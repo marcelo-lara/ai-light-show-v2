@@ -1,4 +1,4 @@
-# ai-light-show-v2
+# Legacy Definition
 
 ## 🎯 Overview
 
@@ -14,7 +14,7 @@ The backend is built with **FastAPI** and provides a comprehensive set of APIs f
 #### Core Components
 
 - **FastAPI Application** (`backend/app.py`): Main application entry point with CORS configuration and route management
-- **DMX Controller** (`backend/dmx_controller.py`): Art-Net DMX protocol implementation for lighting fixture control
+- **DMX Controller** (`backend/services/dmx_dispatcher.py`): Art-Net DMX protocol implementation for lighting fixture control
 - **Timeline Engine** (`backend/timeline_engine.py`): Real-time cue execution and playback synchronization
 - **Render Engine** (`backend/render_engine.py`): DMX universe rendering and fixture state management
 
