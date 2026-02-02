@@ -3,6 +3,11 @@
     "id": "head_el150",
     "name": "Head EL-150",
     "type": "moving_head",
+    "location": {
+      "x": 0.4,
+      "y": 0,
+      "z": 0
+    },
     "channels": {
       "pan_msb": 1,
       "pan_lsb": 2,
@@ -88,6 +93,11 @@
     "id": "parcan_l",
     "name": "ParCan L",
     "type": "rgb",
+    "location": {
+      "x": 0.25,
+      "y": 0,
+      "z": 0
+    },
     "channels": {
       "dim": 16,
       "red": 17,
@@ -115,6 +125,11 @@
     "id": "parcan_r",
     "name": "ParCan R",
     "type": "rgb",
+    "location": {
+      "x": 0.75,
+      "y": 0,
+      "z": 0
+    },
     "channels": {
       "dim": 22,
       "red": 23,
@@ -149,6 +164,11 @@
     "id": "parcan_pl",
     "name": "Proton L",
     "type": "rgb",
+    "location": {
+      "x": 0,
+      "y": 0.1,
+      "z": 0
+    },
     "channels": {
       "dim": 28,
       "red": 29,
@@ -183,6 +203,12 @@
     "id": "parcan_pr",
     "name": "Proton R",
     "type": "rgb",
+    "location": {
+      "x": 1,
+      "y": 0.1,
+      "z": 0
+    },
+    
     "channels": {
       "dim": 35,
       "red": 36,
