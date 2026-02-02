@@ -164,6 +164,11 @@ class StateManager:
             self.current_frame_index = 0
             self.canvas_dirty = False
             self.canvas = self._render_cue_sheet_to_canvas()
+            # Debug: indicate canvas render completion for visibility in Docker logs
+            try:
+                print(f"[DMX CANVAS] render complete for '{song_filename}' — frames={self.canvas.total_frames} fps={self.canvas.fps}", flush=True)
+            except Exception:
+                print("[DMX CANVAS] render complete", flush=True)
 
     async def update_dmx_channel(self, channel: int, value: int) -> bool:
         """Update the editor universe with a live edit.
@@ -225,6 +230,12 @@ class StateManager:
             else:
                 self.canvas_dirty = False
                 self.canvas = self._render_cue_sheet_to_canvas()
+                # Debug: indicate canvas render completion when cues are added while paused
+                try:
+                    song_name = self.cue_sheet.song_filename if self.cue_sheet else song_filename
+                    print(f"[DMX CANVAS] re-render complete for '{song_name}' — frames={self.canvas.total_frames} fps={self.canvas.fps}", flush=True)
+                except Exception:
+                    print("[DMX CANVAS] re-render complete", flush=True)
 
             return new_entries
 

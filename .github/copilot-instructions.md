@@ -32,6 +32,12 @@
 
 ## Developer workflows
 - Local dev: backend in [backend/main.py](backend/main.py) (`python main.py`) and frontend via Vite (`npm run dev`) per [README.md](README.md).
+- Run tests locally using the `ai-light` Python environment (pyenv virtualenv). Example:
+
+  ```bash
+  PYTHONPATH=./backend $(pyenv which python) -m pytest -q
+  ```
+
 - Docker compose runs both services; frontend at http://localhost:3000, backend at http://localhost:8000 (see [README.md](README.md)).
 
 ## Project-specific conventions

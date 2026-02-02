@@ -27,6 +27,18 @@ A real-time DMX control system synchronized with audio playback.
    npm run dev
    ```
 
+2a. Running tests
+
+   - Use the `ai-light` Python environment (pyenv virtualenv) so tests can import backend modules. Example commands:
+
+     ```bash
+     # Use the pyenv-managed ai-light environment, then run tests with PYTHONPATH pointing at the backend package
+     PYTHONPATH=./backend $(pyenv which python) -m pytest -q
+
+     # Or, if your shell already activates the ai-light venv, a simpler form works:
+     PYTHONPATH=./backend python -m pytest -q
+     ```
+
 3. Open http://localhost:5173
 
 ### Docker
