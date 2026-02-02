@@ -47,7 +47,7 @@ Frontend on http://localhost:5000, backend on port 5001.
 
 Defined in `backend/fixtures/fixtures.json`.
 
-Arm fixtures by setting dim to 255 before emitting light.
+Arm fixtures by setting "arm" channels and values from fixtures.json
 
 ## Workflow
 
