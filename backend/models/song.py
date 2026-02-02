@@ -12,3 +12,4 @@ class SongMetadata(BaseModel):
 class Song(BaseModel):
     filename: str
     metadata: SongMetadata
+    audioUrl: Optional[str] = None

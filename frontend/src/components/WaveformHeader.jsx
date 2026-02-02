@@ -4,30 +4,50 @@ import WaveSurfer from 'wavesurfer.js'
 export default function WaveformHeader({ song, onTimecodeUpdate, onLoadSong }) {
   const waveformRef = useRef(null)
   const wavesurferRef = useRef(null)
+  const onTimecodeUpdateRef = useRef(onTimecodeUpdate)
+
+  onTimecodeUpdateRef.current = onTimecodeUpdate
 
   useEffect(() => {
     if (waveformRef.current && !wavesurferRef.current) {
+      console.log('[WaveSurfer] init: container present', {
+        hasContainer: !!waveformRef.current,
+        width: waveformRef.current?.clientWidth,
+        height: waveformRef.current?.clientHeight,
+      })
       wavesurferRef.current = WaveSurfer.create({
         container: waveformRef.current,
         waveColor: '#4a9eff',
         progressColor: '#1e5eff',
         height: 80,
-        responsive: true,
+        normalize: true,
       })
 
       wavesurferRef.current.on('ready', () => {
-        console.log('WaveSurfer ready')
+        console.log('[WaveSurfer] ready', {
+          duration: wavesurferRef.current?.getDuration?.(),
+        })
       })
 
-      wavesurferRef.current.on('audioprocess', () => {
-        const currentTime = wavesurferRef.current.getCurrentTime()
-        onTimecodeUpdate(currentTime)
+      wavesurferRef.current.on('error', (err) => {
+        console.log('[WaveSurfer] error', err)
       })
 
-      wavesurferRef.current.on('seek', () => {
-        const currentTime = wavesurferRef.current.getCurrentTime()
-        onTimecodeUpdate(currentTime)
+      wavesurferRef.current.on('loading', (progress) => {
+        console.log('[WaveSurfer] loading', progress)
       })
+
+      const emitTime = () => {
+        const ws = wavesurferRef.current
+        if (!ws) return
+        const currentTime = ws.getCurrentTime()
+        onTimecodeUpdateRef.current?.(currentTime)
+      }
+
+      // Use multiple events for broad compatibility across WaveSurfer versions.
+      wavesurferRef.current.on('audioprocess', emitTime)
+      wavesurferRef.current.on('seek', emitTime)
+      wavesurferRef.current.on('timeupdate', emitTime)
     }
 
     return () => {
@@ -40,10 +60,22 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onLoadSong }) {
 
   useEffect(() => {
     if (song && wavesurferRef.current) {
-      // Load song from backend API (assuming /api/song/{filename})
-      // For now, placeholder
-      console.log('Load song:', song.filename)
-      // wavesurferRef.current.load(`/api/song/${song.filename}`)
+      console.log('[WaveSurfer] load song', {
+        filename: song?.filename,
+        song,
+      })
+      // If a URL is ever provided by the backend, load it.
+      // This keeps WaveSurfer initialized properly even when no audio endpoint exists yet.
+      const rawUrl = song.url || song.audioUrl
+      const backendBase =
+        import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:8000`
+      const url = rawUrl?.startsWith('/') ? `${backendBase}${rawUrl}` : rawUrl
+      if (url) {
+        console.log('[WaveSurfer] load url', url)
+        wavesurferRef.current.load(url)
+      } else {
+        console.log('[WaveSurfer] no url provided for song')
+      }
     }
   }, [song])
 
@@ -61,13 +93,13 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onLoadSong }) {
   }
 
   return (
-    <div style={{ padding: '10px', borderBottom: '1px solid #333', background: '#252526' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+    <div class="waveHeader">
+      <div class="waveControls">
         <button onClick={handleLoadSong}>Load Song</button>
         <button onClick={handlePlayPause}>Play/Pause</button>
-        <span>{song ? song.filename : 'No song loaded'}</span>
+        <div class="waveTitle muted">{song ? song.filename : 'No song loaded'}</div>
       </div>
-      <div ref={waveformRef} style={{ width: '100%' }}></div>
+      <div ref={waveformRef} class="waveform"></div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import asyncio
 from typing import Dict, List, Optional
 from pathlib import Path
 import json
+from urllib.parse import quote
 from models.fixture import Fixture
 from models.cue import CueSheet, CueEntry
 from models.song import Song, SongMetadata
@@ -29,6 +30,10 @@ class StateManager:
             songs_path = self.backend_path / "songs"
             cues_path = self.backend_path / "cues"
             metadata_path = self.backend_path / "metadata"
+            audio_url = None
+            audio_file = songs_path / f"{song_filename}.mp3"
+            if audio_file.exists():
+                audio_url = f"/songs/{quote(audio_file.name)}"
             # Load metadata
             metadata_file = metadata_path / f"{song_filename}.metadata.json"
             if metadata_file.exists():
@@ -38,7 +43,7 @@ class StateManager:
             else:
                 metadata = SongMetadata(filename=song_filename, parts={}, hints={}, drums={})
 
-            self.current_song = Song(filename=song_filename, metadata=metadata)
+            self.current_song = Song(filename=song_filename, metadata=metadata, audioUrl=audio_url)
 
             # Load cue sheet
             cue_file = cues_path / f"{song_filename}.cue.json"

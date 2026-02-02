@@ -12,49 +12,50 @@ export default function ChatSidePanel({ onSendMessage }) {
     }
   }
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleSend()
     }
   }
 
-  // Mock receiving response
-  // In real, would receive from WS
-  const mockResponse = (msg) => {
-    setTimeout(() => {
-      setMessages(prev => [...prev, { text: `Echo: ${msg}`, from: 'bot' }])
-    }, 1000)
-  }
-
   return (
-    <div style={{ width: '300px', borderLeft: '1px solid #333', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '10px', borderBottom: '1px solid #333' }}>
-        <h3>AI Chat</h3>
+    <div class="chatPanel">
+      <div class="chatHeader">
+        <h3>LLM Chat</h3>
       </div>
-      <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-        {messages.map((msg, index) => (
-          <div key={index} style={{ marginBottom: '10px', textAlign: msg.from === 'user' ? 'right' : 'left' }}>
-            <div style={{
-              display: 'inline-block',
-              padding: '5px 10px',
-              background: msg.from === 'user' ? '#4a9eff' : '#333',
-              borderRadius: '5px'
-            }}>
-              {msg.text}
+
+      <div class="chatMessages">
+        {messages.length === 0 ? (
+          <div class="muted">Send a message to start.</div>
+        ) : (
+          messages.map((msg, index) => (
+            <div key={index} style={{ marginBottom: '10px', textAlign: msg.from === 'user' ? 'right' : 'left' }}>
+              <div
+                style={{
+                  display: 'inline-block',
+                  padding: '6px 10px',
+                  background: msg.from === 'user' ? '#4a9eff' : '#333',
+                  borderRadius: '10px',
+                  maxWidth: '85%'
+                }}
+              >
+                {msg.text}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
-      <div style={{ padding: '10px', borderTop: '1px solid #333' }}>
+
+      <div class="chatComposer">
         <input
+          class="chatInput"
           type="text"
           value={input}
           onInput={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           placeholder="Type a message..."
-          style={{ width: '100%', padding: '5px', marginBottom: '5px' }}
         />
-        <button onClick={handleSend} style={{ width: '100%' }}>Send</button>
+        <button onClick={handleSend}>Send</button>
       </div>
     </div>
   )

@@ -13,6 +13,7 @@ class ArtNetService:
     def __init__(self):
         self.dmx_universe: List[int] = [0] * DMX_CHANNELS
         self.last_send = 0.0
+        self.last_packet = [0] * DMX_CHANNELS
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.running = False
@@ -47,14 +48,18 @@ class ArtNetService:
         packet.extend((0x02, 0x00))  # Data length = 512
         packet.extend(bytes(self.dmx_universe))
 
+        # Only log if different from last packet
+        if self.dmx_universe != self.last_packet:
+            dmx_slice = self.dmx_universe[15:40]
+            dmx_str = '.'.join(f"{v:02X}" for v in dmx_slice)
+            print(f"[{perf_counter():.3f}] {dmx_str}")
+
         try:
             self.sock.sendto(packet, (ARTNET_IP, ARTNET_PORT))
-            # Debug: print slice
-            dmx_slice = self.dmx_universe[15:40]
-            dmx_str = '.'.join(f"{v:03d}" for v in dmx_slice)
-            print(f"[{perf_counter():.3f}] {dmx_str}")
         except Exception as e:
             print(f"Art-Net send error: {e}")
+
+        self.last_packet = self.dmx_universe.copy()
 
     async def set_channel(self, channel: int, value: int):
         if 1 <= channel <= DMX_CHANNELS and 0 <= value <= 255:

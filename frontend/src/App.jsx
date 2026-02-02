@@ -15,7 +15,9 @@ export function App() {
 
   useEffect(() => {
     // Connect to WebSocket
-    const ws = new WebSocket('ws://localhost:8000/ws')
+    const wsUrl =
+      import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:8000/ws`
+    const ws = new WebSocket(wsUrl)
     wsRef.current = ws
 
     ws.onmessage = (event) => {
@@ -69,23 +71,17 @@ export function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#1e1e1e', color: 'white' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <div class="appRoot">
+      <div class="mainColumn">
         <WaveformHeader
           song={song}
           onTimecodeUpdate={handleTimecodeUpdate}
           onLoadSong={handleLoadSong}
         />
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div class="lanesGrid">
           <SongPartsLane song={song} timecode={timecode} />
           <CueSheetLane cues={cues} timecode={timecode} />
-          <FixturesLane
-            fixtures={fixtures}
-            dmxValues={dmxValues}
-            onDmxChange={handleDmxChange}
-            onAddCue={handleAddCue}
-            timecode={timecode}
-          />
+          <FixturesLane fixtures={fixtures} dmxValues={dmxValues} onDmxChange={handleDmxChange} onAddCue={handleAddCue} timecode={timecode} />
         </div>
       </div>
       <ChatSidePanel onSendMessage={(msg) => sendMessage({ type: 'chat', message: msg })} />

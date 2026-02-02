@@ -1,26 +1,37 @@
 export default function FixturesLane({ fixtures, dmxValues, onDmxChange, onAddCue, timecode }) {
   return (
-    <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-      <h3>Fixtures</h3>
-      {fixtures.map((fixture) => (
-        <div key={fixture.id} style={{ marginBottom: '20px' }}>
-          <h4>{fixture.name}</h4>
-          {Object.entries(fixture.channels).map(([channelName, channelNum]) => (
-            <div key={channelName} style={{ marginBottom: '10px' }}>
-              <label>{channelName}: {dmxValues[channelNum] || 0}</label>
-              <input
-                type="range"
-                min="0"
-                max="255"
-                value={dmxValues[channelNum] || 0}
-                onInput={(e) => onDmxChange(channelNum, parseInt(e.target.value))}
-                style={{ width: '100%' }}
-              />
+    <div class="panel">
+      <div class="panelHeader">
+        <h3>DMX fixtures (plain control)</h3>
+        <button onClick={() => onAddCue(timecode)}>Add to Cue</button>
+      </div>
+      <div class="panelBody">
+        {fixtures.length === 0 ? (
+          <div class="muted">No fixtures loaded</div>
+        ) : (
+          fixtures.map((fixture) => (
+            <div key={fixture.id} class="card">
+              <div class="cardTitle">{fixture.name}</div>
+              {Object.entries(fixture.channels).map(([channelName, channelNum]) => (
+                <div key={channelName} style={{ marginBottom: '10px' }}>
+                  <div class="muted" style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                    <span>{channelName}</span>
+                    <span>Ch {channelNum}: {dmxValues[channelNum] || 0}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="255"
+                    value={dmxValues[channelNum] || 0}
+                    onInput={(e) => onDmxChange(channelNum, parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ))}
-      <button onClick={() => onAddCue(timecode)}>Add to Cue</button>
+          ))
+        )}
+      </div>
     </div>
   )
 }

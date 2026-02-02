@@ -35,7 +35,7 @@ A real-time DMX control system synchronized with audio playback.
 docker compose up --build
 ```
 
-Frontend on http://localhost:3000, backend on port 8000.
+Frontend on http://localhost:5000, backend on port 5001.
 
 ## Configuration
 
