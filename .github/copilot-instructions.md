@@ -1,5 +1,7 @@
 # AI Light Show v2 – Copilot Instructions
-
+## Development policy
+- **NEVER keep deprecated code.** Remove deprecated helpers and dead code; do not retain compatibility shims.
+- **NEVER consider backwards compatibility.** Breaking changes are acceptable — prefer clarity and correctness over preserving legacy APIs.
 ## Big-picture architecture
 - Backend is FastAPI + asyncio in [backend/main.py](backend/main.py); it wires `StateManager`, `ArtNetService`, `SongService`, and `WebSocketManager` at startup and exposes only a WebSocket at `/ws`.
 - Real-time DMX flow: frontend sends WebSocket messages → `WebSocketManager.handle_message()` → `StateManager` updates → `ArtNetService` sends ArtDMX UDP packets (see [backend/api/websocket.py](backend/api/websocket.py) and [backend/services/artnet.py](backend/services/artnet.py)).
