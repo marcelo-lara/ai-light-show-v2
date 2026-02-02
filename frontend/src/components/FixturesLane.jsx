@@ -1,9 +1,8 @@
-export default function FixturesLane({ fixtures, dmxValues, onDmxChange, onAddCue, timecode }) {
+export default function FixturesLane({ fixtures, dmxValues, onDmxChange, timecode }) {
   return (
     <div class="panel">
       <div class="panelHeader">
         <h3>DMX fixtures (plain control)</h3>
-        <button onClick={() => onAddCue(timecode)}>Add to Cue</button>
       </div>
       <div class="panelBody">
         {fixtures.length === 0 ? (

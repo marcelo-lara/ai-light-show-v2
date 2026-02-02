@@ -72,10 +72,6 @@ export function App() {
     sendMessage({ type: 'delta', channel, value })
   }
 
-  const handleAddCue = (timecode, name) => {
-    sendMessage({ type: 'add_cue', time: timecode, name })
-  }
-
   const handleLoadSong = (filename) => {
     sendMessage({ type: 'load_song', filename })
   }
@@ -108,7 +104,7 @@ export function App() {
         <div class="lanesGrid">
           <SongPartsLane song={song} timecode={timecode} />
           <CueSheetLane cues={cues} timecode={timecode} />
-          <FixturesLane fixtures={fixtures} dmxValues={dmxValues} onDmxChange={handleDmxChange} onAddCue={handleAddCue} timecode={timecode} />
+          <FixturesLane fixtures={fixtures} dmxValues={dmxValues} onDmxChange={handleDmxChange} timecode={timecode} />
         </div>
       </div>
       <ChatSidePanel onSendMessage={(msg) => sendMessage({ type: 'chat', message: msg })} />

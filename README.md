@@ -53,5 +53,5 @@ Arm fixtures by setting "arm" channels and values from fixtures.json
 
 1. Load song via frontend.
 2. Adjust fixture sliders, deltas sent to backend.
-3. Click "Add to Cue" to save at current timecode.
+3. Use the Cue Sheet editor to add cues at the desired timecode.
 4. Playback syncs cues with audio.

@@ -33,7 +33,7 @@ The system is a real-time DMX control application synchronized to audio playback
 - frontend/
   - src/App.jsx — WebSocket client + state
   - src/components/WaveformHeader.jsx — WaveSurfer playback + timecode/seek/playback messages
-  - src/components/FixturesLane.jsx — DMX authoring sliders + “Add to Cue”
+  - src/components/FixturesLane.jsx — DMX authoring sliders
   - src/components/CueSheetLane.jsx — displays cues (by time)
 
 ## Core Concepts
@@ -150,7 +150,7 @@ Backend:
 - If audio time jumps forward/back, backend **does not** simulate intermediate frames.
 - It simply selects the correct frame for the reported time.
 
-### Authoring cues (Add to Cue)
+### Authoring cues
 
 Frontend sends:
 - `{"type":"add_cue", "time": <seconds>, "name": "optional"}`
