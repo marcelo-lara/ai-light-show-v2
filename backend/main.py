@@ -52,7 +52,11 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Shutdown
+    # Shutdown: perform blackout so fixtures go dark, then stop the Art-Net service
+    try:
+        await artnet_service.blackout()
+    except Exception as e:
+        print(f"Error during blackout: {e}")
     await artnet_service.stop()
 
 app = FastAPI(lifespan=lifespan, title="AI Light Show v2 Backend")

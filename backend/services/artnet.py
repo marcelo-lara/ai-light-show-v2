@@ -71,3 +71,17 @@ class ArtNetService:
             if channel_name in fixture.channels:
                 channel_num = fixture.channels[channel_name]
                 await self.set_channel(channel_num, value)
+
+    async def blackout(self, send_once: bool = True) -> None:
+        """Immediately set the entire DMX universe to zero and optionally send one Art-Net packet.
+
+        This is intended to be called during shutdown to ensure fixtures go dark before sockets close.
+        """
+        # Zero the universe
+        self.dmx_universe = [0] * DMX_CHANNELS
+        # Send one packet immediately so lights receive the blackout
+        if send_once:
+            try:
+                await self.send_artnet()
+            except Exception as e:
+                print(f"Art-Net blackout send error: {e}")
