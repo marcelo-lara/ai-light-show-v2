@@ -1,0 +1,186 @@
+{
+  "song_filename": "sono - keep control",
+  "entries": [
+    {
+      "time": 0.0,
+      "fixture_id": "head_el150",
+      "action": "full",
+      "duration": 0.0,
+      "data": {},
+      "name": "Intro start - head full"
+    },
+    {
+      "time": 15.0,
+      "fixture_id": "parcan_l",
+      "action": "fade",
+      "duration": 5.0,
+      "data": {
+        "red": 255,
+        "green": 0,
+        "blue": 0
+      },
+      "name": "Verse start - left parcan fade to red"
+    },
+    {
+      "time": 15.0,
+      "fixture_id": "parcan_r",
+      "action": "fade",
+      "duration": 5.0,
+      "data": {
+        "red": 0,
+        "green": 255,
+        "blue": 0
+      },
+      "name": "Verse start - right parcan fade to green"
+    },
+    {
+      "time": 20.0,
+      "fixture_id": "head_el150",
+      "action": "flash",
+      "duration": 1.0,
+      "data": {},
+      "name": "First drop - head flash"
+    },
+    {
+      "time": 25.0,
+      "fixture_id": "parcan_pl",
+      "action": "strobe",
+      "duration": 2.0,
+      "data": {
+        "speed": 200
+      },
+      "name": "Clap - proton left strobe"
+    },
+    {
+      "time": 25.0,
+      "fixture_id": "parcan_pr",
+      "action": "strobe",
+      "duration": 2.0,
+      "data": {
+        "speed": 200
+      },
+      "name": "Clap - proton right strobe"
+    },
+    {
+      "time": 45.0,
+      "fixture_id": "head_el150",
+      "action": "move_to",
+      "duration": 3.0,
+      "data": {
+        "pan": 30000,
+        "tilt": 2000
+      },
+      "name": "Chorus start - head move"
+    },
+    {
+      "time": 50.0,
+      "fixture_id": "head_el150",
+      "action": "flash",
+      "duration": 1.0,
+      "data": {},
+      "name": "Second drop - head flash"
+    },
+    {
+      "time": 55.0,
+      "fixture_id": "parcan_l",
+      "action": "fade",
+      "duration": 2.0,
+      "data": {
+        "red": 0,
+        "green": 0,
+        "blue": 255
+      },
+      "name": "Second clap - left parcan to blue"
+    },
+    {
+      "time": 55.0,
+      "fixture_id": "parcan_r",
+      "action": "fade",
+      "duration": 2.0,
+      "data": {
+        "red": 255,
+        "green": 255,
+        "blue": 0
+      },
+      "name": "Second clap - right parcan to yellow"
+    },
+    {
+      "time": 70.0,
+      "fixture_id": "head_el150",
+      "action": "seek",
+      "duration": 5.0,
+      "data": {
+        "pan": 50000,
+        "tilt": 3000
+      },
+      "name": "Tension build - head seek"
+    },
+    {
+      "time": 75.0,
+      "fixture_id": "parcan_pl",
+      "action": "full",
+      "duration": 0.0,
+      "data": {
+        "red": 255,
+        "green": 255,
+        "blue": 255
+      },
+      "name": "Bridge - proton left full white"
+    },
+    {
+      "time": 75.0,
+      "fixture_id": "parcan_pr",
+      "action": "full",
+      "duration": 0.0,
+      "data": {
+        "red": 255,
+        "green": 255,
+        "blue": 255
+      },
+      "name": "Bridge - proton right full white"
+    },
+    {
+      "time": 80.0,
+      "fixture_id": "head_el150",
+      "action": "flash",
+      "duration": 1.0,
+      "data": {},
+      "name": "Third drop - head flash"
+    },
+    {
+      "time": 90.0,
+      "fixture_id": "head_el150",
+      "action": "move_to",
+      "duration": 5.0,
+      "data": {
+        "pan": 0,
+        "tilt": 0
+      },
+      "name": "Outro - head to home"
+    },
+    {
+      "time": 95.0,
+      "fixture_id": "parcan_l",
+      "action": "fade",
+      "duration": 10.0,
+      "data": {
+        "red": 0,
+        "green": 0,
+        "blue": 0
+      },
+      "name": "Outro fade out - left parcan"
+    },
+    {
+      "time": 95.0,
+      "fixture_id": "parcan_r",
+      "action": "fade",
+      "duration": 10.0,
+      "data": {
+        "red": 0,
+        "green": 0,
+        "blue": 0
+      },
+      "name": "Outro fade out - right parcan"
+    }
+  ]
+}
