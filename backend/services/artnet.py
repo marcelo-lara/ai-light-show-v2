@@ -1,7 +1,7 @@
 import asyncio
 import socket
 from time import perf_counter
-from typing import List
+from typing import Iterable, Union
 
 ARTNET_IP = "192.168.10.221"
 ARTNET_PORT = 6454
@@ -9,11 +9,13 @@ ARTNET_UNIVERSE = 0
 DMX_CHANNELS = 512
 FPS = 60
 
+UniverseLike = Union[bytes, bytearray, memoryview, Iterable[int]]
+
 class ArtNetService:
     def __init__(self):
-        self.dmx_universe: List[int] = [0] * DMX_CHANNELS
+        self.dmx_universe: bytearray = bytearray(DMX_CHANNELS)
         self.last_send = 0.0
-        self.last_packet = [0] * DMX_CHANNELS
+        self.last_packet: bytes = bytes(DMX_CHANNELS)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.running = False
@@ -26,8 +28,32 @@ class ArtNetService:
         self.running = False
         self.sock.close()
 
-    async def update_universe(self, universe: List[int]):
-        self.dmx_universe = universe.copy()
+    async def update_universe(self, universe: UniverseLike):
+        if isinstance(universe, memoryview):
+            if len(universe) != DMX_CHANNELS:
+                raise ValueError(f"universe must be {DMX_CHANNELS} bytes")
+            self.dmx_universe[:] = universe
+            return
+        if isinstance(universe, bytes):
+            if len(universe) != DMX_CHANNELS:
+                raise ValueError(f"universe must be {DMX_CHANNELS} bytes")
+            self.dmx_universe[:] = universe
+            return
+        if isinstance(universe, bytearray):
+            if len(universe) != DMX_CHANNELS:
+                raise ValueError(f"universe must be {DMX_CHANNELS} bytes")
+            self.dmx_universe[:] = universe
+            return
+
+        # Fallback: iterable of ints
+        vals = bytearray(DMX_CHANNELS)
+        i = 0
+        for v in universe:
+            if i >= DMX_CHANNELS:
+                break
+            vals[i] = max(0, min(255, int(v)))
+            i += 1
+        self.dmx_universe[:] = vals
 
     async def send_loop(self):
         while self.running:
@@ -46,11 +72,12 @@ class ArtNetService:
         packet.extend((0x00, 0x00))  # Sequence + Physical
         packet.extend((ARTNET_UNIVERSE & 0xFF, (ARTNET_UNIVERSE >> 8) & 0xFF))  # Universe
         packet.extend((0x02, 0x00))  # Data length = 512
-        packet.extend(bytes(self.dmx_universe))
+        packet.extend(self.dmx_universe)
 
         # Only log if different from last packet
-        if self.dmx_universe != self.last_packet:
-            dmx_slice = self.dmx_universe[15:40]
+        current_packet = bytes(self.dmx_universe)
+        if current_packet != self.last_packet:
+            dmx_slice = current_packet[15:40]
             dmx_str = '.'.join(f"{v:02X}" for v in dmx_slice)
             print(f"[{perf_counter():.3f}] {dmx_str}")
 
@@ -59,7 +86,7 @@ class ArtNetService:
         except Exception as e:
             print(f"Art-Net send error: {e}")
 
-        self.last_packet = self.dmx_universe.copy()
+        self.last_packet = current_packet
 
     async def set_channel(self, channel: int, value: int):
         if 1 <= channel <= DMX_CHANNELS and 0 <= value <= 255:
@@ -78,7 +105,7 @@ class ArtNetService:
         This is intended to be called during shutdown to ensure fixtures go dark before sockets close.
         """
         # Zero the universe
-        self.dmx_universe = [0] * DMX_CHANNELS
+        self.dmx_universe = bytearray(DMX_CHANNELS)
         # Send one packet immediately so lights receive the blackout
         if send_once:
             try:

@@ -31,7 +31,12 @@ class WebSocketManager:
             "type": "initial",
             "fixtures": fixtures,
             "cues": cues,
-            "song": song
+            "song": song,
+            "playback": {
+                "fps": 60,
+                "songLengthSeconds": getattr(self.state_manager, "song_length_seconds", 0.0),
+                "isPlaying": getattr(self.state_manager, "is_playing", False),
+            },
         }
         await websocket.send_json(initial_state)
 
@@ -50,27 +55,42 @@ class WebSocketManager:
             if msg_type == "delta":
                 channel = message.get("channel")
                 value = message.get("value")
-                await self.state_manager.update_dmx_channel(channel, value)
-                universe = await self.state_manager.get_dmx_universe()
-                await self.artnet_service.update_universe(universe)
+                should_apply = await self.state_manager.update_dmx_channel(channel, value)
+                if should_apply:
+                    universe = await self.state_manager.get_output_universe()
+                    await self.artnet_service.update_universe(universe)
                 # Broadcast delta
                 await self.broadcast({"type": "delta", "channel": channel, "value": value})
 
             elif msg_type == "timecode":
                 timecode = message.get("time")
                 await self.state_manager.update_timecode(timecode)
+                universe = await self.state_manager.get_output_universe()
+                await self.artnet_service.update_universe(universe)
+
+            elif msg_type == "seek":
+                timecode = message.get("time")
+                await self.state_manager.seek_timecode(timecode)
+                universe = await self.state_manager.get_output_universe()
+                await self.artnet_service.update_universe(universe)
+
+            elif msg_type == "playback":
+                playing = bool(message.get("playing", False))
+                await self.state_manager.set_playback_state(playing)
 
             elif msg_type == "add_cue":
                 timecode = message.get("time")
                 name = message.get("name")
                 await self.state_manager.add_cue_entry(timecode, name)
-                # Broadcast new cue
+                # Broadcast updated cue sheet (add_cue now appends multiple action entries).
                 if self.state_manager.cue_sheet:
-                    await self.broadcast({"type": "cue_added", "entry": self.state_manager.cue_sheet.entries[-1].dict()})
+                    await self.broadcast({"type": "cues_updated", "cues": self.state_manager.cue_sheet.dict()})
 
             elif msg_type == "load_song":
                 song_filename = message.get("filename")
                 await self.state_manager.load_song(song_filename)
+                universe = await self.state_manager.get_output_universe()
+                await self.artnet_service.update_universe(universe)
                 # Broadcast new state
                 for conn in self.active_connections:
                     await self.send_initial_state(conn)

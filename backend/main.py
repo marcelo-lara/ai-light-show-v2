@@ -34,6 +34,12 @@ async def lifespan(app: FastAPI):
     elif songs:
         await state_manager.load_song(songs[0])
 
+    # Sync initial output universe (frame 0) to Art-Net.
+    try:
+        await artnet_service.update_universe(await state_manager.get_output_universe())
+    except Exception as e:
+        print(f"Error syncing initial universe: {e}")
+
     # Initial ArtNet sequence: flash blue on parcans
     parcans = [f for f in state_manager.fixtures if f.id.startswith('parcan')]
     for parcan in parcans:

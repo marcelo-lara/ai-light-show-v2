@@ -13,15 +13,15 @@ export default function CueSheetLane({ cues, timecode }) {
               key={index}
               class="card"
               style={{
-                borderColor: Math.abs(timecode - cue.timecode) < 0.5 ? '#4a9eff' : '#333',
+                borderColor: Math.abs(timecode - cue.time) < 0.5 ? '#4a9eff' : '#333',
                 cursor: 'pointer',
               }}
               onClick={() => {
-                console.log('Seek to cue', cue.timecode)
+                console.log('Seek to cue', cue.time)
               }}
             >
               <div class="cardTitle">{cue.name || `Cue ${index + 1}`}</div>
-              <div class="muted">Time: {cue.timecode.toFixed(2)}s</div>
+              <div class="muted">Time: {cue.time.toFixed(2)}s</div>
             </div>
           ))
         )}

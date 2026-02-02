@@ -1,11 +1,22 @@
 from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 
 class CueEntry(BaseModel):
-    timecode: float  # in seconds
+    """A single high-level cue instruction.
+
+    This matches docs/dmx_dispatcher.md: the cue sheet is a list of actions that
+    fixtures interpret to render intermediate DMX frames.
+    """
+
+    time: float  # seconds
+    fixture_id: str
+    action: str
+    duration: float = 0.0  # seconds
+    data: Dict[str, Any] = {}
     name: Optional[str] = None
-    values: Dict[str, Dict[str, Any]]  # fixture_id -> {channel: value}
+
 
 class CueSheet(BaseModel):
     song_filename: str
-    entries: List["CueEntry"]
+    entries: List[CueEntry]

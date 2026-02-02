@@ -28,8 +28,8 @@ export function App() {
         setSong(data.song)
       } else if (data.type === 'delta') {
         setDmxValues(prev => ({ ...prev, [data.channel]: data.value }))
-      } else if (data.type === 'cue_added') {
-        setCues(prev => [...prev, data.entry])
+      } else if (data.type === 'cues_updated') {
+        setCues(data.cues?.entries || [])
       }
     }
 
@@ -70,12 +70,23 @@ export function App() {
     sendMessage({ type: 'timecode', time })
   }
 
+  const handleSeek = (time) => {
+    setTimecode(time)
+    sendMessage({ type: 'seek', time })
+  }
+
+  const handlePlaybackChange = (playing) => {
+    sendMessage({ type: 'playback', playing })
+  }
+
   return (
     <div class="appRoot">
       <div class="mainColumn">
         <WaveformHeader
           song={song}
           onTimecodeUpdate={handleTimecodeUpdate}
+          onSeek={handleSeek}
+          onPlaybackChange={handlePlaybackChange}
           onLoadSong={handleLoadSong}
         />
         <div class="lanesGrid">

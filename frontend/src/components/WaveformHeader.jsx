@@ -1,12 +1,19 @@
 import { useEffect, useRef } from 'preact/hooks'
 import WaveSurfer from 'wavesurfer.js'
 
-export default function WaveformHeader({ song, onTimecodeUpdate, onLoadSong }) {
+const TIME_TICK_HZ = 20
+
+export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlaybackChange, onLoadSong }) {
   const waveformRef = useRef(null)
   const wavesurferRef = useRef(null)
   const onTimecodeUpdateRef = useRef(onTimecodeUpdate)
+  const onSeekRef = useRef(onSeek)
+  const onPlaybackChangeRef = useRef(onPlaybackChange)
+  const lastSentRef = useRef(0)
 
   onTimecodeUpdateRef.current = onTimecodeUpdate
+  onSeekRef.current = onSeek
+  onPlaybackChangeRef.current = onPlaybackChange
 
   useEffect(() => {
     if (waveformRef.current && !wavesurferRef.current) {
@@ -41,13 +48,32 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onLoadSong }) {
         const ws = wavesurferRef.current
         if (!ws) return
         const currentTime = ws.getCurrentTime()
+        const now = performance.now()
+        const minDeltaMs = 1000 / TIME_TICK_HZ
+        if (now - lastSentRef.current < minDeltaMs) return
+        lastSentRef.current = now
         onTimecodeUpdateRef.current?.(currentTime)
+      }
+
+      const emitSeek = () => {
+        const ws = wavesurferRef.current
+        if (!ws) return
+        const currentTime = ws.getCurrentTime()
+        lastSentRef.current = performance.now()
+        onSeekRef.current?.(currentTime)
       }
 
       // Use multiple events for broad compatibility across WaveSurfer versions.
       wavesurferRef.current.on('audioprocess', emitTime)
-      wavesurferRef.current.on('seek', emitTime)
       wavesurferRef.current.on('timeupdate', emitTime)
+      wavesurferRef.current.on('seek', emitSeek)
+
+      wavesurferRef.current.on('play', () => {
+        onPlaybackChangeRef.current?.(true)
+      })
+      wavesurferRef.current.on('pause', () => {
+        onPlaybackChangeRef.current?.(false)
+      })
     }
 
     return () => {
