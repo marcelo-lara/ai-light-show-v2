@@ -12,6 +12,7 @@ export function App() {
   const [dmxValues, setDmxValues] = useState({})
   const [timecode, setTimecode] = useState(0)
   const wsRef = useRef(null)
+  const isPlayingRef = useRef(false)
 
   useEffect(() => {
     // Connect to WebSocket
@@ -26,8 +27,22 @@ export function App() {
         setFixtures(data.fixtures || [])
         setCues(data.cues?.entries || [])
         setSong(data.song)
+        isPlayingRef.current = !!data.playback?.isPlaying
       } else if (data.type === 'delta') {
         setDmxValues(prev => ({ ...prev, [data.channel]: data.value }))
+      } else if (data.type === 'dmx_frame') {
+        // Backend sends full-frame snapshots only for paused seek-preview / initialization.
+        // Never animate sliders during playback.
+        if (isPlayingRef.current) return
+        const values = Array.isArray(data.values) ? data.values : []
+        const next = {}
+        for (let i = 0; i < values.length; i++) {
+          next[i + 1] = values[i]
+        }
+        setDmxValues(next)
+        if (typeof data.time === 'number') {
+          setTimecode(data.time)
+        }
       } else if (data.type === 'cues_updated') {
         setCues(data.cues?.entries || [])
       }
@@ -76,6 +91,7 @@ export function App() {
   }
 
   const handlePlaybackChange = (playing) => {
+    isPlayingRef.current = !!playing
     sendMessage({ type: 'playback', playing })
   }
 

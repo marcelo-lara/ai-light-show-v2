@@ -86,9 +86,9 @@ StateManager holds two separate DMX universes:
 - **editor_universe**: reflects live slider edits (authoring state).
 - **output_universe**: what is actually sent to Art-Net.
 
-This allows the policy:
-- While playing: **ignore live edits for output** (but still record them if you “Add to Cue”).
-- While not playing: live edits update both editor and output.
+This allows the play-state routing policy:
+- **Not playing (paused / edit mode)**: Art-Net output follows the frontend **Fixtures lane** (live `delta` edits update both `editor_universe` and `output_universe`).
+- **Playing (playback mode)**: Art-Net output follows the **DMX canvas** (timecode/seek selects a canvas frame and overwrites `output_universe`). Live `delta` edits still update `editor_universe` but do **not** affect `output_universe`.
 
 ### 4) Fixture-specific action rendering
 
@@ -134,13 +134,17 @@ Backend:
 Frontend is authoritative for time. It sends:
 
 - `{"type":"playback", "playing": true|false}` on play/pause
-- `{"type":"timecode", "time": <seconds>}` periodically while playing (throttled)
+- `{"type":"timecode", "time": <seconds>}` periodically **while playing** (throttled)
 - `{"type":"seek", "time": <seconds>}` immediately on seek
 
 Backend:
 - Maps time to canvas frame: `frame = round(time * fps)`.
 - Sets `output_universe = canvas[frame]`.
 - Art-Net sender emits that universe at 60 FPS.
+
+**Paused behavior**
+- While **not playing**, the backend ignores `timecode` updates (so paused timecode sync does not drive Art-Net).
+- A `seek` while **not playing** acts as a **preview**: the backend selects the nearest canvas frame, updates its current time, applies the frame to `output_universe`, and sends that frame back to the frontend so the Fixtures lane sliders reflect the previewed values.
 
 **Skipping policy**
 - If audio time jumps forward/back, backend **does not** simulate intermediate frames.
@@ -171,6 +175,11 @@ Re-render policy:
 
 - `delta`
   - `{ type:'delta', channel, value }`
+
+- `dmx_frame`
+  - `{ type:'dmx_frame', time, values }`
+  - `values` is a JSON array of ints (0–255) representing channels `[1..N]`, truncated to the **max channel used by fixtures** to keep payloads small.
+  - Sent on connect (to reflect armed defaults in the Fixtures lane) and on **paused seek-preview**. Not streamed during playback.
 
 - `cues_updated`
   - `{ type:'cues_updated', cues: <CueSheet> }`

@@ -29,6 +29,9 @@ class StateManager:
         self.song_length_seconds: float = 0.0
         self.canvas_dirty: bool = False
         self.current_frame_index: int = 0
+        # Highest 1-based DMX channel referenced by any fixture channel map.
+        # Used to limit payload sizes when sending full-frame snapshots to the frontend.
+        self.max_used_channel: int = 0
 
     def _infer_song_length_seconds(self, metadata: SongMetadata) -> float:
         # Prefer explicit metadata if it ever gets added later.
@@ -92,11 +95,33 @@ class StateManager:
                     fixtures.append(obj)
                 self.fixtures = fixtures
 
+            # Compute highest referenced 1-based channel for smaller frontend snapshots.
+            max_ch = 0
+            for fixture in self.fixtures:
+                for ch in (fixture.channels or {}).values():
+                    try:
+                        max_ch = max(max_ch, int(ch))
+                    except Exception:
+                        pass
+            self.max_used_channel = max(0, min(DMX_CHANNELS, int(max_ch)))
+
             # Apply arm defaults to both editor and output universes.
             self.editor_universe = bytearray(DMX_CHANNELS)
             self.output_universe = bytearray(DMX_CHANNELS)
             self._apply_arm(self.editor_universe)
             self._apply_arm(self.output_universe)
+
+    async def get_is_playing(self) -> bool:
+        async with self.lock:
+            return bool(self.is_playing)
+
+    async def get_timecode(self) -> float:
+        async with self.lock:
+            return float(self.timecode)
+
+    async def get_max_used_channel(self) -> int:
+        async with self.lock:
+            return int(self.max_used_channel)
 
     async def load_song(self, song_filename: str):
         async with self.lock:

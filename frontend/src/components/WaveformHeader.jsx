@@ -10,6 +10,7 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
   const onSeekRef = useRef(onSeek)
   const onPlaybackChangeRef = useRef(onPlaybackChange)
   const lastSentRef = useRef(0)
+  const isPlayingRef = useRef(false)
 
   onTimecodeUpdateRef.current = onTimecodeUpdate
   onSeekRef.current = onSeek
@@ -47,6 +48,7 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
       const emitTime = () => {
         const ws = wavesurferRef.current
         if (!ws) return
+        if (!isPlayingRef.current) return
         const currentTime = ws.getCurrentTime()
         const now = performance.now()
         const minDeltaMs = 1000 / TIME_TICK_HZ
@@ -69,9 +71,11 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
       wavesurferRef.current.on('seek', emitSeek)
 
       wavesurferRef.current.on('play', () => {
+        isPlayingRef.current = true
         onPlaybackChangeRef.current?.(true)
       })
       wavesurferRef.current.on('pause', () => {
+        isPlayingRef.current = false
         onPlaybackChangeRef.current?.(false)
       })
     }
