@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    network_mode: host
+    volumes:
+      - ./backend/songs:/app/songs
+      - ./backend/cues:/app/cues
+      - ./backend/metadata:/app/metadata
+    environment:
+      - DMX_NODE_IP=192.168.10.221
+      - FPS=60
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5000:80"
+    environment:
+      - VITE_WS_URL=ws://localhost:8000/ws
+    depends_on:
+      - backend
+    restart: unless-stopped
