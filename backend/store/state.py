@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from pathlib import Path
 import json
 from urllib.parse import quote
-from models.fixture import Fixture, ParcanFixture, MovingHeadFixture
+from models.fixture import Fixture, Parcan, MovingHead
 from models.cue import CueSheet, CueEntry
 from models.song import Song, SongMetadata
 
@@ -28,13 +28,13 @@ class StateManager:
                     ftype = fixture.get('type', '').lower()
                     try:
                         if ftype == 'moving_head' or ftype == 'moving-head':
-                            obj = MovingHeadFixture(**fixture)
+                            obj = MovingHead(**fixture)
                         else:
                             # default to parcan for unknown/empty types
-                            obj = ParcanFixture(**fixture)
+                            obj = Parcan(**fixture)
                     except Exception:
                         # Fallback: try base Fixture (non-abstract) if parsing differs
-                        obj = ParcanFixture(**fixture)
+                        obj = Parcan(**fixture)
                     fixtures.append(obj)
                 self.fixtures = fixtures
 
