@@ -1,0 +1,216 @@
+[
+  {
+    "id": "head_el150",
+    "name": "Head EL-150",
+    "type": "moving_head",
+    "channels": {
+      "pan_msb": 1,
+      "pan_lsb": 2,
+      "tilt_msb": 3,
+      "tilt_lsb": 4,
+      "speed": 5,
+      "dim": 6,
+      "shutter": 7,
+      "color": 8,
+      "gobo": 9
+    },
+    "current_values": {
+      "pan": 0,
+      "tilt": 0,
+      "speed": 0,
+      "dim": 0,
+      "shutter": 0,
+      "color": 0,
+      "gobo": 0,
+      "autoplay": 0,
+      "movement": 0,
+      "reset": 0
+    },
+    "presets": [
+      {
+        "name": "Piano",
+        "values": {
+          "pan": 120,
+          "pan_fine": 35,
+          "tilt": 20,
+          "tilt_fine": 11
+        }
+      }
+    ],
+    "actions": ["full", "strobe", "flash", "seek", "move_to"],
+    "arm": {
+      "shutter": 255
+    },
+    "meta": {
+      "channel_types": {
+        "pan": "position_16bit",
+        "tilt": "position_16bit",
+        "shutter": "strobe",
+        "color": "wheel",
+        "gobo": "wheel"
+      },
+      "value_mappings": {
+        "color": {
+            "0": "White",
+            "25": "Orange",
+            "50": "Cyan",
+            "75": "Purple",
+            "100": "Yellow",
+            "125": "Green",
+            "150": "Blue",
+            "175": "Red"
+        },
+        "gobo": {
+            "0": "Open",
+            "25": "Tunnel",
+            "50": "BigOval",
+            "75": "SmallOval",
+            "100": "Squares",
+            "125": "Shapes",
+            "150": "Tribal",
+            "175": "Slashes"
+        }      
+      },
+      "position_constraints": {
+        "pan": {
+          "min": 0,
+          "max": 65535
+        },
+        "tilt": {
+          "min": 70,
+          "max": 3363
+        }
+      }
+
+    }
+  },
+  {
+    "id": "parcan_l",
+    "name": "ParCan L",
+    "type": "rgb",
+    "channels": {
+      "dim": 16,
+      "red": 17,
+      "green": 18,
+      "blue": 19,
+      "strobe": 20
+    },
+    "current_values": {
+    },
+    "presets": [],
+    "actions": ["strobe", "flash", "fade", "full"],
+    "arm": {
+      "dim": 255
+    },
+    "meta": {
+      "channel_types": {
+        "dim": "dimmer",
+        "red": "color",
+        "green": "color",
+        "blue": "color"
+      }
+    }
+  },
+  {
+    "id": "parcan_r",
+    "name": "ParCan R",
+    "type": "rgb",
+    "channels": {
+      "dim": 22,
+      "red": 23,
+      "green": 24,
+      "blue": 25,
+      "strobe": 26,
+      "program": 27
+    },
+    "current_values": {
+      "dim": 0,
+      "red": 0,
+      "green": 0,
+      "blue": 0,
+      "strobe": 0,
+      "program": 0
+    },
+    "presets": [],
+    "actions": ["strobe", "flash", "fade", "full"],
+    "arm": {
+      "dim": 255
+    },
+    "meta": {
+      "channel_types": {
+        "dim": "dimmer",
+        "red": "color",
+        "green": "color",
+        "blue": "color"
+      }
+    }
+  },
+  {
+    "id": "parcan_pl",
+    "name": "Proton L",
+    "type": "rgb",
+    "channels": {
+      "dim": 28,
+      "red": 29,
+      "green": 30,
+      "blue": 31,
+      "strobe": 32,
+      "program": 33
+    },
+    "current_values": {
+      "dim": 0,
+      "red": 0,
+      "green": 0,
+      "blue": 0,
+      "strobe": 0,
+      "program": 0
+    },
+    "presets": [],
+    "actions": ["strobe", "flash", "fade", "full"],
+    "arm": {
+      "dim": 255
+    },
+    "meta": {
+      "channel_types": {
+        "dim": "dimmer",
+        "red": "color",
+        "green": "color",
+        "blue": "color"
+      }
+    }
+  },
+  {
+    "id": "parcan_pr",
+    "name": "Proton R",
+    "type": "rgb",
+    "channels": {
+      "dim": 35,
+      "red": 36,
+      "green": 37,
+      "blue": 38,
+      "strobe": 39,
+      "program": 40
+    },
+    "current_values": {
+      "dim": 0,
+      "red": 0,
+      "green": 0,
+      "blue": 0,
+      "strobe": 0,
+      "program": 0
+    },
+    "presets": [],
+    "actions": ["strobe", "flash", "fade", "full"],
+    "arm": {
+      "dim": 255
+    },
+    "meta": {
+      "channel_types": {
+        "dim": "dimmer",
+        "red": "color",
+        "green": "color",
+        "blue": "color"
+      }
+    }
+  }
+]
