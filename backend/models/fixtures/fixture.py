@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class Fixture(BaseModel, ABC):
@@ -13,6 +13,7 @@ class Fixture(BaseModel, ABC):
     actions: List[str] = []
     arm: Dict[str, int] = {}
     meta: Dict[str, Any] = {}
+    location: Dict[str, float] = {}
 
     def set_channel_value(self, channel_name: str, value: int) -> None:
         if channel_name in self.channels:
