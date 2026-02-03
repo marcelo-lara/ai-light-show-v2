@@ -35,14 +35,14 @@
       {
         "name": "Piano",
         "values": {
-          "pan": 120,
-          "pan_fine": 35,
-          "tilt": 20,
-          "tilt_fine": 11
+          "pan_msb": 120,
+          "pan_lsb": 35,
+          "tilt_msb": 20,
+          "tilt_lsb": 11
         }
       }
     ],
-    "actions": ["full", "strobe", "flash", "seek", "move_to"],
+    "actions": ["full", "strobe", "flash", "fade_in", "seek", "move_to"],
     "arm": {
       "shutter": 255
     },
@@ -108,7 +108,7 @@
     "current_values": {
     },
     "presets": [],
-    "actions": ["strobe", "flash", "fade", "full"],
+    "actions": ["strobe", "flash", "fade_in", "full"],
     "arm": {
       "dim": 255
     },
@@ -147,7 +147,7 @@
       "program": 0
     },
     "presets": [],
-    "actions": ["strobe", "flash", "fade", "full"],
+    "actions": ["strobe", "flash", "fade_in", "full"],
     "arm": {
       "dim": 255
     },
@@ -186,7 +186,7 @@
       "program": 0
     },
     "presets": [],
-    "actions": ["strobe", "flash", "fade", "full"],
+    "actions": ["strobe", "flash", "fade_in", "full"],
     "arm": {
       "dim": 255
     },
@@ -226,7 +226,7 @@
       "program": 0
     },
     "presets": [],
-    "actions": ["strobe", "flash", "fade", "full"],
+    "actions": ["strobe", "flash", "fade_in", "full"],
     "arm": {
       "dim": 255
     },

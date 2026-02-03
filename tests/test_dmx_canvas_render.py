@@ -4,6 +4,7 @@ from pathlib import Path
 from backend.store.state import StateManager, FPS
 from backend.models.cue import CueSheet, CueEntry
 from backend.models.fixtures.parcans.parcan import Parcan
+from backend.models.fixtures.moving_heads.moving_head import MovingHead
 
 
 def test_dmx_canvas_renders_set_channels_and_persists():
@@ -179,3 +180,80 @@ def test_dmx_canvas_renders_strobe_rgb_toggles_and_ends_on():
     assert view_end[2 - 1] == 255
     view_after = canvas.frame_view(end_frame + 1)
     assert view_after[2 - 1] == 255
+
+
+def test_dmx_canvas_renders_moving_head_move_to_16bit():
+    sm = StateManager(Path('.'))
+    head = MovingHead(
+        id='head_1',
+        name='Head 1',
+        type='moving_head',
+        channels={
+            'pan_msb': 1,
+            'pan_lsb': 2,
+            'tilt_msb': 3,
+            'tilt_lsb': 4,
+            'dim': 5,
+            'shutter': 6,
+        },
+        location={'x': 0.0, 'y': 0, 'z': 0},
+        presets=[],
+    )
+    sm.fixtures = [head]
+
+    sm.song_length_seconds = 2.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            CueEntry(time=0.0, fixture_id='head_1', action='move_to', duration=1.0, data={'pan': 0x1234, 'tilt': 0xABCD}),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+    frame_mid = int(round(0.5 * FPS))
+    frame_end = int(round(1.0 * FPS))
+
+    view_mid = canvas.frame_view(frame_mid)
+    # Pan ~ 0x091A at halfway (allow rounding).
+    pan_mid = (int(view_mid[1 - 1]) << 8) | int(view_mid[2 - 1])
+    assert 0x0919 <= pan_mid <= 0x091B
+
+    view_end = canvas.frame_view(frame_end)
+    pan_end = (int(view_end[1 - 1]) << 8) | int(view_end[2 - 1])
+    tilt_end = (int(view_end[3 - 1]) << 8) | int(view_end[4 - 1])
+    assert pan_end == 0x1234
+    assert tilt_end == 0xABCD
+
+
+def test_dmx_canvas_renders_moving_head_seek_preset_16bit():
+    sm = StateManager(Path('.'))
+    head = MovingHead(
+        id='head_1',
+        name='Head 1',
+        type='moving_head',
+        channels={
+            'pan_msb': 1,
+            'pan_lsb': 2,
+            'tilt_msb': 3,
+            'tilt_lsb': 4,
+        },
+        location={'x': 0.0, 'y': 0, 'z': 0},
+        presets=[
+            {'name': 'Piano', 'values': {'pan': 120, 'pan_fine': 35, 'tilt': 20, 'tilt_fine': 11}},
+        ],
+    )
+    sm.fixtures = [head]
+    sm.song_length_seconds = 1.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            CueEntry(time=0.0, fixture_id='head_1', action='seek', duration=0.0, data={'preset': 'Piano'}),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+    view0 = canvas.frame_view(0)
+    pan = (int(view0[1 - 1]) << 8) | int(view0[2 - 1])
+    tilt = (int(view0[3 - 1]) << 8) | int(view0[4 - 1])
+    assert pan == ((120 << 8) | 35)
+    assert tilt == ((20 << 8) | 11)

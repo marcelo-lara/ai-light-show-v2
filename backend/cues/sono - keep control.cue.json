@@ -120,6 +120,74 @@
         "blue": 0
       },
       "name": "TEST: parcan_pr fade_in to black (3s)"
+    },
+    {
+      "time": 2.0,
+      "fixture_id": "head_el150",
+      "action": "full",
+      "duration": 0.0,
+      "data": {},
+      "name": "TEST: head full (instant)"
+    },
+    {
+      "time": 4.0,
+      "fixture_id": "head_el150",
+      "action": "seek",
+      "duration": 0.0,
+      "data": {
+        "preset": "Piano"
+      },
+      "name": "TEST: head seek preset Piano (instant 16-bit)"
+    },
+    {
+      "time": 6.0,
+      "fixture_id": "head_el150",
+      "action": "move_to",
+      "duration": 4.0,
+      "data": {
+        "pan": 50000,
+        "tilt": 3000
+      },
+      "name": "TEST: head move_to absolute u16 (4s)"
+    },
+    {
+      "time": 11.0,
+      "fixture_id": "head_el150",
+      "action": "move_to",
+      "duration": 4.0,
+      "data": {
+        "preset": "Piano"
+      },
+      "name": "TEST: head move_to preset Piano (4s)"
+    },
+    {
+      "time": 16.0,
+      "fixture_id": "head_el150",
+      "action": "strobe",
+      "duration": 3.0,
+      "data": {
+        "rate": 4.0
+      },
+      "name": "TEST: head strobe (3s @4Hz)"
+    },
+    {
+      "time": 20.0,
+      "fixture_id": "head_el150",
+      "action": "flash",
+      "duration": 2.0,
+      "data": {},
+      "name": "TEST: head flash (2s fade dim)"
+    },
+    {
+      "time": 22.0,
+      "fixture_id": "head_el150",
+      "action": "seek",
+      "duration": 0.0,
+      "data": {
+        "pan": 0,
+        "tilt": 0
+      },
+      "name": "TEST: head seek home u16 (instant)"
     }
   ]
 }
