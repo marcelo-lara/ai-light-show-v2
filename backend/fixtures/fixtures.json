@@ -42,7 +42,7 @@
         }
       }
     ],
-    "actions": ["full", "strobe", "flash", "fade_in", "seek", "move_to"],
+    "actions": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
     "arm": {
       "shutter": 255
     },

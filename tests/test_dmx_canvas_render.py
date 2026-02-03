@@ -257,3 +257,62 @@ def test_dmx_canvas_renders_moving_head_seek_preset_16bit():
     tilt = (int(view0[3 - 1]) << 8) | int(view0[4 - 1])
     assert pan == ((120 << 8) | 35)
     assert tilt == ((20 << 8) | 11)
+
+
+def test_dmx_canvas_renders_moving_head_sweep_peaks_at_preset():
+    sm = StateManager(Path('.'))
+    head = MovingHead(
+        id='head_1',
+        name='Head 1',
+        type='moving_head',
+        channels={
+            'pan_msb': 1,
+            'pan_lsb': 2,
+            'tilt_msb': 3,
+            'tilt_lsb': 4,
+            'dim': 5,
+            'shutter': 6,
+        },
+        location={'x': 0.0, 'y': 0, 'z': 0},
+        presets=[
+            {'name': 'Piano', 'values': {'pan': 120, 'pan_fine': 35, 'tilt': 20, 'tilt_fine': 11}},
+        ],
+    )
+    sm.fixtures = [head]
+
+    sm.song_length_seconds = 3.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            # Sweep for 2 seconds across the Piano preset.
+            CueEntry(time=0.0, fixture_id='head_1', action='sweep', duration=2.0, data={'preset': 'Piano', 'span_pan': 1000, 'span_tilt': 0}),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+    frame_start = int(round(0.0 * FPS))
+    frame_mid = int(round(1.0 * FPS))
+    frame_end = int(round(2.0 * FPS))
+
+    target_pan = (120 << 8) | 35
+    target_tilt = (20 << 8) | 11
+    start_pan = target_pan - 500
+    end_pan = target_pan + 500
+
+    view_start = canvas.frame_view(frame_start)
+    pan_start = (int(view_start[1 - 1]) << 8) | int(view_start[2 - 1])
+    assert abs(pan_start - start_pan) <= 1
+    assert int(view_start[5 - 1]) == 0
+
+    view_mid = canvas.frame_view(frame_mid)
+    pan_mid = (int(view_mid[1 - 1]) << 8) | int(view_mid[2 - 1])
+    tilt_mid = (int(view_mid[3 - 1]) << 8) | int(view_mid[4 - 1])
+    assert abs(pan_mid - target_pan) <= 1
+    assert abs(tilt_mid - target_tilt) <= 1
+    assert int(view_mid[5 - 1]) == 255
+    assert int(view_mid[6 - 1]) == 255
+
+    view_end = canvas.frame_view(frame_end)
+    pan_end = (int(view_end[1 - 1]) << 8) | int(view_end[2 - 1])
+    assert abs(pan_end - end_pan) <= 1
+    assert int(view_end[5 - 1]) == 0

@@ -6,6 +6,7 @@ from .seek import handle as handle_seek
 from .strobe import handle as handle_strobe
 from .full import handle as handle_full
 from .flash import handle as handle_flash
+from .sweep import handle as handle_sweep
 
 
 class MovingHead(Fixture):
@@ -164,6 +165,7 @@ class MovingHead(Fixture):
             "strobe": handle_strobe,
             "full": handle_full,
             "flash": handle_flash,
+            "sweep": handle_sweep,
         }
         handler = action_handlers.get(action)
         if handler:

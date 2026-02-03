@@ -140,7 +140,19 @@
       "name": "TEST: head seek preset Piano (instant 16-bit)"
     },
     {
-      "time": 6.0,
+      "time": 5.0,
+      "fixture_id": "head_el150",
+      "action": "sweep",
+      "duration": 2.0,
+      "data": {
+        "preset": "Piano",
+        "span_pan": 12000,
+        "span_tilt": 0
+      },
+      "name": "TEST: head sweep over Piano (2s)"
+    },
+    {
+      "time": 8.0,
       "fixture_id": "head_el150",
       "action": "move_to",
       "duration": 4.0,
@@ -151,7 +163,7 @@
       "name": "TEST: head move_to absolute u16 (4s)"
     },
     {
-      "time": 11.0,
+      "time": 13.0,
       "fixture_id": "head_el150",
       "action": "move_to",
       "duration": 4.0,
@@ -161,7 +173,7 @@
       "name": "TEST: head move_to preset Piano (4s)"
     },
     {
-      "time": 16.0,
+      "time": 18.0,
       "fixture_id": "head_el150",
       "action": "strobe",
       "duration": 3.0,
@@ -171,7 +183,7 @@
       "name": "TEST: head strobe (3s @4Hz)"
     },
     {
-      "time": 20.0,
+      "time": 22.0,
       "fixture_id": "head_el150",
       "action": "flash",
       "duration": 2.0,
@@ -179,7 +191,7 @@
       "name": "TEST: head flash (2s fade dim)"
     },
     {
-      "time": 22.0,
+      "time": 24.0,
       "fixture_id": "head_el150",
       "action": "seek",
       "duration": 0.0,
