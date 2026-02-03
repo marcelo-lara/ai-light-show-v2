@@ -169,6 +169,11 @@ class StateManager:
                 print(f"[DMX CANVAS] render complete for '{song_filename}' — frames={self.canvas.total_frames} fps={self.canvas.fps}", flush=True)
             except Exception:
                 print("[DMX CANVAS] render complete", flush=True)
+            # Dump debug file with per-frame timecodes and used DMX channels
+            try:
+                self._dump_canvas_debug(song_filename)
+            except Exception:
+                pass
 
     async def update_dmx_channel(self, channel: int, value: int) -> bool:
         """Update the editor universe with a live edit.
@@ -236,6 +241,11 @@ class StateManager:
                     print(f"[DMX CANVAS] re-render complete for '{song_name}' — frames={self.canvas.total_frames} fps={self.canvas.fps}", flush=True)
                 except Exception:
                     print("[DMX CANVAS] re-render complete", flush=True)
+                # Dump debug file after re-render
+                try:
+                    self._dump_canvas_debug(song_name)
+                except Exception:
+                    pass
 
             return new_entries
 
@@ -331,6 +341,40 @@ class StateManager:
             canvas.set_frame(frame_index, universe)
 
         return canvas
+
+    def _dump_canvas_debug(self, song_filename: str) -> None:
+        """Write a LOG debug file of non-empty frames to backend/cues.
+
+        Each line is formatted like the backend logs:
+        [<time_seconds>] AA.BB.CC.00.00... (hex pairs, uppercase, dot-separated)
+
+        To keep files compact we only write frames that have any non-zero channel
+        value within the highest referenced channel (self.max_used_channel).
+        """
+        try:
+            if not self.canvas:
+                return
+            cues_path = self.backend_path / "cues"
+            cues_path.mkdir(parents=True, exist_ok=True)
+            debug_file = cues_path / f"{song_filename}.canvas.debug.log"
+            frames_written = 0
+            # Limit written channels to the highest referenced channel to keep lines smaller.
+            max_ch = self.max_used_channel or DMX_CHANNELS
+            max_ch = max(1, min(DMX_CHANNELS, int(max_ch)))
+            with open(debug_file, 'w') as f:
+                for frame_index in range(self.canvas.total_frames):
+                    view = self.canvas.frame_view(frame_index)
+                    # Check for any non-zero within the used channel range.
+                    if not any(b != 0 for b in view[:max_ch]):
+                        continue
+                    # Format time with millisecond precision like logs.
+                    time_sec = frame_index / float(self.canvas.fps)
+                    hex_pairs = ".".join(f"{int(b):02X}" for b in view[:max_ch])
+                    f.write(f"[{time_sec:.3f}] {hex_pairs}\n")
+                    frames_written += 1
+            print(f"[DMX CANVAS] dumped debug file '{debug_file}' — frames={frames_written}", flush=True)
+        except Exception as exc:
+            print(f"[DMX CANVAS] failed to write debug file: {exc}", flush=True)
 
     def _render_entry_into_universe(
         self,

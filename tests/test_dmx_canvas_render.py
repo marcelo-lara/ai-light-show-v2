@@ -60,3 +60,122 @@ def test_dmx_canvas_renders_set_channels_and_persists():
     view_last = canvas.frame_view(canvas.total_frames - 1)
     assert view_last[4 - 1] == 255
     assert view_last[8 - 1] == 255
+
+
+def test_dmx_canvas_renders_fade_in_rgb_only_and_persists():
+    sm = StateManager(Path('.'))
+    parcan = Parcan(
+        id='parcan_1',
+        name='ParCan 1',
+        type='parcan',
+        channels={'dim': 1, 'red': 2, 'green': 3, 'blue': 4},
+        location={'x': 0.0, 'y': 0, 'z': 0},
+    )
+    sm.fixtures = [parcan]
+
+    sm.song_length_seconds = 2.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            CueEntry(time=0.0, fixture_id='parcan_1', action='fade_in', duration=1.0, data={'red': 255}),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+
+    frame_start = int(round(0.0 * FPS))
+    frame_mid = int(round(0.5 * FPS))
+    frame_end = int(round(1.0 * FPS))
+
+    # Start: red begins at current value (0)
+    view_start = canvas.frame_view(frame_start)
+    assert view_start[2 - 1] == 0
+    assert view_start[3 - 1] == 0
+    assert view_start[4 - 1] == 0
+
+    # Midpoint: roughly half intensity (allow 1 step of rounding)
+    view_mid = canvas.frame_view(frame_mid)
+    assert 127 <= view_mid[2 - 1] <= 128
+    assert view_mid[3 - 1] == 0
+    assert view_mid[4 - 1] == 0
+
+    # End: reaches full red
+    view_end = canvas.frame_view(frame_end)
+    assert view_end[2 - 1] == 255
+    assert view_end[3 - 1] == 0
+    assert view_end[4 - 1] == 0
+
+    # After end: persists (universe carries forward) until overwritten
+    view_after = canvas.frame_view(frame_end + 1)
+    assert view_after[2 - 1] == 255
+
+
+def test_dmx_canvas_renders_full_rgb_and_persists():
+    sm = StateManager(Path('.'))
+    parcan = Parcan(
+        id='parcan_1',
+        name='ParCan 1',
+        type='parcan',
+        channels={'dim': 1, 'red': 2, 'green': 3, 'blue': 4},
+        location={'x': 0.0, 'y': 0, 'z': 0},
+    )
+    sm.fixtures = [parcan]
+
+    sm.song_length_seconds = 1.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            CueEntry(time=0.0, fixture_id='parcan_1', action='full', duration=0.0, data={'red': 10, 'green': 20, 'blue': 30}),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+    view0 = canvas.frame_view(0)
+    assert view0[2 - 1] == 10
+    assert view0[3 - 1] == 20
+    assert view0[4 - 1] == 30
+
+    view_last = canvas.frame_view(canvas.total_frames - 1)
+    assert view_last[2 - 1] == 10
+    assert view_last[3 - 1] == 20
+    assert view_last[4 - 1] == 30
+
+
+def test_dmx_canvas_renders_strobe_rgb_toggles_and_ends_on():
+    sm = StateManager(Path('.'))
+    parcan = Parcan(
+        id='parcan_1',
+        name='ParCan 1',
+        type='parcan',
+        channels={'dim': 1, 'red': 2, 'green': 3, 'blue': 4},
+        location={'x': 0.0, 'y': 0, 'z': 0},
+    )
+    sm.fixtures = [parcan]
+
+    sm.song_length_seconds = 2.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            # Establish a base color.
+            CueEntry(time=0.0, fixture_id='parcan_1', action='set_channels', duration=0.0, data={'channels': {'red': 255, 'green': 0, 'blue': 0}}),
+            # Strobe it at 2Hz for 1 second.
+            CueEntry(time=0.0, fixture_id='parcan_1', action='strobe', duration=1.0, data={'rate': 2.0}),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+    start_frame = int(round(0.0 * FPS))
+    mid_off_frame = start_frame + 16  # with 2Hz: half-period ~= 15 frames, so frame 16 is "off"
+    end_frame = int(round(1.0 * FPS))
+
+    view_start = canvas.frame_view(start_frame)
+    assert view_start[2 - 1] == 255
+
+    view_off = canvas.frame_view(mid_off_frame)
+    assert view_off[2 - 1] == 0
+
+    # End frame should restore original "on" color and persist after.
+    view_end = canvas.frame_view(end_frame)
+    assert view_end[2 - 1] == 255
+    view_after = canvas.frame_view(end_frame + 1)
+    assert view_after[2 - 1] == 255

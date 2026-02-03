@@ -3,7 +3,7 @@ from models.fixtures.fixture import Fixture
 from .set_channels import handle as handle_set_channels
 from .flash import handle as handle_flash
 from .strobe import handle as handle_strobe
-from .fade import handle as handle_fade
+from .fade_in import handle as handle_fade_in
 from .full import handle as handle_full
 
 
@@ -39,7 +39,7 @@ class Parcan(Fixture):
             "set_channels": handle_set_channels,
             "flash": handle_flash,
             "strobe": handle_strobe,
-            "fade": handle_fade,
+            "fade_in": handle_fade_in,
             "full": handle_full,
         }
         handler = action_handlers.get(action)
