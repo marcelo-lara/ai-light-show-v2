@@ -1,5 +1,5 @@
 def handle(self, universe, frame_index, start_frame, end_frame, fps, data, render_state):
-    # Parcan flash: fade to 0 across duration.
+    # Parcan flash: set RGB to 100% then fade to 0 across duration. default duration: 250 ms.
     duration_frames = max(1, end_frame - start_frame)
     progress = max(0.0, min(1.0, (frame_index - start_frame) / float(duration_frames)))
     level = int(round(255 * (1.0 - progress)))

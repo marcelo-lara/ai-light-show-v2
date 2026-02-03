@@ -3,184 +3,203 @@
   "entries": [
     {
       "time": 0.0,
-      "fixture_id": "head_el150",
+      "fixture_id": "parcan_l",
       "action": "full",
       "duration": 0.0,
-      "data": {},
-      "name": "Intro start - head full"
+      "data": {
+        "red": 255,
+        "green": 255,
+        "blue": 255
+      },
+      "name": "TEST: parcan_l full white"
     },
     {
-      "time": 15.0,
-      "fixture_id": "parcan_l",
-      "action": "fade",
-      "duration": 5.0,
+      "time": 2.0,
+      "fixture_id": "parcan_r",
+      "action": "fade_in",
+      "duration": 3.0,
       "data": {
         "red": 255,
         "green": 0,
         "blue": 0
       },
-      "name": "Verse start - left parcan fade to red"
+      "name": "TEST: parcan_r fade_in to red (3s)"
     },
     {
-      "time": 15.0,
+      "time": 6.0,
       "fixture_id": "parcan_r",
-      "action": "fade",
-      "duration": 5.0,
-      "data": {
-        "red": 0,
-        "green": 255,
-        "blue": 0
-      },
-      "name": "Verse start - right parcan fade to green"
-    },
-    {
-      "time": 20.0,
-      "fixture_id": "head_el150",
       "action": "flash",
-      "duration": 1.0,
-      "data": {},
-      "name": "First drop - head flash"
+      "duration": 2.0,
+      "data": {
+        "channels": [
+          "red",
+          "green",
+          "blue"
+        ]
+      },
+      "name": "TEST: parcan_r flash RGB (2s)"
     },
     {
-      "time": 25.0,
+      "time": 8.5,
+      "fixture_id": "parcan_pl",
+      "action": "full",
+      "duration": 0.0,
+      "data": {
+        "red": 255,
+        "green": 255,
+        "blue": 255
+      },
+      "name": "TEST: parcan_pl set base color for strobe"
+    },
+    {
+      "time": 9.0,
       "fixture_id": "parcan_pl",
       "action": "strobe",
-      "duration": 2.0,
-      "data": {
-        "speed": 200
-      },
-      "name": "Clap - proton left strobe"
-    },
-    {
-      "time": 25.0,
-      "fixture_id": "parcan_pr",
-      "action": "strobe",
-      "duration": 2.0,
-      "data": {
-        "speed": 200
-      },
-      "name": "Clap - proton right strobe"
-    },
-    {
-      "time": 45.0,
-      "fixture_id": "head_el150",
-      "action": "move_to",
       "duration": 3.0,
       "data": {
-        "pan": 30000,
-        "tilt": 2000
+        "rate": 2.0
       },
-      "name": "Chorus start - head move"
+      "name": "TEST: parcan_pl strobe (speed=200, 3s)"
     },
     {
-      "time": 50.0,
-      "fixture_id": "head_el150",
-      "action": "flash",
-      "duration": 1.0,
-      "data": {},
-      "name": "Second drop - head flash"
-    },
-    {
-      "time": 55.0,
-      "fixture_id": "parcan_l",
-      "action": "fade",
-      "duration": 2.0,
+      "time": 13.0,
+      "fixture_id": "parcan_pr",
+      "action": "fade_in",
+      "duration": 3.0,
       "data": {
         "red": 0,
         "green": 0,
         "blue": 255
       },
-      "name": "Second clap - left parcan to blue"
+      "name": "TEST: parcan_pr fade_in to blue (3s)"
     },
     {
-      "time": 55.0,
+      "fixture_id": "parcan_l",
+      "action": "fade_in",
+      "time": 17.0,
+      "duration": 3.0,
+      "data": {
+        "red": 0,
+        "green": 255,
+        "blue": 0
+      },
+      "name": "TEST: parcan_l fade_in to green (3s)"
+    },
+    {
       "fixture_id": "parcan_r",
-      "action": "fade",
-      "duration": 2.0,
+      "action": "full",
+      "time": 21.0,
+      "duration": 0.0,
       "data": {
         "red": 255,
         "green": 255,
         "blue": 0
       },
-      "name": "Second clap - right parcan to yellow"
+      "name": "TEST: parcan_r full yellow"
     },
     {
-      "time": 70.0,
+      "time": 24.0,
+      "fixture_id": "parcan_pl",
+      "action": "full",
+      "duration": 0.0,
+      "data": {
+        "red": 255,
+        "green": 0,
+        "blue": 255
+      },
+      "name": "TEST: parcan_pl full magenta"
+    },
+    {
+      "time": 26.0,
+      "fixture_id": "parcan_pr",
+      "action": "fade_in",
+      "duration": 3.0,
+      "data": {
+        "red": 0,
+        "green": 0,
+        "blue": 0
+      },
+      "name": "TEST: parcan_pr fade_in to black (3s)"
+    },
+    {
+      "time": 2.0,
+      "fixture_id": "head_el150",
+      "action": "full",
+      "duration": 0.0,
+      "data": {},
+      "name": "TEST: head full (instant)"
+    },
+    {
+      "time": 4.0,
       "fixture_id": "head_el150",
       "action": "seek",
-      "duration": 5.0,
+      "duration": 0.0,
+      "data": {
+        "preset": "Piano"
+      },
+      "name": "TEST: head seek preset Piano (instant 16-bit)"
+    },
+    {
+      "time": 5.0,
+      "fixture_id": "head_el150",
+      "action": "sweep",
+      "duration": 2.0,
+      "data": {
+        "preset": "Piano",
+        "span_pan": 12000,
+        "span_tilt": 0
+      },
+      "name": "TEST: head sweep over Piano (2s)"
+    },
+    {
+      "time": 8.0,
+      "fixture_id": "head_el150",
+      "action": "move_to",
+      "duration": 4.0,
       "data": {
         "pan": 50000,
         "tilt": 3000
       },
-      "name": "Tension build - head seek"
+      "name": "TEST: head move_to absolute u16 (4s)"
     },
     {
-      "time": 75.0,
-      "fixture_id": "parcan_pl",
-      "action": "full",
-      "duration": 0.0,
-      "data": {
-        "red": 255,
-        "green": 255,
-        "blue": 255
-      },
-      "name": "Bridge - proton left full white"
-    },
-    {
-      "time": 75.0,
-      "fixture_id": "parcan_pr",
-      "action": "full",
-      "duration": 0.0,
-      "data": {
-        "red": 255,
-        "green": 255,
-        "blue": 255
-      },
-      "name": "Bridge - proton right full white"
-    },
-    {
-      "time": 80.0,
-      "fixture_id": "head_el150",
-      "action": "flash",
-      "duration": 1.0,
-      "data": {},
-      "name": "Third drop - head flash"
-    },
-    {
-      "time": 90.0,
+      "time": 13.0,
       "fixture_id": "head_el150",
       "action": "move_to",
-      "duration": 5.0,
+      "duration": 4.0,
+      "data": {
+        "preset": "Piano"
+      },
+      "name": "TEST: head move_to preset Piano (4s)"
+    },
+    {
+      "time": 18.0,
+      "fixture_id": "head_el150",
+      "action": "strobe",
+      "duration": 3.0,
+      "data": {
+        "rate": 4.0
+      },
+      "name": "TEST: head strobe (3s @4Hz)"
+    },
+    {
+      "time": 22.0,
+      "fixture_id": "head_el150",
+      "action": "flash",
+      "duration": 2.0,
+      "data": {},
+      "name": "TEST: head flash (2s fade dim)"
+    },
+    {
+      "time": 24.0,
+      "fixture_id": "head_el150",
+      "action": "seek",
+      "duration": 0.0,
       "data": {
         "pan": 0,
         "tilt": 0
       },
-      "name": "Outro - head to home"
-    },
-    {
-      "time": 95.0,
-      "fixture_id": "parcan_l",
-      "action": "fade",
-      "duration": 10.0,
-      "data": {
-        "red": 0,
-        "green": 0,
-        "blue": 0
-      },
-      "name": "Outro fade out - left parcan"
-    },
-    {
-      "time": 95.0,
-      "fixture_id": "parcan_r",
-      "action": "fade",
-      "duration": 10.0,
-      "data": {
-        "red": 0,
-        "green": 0,
-        "blue": 0
-      },
-      "name": "Outro fade out - right parcan"
+      "name": "TEST: head seek home u16 (instant)"
     }
   ]
 }

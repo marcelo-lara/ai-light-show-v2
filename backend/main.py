@@ -40,15 +40,37 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Error syncing initial universe: {e}")
 
-    # Initial ArtNet sequence: flash blue on parcans
-    parcans = [f for f in state_manager.fixtures if f.id.startswith('parcan')]
-    for parcan in parcans:
-        if 'blue' in parcan.channels:
+    # Initial ArtNet sequence: left-to-right blue wipe that lasts exactly 1 second.
+    # Behavior: first half = turn ON left→right; second half = turn OFF left→right.
+    parcans_with_blue = sorted(
+        [f for f in state_manager.fixtures if f.id.startswith('parcan') and 'blue' in f.channels],
+        key=lambda f: f.location.get('x', 0)
+    )
+    total_duration = 1.0
+    if parcans_with_blue:
+        n = len(parcans_with_blue)
+        # Single fixture: keep lit for the whole duration then turn off at the end.
+        if n == 1:
+            parcan = parcans_with_blue[0]
             channel_num = parcan.channels['blue']
             await artnet_service.set_channel(channel_num, 255)
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(total_duration)
             await artnet_service.set_channel(channel_num, 0)
-            await asyncio.sleep(0.3)
+        else:
+            phase = total_duration / 2.0
+            spacing = phase / (n - 1)
+            # Turn ON left-to-right over the first half
+            for i, parcan in enumerate(parcans_with_blue):
+                channel_num = parcan.channels['blue']
+                await artnet_service.set_channel(channel_num, 255)
+                if i < n - 1:
+                    await asyncio.sleep(spacing)
+            # Turn OFF left-to-right over the second half
+            for i, parcan in enumerate(parcans_with_blue):
+                channel_num = parcan.channels['blue']
+                await artnet_service.set_channel(channel_num, 0)
+                if i < n - 1:
+                    await asyncio.sleep(spacing)
 
     # Make services available to routes
     app.state.state_manager = state_manager

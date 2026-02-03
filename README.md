@@ -27,6 +27,18 @@ A real-time DMX control system synchronized with audio playback.
    npm run dev
    ```
 
+2a. Running tests
+
+   - Use the `ai-light` Python environment (pyenv virtualenv) so tests can import backend modules. Example commands:
+
+     ```bash
+     # Use the pyenv-managed ai-light environment, then run tests with PYTHONPATH pointing at the backend package
+     PYTHONPATH=./backend $(pyenv which python) -m pytest -q
+
+     # Or, if your shell already activates the ai-light venv, a simpler form works:
+     PYTHONPATH=./backend python -m pytest -q
+     ```
+
 3. Open http://localhost:5173
 
 ### Docker
@@ -53,5 +65,5 @@ Arm fixtures by setting "arm" channels and values from fixtures.json
 
 1. Load song via frontend.
 2. Adjust fixture sliders, deltas sent to backend.
-3. Click "Add to Cue" to save at current timecode.
+3. Use the Cue Sheet editor to add cues at the desired timecode.
 4. Playback syncs cues with audio.
