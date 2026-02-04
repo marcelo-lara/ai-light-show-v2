@@ -13,8 +13,11 @@ FPS = 60
 MAX_SONG_SECONDS = 6 * 60
 
 class StateManager:
-    def __init__(self, backend_path: Path):
+    def __init__(self, backend_path: Path, songs_path: Path = None, cues_path: Path = None, metadata_path: Path = None):
         self.backend_path = backend_path
+        self.songs_path = songs_path or backend_path / "songs"
+        self.cues_path = cues_path or backend_path / "cues"
+        self.metadata_path = metadata_path or backend_path / "metadata"
         self.lock = asyncio.Lock()
         # "editor" universe reflects UI slider edits (always updated by deltas).
         self.editor_universe: bytearray = bytearray(DMX_CHANNELS)
@@ -125,15 +128,12 @@ class StateManager:
 
     async def load_song(self, song_filename: str):
         async with self.lock:
-            songs_path = self.backend_path / "songs"
-            cues_path = self.backend_path / "cues"
-            metadata_path = self.backend_path / "metadata"
             audio_url = None
-            audio_file = songs_path / f"{song_filename}.mp3"
+            audio_file = self.songs_path / f"{song_filename}.mp3"
             if audio_file.exists():
                 audio_url = f"/songs/{quote(audio_file.name)}"
             # Load metadata
-            metadata_file = metadata_path / f"{song_filename}.metadata.json"
+            metadata_file = self.metadata_path / f"{song_filename}.metadata.json"
             if metadata_file.exists():
                 with open(metadata_file, 'r') as f:
                     metadata_data = json.load(f)
@@ -146,7 +146,7 @@ class StateManager:
             self.song_length_seconds = self._infer_song_length_seconds(metadata)
 
             # Load cue sheet
-            cue_file = cues_path / f"{song_filename}.cue.json"
+            cue_file = self.cues_path / f"{song_filename}.cue.json"
             if cue_file.exists():
                 with open(cue_file, 'r') as f:
                     cue_data = json.load(f)

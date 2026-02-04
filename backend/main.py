@@ -13,9 +13,15 @@ from api.websocket import WebSocketManager, websocket_endpoint
 async def lifespan(app: FastAPI):
     # Initialize services
     backend_path = Path(__file__).parent
-    state_manager = StateManager(backend_path)
+    
+    # Use absolute paths for Docker containers, relative for local development
+    songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
+    metadata_path = Path("/app/metadata") if Path("/app/metadata").exists() else backend_path / "metadata"
+    cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
+    
+    state_manager = StateManager(backend_path, songs_path, cues_path, metadata_path)
     artnet_service = ArtNetService()
-    song_service = SongService(backend_path / "songs", backend_path / "metadata")
+    song_service = SongService(songs_path, metadata_path)
     ws_manager = WebSocketManager(state_manager, artnet_service, song_service)
 
     # Startup
@@ -89,9 +95,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="AI Light Show v2 Backend")
 
-# Serve audio files
-backend_path = Path(__file__).parent
-app.mount("/songs", StaticFiles(directory=backend_path / "songs"), name="songs")
+# Serve audio files - use absolute path for Docker, relative for local development
+songs_directory = Path("/app/songs") if Path("/app/songs").exists() else Path(__file__).parent / "songs"
+app.mount("/songs", StaticFiles(directory=songs_directory), name="songs")
 
 # CORS for frontend
 app.add_middleware(

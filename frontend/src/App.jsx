@@ -17,7 +17,7 @@ export function App() {
   useEffect(() => {
     // Connect to WebSocket
     const wsUrl =
-      import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:8000/ws`
+      import.meta.env.VITE_WS_URL || `${window.location.origin.replace(/^http/, 'ws')}/ws`
     const ws = new WebSocket(wsUrl)
     wsRef.current = ws
 
