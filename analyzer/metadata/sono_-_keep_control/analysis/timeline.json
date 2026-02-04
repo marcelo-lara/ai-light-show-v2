@@ -1,0 +1,11 @@
+{
+  "channels": 2,
+  "duration_s": 218.060091,
+  "sample_rate_hz": 44100,
+  "schema_version": "1.0",
+  "song_slug": "sono_-_keep_control",
+  "source_audio": {
+    "decoded_wav": "temp_files/sono_-_keep_control/audio/source.wav",
+    "original": "songs/sono - keep control.mp3"
+  }
+}

@@ -10,9 +10,21 @@ The build plan (phased backlog + JSON contracts + proposed module layout) lives 
 
 This README describes the desired behavior and output layout. The actual implementation should follow the backlog phases and ship incrementally.
 
+## Current Implementation
+
+- ✅ **Phase 0**: Project scaffolding + ingestion (foundation) - MP3 decode to WAV, metadata extraction
+- ✅ **Phase 1**: Stem separation using Demucs v4 (GPU-first)
+- ✅ **Phase 2**: Beat grid + tempo curve using librosa
+- ✅ **Phase 3**: Energy curves (per stem + overall) using librosa
+- ✅ **Phase 4**: Drum event extraction (kick/snare/hihat) using librosa onset strength
+- ✅ **Phase 5**: Vocal activity detection using librosa
+- ✅ **Phase 6**: Song section analysis using OpenL3 embeddings
+- ✅ **Phase 7**: Drum pattern mining using DBSCAN clustering
+- ✅ **Phase 8**: Show plan IR generation for LLM consumption
+
 ## High Level Flow
 
-1. Analyze/Extract:
+The analyzer processes a song through 9 phases to create comprehensive musical analysis artifacts:
 - Stem separation (drums / bass / vocals / other) so you can drive different fixtures from different musical roles.
 - Beat grid + tempo curve (beats and downbeats)
 - Onsets (kick/snare/hihat hits; synth stabs)
@@ -35,20 +47,22 @@ Create an intermediate representation (IR) like:
 - identify the song patterns: repeating kick and snare patterns, a list of this patterns and a list whrere these patterns starts.
 - identify segments of the energy of the voice track, creating a precise timeline with of each change (also consider the time window of the silence).
 
-## CLI (planned)
+## CLI (implemented)
 
-The analyzer should be runnable as a CLI on a headless Linux server (NVIDIA GPU available):
+The analyzer is runnable as a CLI on a headless Linux server (NVIDIA GPU available):
 
 ```bash
 python -m song_analyzer analyze songs/<song>.mp3
 ```
 
-Planned flags (see `implementation_backlog.md` for the authoritative list):
+Implemented flags:
 
 - `--device auto|cuda|cpu`
 - `--out metadata/`
 - `--temp temp_files/`
+- `--stems-model demucs:<model_name>`
 - `--overwrite`
+- `--until <step>` (for incremental development)
 
 ## output metadata definition
 
@@ -67,10 +81,10 @@ analyzer/metadata/
   │   ├── energy.json
   │   ├── onsets.json
   │   ├── vocals.json
-  │   └── sections.json
+  │   ├── sections.json
+  │   └── patterns.json
   ├── show_plan/
   │   ├── roles.json
-  │   ├── patterns.json
   │   ├── moments.json
   │   └── show_plan.json      # contract (index)
   └── README.md
@@ -82,18 +96,25 @@ For incremental development, see the “Phase artifacts checklist” in `impleme
 
 ```json
 {
+  "schema_version": "1.0",
+  "generated_at": "2026-02-03T21:51:38.000Z",
   "includes": {
     "timeline": "../analysis/timeline.json",
+    "stems": "../analysis/stems.json",
+    "beats": "../analysis/beats.json",
     "energy": "../analysis/energy.json",
+    "onsets": "../analysis/onsets.json",
+    "vocals": "../analysis/vocals.json",
+    "sections": "../analysis/sections.json",
+    "patterns": "../analysis/patterns.json",
     "roles": "./roles.json",
-    "sections": "./sections.json",
-    "patterns": "./patterns.json",
     "moments": "./moments.json"
   },
   "meta": {
-    "style": "hypnotic",
-    "llm_version": "gpt-5.2",
-    "confidence": 0.91
+    "style": "electronic_vocal",
+    "llm_version": "unknown",
+    "confidence": 0.0,
+    "notes": "Show plan generated from available analysis artifacts"
   }
 }
 ```

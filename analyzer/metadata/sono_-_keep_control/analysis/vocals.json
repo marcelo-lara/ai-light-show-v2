@@ -1,0 +1,1396 @@
+{
+  "phrases": [
+    {
+      "confidence": 1.0,
+      "end_s": 30.79,
+      "start_s": 0.7,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 31.22,
+      "start_s": 30.81,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 31.67,
+      "start_s": 31.23,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 32.62,
+      "start_s": 31.78,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 33.51,
+      "start_s": 32.65,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 34.46,
+      "start_s": 33.58,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 34.9,
+      "start_s": 34.48,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 35.36,
+      "start_s": 34.91,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 36.3,
+      "start_s": 35.48,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 38.52,
+      "start_s": 37.61,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 39.06,
+      "start_s": 38.67,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 39.98,
+      "start_s": 39.26,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 40.42,
+      "start_s": 40.05,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 41.85,
+      "start_s": 41.05,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 43.69,
+      "start_s": 42.99,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 45.54,
+      "start_s": 44.69,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 47.36,
+      "start_s": 46.84,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 49.24,
+      "start_s": 48.31,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 50.13,
+      "start_s": 49.74,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 51.07,
+      "start_s": 50.25,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 51.41,
+      "start_s": 51.1,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 52.91,
+      "start_s": 52.18,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 53.36,
+      "start_s": 53.0,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 53.84,
+      "start_s": 53.45,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 54.77,
+      "start_s": 53.97,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 55.17,
+      "start_s": 54.81,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 58.9,
+      "start_s": 55.88,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 60.31,
+      "start_s": 59.54,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 60.75,
+      "start_s": 60.32,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 61.22,
+      "start_s": 60.82,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 62.6,
+      "start_s": 61.37,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 63.06,
+      "start_s": 62.66,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 64.37,
+      "start_s": 63.14,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 64.89,
+      "start_s": 64.46,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 66.28,
+      "start_s": 64.97,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 66.78,
+      "start_s": 66.29,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 68.59,
+      "start_s": 66.8,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 69.55,
+      "start_s": 68.7,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 69.92,
+      "start_s": 69.57,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 70.44,
+      "start_s": 70.08,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 71.84,
+      "start_s": 70.5,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 75.99,
+      "start_s": 72.4,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 76.92,
+      "start_s": 76.04,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 77.25,
+      "start_s": 76.94,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 78.77,
+      "start_s": 78.09,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 79.69,
+      "start_s": 79.26,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 80.62,
+      "start_s": 79.73,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 83.37,
+      "start_s": 81.66,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 84.69,
+      "start_s": 83.44,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 90.78,
+      "start_s": 84.78,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 92.15,
+      "start_s": 90.85,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 93.86,
+      "start_s": 92.16,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 94.43,
+      "start_s": 94.01,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 95.77,
+      "start_s": 94.54,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 98.15,
+      "start_s": 95.78,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 99.54,
+      "start_s": 98.25,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 99.98,
+      "start_s": 99.64,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 100.94,
+      "start_s": 100.07,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 101.36,
+      "start_s": 100.95,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 105.55,
+      "start_s": 101.42,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 106.9,
+      "start_s": 105.65,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 108.31,
+      "start_s": 106.95,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 109.23,
+      "start_s": 108.35,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 110.15,
+      "start_s": 109.34,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 110.58,
+      "start_s": 110.2,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 112.02,
+      "start_s": 111.46,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 112.38,
+      "start_s": 112.04,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 112.93,
+      "start_s": 112.57,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 149.29,
+      "start_s": 113.1,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 150.75,
+      "start_s": 150.07,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 152.59,
+      "start_s": 152.11,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 154.46,
+      "start_s": 153.6,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 156.95,
+      "start_s": 155.71,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 158.64,
+      "start_s": 157.36,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 159.06,
+      "start_s": 158.65,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 160.0,
+      "start_s": 159.11,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 160.91,
+      "start_s": 160.55,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 164.08,
+      "start_s": 161.06,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 164.59,
+      "start_s": 164.18,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 165.55,
+      "start_s": 164.66,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 165.99,
+      "start_s": 165.56,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 167.75,
+      "start_s": 166.69,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 168.29,
+      "start_s": 167.87,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 169.41,
+      "start_s": 168.38,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 171.1,
+      "start_s": 170.2,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 171.83,
+      "start_s": 171.26,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 173.37,
+      "start_s": 172.23,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 173.82,
+      "start_s": 173.43,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 174.77,
+      "start_s": 173.85,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 175.11,
+      "start_s": 174.8,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 175.71,
+      "start_s": 175.17,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 181.23,
+      "start_s": 175.73,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 182.16,
+      "start_s": 181.27,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 184.35,
+      "start_s": 182.19,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 184.9,
+      "start_s": 184.38,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 185.85,
+      "start_s": 184.99,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 187.71,
+      "start_s": 185.87,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 188.12,
+      "start_s": 187.73,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 189.54,
+      "start_s": 188.68,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 196.01,
+      "start_s": 189.57,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 199.09,
+      "start_s": 196.03,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 200.61,
+      "start_s": 200.1,
+      "type": "vocal_phrase"
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 215.89,
+      "start_s": 200.87,
+      "type": "vocal_phrase"
+    }
+  ],
+  "schema_version": "1.0",
+  "segments": [
+    {
+      "confidence": 1.0,
+      "end_s": 30.79,
+      "start_s": 0.7
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 31.22,
+      "start_s": 30.81
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 31.67,
+      "start_s": 31.23
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 32.62,
+      "start_s": 31.78
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 33.51,
+      "start_s": 32.65
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 34.46,
+      "start_s": 33.58
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 34.9,
+      "start_s": 34.48
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 35.36,
+      "start_s": 34.91
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 36.3,
+      "start_s": 35.48
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 36.62,
+      "start_s": 36.36
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 36.98,
+      "start_s": 36.78
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 37.08,
+      "start_s": 37.02
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 37.22,
+      "start_s": 37.12
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 37.59,
+      "start_s": 37.33
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 38.52,
+      "start_s": 37.61
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 39.06,
+      "start_s": 38.67
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 39.98,
+      "start_s": 39.26
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 40.42,
+      "start_s": 40.05
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 41.85,
+      "start_s": 41.05
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 42.15,
+      "start_s": 41.87
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 43.69,
+      "start_s": 42.99
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 43.99,
+      "start_s": 43.75
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 44.27,
+      "start_s": 44.19
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 45.54,
+      "start_s": 44.69
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 45.69,
+      "start_s": 45.59
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 45.88,
+      "start_s": 45.73
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 46.44,
+      "start_s": 46.31
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 46.77,
+      "start_s": 46.69
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 47.36,
+      "start_s": 46.84
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 47.52,
+      "start_s": 47.46
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 47.73,
+      "start_s": 47.58
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 48.05,
+      "start_s": 47.93
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 49.24,
+      "start_s": 48.31
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 49.53,
+      "start_s": 49.29
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 50.13,
+      "start_s": 49.74
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 51.07,
+      "start_s": 50.25
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 51.41,
+      "start_s": 51.1
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 51.69,
+      "start_s": 51.54
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 51.98,
+      "start_s": 51.91
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 52.91,
+      "start_s": 52.18
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 53.36,
+      "start_s": 53.0
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 53.84,
+      "start_s": 53.45
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 54.77,
+      "start_s": 53.97
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 55.17,
+      "start_s": 54.81
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 55.67,
+      "start_s": 55.42
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 58.9,
+      "start_s": 55.88
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 59.15,
+      "start_s": 59.02
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 60.31,
+      "start_s": 59.54
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 60.75,
+      "start_s": 60.32
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 61.22,
+      "start_s": 60.82
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 62.6,
+      "start_s": 61.37
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 63.06,
+      "start_s": 62.66
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 64.37,
+      "start_s": 63.14
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 64.89,
+      "start_s": 64.46
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 66.28,
+      "start_s": 64.97
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 66.78,
+      "start_s": 66.29
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 68.59,
+      "start_s": 66.8
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 69.55,
+      "start_s": 68.7
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 69.92,
+      "start_s": 69.57
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 70.44,
+      "start_s": 70.08
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 71.84,
+      "start_s": 70.5
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 72.02,
+      "start_s": 71.93
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 72.33,
+      "start_s": 72.12
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 75.99,
+      "start_s": 72.4
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 76.92,
+      "start_s": 76.04
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 77.25,
+      "start_s": 76.94
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 77.83,
+      "start_s": 77.63
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 78.77,
+      "start_s": 78.09
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 78.93,
+      "start_s": 78.82
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 79.07,
+      "start_s": 78.98
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 79.69,
+      "start_s": 79.26
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 80.62,
+      "start_s": 79.73
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 80.82,
+      "start_s": 80.66
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 81.29,
+      "start_s": 81.11
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 83.37,
+      "start_s": 81.66
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 84.69,
+      "start_s": 83.44
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 90.78,
+      "start_s": 84.78
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 92.15,
+      "start_s": 90.85
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 93.86,
+      "start_s": 92.16
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 94.43,
+      "start_s": 94.01
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 95.77,
+      "start_s": 94.54
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 98.15,
+      "start_s": 95.78
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 99.54,
+      "start_s": 98.25
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 99.98,
+      "start_s": 99.64
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 100.94,
+      "start_s": 100.07
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 101.36,
+      "start_s": 100.95
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 105.55,
+      "start_s": 101.42
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 106.9,
+      "start_s": 105.65
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 108.31,
+      "start_s": 106.95
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 109.23,
+      "start_s": 108.35
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 110.15,
+      "start_s": 109.34
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 110.58,
+      "start_s": 110.2
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 110.79,
+      "start_s": 110.64
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 111.04,
+      "start_s": 110.99
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 111.28,
+      "start_s": 111.12
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 112.02,
+      "start_s": 111.46
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 112.38,
+      "start_s": 112.04
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 112.93,
+      "start_s": 112.57
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 113.09,
+      "start_s": 113.03
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 149.29,
+      "start_s": 113.1
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 149.55,
+      "start_s": 149.48
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 150.75,
+      "start_s": 150.07
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 150.94,
+      "start_s": 150.89
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 151.65,
+      "start_s": 151.6
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 152.59,
+      "start_s": 152.11
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 152.79,
+      "start_s": 152.63
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 153.26,
+      "start_s": 153.13
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 153.51,
+      "start_s": 153.29
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 154.46,
+      "start_s": 153.6
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 154.67,
+      "start_s": 154.5
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 155.1,
+      "start_s": 154.96
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 155.37,
+      "start_s": 155.31
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 155.56,
+      "start_s": 155.44
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 156.95,
+      "start_s": 155.71
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 157.23,
+      "start_s": 156.98
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 158.64,
+      "start_s": 157.36
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 159.06,
+      "start_s": 158.65
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 160.0,
+      "start_s": 159.11
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 160.24,
+      "start_s": 160.05
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 160.54,
+      "start_s": 160.48
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 160.91,
+      "start_s": 160.55
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 164.08,
+      "start_s": 161.06
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 164.59,
+      "start_s": 164.18
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 165.55,
+      "start_s": 164.66
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 165.99,
+      "start_s": 165.56
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 166.44,
+      "start_s": 166.31
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 167.75,
+      "start_s": 166.69
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 168.29,
+      "start_s": 167.87
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 169.41,
+      "start_s": 168.38
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 169.86,
+      "start_s": 169.77
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 170.05,
+      "start_s": 169.99
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 171.1,
+      "start_s": 170.2
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 171.83,
+      "start_s": 171.26
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 173.37,
+      "start_s": 172.23
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 173.82,
+      "start_s": 173.43
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 174.77,
+      "start_s": 173.85
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 175.11,
+      "start_s": 174.8
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 175.71,
+      "start_s": 175.17
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 181.23,
+      "start_s": 175.73
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 182.16,
+      "start_s": 181.27
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 184.35,
+      "start_s": 182.19
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 184.9,
+      "start_s": 184.38
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 185.85,
+      "start_s": 184.99
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 187.71,
+      "start_s": 185.87
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 188.12,
+      "start_s": 187.73
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 188.33,
+      "start_s": 188.22
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 188.61,
+      "start_s": 188.4
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 189.54,
+      "start_s": 188.68
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 196.01,
+      "start_s": 189.57
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 199.09,
+      "start_s": 196.03
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 199.47,
+      "start_s": 199.27
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 200.61,
+      "start_s": 200.1
+    },
+    {
+      "confidence": 1.0,
+      "end_s": 215.89,
+      "start_s": 200.87
+    }
+  ],
+  "source": {
+    "device": "auto",
+    "fallback": null,
+    "model": "silero_vad",
+    "name": "silero_vad"
+  }
+}
