@@ -203,20 +203,19 @@ Test
 ### Phase 2 — Beat grid + tempo curve (beat/downbeat)
 **Deliverable**: `analysis/beats.json` with beats, downbeats, tempo curve.
 
-Model options (pick one; don’t implement multiple in v1)
-- **madmom** DownBeatTracking (strong baseline; CPU)
-- **essentia** rhythm models (some TensorFlow-based; can use GPU depending on build)
-- If you want “latest deep” later: introduce an embedding-based beat tracker, but keep scope contained.
+Model choices (practical in v1)
+- **librosa** beat tracking (robust, CPU-friendly) is the primary implementation in v1.
+- **Optional**: If available, **madmom**'s downbeat model may be invoked for more robust downbeat estimation (kept as an optional enhancement, not a hard dependency).
 
 Implementation
 - Use the **mixture** or **drums** stem for beat tracking (configurable).
 - Emit:
   - `beats[]` (every beat)
-  - `downbeats[]` (bar starts)
-  - `bpm_curve[]` segments (piecewise constant or piecewise linear)
+  - `downbeats[]` (bar starts — computed heuristically or via optional model if present)
+  - `tempo` segments describing estimated BPM
 
 Test
-- For a known click track, verify beat count approximates expected.
+- For a known click track, verify beat count approximates expected. When madmom is available, verify downbeats are present and align with bars.
 
 ---
 
@@ -413,7 +412,7 @@ Any step can fail; the pipeline should continue. When it does, record:
 ```json
 {
   "schema_version": "1.0",
-  "source": {"name": "madmom", "model": "downbeat_rnn", "device": "cpu"},
+  "source": {"primary": {"name": "librosa", "model": "beat_track", "device": "cpu"}, "downbeat": {"method": "heuristic|madmom"}},
   "beats": [0.49, 0.98, 1.47],
   "downbeats": [0.49, 2.45, 4.41],
   "tempo": {
@@ -555,7 +554,7 @@ Prioritize these in this order:
 1. **Demucs v4** for stems (GPU)
 2. **Silero VAD** for vocal activity (CPU/GPU)
 3. **OpenL3 / musicnn embeddings** for sections (GPU helps)
-4. Beat tracking: pick **madmom** first for reliability; revisit with a newer deep model later
+4. Beat tracking: use **librosa** for a robust CPU-first implementation; optionally support **madmom** for improved downbeat estimation if available.
 5. Drum transcription: evaluate **one** modern pretrained model and commit to it (no multi-backend complexity)
 
 ---

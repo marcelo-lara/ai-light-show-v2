@@ -1,0 +1,104 @@
+{
+  "environment": {},
+  "schema_version": "1.0",
+  "song": {
+    "filename": "sono - keep control.mp3",
+    "sha256": null,
+    "song_slug": "sono_-_keep_control"
+  },
+  "steps": [
+    {
+      "artifacts": [
+        "metadata/sono_-_keep_control/analysis/timeline.json"
+      ],
+      "failure": null,
+      "name": "ingest",
+      "seconds": 0.42216968536376953,
+      "status": "ok"
+    },
+    {
+      "artifacts": [
+        "metadata/sono_-_keep_control/analysis/stems.json"
+      ],
+      "failure": null,
+      "name": "stems",
+      "seconds": 54.60521054267883,
+      "status": "ok"
+    },
+    {
+      "artifacts": [
+        "metadata/sono_-_keep_control/analysis/beats.json"
+      ],
+      "failure": null,
+      "name": "beats",
+      "seconds": 3.1415443420410156,
+      "status": "ok"
+    },
+    {
+      "artifacts": [
+        "metadata/sono_-_keep_control/analysis/energy.json"
+      ],
+      "failure": null,
+      "name": "energy",
+      "seconds": 0.20035457611083984,
+      "status": "ok"
+    },
+    {
+      "artifacts": [],
+      "failure": {
+        "code": "MODEL_ERROR",
+        "detail": "ModuleNotFoundError(\"No module named 'omnizart'\")",
+        "exception_type": "ModuleNotFoundError",
+        "message": "No module named 'omnizart'",
+        "retryable": false
+      },
+      "name": "drums",
+      "seconds": 0.0006856918334960938,
+      "status": "failed"
+    },
+    {
+      "artifacts": [
+        "metadata/sono_-_keep_control/analysis/vocals.json"
+      ],
+      "failure": null,
+      "name": "vocals",
+      "seconds": 3.5772900581359863,
+      "status": "ok"
+    },
+    {
+      "artifacts": [],
+      "failure": {
+        "code": "MODEL_ERROR",
+        "detail": "ModuleNotFoundError(\"No module named 'openl3'\")",
+        "exception_type": "ModuleNotFoundError",
+        "message": "No module named 'openl3'",
+        "retryable": false
+      },
+      "name": "sections",
+      "seconds": 0.0007915496826171875,
+      "status": "failed"
+    },
+    {
+      "artifacts": [],
+      "failure": {
+        "code": "MODEL_ERROR",
+        "detail": "FileNotFoundError(2, 'No such file or directory')",
+        "exception_type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: 'metadata/sono_-_keep_control/analysis/onsets.json'",
+        "retryable": false
+      },
+      "name": "patterns",
+      "seconds": 0.0007703304290771484,
+      "status": "failed"
+    },
+    {
+      "artifacts": [
+        "metadata/sono_-_keep_control/show_plan/show_plan.json"
+      ],
+      "failure": null,
+      "name": "show_plan",
+      "seconds": 0.0008077621459960938,
+      "status": "ok"
+    }
+  ]
+}

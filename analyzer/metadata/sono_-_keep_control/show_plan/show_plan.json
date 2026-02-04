@@ -1,0 +1,19 @@
+{
+  "includes": {
+    "beats": "../analysis/beats.json",
+    "energy": "../analysis/energy.json",
+    "moments": "./moments.json",
+    "onsets": "../analysis/onsets.json",
+    "patterns": "./patterns.json",
+    "roles": "./roles.json",
+    "sections": "../analysis/sections.json",
+    "stems": "../analysis/stems.json",
+    "timeline": "../analysis/timeline.json",
+    "vocals": "../analysis/vocals.json"
+  },
+  "meta": {
+    "confidence": 0.0,
+    "llm_version": "unknown",
+    "style": "auto"
+  }
+}

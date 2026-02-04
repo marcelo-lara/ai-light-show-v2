@@ -1,1 +1,11 @@
-spleeter
+pydantic>=2.0
+numpy
+soundfile
+typer
+jsonschema
+# ML / audio (optional heavy, install as needed in ai-light env)
+torch
+librosa
+openl3
+demucs
+omnizart

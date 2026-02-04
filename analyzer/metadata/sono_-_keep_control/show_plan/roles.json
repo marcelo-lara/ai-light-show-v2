@@ -1,0 +1,13 @@
+{
+  "roles": {
+    "groove": {
+      "features": [
+        "beats",
+        "kick",
+        "snare"
+      ],
+      "primary": "drums"
+    }
+  },
+  "schema_version": "1.0"
+}

@@ -1,0 +1,5 @@
+# Minimal dependencies for drum transcription step (omnizart / drum models)
+omnizart
+# If omnizart requires tensorflow, use a matching tensorflow installation (CPU or GPU)
+# Example GPU TF install (for CUDA 11.8):
+#   pip install tensorflow==2.14.0

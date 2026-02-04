@@ -1,0 +1,16 @@
+# Optional heavy ML/audio dependencies for full pipeline (install in ai-light env or a dedicated conda env)
+# NOTE: Install a CUDA-capable torch wheel that matches your driver before installing other packages requiring CUDA.
+# Example (CUDA 12.1):
+#   pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio --upgrade
+
+# Core models and tooling
+demucs
+openl3
+omnizart
+# Silero VAD is loaded via torch.hub; no pip package necessary but torch must be installed
+# Optional: install madmom from conda-forge for robust downbeat estimation
+# For working with audio
+librosa
+soundfile
+# optional: faster audio backends
+torchaudio
