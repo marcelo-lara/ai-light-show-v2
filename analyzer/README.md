@@ -136,7 +136,7 @@ Quick `docker run` example that mounts the songs and metadata folders and expose
 ```bash
 docker run --rm --gpus all \
   -v $(pwd)/backend/songs:/input_songs \
-  -v $(pwd)/analyzer/metadata:/app/metadata \
+  -v $(pwd)/backend/metadata:/app/metadata \
   -v $(pwd)/analyzer/temp_files:/app/temp_files \
   ai-light-show-v2-analyzer \
   analyze "/input_songs/sono - keep control.mp3" --device cuda --out metadata/sono_keep_control --temp temp_files --overwrite
