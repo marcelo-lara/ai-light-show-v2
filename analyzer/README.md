@@ -127,6 +127,25 @@ For incremental development, see the “Phase artifacts checklist” in `impleme
 - this is a NEW PoC project: don't add backward compatibility, breaking changes are allowed.
 - update this document for future LLMs.
 
+## GPU Usage
+
+This project can run analysis on machines with an NVIDIA GPU for much faster stem separation (Demucs) and other ML steps.
+
+Quick `docker run` example that mounts the songs and metadata folders and exposes the GPU to the container:
+
+```bash
+docker run --rm --gpus all \
+  -v $(pwd)/backend/songs:/input_songs \
+  -v $(pwd)/analyzer/metadata:/app/metadata \
+  -v $(pwd)/analyzer/temp_files:/app/temp_files \
+  ai-light-show-v2-analyzer \
+  analyze "/input_songs/sono - keep control.mp3" --device cuda --out metadata/sono_keep_control --temp temp_files --overwrite
+```
+
+Compose note: the `analyzer` service in `docker-compose.yml` is configured to use the NVIDIA runtime (`runtime: nvidia`). If your environment prefers Compose-native device requests and your Compose version supports `device_requests`, replace the runtime entry with a `device_requests` block.
+
+Verify GPU availability on the host with `nvidia-smi` before running.
+
 ## Notes on model selection
 
 This project intentionally prefers modern ML-first approaches (GPU when useful). The current recommended shortlist and per-phase model choices are documented in `implementation_backlog.md`.

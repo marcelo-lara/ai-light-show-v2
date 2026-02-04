@@ -22,11 +22,16 @@ services:
     restart: unless-stopped
 
   analyzer:
-    build: ./analyzer
+    build:
+      context: ./analyzer
+      args:
+        BUILD_UID: ${UID:-1000}
+        BUILD_GID: ${GID:-1000}
     restart: unless-stopped
     volumes:
       - ./backend/songs:/app/songs
-      - ./analyzer/metadata:/app/metadata
+      - ./backend/metadata:/app/metadata
       - ./analyzer/temp_files:/app/temp_files
     environment:
       - PYTHONPATH=/app
+    runtime: nvidia

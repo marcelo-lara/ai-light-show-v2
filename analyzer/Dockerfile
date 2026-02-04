@@ -33,6 +33,15 @@ COPY split_stems.py ./split_stems.py
 
 # install the actual analyzer package without re-resolving dependencies
 RUN pip install --no-cache-dir --no-deps .
+ARG BUILD_UID=1000
+ARG BUILD_GID=1000
+
+# create a user matching host uid/gid so files written to mounts are owned by host user
+RUN groupadd -g ${BUILD_GID} appgroup || true && \
+    useradd -m -u ${BUILD_UID} -g ${BUILD_GID} -s /bin/bash appuser || true && \
+    chown -R ${BUILD_UID}:${BUILD_GID} /app /opt/venv
+
+USER appuser
 
 ENTRYPOINT ["python", "-m", "song_analyzer.cli"]
 CMD ["--help"]
