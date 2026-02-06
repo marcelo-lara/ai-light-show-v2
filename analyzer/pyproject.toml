@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "song-analyzer"
+version = "0.1.0"
+description = "AI-powered song analysis for light shows"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pydantic>=2.0.0",
+    "typer>=0.9.0",
+    "soundfile>=0.12.0",
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+    "demucs>=4.0.0",
+    "ffmpeg-python>=0.2.0",
+    "librosa>=0.10.0",
+    "onnxruntime>=1.15.0",
+    "scipy>=1.11.0",
+    "scikit-learn>=1.3.0",
+]
+
+[project.scripts]
+song-analyzer = "song_analyzer.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["song_analyzer*"]
+
+[tool.setuptools.package-dir]
+"" = "."

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build: ./backend
@@ -17,14 +15,27 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        - VITE_WS_URL=ws://localhost:5001/ws
-        - VITE_BACKEND_URL=http://localhost:5001
     ports:
       - "5000:80"
-    environment:
-      - VITE_WS_URL=ws://localhost:5001/ws
-      - VITE_BACKEND_URL=http://localhost:5001
     depends_on:
       - backend
     restart: unless-stopped
+
+  analyzer:
+    build:
+      context: ./analyzer
+      args:
+        BUILD_UID: ${UID:-1000}
+        BUILD_GID: ${GID:-1000}
+    restart: unless-stopped
+    volumes:
+      - ./backend/songs:/app/songs
+      - ./backend/metadata:/app/metadata
+      - ./analyzer/temp_files:/app/temp_files
+      - analyzer_model_cache:/home/appuser/.cache
+    environment:
+      - PYTHONPATH=/app
+    runtime: nvidia
+
+volumes:
+  analyzer_model_cache:

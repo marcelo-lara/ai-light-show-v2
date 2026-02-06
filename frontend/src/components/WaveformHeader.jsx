@@ -97,9 +97,10 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
       // If a URL is ever provided by the backend, load it.
       // This keeps WaveSurfer initialized properly even when no audio endpoint exists yet.
       const rawUrl = song.url || song.audioUrl
-      const backendBase =
-        import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:8000`
-      const url = rawUrl?.startsWith('/') ? `${backendBase}${rawUrl}` : rawUrl
+
+      // nginx proxies /songs/ requests to the backend, so use relative URLs
+      const url = rawUrl?.startsWith('/') ? rawUrl : rawUrl
+
       if (url) {
         console.log('[WaveSurfer] load url', url)
         wavesurferRef.current.load(url)
