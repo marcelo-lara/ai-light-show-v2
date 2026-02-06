@@ -2,6 +2,13 @@
 A way to execute the analysis service pipeline on a selected song.
 A stateless API could be ok, with progress steps to be pushed to the frontend UI.
 
+## Frontend Section Menu
+On the frontend, there is a list of icons to select different sections of the UI.
+Sections are:
+- Show Control (the current main UI): allow the user to play the current light show.
+- Song Analysis: view and edit song metadata. request analysis service on a song. on the right, the current llm chat history.
+- DMX Controller: crud for chasers, scenes, and POI mappings.
+
 ## Song Selection
 when the user clicks on the song name, there's a list of available songs (from backend/songs). 
 when select one song to be loaded in the ui (also re-render the backend dmx canvas)
