@@ -1,14 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
 
 class SongMetadata(BaseModel):
     filename: str
-    length: float  # seconds
+    length: Optional[float] = None  # seconds (may be absent from analyzer output)
     bpm: Optional[float] = None
     key: Optional[str] = None
-    parts: Dict[str, List[float]]  # e.g., {"intro": [0.0, 30.0], "verse": [30.0, 60.0], ...}
-    hints: Dict[str, List[float]]  # e.g., {"drops": [15.0, 45.0], ...}
-    drums: Dict[str, List[float]]  # e.g., {"kicks": [...], "snares": [...], "hihats": [...]}
+    parts: Dict[str, List[float]] = Field(default_factory=dict)
+    hints: Dict[str, List[float]] = Field(default_factory=dict)
+    drums: Dict[str, List[float]] = Field(default_factory=dict)
 
 class Song(BaseModel):
     filename: str
