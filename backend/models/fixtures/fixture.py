@@ -10,6 +10,7 @@ class Fixture(BaseModel, ABC):
     channels: Dict[str, int]
     current_values: Dict[str, Any] = {}
     presets: List[Dict[str, Any]] = []
+    effects: List[str] = []
     actions: List[str] = []
     arm: Dict[str, int] = {}
     meta: Dict[str, Any] = {}
@@ -52,7 +53,7 @@ class Fixture(BaseModel, ABC):
         frame_index: int,
         start_frame: int,
     ) -> None:
-        # Instant action only at its start frame; persistence comes from universe carrying forward.
+        # Instant effect only at its start frame; persistence comes from universe carrying forward.
         if frame_index != start_frame:
             return
         for channel_name, value in channels.items():
@@ -60,11 +61,11 @@ class Fixture(BaseModel, ABC):
                 self._write_channel(universe, self.channels[channel_name], value)
 
     @abstractmethod
-    def render_action(
+    def render_effect(
         self,
         universe: bytearray,
         *,
-        action: str,
+        effect: str,
         frame_index: int,
         start_frame: int,
         end_frame: int,
@@ -72,4 +73,4 @@ class Fixture(BaseModel, ABC):
         data: Dict[str, Any],
         render_state: Dict[str, Any],
     ) -> None:
-        """Render a cue action into the provided DMX universe for the given frame."""
+        """Render a cue effect into the provided DMX universe for the given frame."""

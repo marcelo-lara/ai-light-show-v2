@@ -145,11 +145,11 @@ class MovingHead(Fixture):
             if k in self.channels:
                 self.set_channel_value(k, v)
 
-    def render_action(
+    def render_effect(
         self,
         universe: bytearray,
         *,
-        action: str,
+        effect: str,
         frame_index: int,
         start_frame: int,
         end_frame: int,
@@ -157,8 +157,8 @@ class MovingHead(Fixture):
         data: Dict[str, Any],
         render_state: Dict[str, Any],
     ) -> None:
-        action = (action or "").lower().strip()
-        action_handlers = {
+        effect = (effect or "").lower().strip()
+        effect_handlers = {
             "set_channels": handle_set_channels,
             "move_to": handle_move_to,
             "seek": handle_seek,
@@ -167,6 +167,6 @@ class MovingHead(Fixture):
             "flash": handle_flash,
             "sweep": handle_sweep,
         }
-        handler = action_handlers.get(action)
+        handler = effect_handlers.get(effect)
         if handler:
             handler(self, universe, frame_index, start_frame, end_frame, fps, data, render_state)

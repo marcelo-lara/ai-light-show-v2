@@ -11,7 +11,7 @@
 - Cue sheets are **action-based** (not snapshot-only): each entry has `time`, `fixture_id`, `action`, `duration`, `data` (see [backend/models/cue.py](backend/models/cue.py)).
 - On song load the backend renders a **precomputed 60 FPS DMX canvas** for the full song length (max 6 minutes) and stores it in memory (see [backend/store/dmx_canvas.py](backend/store/dmx_canvas.py) and [backend/store/state.py](backend/store/state.py)).
 - The frontend audio timeline is authoritative; the backend selects the nearest canvas frame for a given timecode or seek.
-- Fixture types own effect math via `Fixture.render_action(...)` implemented in subclasses (see [backend/models/fixtures](backend/models/fixtures)).
+- Fixture types own effect math via `Fixture.render_effect(...)` implemented in subclasses (see [backend/models/fixtures](backend/models/fixtures)).
 
 ## Message protocol (WebSocket)
 - `initial`: sent on connect with `fixtures`, `cues`, `song`, and `playback` (see `send_initial_state` in [backend/api/websocket.py](backend/api/websocket.py)).
