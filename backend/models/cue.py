@@ -5,8 +5,10 @@ from typing import Any, Dict, List, Optional
 class CueEntry(BaseModel):
     """A single high-level cue instruction.
 
-    This matches docs/dmx_dispatcher.md: the cue sheet is a list of actions that
-    fixtures interpret to render intermediate DMX frames.
+    Cue sheets are effect-based: each entry names a fixture `effect` plus
+    parameters that the fixture type interprets while rendering the DMX canvas.
+
+    See docs/architecture.md.
     """
 
     time: float  # seconds

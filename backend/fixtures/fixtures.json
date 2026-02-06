@@ -42,7 +42,7 @@
         }
       }
     ],
-    "actions": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
+    "effects": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
     "arm": {
       "shutter": 255
     },
@@ -108,7 +108,7 @@
     "current_values": {
     },
     "presets": [],
-    "actions": ["strobe", "flash", "fade_in", "full"],
+    "effects": ["strobe", "flash", "fade_in", "full"],
     "arm": {
       "dim": 255
     },
@@ -147,7 +147,7 @@
       "program": 0
     },
     "presets": [],
-    "actions": ["strobe", "flash", "fade_in", "full"],
+    "effects": ["strobe", "flash", "fade_in", "full"],
     "arm": {
       "dim": 255
     },
@@ -186,7 +186,7 @@
       "program": 0
     },
     "presets": [],
-    "actions": ["strobe", "flash", "fade_in", "full"],
+    "effects": ["strobe", "flash", "fade_in", "full"],
     "arm": {
       "dim": 255
     },
@@ -226,7 +226,7 @@
       "program": 0
     },
     "presets": [],
-    "actions": ["strobe", "flash", "fade_in", "full"],
+    "effects": ["strobe", "flash", "fade_in", "full"],
     "arm": {
       "dim": 255
     },

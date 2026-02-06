@@ -198,12 +198,12 @@ class StateManager:
             return bytearray(self.editor_universe)
 
     async def add_cue_entry(self, timecode: float, name: Optional[str] = None) -> List[CueEntry]:
-        """Record actions into the cue sheet.
+        """Record effects into the cue sheet.
 
         Current UI is "plain control" (sliders) so this records a set_channels effect per fixture
         capturing the editor universe at the given time.
 
-        While playing, actions are recorded but NOT rendered in real-time (canvas becomes dirty).
+        While playing, effects are recorded but NOT rendered in real-time (canvas becomes dirty).
         """
         async with self.lock:
             if not self.cue_sheet:

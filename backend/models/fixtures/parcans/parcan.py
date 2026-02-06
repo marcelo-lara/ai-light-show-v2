@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 from models.fixtures.fixture import Fixture
 from .set_channels import handle as handle_set_channels
 from .flash import handle as handle_flash
@@ -9,9 +9,6 @@ from .full import handle as handle_full
 
 class Parcan(Fixture):
     type: str = "parcan"
-
-    # Keep older `actions` field for fixtures.json compatibility but prefer `effects`.
-    actions: List[str] = []
 
     def to_dmx(self) -> Dict[int, int]:
         dmx: Dict[int, int] = {}

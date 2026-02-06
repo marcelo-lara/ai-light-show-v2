@@ -2,13 +2,13 @@
 
 This document describes the current architecture of AI Light Show v2.
 
-The system is a real-time DMX control application synchronized to audio playback. The frontend owns audio playback time; the backend renders a **precomputed DMX canvas** (60 FPS) from an **action-based cue sheet**, and outputs the correct DMX frame for the current audio position.
+The system is a real-time DMX control application synchronized to audio playback. The frontend owns audio playback time; the backend renders a **precomputed DMX canvas** (60 FPS) from an **effect-based cue sheet**, and outputs the correct DMX frame for the current audio position.
 
 ## Goals
 
 - **Deterministic lighting playback** tied to audio time.
 - **Seek correctness**: seeking to any song time immediately selects the correct DMX state (frame skipping allowed).
-- **Fixture-specific effect logic**: each fixture type owns its channel calculations for actions like `flash` and `move_to`.
+- **Fixture-specific effect logic**: each fixture type owns its channel calculations for effects like `flash` and `move_to`.
 - **Simple persistence**: cue sheets and metadata are JSON files.
 
 ## Repository Layout (relevant parts)
@@ -23,12 +23,12 @@ The system is a real-time DMX control application synchronized to audio playback
     - state.py — StateManager: fixtures, cue sheet, editor/output universes, DMX canvas, playback state
     - dmx_canvas.py — memory-efficient canvas buffer
   - models/
-    - cue.py — cue sheet models (action-based)
+    - cue.py — cue sheet models (effect-based)
     - song.py — song + metadata models
     - fixtures/
-      - fixture.py — Fixture base class + action rendering contract
-      - parcan.py — Parcan-specific action rendering
-      - moving_head.py — MovingHead-specific action rendering
+      - fixture.py — Fixture base class + effect rendering contract
+      - parcan.py — Parcan-specific effect rendering
+      - moving_head.py — MovingHead-specific effect rendering
 
 - frontend/
   - src/App.jsx — WebSocket client + state
@@ -38,7 +38,7 @@ The system is a real-time DMX control application synchronized to audio playback
 
 ## Core Concepts
 
-### 1) Cue Sheet (action-based)
+### 1) Cue Sheet (effect-based)
 
 Cue sheets are **high-level instructions**, not per-channel snapshots.
 
@@ -53,14 +53,14 @@ Cue sheets are **high-level instructions**, not per-channel snapshots.
 - `CueEntry`
   - `time: float` — cue start time in seconds
   - `fixture_id: str` — fixture to act on
-  - `action: str` — action name (e.g. `set_channels`, `flash`, `move_to`)
-  - `duration: float` — seconds the action lasts
-  - `data: dict` — action parameters (fixture-dependent)
+  - `effect: str` — effect name (e.g. `set_channels`, `flash`, `move_to`)
+  - `duration: float` — seconds the effect lasts
+  - `data: dict` — effect parameters (fixture-dependent)
   - `name: str | null` — optional label
 
 **Important behavior**
-- The current authoring UI (“plain control”) records **`set_channels`** actions per fixture.
-- Additional actions (e.g. `flash`, `move_to`) are supported by the renderer and should be authored by future UI controls.
+- The current authoring UI (“plain control”) records **`set_channels`** effects per fixture.
+- Additional effects (e.g. `flash`, `move_to`) are supported by the renderer and should be authored by future UI controls.
 
 ### 2) DMX Canvas (precomputed)
 
@@ -90,9 +90,9 @@ This allows the play-state routing policy:
 - **Not playing (paused / edit mode)**: Art-Net output follows the frontend **Fixtures lane** (live `delta` edits update both `editor_universe` and `output_universe`).
 - **Playing (playback mode)**: Art-Net output follows the **DMX canvas** (timecode/seek selects a canvas frame and overwrites `output_universe`). Live `delta` edits still update `editor_universe` but do **not** affect `output_universe`.
 
-### 4) Fixture-specific action rendering
+### 4) Fixture-specific effect rendering
 
-Each fixture type implements an action renderer (see `backend/models/fixtures/fixture.py`):
+Each fixture type implements an effect renderer (see `backend/models/fixtures/fixture.py`):
 
 `render_effect(universe, effect, frame_index, start_frame, end_frame, fps, data, render_state)`
 
@@ -160,7 +160,7 @@ Backend records cue entries:
 - Persists cue sheet JSON.
 
 Re-render policy:
-- If playing: marks canvas dirty (actions are recorded, not rendered live).
+- If playing: marks canvas dirty (effects are recorded, not rendered live).
 - If not playing: immediately rebuilds the canvas from the updated cue sheet.
 
 ## WebSocket Protocol (current)
@@ -190,7 +190,7 @@ Re-render policy:
 - `timecode` — current audio time (seconds)
 - `seek` — explicit seek/jump to time (seconds)
 - `playback` — playing state
-- `add_cue` — record actions at the given time
+- `add_cue` — record effects at the given time
 - `load_song` — load a different song
 - `chat` — mock echo
 
@@ -204,6 +204,6 @@ See `backend/services/artnet.py`.
 
 ## Known Limitations / Next Steps
 
-- The authoring UI currently only creates `set_channels` actions. Adding UI controls for `flash`, `move_to`, color changes, etc. will make the cue sheet truly “effect-based”.
+- The authoring UI currently only creates `set_channels` effects. Adding UI controls for `flash`, `move_to`, color changes, etc. will expand the cue sheet beyond basic channel snapshots.
 - Canvas rebuild while playing is intentionally deferred (canvas marked dirty). A future `rebuild_canvas` message could allow an explicit “re-render now” workflow.
 - Multi-client sync is not implemented; current assumptions are single controlling client.

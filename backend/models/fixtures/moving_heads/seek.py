@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 
 def handle(self, universe: bytearray, frame_index: int, start_frame: int, end_frame: int, fps: int, data: Dict[str, Any], render_state: Dict[str, Any]) -> None:
-    # Seek: immediate set of 16-bit pan/tilt at the action's start frame.
+    # Seek: immediate set of 16-bit pan/tilt at the effect's start frame.
     if frame_index != start_frame:
         return
     if not (self._has_axis_16bit("pan") and self._has_axis_16bit("tilt")):

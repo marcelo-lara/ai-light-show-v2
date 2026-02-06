@@ -11,7 +11,6 @@ class Fixture(BaseModel, ABC):
     current_values: Dict[str, Any] = {}
     presets: List[Dict[str, Any]] = []
     effects: List[str] = []
-    actions: List[str] = []
     arm: Dict[str, int] = {}
     meta: Dict[str, Any] = {}
     location: Dict[str, float] = {}

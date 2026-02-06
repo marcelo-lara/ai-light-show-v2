@@ -108,7 +108,7 @@ class WebSocketManager:
                 timecode = message.get("time")
                 name = message.get("name")
                 await self.state_manager.add_cue_entry(timecode, name)
-                # Broadcast updated cue sheet (add_cue now appends multiple action entries).
+                # Broadcast updated cue sheet (add_cue now appends multiple effect entries).
                 if self.state_manager.cue_sheet:
                     await self.broadcast({"type": "cues_updated", "cues": self.state_manager.cue_sheet.dict()})
 
