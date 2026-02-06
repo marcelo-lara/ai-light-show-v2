@@ -24,7 +24,7 @@ This README describes the desired behavior and output layout. The actual impleme
 
 ## High Level Flow
 
-The analyzer processes a song through 9 phases to create comprehensive musical analysis artifacts:
+The analyzer processes a song through a fixed sequence of steps to create analysis artifacts (JSON) and visualization artifacts (SVG plots):
 - Stem separation (drums / bass / vocals / other) so you can drive different fixtures from different musical roles.
 - Beat grid + tempo curve (beats and downbeats)
 - Onsets (kick/snare/hihat hits; synth stabs)
@@ -33,6 +33,10 @@ The analyzer processes a song through 9 phases to create comprehensive musical a
 - Spectral descriptors (brightness, bass energy, noisiness)
 - Vocal activity / phrase timing (so the moving head “sings” when the singer sings).
 - Chord/harmony roughness (for color palette shifts), if you want “music theory aware” looks.
+
+Additionally:
+- A show-plan IR is generated under `show_plan/` (roles + notable moments + an index).
+- Step 100 generates SVG waveform plots under `analysis/plots/`.
 
 2) Convert signals → an intermediate “Show Plan” (don’t jump straight to DMX)
 
@@ -49,10 +53,12 @@ Create an intermediate representation (IR) like:
 
 ## CLI (implemented)
 
-The analyzer is runnable as a CLI on a headless Linux server (NVIDIA GPU available):
+The analyzer is runnable as a CLI on a headless Linux server (NVIDIA GPU available).
+
+The Docker image sets the entrypoint to `python -m song_analyzer.cli`.
 
 ```bash
-python -m song_analyzer analyze songs/<song>.mp3
+python -m song_analyzer.cli analyze songs/<song>.mp3
 ```
 
 Implemented flags:
@@ -60,19 +66,32 @@ Implemented flags:
 - `--device auto|cuda|cpu`
 - `--out metadata/`
 - `--temp temp_files/`
-- `--stems-model demucs:<model_name>`
+- `--stems-model <model_name>` (default: `htdemucs_ft`)
 - `--overwrite`
 - `--until <step>` (for incremental development)
 
+## Device Configuration
+
+The analyzer supports GPU acceleration when possible. Use the `--device` flag to control hardware usage:
+
+- `--device auto`: Automatically detect and use GPU if available, fallback to CPU
+- `--device cuda`: Force GPU usage (fails if no GPU available)
+- `--device cpu`: Force CPU usage
+
+GPU usage is recommended for faster processing, especially for stem separation and ML-based analysis steps.
+
 ## output metadata definition
 
-The analyzer writes one output directory per song under `analyzer/metadata/<song_slug>/`.
+The analyzer writes one output directory per song under `<metadata_dir>/<song_slug>/`.
+
+- In Docker Compose, `metadata_dir` is mounted at `/app/metadata` from `./backend/metadata`.
+- Temporary files are written under `<temp_dir>/<song_slug>/`.
 
 Example:
 
 ```
-analyzer/metadata/
-└── sono_keep_control/
+<metadata_dir>/
+└── <song_slug>/
   ├── analysis/
   │   ├── run.json
   │   ├── timeline.json
@@ -83,12 +102,23 @@ analyzer/metadata/
   │   ├── vocals.json
   │   ├── sections.json
   │   └── patterns.json
-  ├── show_plan/
-  │   ├── roles.json
-  │   ├── moments.json
-  │   └── show_plan.json      # contract (index)
-  └── README.md
+  ├── plots/
+  │   ├── beats.svg
+  │   ├── energy.svg
+  │   ├── sections.svg
+  │   ├── vocals.svg
+  │   ├── drums.svg
+  │   ├── bass.svg
+  │   └── other.svg
+  └── show_plan/
+      ├── roles.json
+      ├── moments.json
+      └── show_plan.json      # index contract
 ```
+
+Notes:
+- Stems WAVs are written to `<temp_dir>/<song_slug>/stems/{drums,bass,vocals,other}.wav`.
+- The plots are written into metadata (not temp) so the backend service can read them via the `backend/metadata` volume.
 
 For incremental development, see the “Phase artifacts checklist” in `implementation_backlog.md`.
 
@@ -121,11 +151,11 @@ For incremental development, see the “Phase artifacts checklist” in `impleme
 
 ## LLM Developer Instructions
 
-- use the "ai-light" python environment.
-- update "requirements.txt" as needed
-- DO NOT use fallbacks, if a model fails, log a warning, but never simple calculations.
-- this is a NEW PoC project: don't add backward compatibility, breaking changes are allowed.
-- update this document for future LLMs.
+- Use the "ai-light" python environment.
+- Update `requirements.txt` as needed.
+- This is a PoC project: avoid backward-compatibility shims; breaking changes are acceptable.
+- The current implementation includes a few fallbacks (e.g., sections extraction if OpenL3 is unavailable or fails, and an energy-based fallback if VAD returns no segments). When a fallback is used, it should be surfaced via logs and/or artifact metadata.
+- Keep this document aligned with the actual code and folder layout.
 
 ## GPU Usage
 
@@ -135,11 +165,22 @@ Quick `docker run` example that mounts the songs and metadata folders and expose
 
 ```bash
 docker run --rm --gpus all \
-  -v $(pwd)/backend/songs:/input_songs \
+  -v $(pwd)/backend/songs:/app/songs \
   -v $(pwd)/backend/metadata:/app/metadata \
   -v $(pwd)/analyzer/temp_files:/app/temp_files \
   ai-light-show-v2-analyzer \
-  analyze "/input_songs/sono - keep control.mp3" --device cuda --out metadata/sono_keep_control --temp temp_files --overwrite
+  analyze "/app/songs/sono - keep control.mp3" --device cuda --out /app/metadata --temp /app/temp_files --overwrite
+```
+
+To analyze all songs in the songs folder:
+
+```bash
+docker run --rm --gpus all \
+  -v $(pwd)/backend/songs:/app/songs \
+  -v $(pwd)/backend/metadata:/app/metadata \
+  -v $(pwd)/analyzer/temp_files:/app/temp_files \
+  ai-light-show-v2-analyzer \
+  analyze-all /app/songs --device cuda --out /app/metadata --temp /app/temp_files --overwrite
 ```
 
 Compose note: the `analyzer` service in `docker-compose.yml` is configured to use the NVIDIA runtime (`runtime: nvidia`). If your environment prefers Compose-native device requests and your Compose version supports `device_requests`, replace the runtime entry with a `device_requests` block.
@@ -149,3 +190,13 @@ Verify GPU availability on the host with `nvidia-smi` before running.
 ## Notes on model selection
 
 This project intentionally prefers modern ML-first approaches (GPU when useful). The current recommended shortlist and per-phase model choices are documented in `implementation_backlog.md`.
+
+## Docker Compose filesystem layout (canonical)
+
+When running via `docker compose`, these are the important in-container paths:
+
+- Songs (MP3 inputs): `/app/songs/*.mp3` (mounted from `./backend/songs`)
+- Metadata outputs: `/app/metadata/<song_slug>/...` (mounted from `./backend/metadata`)
+- Temp files (decoded WAV + stems): `/app/temp_files/<song_slug>/...` (mounted from `./analyzer/temp_files`)
+
+Step 100 writes SVGs to `/app/metadata/<song_slug>/plots/*.svg` and reads stems from `/app/temp_files/<song_slug>/stems/*.wav`.

@@ -2,6 +2,7 @@
 
 import typer
 from pathlib import Path
+import glob
 
 from .config import AnalysisConfig
 from .pipeline import AnalysisPipeline
@@ -77,6 +78,56 @@ def run_step(
 
     # Print summary
     typer.echo(f"Step {step} complete for {song_path.name}")
+
+
+@app.command()
+def analyze_all(
+    songs_dir: Path = typer.Argument(..., help="Directory containing MP3 files to analyze"),
+    out: Path = typer.Option("metadata", help="Output directory for metadata"),
+    temp: Path = typer.Option("temp_files", help="Temporary files directory"),
+    device: str = typer.Option("auto", help="Device to use (auto/cuda/cpu)"),
+    stems_model: str = typer.Option("htdemucs_ft", help="Stem separation model"),
+    overwrite: bool = typer.Option(False, help="Overwrite existing results"),
+    until: str = typer.Option(None, help="Run until this step (for incremental development)")
+):
+    """Analyze all songs in the directory."""
+
+    # Find all MP3 files
+    mp3_files = list(songs_dir.glob("*.mp3"))
+    if not mp3_files:
+        typer.echo(f"No MP3 files found in {songs_dir}")
+        return
+
+    typer.echo(f"Found {len(mp3_files)} MP3 files to analyze")
+
+    # Create config
+    config = AnalysisConfig(
+        songs_dir=songs_dir,
+        temp_dir=temp,
+        metadata_dir=out,
+        device=device,
+        stems_model=stems_model,
+        overwrite=overwrite
+    )
+
+    # Create pipeline
+    pipeline = AnalysisPipeline(config)
+
+    failed_songs = []
+    for song_path in mp3_files:
+        typer.echo(f"Analyzing {song_path.name}...")
+        try:
+            run_record = pipeline.analyze_song(song_path, until_step=until)
+            typer.echo(f"Completed {song_path.name}")
+        except Exception as e:
+            typer.echo(f"Failed {song_path.name}: {e}")
+            failed_songs.append(song_path.name)
+
+    if failed_songs:
+        typer.echo(f"Analysis complete. Failed songs: {', '.join(failed_songs)}")
+        raise typer.Exit(1)
+    else:
+        typer.echo("All songs analyzed successfully")
 
 
 if __name__ == "__main__":

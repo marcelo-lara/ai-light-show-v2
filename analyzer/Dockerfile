@@ -36,10 +36,10 @@ RUN pip install --no-cache-dir --no-deps .
 ARG BUILD_UID=1000
 ARG BUILD_GID=1000
 
-# create a user matching host uid/gid so files written to mounts are owned by host user
-RUN groupadd -g ${BUILD_GID} appgroup || true && \
-    useradd -m -u ${BUILD_UID} -g ${BUILD_GID} -s /bin/bash appuser || true && \
-    chown -R ${BUILD_UID}:${BUILD_GID} /app /opt/venv
+# Create dedicated non-root user and set ownership for application directories
+RUN groupadd -g ${BUILD_GID} appuser && \
+    useradd -m -u ${BUILD_UID} -g appuser -s /bin/bash appuser && \
+    chown -R appuser:appuser /app /opt/venv
 
 USER appuser
 

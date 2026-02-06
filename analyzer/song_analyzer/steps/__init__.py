@@ -12,4 +12,5 @@ def get_available_steps() -> list[str]:
         "60_sections",
         "70_patterns",
         "80_show_plan",
+        "100_plot_analysis_results",
     ]

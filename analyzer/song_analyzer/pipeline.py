@@ -8,8 +8,8 @@ from typing import List, Optional
 from .config import AnalysisConfig, AnalysisContext
 from .io.hashing import sha256_file
 from .io.json_write import write_json
-from .io.paths import create_song_slug, ensure_directory
-from .logging import setup_logging
+from .io.paths import ensure_directory, create_song_slug
+from .custom_logging import setup_logging
 from .models.schemas import RunRecord, StepRun, FailureRecord
 from .steps import get_available_steps
 
@@ -39,7 +39,7 @@ class AnalysisPipeline:
         )
 
         # Setup logging
-        log_file = output_dir / "analysis" / f"run_{int(time.time())}.log"
+        log_file = temp_dir / f"run_{int(time.time())}.log"
         ensure_directory(log_file.parent)
         self.logger = setup_logging(log_file)
 

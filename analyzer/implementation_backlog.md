@@ -135,7 +135,7 @@ Each phase should ship working code + JSON outputs + one focused test.
 
 | Phase | Step name | Required inputs | Required outputs | Optional outputs |
 |------:|-----------|-----------------|------------------|------------------|
-| 0 | ingest | songs/<song>.mp3 | analysis/timeline.json, analysis/run.json, temp_files/<slug>/audio/source.wav | logs/<run_id>.log |
+| 0 | ingest | songs/<song>.mp3 | analysis/timeline.json, analysis/run.json, temp_files/<slug>/audio/source.wav | temp_files/<slug>/run_<timestamp>.log |
 | 1 | stems | analysis/timeline.json, source.wav | analysis/stems.json, temp_files/<slug>/stems/*.wav | - |
 | 2 | beats | stems.json (or source.wav) | analysis/beats.json | - |
 | 3 | energy | timeline.json, stems (if available) | analysis/energy.json | energy curves per-stem |
@@ -144,6 +144,7 @@ Each phase should ship working code + JSON outputs + one focused test.
 | 6 | sections | embeddings source (mix or stems) | analysis/sections.json | novelty curve debug JSON |
 | 7 | patterns | beats.json, onsets.json | show_plan/patterns.json | - |
 | 8 | show_plan | analysis/* (as available) | show_plan/show_plan.json, show_plan/roles.json, show_plan/moments.json | show_plan/README.md |
+| 9 | plot_analysis_results | analysis/*.json, temp_files/<slug>/audio/source.wav | analysis/plots/beats.png, analysis/plots/energy.png, analysis/plots/sections.png, analysis/plots/vocals.png | - |
 
 ### Phase 0 — Project scaffolding + ingestion (foundation)
 **Deliverable**: deterministic pipeline skeleton that runs end-to-end and writes `analysis/timeline.json`.
@@ -320,6 +321,28 @@ Generate:
 - `roles.json`: mapping of musical roles → tracks/features
 - `moments.json`: “notable moments” (drops, risers, vocal entries, high energy peaks)
 - `show_plan.json`: a compact index + meta
+
+---
+
+### Phase 9 — Plot analysis results
+**Deliverable**: Generate visualization plots of the source waveform with inferred information overlaid, saved as PNG files in `analysis/plots/`.
+
+Tasks
+- Load source audio waveform from `temp_files/<song_slug>/audio/source.wav`.
+- Load inferred data from `analysis/beats.json`, `analysis/energy.json`, `analysis/sections.json`, `analysis/vocals.json`.
+- For each inferred type (beats, energy, sections, vocals), create a separate plot canvas:
+  - Background: full source waveform (mono or stereo as appropriate).
+  - Overlay: inferred data (e.g., vertical lines for beats, curves for energy).
+  - Canvas size: 1920px wide x 200px height.
+- Use matplotlib for plotting, ensuring headless compatibility.
+- Save plots as `analysis/plots/beats.png`, `analysis/plots/energy.png`, etc.
+- Handle missing data gracefully (e.g., if a step failed, skip that plot or plot empty).
+
+Suggested deps
+- `matplotlib>=3.5.0` (added to requirements.txt)
+
+Test
+- After running full analysis, verify 4 PNG files exist in `analysis/plots/` and are viewable.
 
 ---
 
