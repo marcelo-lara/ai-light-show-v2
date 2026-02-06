@@ -31,8 +31,8 @@ def test_dmx_canvas_renders_set_channels_and_persists():
     sm.cue_sheet = CueSheet(
         song_filename='test_song',
         entries=[
-            CueEntry(time=0.0, fixture_id='parcan_l', action='set_channels', data={'channels': {'blue': 255}}),
-            CueEntry(time=0.5, fixture_id='parcan_r', action='set_channels', data={'channels': {'blue': 255}}),
+            CueEntry(time=0.0, fixture_id='parcan_l', effect='set_channels', data={'channels': {'blue': 255}}),
+            CueEntry(time=0.5, fixture_id='parcan_r', effect='set_channels', data={'channels': {'blue': 255}}),
         ],
     )
 
@@ -78,7 +78,7 @@ def test_dmx_canvas_renders_fade_in_rgb_only_and_persists():
     sm.cue_sheet = CueSheet(
         song_filename='test_song',
         entries=[
-            CueEntry(time=0.0, fixture_id='parcan_1', action='fade_in', duration=1.0, data={'red': 255}),
+            CueEntry(time=0.0, fixture_id='parcan_1', effect='fade_in', duration=1.0, data={'red': 255}),
         ],
     )
 
@@ -126,7 +126,7 @@ def test_dmx_canvas_renders_full_rgb_and_persists():
     sm.cue_sheet = CueSheet(
         song_filename='test_song',
         entries=[
-            CueEntry(time=0.0, fixture_id='parcan_1', action='full', duration=0.0, data={'red': 10, 'green': 20, 'blue': 30}),
+            CueEntry(time=0.0, fixture_id='parcan_1', effect='full', duration=0.0, data={'red': 10, 'green': 20, 'blue': 30}),
         ],
     )
 
@@ -158,9 +158,9 @@ def test_dmx_canvas_renders_strobe_rgb_toggles_and_ends_on():
         song_filename='test_song',
         entries=[
             # Establish a base color.
-            CueEntry(time=0.0, fixture_id='parcan_1', action='set_channels', duration=0.0, data={'channels': {'red': 255, 'green': 0, 'blue': 0}}),
+            CueEntry(time=0.0, fixture_id='parcan_1', effect='set_channels', duration=0.0, data={'channels': {'red': 255, 'green': 0, 'blue': 0}}),
             # Strobe it at 2Hz for 1 second.
-            CueEntry(time=0.0, fixture_id='parcan_1', action='strobe', duration=1.0, data={'rate': 2.0}),
+            CueEntry(time=0.0, fixture_id='parcan_1', effect='strobe', duration=1.0, data={'rate': 2.0}),
         ],
     )
 
@@ -205,7 +205,7 @@ def test_dmx_canvas_renders_moving_head_move_to_16bit():
     sm.cue_sheet = CueSheet(
         song_filename='test_song',
         entries=[
-            CueEntry(time=0.0, fixture_id='head_1', action='move_to', duration=1.0, data={'pan': 0x1234, 'tilt': 0xABCD}),
+            CueEntry(time=0.0, fixture_id='head_1', effect='move_to', duration=1.0, data={'pan': 0x1234, 'tilt': 0xABCD}),
         ],
     )
 
@@ -247,7 +247,7 @@ def test_dmx_canvas_renders_moving_head_seek_preset_16bit():
     sm.cue_sheet = CueSheet(
         song_filename='test_song',
         entries=[
-            CueEntry(time=0.0, fixture_id='head_1', action='seek', duration=0.0, data={'preset': 'Piano'}),
+            CueEntry(time=0.0, fixture_id='head_1', effect='seek', duration=0.0, data={'preset': 'Piano'}),
         ],
     )
 
@@ -285,7 +285,7 @@ def test_dmx_canvas_renders_moving_head_sweep_peaks_at_preset():
         song_filename='test_song',
         entries=[
             # Sweep for 2 seconds across the Piano preset.
-            CueEntry(time=0.0, fixture_id='head_1', action='sweep', duration=2.0, data={'preset': 'Piano', 'span_pan': 1000, 'span_tilt': 0}),
+            CueEntry(time=0.0, fixture_id='head_1', effect='sweep', duration=2.0, data={'preset': 'Piano', 'span_pan': 1000, 'span_tilt': 0}),
         ],
     )
 

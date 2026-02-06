@@ -94,7 +94,7 @@ This allows the play-state routing policy:
 
 Each fixture type implements an action renderer (see `backend/models/fixtures/fixture.py`):
 
-`render_action(universe, action, frame_index, start_frame, end_frame, fps, data, render_state)`
+`render_effect(universe, effect, frame_index, start_frame, end_frame, fps, data, render_state)`
 
 - The renderer is called during canvas generation for every active cue and frame.
 - `render_state` is a per-entry dict that fixtures can use to cache values (e.g., a `move_to` start position).

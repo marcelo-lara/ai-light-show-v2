@@ -11,7 +11,7 @@ class CueEntry(BaseModel):
 
     time: float  # seconds
     fixture_id: str
-    action: str
+    effect: str
     duration: float = 0.0  # seconds
     data: Dict[str, Any] = {}
     name: Optional[str] = None

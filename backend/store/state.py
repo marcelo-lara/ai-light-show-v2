@@ -200,7 +200,7 @@ class StateManager:
     async def add_cue_entry(self, timecode: float, name: Optional[str] = None) -> List[CueEntry]:
         """Record actions into the cue sheet.
 
-        Current UI is "plain control" (sliders) so this records a set_channels action per fixture
+        Current UI is "plain control" (sliders) so this records a set_channels effect per fixture
         capturing the editor universe at the given time.
 
         While playing, actions are recorded but NOT rendered in real-time (canvas becomes dirty).
@@ -219,7 +219,7 @@ class StateManager:
                     CueEntry(
                         time=float(timecode),
                         fixture_id=fixture.id,
-                        action="set_channels",
+                        effect="set_channels",
                         duration=0.0,
                         data={"channels": channel_values},
                         name=name,
@@ -227,7 +227,7 @@ class StateManager:
                 )
 
             self.cue_sheet.entries.extend(new_entries)
-            self.cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.action))
+            self.cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
             await self.save_cue_sheet()
 
             if self.is_playing:
@@ -300,7 +300,7 @@ class StateManager:
             dur = max(0.0, float(entry.duration or 0.0))
             end = int(round((float(entry.time) + dur) * FPS))
             cues.append((start, end, entry))
-        cues.sort(key=lambda x: (x[0], x[2].fixture_id, x[2].action))
+        cues.sort(key=lambda x: (x[0], x[2].fixture_id, x[2].effect))
         return cues
 
     def _render_cue_sheet_to_canvas(self) -> DMXCanvas:
@@ -334,7 +334,7 @@ class StateManager:
             # Apply active cue effects for this frame.
             if active:
                 # Stable order for deterministic overlaps.
-                active_sorted = sorted(active, key=lambda x: (x[2].time, x[2].fixture_id, x[2].action))
+                active_sorted = sorted(active, key=lambda x: (x[2].time, x[2].fixture_id, x[2].effect))
                 for start_frame, end_frame, entry in active_sorted:
                     self._render_entry_into_universe(universe, frame_index, start_frame, end_frame, entry, entry_render_state)
 
@@ -389,12 +389,12 @@ class StateManager:
         if not fixture:
             return
 
-        # Delegate action rendering to the fixture type.
+        # Delegate effect rendering to the fixture type.
         state_key = id(entry)
         render_state = entry_render_state.setdefault(state_key, {})
-        fixture.render_action(
+        fixture.render_effect(
             universe,
-            action=entry.action,
+            effect=entry.effect,
             frame_index=frame_index,
             start_frame=start_frame,
             end_frame=end_frame,
