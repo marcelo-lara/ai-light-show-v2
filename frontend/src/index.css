@@ -224,3 +224,29 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Playback control (compact bottom-right overlay) */
+.playbackControl {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  height: 44px;
+  min-width: 320px;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  background: rgba(28,28,28,0.9);
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  z-index: 1200;
+}
+.pcLeft { display:flex; align-items:center; gap:8px; min-width:0 }
+.pcButton { width:36px; height:36px; display:inline-grid; place-items:center; font-size:14px }
+.pcTitle { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px }
+.pcCenter { flex:1; height:8px; background:#111; border-radius:8px; position:relative; cursor:pointer }
+.pcProgress { position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg,#646cff,#7b7fff); border-radius:8px }
+.pcRight { min-width:90px; text-align:right }
+.pcTime { font-size:12px; color:rgba(255,255,255,0.85) }

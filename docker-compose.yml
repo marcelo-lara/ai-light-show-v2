@@ -12,6 +12,27 @@ services:
       - FPS=60
     restart: unless-stopped
 
+  redis:
+    image: redis:7
+    restart: unless-stopped
+
+  worker:
+    build: ./backend
+    command: sh -c "PYTHONPATH=/app celery -A tasks.celery_app.celery_app worker --loglevel=info --concurrency=1"
+    depends_on:
+      - redis
+    volumes:
+      - ./backend/songs:/app/songs
+      - ./backend/metadata:/app/metadata
+      - ./analyzer:/app/analyzer
+      - ./analyzer/temp_files:/app/temp_files
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - PYTHONPATH=/app
+      - CELERY_IMPORTS=tasks.analyze
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
