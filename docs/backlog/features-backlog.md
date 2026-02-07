@@ -24,7 +24,7 @@ Decision: keep the backend WebSocket-only for the analysis workflow (trigger + p
 #### 1) Always-Visible Playback Control (bottom-right)
 Add a playback control that is always visible across the app (all sections).
 
-Placement and layout (per ![LoFi](<docs/LoFi Always-Visible Playback Control.png>)):
+Placement and layout (per ![LoFi](<../LoFi Always-Visible Playback Control.png>)):
 - **Pinned to the bottom-right** of the page as an **overlay**.
 - Shows:
 	- Song name
