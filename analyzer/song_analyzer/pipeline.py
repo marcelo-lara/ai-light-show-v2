@@ -21,7 +21,7 @@ class AnalysisPipeline:
         self.config = config
         self.logger = None
 
-    def analyze_song(self, song_path: Path, until_step: Optional[str] = None) -> RunRecord:
+    def analyze_song(self, song_path: Path, until_step: Optional[str] = None, progress_callback: Optional[callable] = None) -> RunRecord:
         """Run the full analysis pipeline on a song."""
 
         # Create context
@@ -54,9 +54,17 @@ class AnalysisPipeline:
 
         # Run steps
         step_runs = []
-        for step_name in steps_to_run:
+        total_steps = len(steps_to_run)
+        for idx, step_name in enumerate(steps_to_run, start=1):
             step_run = self._run_step(step_name, context)
             step_runs.append(step_run)
+
+            # Invoke progress callback if provided
+            try:
+                if progress_callback:
+                    progress_callback(step_run, idx, total_steps)
+            except Exception:
+                self.logger.exception("Progress callback raised an exception")
 
             if step_run.status == "failed" and not step_run.failure.retryable:
                 self.logger.warning(f"Step {step_name} failed, continuing...")

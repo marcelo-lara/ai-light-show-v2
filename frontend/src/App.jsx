@@ -4,6 +4,7 @@ import SongPartsLane from './components/SongPartsLane.jsx'
 import CueSheetLane from './components/CueSheetLane.jsx'
 import FixturesLane from './components/FixturesLane.jsx'
 import ChatSidePanel from './components/ChatSidePanel.jsx'
+import PlaybackControl from './components/PlaybackControl.jsx'
 
 export function App() {
   const [fixtures, setFixtures] = useState([])
@@ -11,6 +12,7 @@ export function App() {
   const [song, setSong] = useState(null)
   const [dmxValues, setDmxValues] = useState({})
   const [timecode, setTimecode] = useState(0)
+  const [playing, setPlaying] = useState(false)
   const wsRef = useRef(null)
   const isPlayingRef = useRef(false)
 
@@ -28,6 +30,7 @@ export function App() {
         setCues(data.cues?.entries || [])
         setSong(data.song)
         isPlayingRef.current = !!data.playback?.isPlaying
+        setPlaying(!!data.playback?.isPlaying)
       } else if (data.type === 'delta') {
         setDmxValues(prev => ({ ...prev, [data.channel]: data.value }))
       } else if (data.type === 'dmx_frame') {
@@ -88,6 +91,7 @@ export function App() {
 
   const handlePlaybackChange = (playing) => {
     isPlayingRef.current = !!playing
+    setPlaying(!!playing)
     sendMessage({ type: 'playback', playing })
   }
 
@@ -107,7 +111,14 @@ export function App() {
           <FixturesLane fixtures={fixtures} dmxValues={dmxValues} onDmxChange={handleDmxChange} timecode={timecode} />
         </div>
       </div>
-      <ChatSidePanel onSendMessage={(msg) => sendMessage({ type: 'chat', message: msg })} />
+        <ChatSidePanel onSendMessage={(msg) => sendMessage({ type: 'chat', message: msg })} />
+        <PlaybackControl
+          song={song}
+          timecode={timecode}
+          playing={playing}
+          onSeek={handleSeek}
+          onPlaybackChange={handlePlaybackChange}
+        />
     </div>
   )
 }
