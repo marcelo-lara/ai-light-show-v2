@@ -13,9 +13,14 @@ export default function FixturesLane({ fixtures, dmxValues, onDmxChange, timecod
               <div class="cardTitle">{fixture.name}</div>
               {Object.entries(fixture.channels).map(([channelName, channelNum]) => (
                 <div key={channelName} style={{ marginBottom: '10px' }}>
-                  <div class="muted" style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                  <div
+                    class="muted"
+                    style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}
+                  >
                     <span>{channelName}</span>
-                    <span>Ch {channelNum}: {dmxValues[channelNum] || 0}</span>
+                    <span>
+                      Ch {channelNum}: {dmxValues[channelNum] || 0}
+                    </span>
                   </div>
                   <input
                     type="range"

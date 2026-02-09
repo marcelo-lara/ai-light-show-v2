@@ -6,7 +6,7 @@ export default function ChatSidePanel({ onSendMessage }) {
 
   const handleSend = () => {
     if (input.trim()) {
-      setMessages(prev => [...prev, { text: input, from: 'user' }])
+      setMessages((prev) => [...prev, { text: input, from: 'user' }])
       onSendMessage(input)
       setInput('')
     }
@@ -29,14 +29,17 @@ export default function ChatSidePanel({ onSendMessage }) {
           <div class="muted">Send a message to start.</div>
         ) : (
           messages.map((msg, index) => (
-            <div key={index} style={{ marginBottom: '10px', textAlign: msg.from === 'user' ? 'right' : 'left' }}>
+            <div
+              key={index}
+              style={{ marginBottom: '10px', textAlign: msg.from === 'user' ? 'right' : 'left' }}
+            >
               <div
                 style={{
                   display: 'inline-block',
                   padding: '6px 10px',
                   background: msg.from === 'user' ? '#4a9eff' : '#333',
                   borderRadius: '10px',
-                  maxWidth: '85%'
+                  maxWidth: '85%',
                 }}
               >
                 {msg.text}
