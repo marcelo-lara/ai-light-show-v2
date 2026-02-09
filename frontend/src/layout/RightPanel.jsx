@@ -8,6 +8,11 @@ export default function RightPanel() {
 
   return (
     <div class="rightPanelInner">
+
+      <div class="rightPanelChat">
+        <ChatSidePanel onSendMessage={(msg) => sendMessage({ type: 'chat', message: msg })} />
+      </div>
+
       <div class="rightPanelPlayer">
         <PlayerPanel
           song={song}
@@ -18,9 +23,6 @@ export default function RightPanel() {
         />
       </div>
 
-      <div class="rightPanelChat">
-        <ChatSidePanel onSendMessage={(msg) => sendMessage({ type: 'chat', message: msg })} />
-      </div>
     </div>
   )
 }

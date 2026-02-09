@@ -68,17 +68,18 @@ body {
 .rightPanelInner {
   height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: 1fr auto;
   min-height: 0;
 }
 
 .rightPanelPlayer {
   background: #252526;
-  border-bottom: 1px solid #333;
+  border-top: 1px solid #333;
 }
 
 .rightPanelChat {
   min-height: 0;
+  overflow: hidden;
 }
 
 /* Left menu */
@@ -229,17 +230,37 @@ body {
 .chatComposer {
   padding: 10px 12px;
   border-top: 1px solid #333;
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .chatInput {
   width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #3a3a3a;
   background: #1a1a1a;
   color: white;
+}
+
+.chatSendButton {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.chatSendButton svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .card {

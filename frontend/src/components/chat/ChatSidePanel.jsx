@@ -1,8 +1,13 @@
-import { useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 
 export default function ChatSidePanel({ onSendMessage }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
+  const endRef = useRef(null)
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' })
+  }, [messages.length])
 
   const handleSend = () => {
     if (input.trim()) {
@@ -47,6 +52,7 @@ export default function ChatSidePanel({ onSendMessage }) {
             </div>
           ))
         )}
+        <div ref={endRef} />
       </div>
 
       <div class="chatComposer">
@@ -58,7 +64,11 @@ export default function ChatSidePanel({ onSendMessage }) {
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
         />
-        <button onClick={handleSend}>Send</button>
+        <button class="chatSendButton" type="button" onClick={handleSend} aria-label="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3.4 20.6 21 12 3.4 3.4l.3 6.2L15.7 12 3.7 14.4l-.3 6.2z" fill="currentColor" />
+          </svg>
+        </button>
       </div>
     </div>
   )
