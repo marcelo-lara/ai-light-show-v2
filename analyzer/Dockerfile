@@ -33,15 +33,7 @@ COPY split_stems.py ./split_stems.py
 
 # install the actual analyzer package without re-resolving dependencies
 RUN pip install --no-cache-dir --no-deps .
-ARG BUILD_UID=1000
-ARG BUILD_GID=1000
 
-# Create dedicated non-root user and set ownership for application directories
-RUN groupadd -g ${BUILD_GID} appuser && \
-    useradd -m -u ${BUILD_UID} -g appuser -s /bin/bash appuser && \
-    chown -R appuser:appuser /app /opt/venv
-
-USER appuser
-
+# User creation removed; container will run as root
 ENTRYPOINT ["python", "-m", "song_analyzer.cli"]
 CMD ["--help"]
