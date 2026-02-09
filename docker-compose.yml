@@ -17,19 +17,21 @@ services:
     restart: unless-stopped
 
   worker:
-    build: ./backend
-    command: sh -c "PYTHONPATH=/app celery -A tasks.celery_app.celery_app worker --loglevel=info --concurrency=1"
+    build:
+      context: ./analyzer
+    entrypoint: ["sh", "-c"]
+    command: "PYTHONPATH=/app/backend:/app celery -A tasks.celery_app.celery_app worker --loglevel=info --concurrency=1"
     depends_on:
       - redis
     volumes:
-      - ./backend/songs:/app/songs
-      - ./backend/metadata:/app/metadata
-      - ./analyzer:/app/analyzer
+      - ./backend:/app/backend
+      - ./backend/songs:/app/backend/songs
+      - ./backend/metadata:/app/backend/metadata
       - ./analyzer/temp_files:/app/temp_files
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - PYTHONPATH=/app
+      - PYTHONPATH=/app/backend:/app
       - CELERY_IMPORTS=tasks.analyze
     restart: unless-stopped
 
@@ -42,21 +44,21 @@ services:
       - backend
     restart: unless-stopped
 
-  # analyzer:
-  #   build:
-  #     context: ./analyzer
-  #     args:
-  #       BUILD_UID: ${UID:-1000}
-  #       BUILD_GID: ${GID:-1000}
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./backend/songs:/app/songs
-  #     - ./backend/metadata:/app/metadata
-  #     - ./analyzer/temp_files:/app/temp_files
-  #     - analyzer_model_cache:/home/appuser/.cache
-  #   environment:
-  #     - PYTHONPATH=/app
-  #   runtime: nvidia
+  analyzer:
+    build:
+      context: ./analyzer
+      args:
+        BUILD_UID: ${UID:-1000}
+        BUILD_GID: ${GID:-1000}
+    restart: unless-stopped
+    volumes:
+      - ./backend/songs:/app/songs
+      - ./backend/metadata:/app/metadata
+      - ./analyzer/temp_files:/app/temp_files
+      - analyzer_model_cache:/home/appuser/.cache
+    environment:
+      - PYTHONPATH=/app
+    runtime: nvidia
 
 volumes:
   analyzer_model_cache:

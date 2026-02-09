@@ -11,6 +11,15 @@ export function AppStateProvider({ children }) {
   const [timecode, setTimecode] = useState(0)
   const [playing, setPlaying] = useState(false)
 
+  const [analysis, setAnalysis] = useState({
+    taskId: null,
+    state: null,
+    meta: null,
+    result: null,
+    error: null,
+    updatedAt: null,
+  })
+
   const wsRef = useRef(null)
   const isPlayingRef = useRef(false)
   const audioControlsRef = useRef(null)
@@ -47,6 +56,41 @@ export function AppStateProvider({ children }) {
         }
       } else if (data.type === 'cues_updated') {
         setCues(data.cues?.entries || [])
+      } else if (data.type === 'task_submitted') {
+        setAnalysis((prev) => ({
+          ...prev,
+          taskId: data.task_id || null,
+          state: 'SUBMITTED',
+          meta: null,
+          result: null,
+          error: null,
+          updatedAt: Date.now(),
+        }))
+      } else if (data.type === 'analyze_progress') {
+        setAnalysis((prev) => ({
+          ...prev,
+          taskId: data.task_id || prev.taskId || null,
+          state: data.state || prev.state || null,
+          meta: data.meta || null,
+          error: null,
+          updatedAt: Date.now(),
+        }))
+      } else if (data.type === 'analyze_result') {
+        setAnalysis((prev) => ({
+          ...prev,
+          taskId: data.task_id || prev.taskId || null,
+          state: data.state || 'SUCCESS',
+          result: data.result ?? null,
+          updatedAt: Date.now(),
+        }))
+      } else if (data.type === 'task_error') {
+        setAnalysis((prev) => ({
+          ...prev,
+          taskId: data.task_id || prev.taskId || null,
+          state: 'ERROR',
+          error: data.message || 'Unknown error',
+          updatedAt: Date.now(),
+        }))
       }
     }
 
@@ -120,6 +164,7 @@ export function AppStateProvider({ children }) {
       dmxValues,
       timecode,
       playing,
+      analysis,
       sendMessage,
       actions: {
         handleDmxChange,
@@ -131,7 +176,7 @@ export function AppStateProvider({ children }) {
         seekTo,
       },
     }),
-    [fixtures, cues, song, dmxValues, timecode, playing]
+    [fixtures, cues, song, dmxValues, timecode, playing, analysis]
   )
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>
