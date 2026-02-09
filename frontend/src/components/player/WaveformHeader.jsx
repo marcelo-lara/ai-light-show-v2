@@ -3,7 +3,13 @@ import WaveSurfer from 'wavesurfer.js'
 
 const TIME_TICK_HZ = 20
 
-export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlaybackChange, onLoadSong }) {
+export default function WaveformHeader({
+  song,
+  onTimecodeUpdate,
+  onSeek,
+  onPlaybackChange,
+  onRegisterAudioControls,
+}) {
   const waveformRef = useRef(null)
   const wavesurferRef = useRef(null)
   const onTimecodeUpdateRef = useRef(onTimecodeUpdate)
@@ -18,11 +24,6 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
 
   useEffect(() => {
     if (waveformRef.current && !wavesurferRef.current) {
-      console.log('[WaveSurfer] init: container present', {
-        hasContainer: !!waveformRef.current,
-        width: waveformRef.current?.clientWidth,
-        height: waveformRef.current?.clientHeight,
-      })
       wavesurferRef.current = WaveSurfer.create({
         container: waveformRef.current,
         waveColor: '#4a9eff',
@@ -31,18 +32,23 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
         normalize: true,
       })
 
-      wavesurferRef.current.on('ready', () => {
-        console.log('[WaveSurfer] ready', {
-          duration: wavesurferRef.current?.getDuration?.(),
-        })
-      })
+      onRegisterAudioControls?.({
+        playPause: () => wavesurferRef.current?.playPause?.(),
+        seekTo: (time) => {
+          const ws = wavesurferRef.current
+          if (!ws) return
 
-      wavesurferRef.current.on('error', (err) => {
-        console.log('[WaveSurfer] error', err)
-      })
+          if (typeof ws.setTime === 'function') {
+            ws.setTime(time)
+            return
+          }
 
-      wavesurferRef.current.on('loading', (progress) => {
-        console.log('[WaveSurfer] loading', progress)
+          // Fallback: if setTime isn't available, approximate with seekTo percent.
+          const duration = typeof ws.getDuration === 'function' ? ws.getDuration() : 0
+          if (duration > 0 && typeof ws.seekTo === 'function') {
+            ws.seekTo(Math.max(0, Math.min(1, time / duration)))
+          }
+        },
       })
 
       const emitTime = () => {
@@ -65,7 +71,6 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
         onSeekRef.current?.(currentTime)
       }
 
-      // Use multiple events for broad compatibility across WaveSurfer versions.
       wavesurferRef.current.on('audioprocess', emitTime)
       wavesurferRef.current.on('timeupdate', emitTime)
       wavesurferRef.current.on('seek', emitSeek)
@@ -81,6 +86,7 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
     }
 
     return () => {
+      onRegisterAudioControls?.(null)
       if (wavesurferRef.current) {
         wavesurferRef.current.destroy()
         wavesurferRef.current = null
@@ -90,46 +96,18 @@ export default function WaveformHeader({ song, onTimecodeUpdate, onSeek, onPlayb
 
   useEffect(() => {
     if (song && wavesurferRef.current) {
-      console.log('[WaveSurfer] load song', {
-        filename: song?.filename,
-        song,
-      })
-      // If a URL is ever provided by the backend, load it.
-      // This keeps WaveSurfer initialized properly even when no audio endpoint exists yet.
       const rawUrl = song.url || song.audioUrl
-
-      // nginx proxies /songs/ requests to the backend, so use relative URLs
       const url = rawUrl?.startsWith('/') ? rawUrl : rawUrl
 
       if (url) {
-        console.log('[WaveSurfer] load url', url)
         wavesurferRef.current.load(url)
-      } else {
-        console.log('[WaveSurfer] no url provided for song')
       }
     }
   }, [song])
 
-  const handlePlayPause = () => {
-    if (wavesurferRef.current) {
-      wavesurferRef.current.playPause()
-    }
-  }
-
-  const handleLoadSong = () => {
-    const filename = prompt('Enter song filename (without extension):')
-    if (filename) {
-      onLoadSong(filename)
-    }
-  }
-
   return (
     <div class="waveHeader">
-      <div class="waveControls">
-        <button onClick={handleLoadSong}>Load Song</button>
-        <button onClick={handlePlayPause}>Play/Pause</button>
-        <div class="waveTitle muted">{song ? song.filename : 'No song loaded'}</div>
-      </div>
+      <div class="waveTitle muted">{song ? song.filename : 'No song loaded'}</div>
       <div ref={waveformRef} class="waveform"></div>
     </div>
   )

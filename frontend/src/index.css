@@ -39,18 +39,88 @@ body {
   background-color: #1e1e1e;
 }
 
-/* App layout */
-.appRoot {
+/* App shell layout (Lo-Fi: left menu + main + right panel) */
+.appShell {
   height: 100%;
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr var(--chat-width, 360px);
+  grid-template-columns: var(--left-menu-width, 64px) 1fr var(--right-panel-width, 360px);
   background: #1e1e1e;
   color: white;
   overflow: hidden;
 }
 
+.appMain {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.rightPanel {
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid #333;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.rightPanelInner {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 0;
+}
+
+.rightPanelPlayer {
+  background: #252526;
+  border-top: 1px solid #333;
+}
+
+.rightPanelChat {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Left menu */
+.leftMenu {
+  border-right: 1px solid #333;
+  background: #252526;
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.leftMenuTop {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  align-content: start;
+}
+
+.leftMenuItem {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  border: 1px solid transparent;
+}
+
+.leftMenuItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.leftMenuItemActive {
+  background: rgba(74, 158, 255, 0.15);
+  border-color: rgba(74, 158, 255, 0.35);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Show control layout (main content) */
 .mainColumn {
+  height: 100%;
   min-width: 0;
   display: grid;
   grid-template-rows: auto 1fr;
@@ -134,11 +204,11 @@ body {
 
 /* Chat panel */
 .chatPanel {
-  border-left: 1px solid #333;
   display: grid;
   grid-template-rows: auto 1fr auto;
   min-width: 0;
   overflow: hidden;
+  height: 100%;
 }
 
 .chatHeader {
@@ -160,17 +230,37 @@ body {
 .chatComposer {
   padding: 10px 12px;
   border-top: 1px solid #333;
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .chatInput {
   width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #3a3a3a;
   background: #1a1a1a;
   color: white;
+}
+
+.chatSendButton {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.chatSendButton svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .card {
@@ -225,28 +315,77 @@ button:focus-visible {
   }
 }
 
-/* Playback control (compact bottom-right overlay) */
-.playbackControl {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  height: 44px;
-  min-width: 320px;
-  max-width: 480px;
+/* Player panel (inside right panel) */
+.playerPanel {
+  padding: 10px 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.playerRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 10px;
-  background: rgba(28,28,28,0.9);
-  border: 1px solid #333;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-  z-index: 1200;
+  gap: 10px;
+  min-width: 0;
 }
-.pcLeft { display:flex; align-items:center; gap:8px; min-width:0 }
-.pcButton { width:36px; height:36px; display:inline-grid; place-items:center; font-size:14px }
-.pcTitle { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px }
-.pcCenter { flex:1; height:8px; background:#111; border-radius:8px; position:relative; cursor:pointer }
-.pcProgress { position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg,#646cff,#7b7fff); border-radius:8px }
-.pcRight { min-width:90px; text-align:right }
-.pcTime { font-size:12px; color:rgba(255,255,255,0.85) }
+
+.playerButton {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 14px;
+  padding: 0;
+}
+
+.playerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playerSeek {
+  height: 8px;
+  background: #111;
+  border-radius: 8px;
+  position: relative;
+  cursor: pointer;
+}
+
+.playerSeekProgress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #646cff, #7b7fff);
+  border-radius: 8px;
+}
+
+.playerTime {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Generic routed page containers */
+.page {
+  height: 100%;
+  overflow: auto;
+  padding: 14px 16px;
+}
+
+.pageHeader {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.pageHeader h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.pageBody {
+  min-height: 0;
+}

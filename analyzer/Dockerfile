@@ -26,7 +26,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=deps $VENV_PATH $VENV_PATH
 
-COPY pyproject.toml requirements.txt README.md implementation_backlog.md ./
+COPY pyproject.toml requirements.txt ./
 COPY song_analyzer ./song_analyzer
 COPY main.py ./main.py
 COPY split_stems.py ./split_stems.py

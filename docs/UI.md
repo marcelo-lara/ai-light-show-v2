@@ -1,29 +1,40 @@
-# AI Ligth show
+# AI Light Show — UI
 
-## Common items
+This doc describes the *current* frontend implementation.
 
-- Left Menu (icons)
-- Right Panel
-    - Show Player ![alt text](<LoFi Always-Visible Playback Control.png>)
-    - LLM Chat history
+## App shell (persistent)
 
-## Show Control
+- Left menu: icon-only navigation.
+- Routes/pages:
+  - `/show` — Show Control
+  - `/analysis` — Song Analysis (placeholder)
+  - `/dmx` — DMX Controller (placeholder)
+  - `/builder` — Show Builder (placeholder)
+  - `/` redirects to `/show`
+- Right panel (persistent):
+  - Show Player (always visible)
+  - LLM Chat (always visible)
 
-- Play / Stop Audio/Show
-- View waveform and progress
-- Current Song Section / DMX Scene
+## Show Control (/show)
 
-## Song Analisis
+- Waveform header (WaveSurfer): displays waveform + title.
+- Playback:
+  - The *only* play/pause control is in the right-panel Show Player.
+  - Waveform header has no play/pause or load-song buttons.
+- Lanes (main column):
+  - Song parts lane (from metadata when available)
+  - Cue sheet lane
+  - Fixtures lane (DMX sliders)
 
-- Pick a song
-- Request to Analyze
-- Review of plot results of metadata
-  - SVG ultra wide (maybe horizontal scroll/zoom)
-- Review of metadata (add/edit llm instructions/hints)
+## Song Analysis (/analysis)
 
-## DMX Controller
+- Current: placeholder page.
+- Not implemented in UI yet: song picking, analysis triggering, and results visualization.
 
-- View/Edit POIs
-- View/Edit Chasers
-- Always show virtual console per Fixture (select one fixture to set/edit)
-  - button to save changes when dirty
+## DMX Controller (/dmx)
+
+- Current: placeholder page.
+
+## Show Builder (/builder)
+
+- Current: placeholder page.

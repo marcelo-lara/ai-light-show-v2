@@ -1,12 +1,17 @@
-import { useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 
 export default function ChatSidePanel({ onSendMessage }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
+  const endRef = useRef(null)
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' })
+  }, [messages.length])
 
   const handleSend = () => {
     if (input.trim()) {
-      setMessages(prev => [...prev, { text: input, from: 'user' }])
+      setMessages((prev) => [...prev, { text: input, from: 'user' }])
       onSendMessage(input)
       setInput('')
     }
@@ -29,14 +34,17 @@ export default function ChatSidePanel({ onSendMessage }) {
           <div class="muted">Send a message to start.</div>
         ) : (
           messages.map((msg, index) => (
-            <div key={index} style={{ marginBottom: '10px', textAlign: msg.from === 'user' ? 'right' : 'left' }}>
+            <div
+              key={index}
+              style={{ marginBottom: '10px', textAlign: msg.from === 'user' ? 'right' : 'left' }}
+            >
               <div
                 style={{
                   display: 'inline-block',
                   padding: '6px 10px',
                   background: msg.from === 'user' ? '#4a9eff' : '#333',
                   borderRadius: '10px',
-                  maxWidth: '85%'
+                  maxWidth: '85%',
                 }}
               >
                 {msg.text}
@@ -44,6 +52,7 @@ export default function ChatSidePanel({ onSendMessage }) {
             </div>
           ))
         )}
+        <div ref={endRef} />
       </div>
 
       <div class="chatComposer">
@@ -55,7 +64,11 @@ export default function ChatSidePanel({ onSendMessage }) {
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
         />
-        <button onClick={handleSend}>Send</button>
+        <button class="chatSendButton" type="button" onClick={handleSend} aria-label="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3.4 20.6 21 12 3.4 3.4l.3 6.2L15.7 12 3.7 14.4l-.3 6.2z" fill="currentColor" />
+          </svg>
+        </button>
       </div>
     </div>
   )
