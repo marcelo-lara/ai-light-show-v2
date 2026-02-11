@@ -8,6 +8,7 @@ import onnxruntime as ort
 from ..config import AnalysisContext
 from ..io.json_write import write_json
 from ..models.schemas import StepResult, VocalsArtifact
+from ..utils.numba_guard import disable_numba_jit
 
 
 def run(ctx: AnalysisContext) -> StepResult:
@@ -66,6 +67,7 @@ def run(ctx: AnalysisContext) -> StepResult:
 def extract_vocal_activity(audio_path: str) -> tuple[list[dict], list[dict]]:
     """Extract vocal activity segments and phrases from vocals stem using Silero VAD with fallback."""
 
+    disable_numba_jit()
     import librosa
 
     # Load audio at 16kHz for VAD

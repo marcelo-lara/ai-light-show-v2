@@ -31,6 +31,15 @@ PYTHONPATH=./backend python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 5
 PYTHONPATH=./backend celery -A backend.tasks.celery_app.celery_app worker --loglevel=info
 ```
 
+Alternative (convenient when using the `analyzer` container):
+
+```bash
+# Waits for the broker, then execs into a celery worker
+python -m song_analyzer.cli listen --start-worker --worker-args "-A backend.tasks.celery_app.celery_app worker --loglevel=info"
+
+# Or let docker-compose pass the worker args via the CELERY_WORKER_ARGS env var (recommended):
+# docker-compose up --build
+```
 Developer note
 --------------
 - Tests use Celery's `task_always_eager` mode to run tasks synchronously so CI/dev machines don't need Redis.

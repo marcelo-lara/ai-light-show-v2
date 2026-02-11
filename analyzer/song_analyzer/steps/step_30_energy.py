@@ -6,6 +6,7 @@ import numpy as np
 from ..config import AnalysisContext
 from ..io.json_write import write_json
 from ..models.schemas import StepResult, EnergyArtifact
+from ..utils.numba_guard import disable_numba_jit
 
 
 def run(ctx: AnalysisContext) -> StepResult:
@@ -65,6 +66,7 @@ def run(ctx: AnalysisContext) -> StepResult:
 def compute_energy_curve(audio_path: str, fps: int) -> tuple[list[float], list[float]]:
     """Compute RMS energy curve for audio file."""
 
+    disable_numba_jit()
     import librosa
 
     # Load audio

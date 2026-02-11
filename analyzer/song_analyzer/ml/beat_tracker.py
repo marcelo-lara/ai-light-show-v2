@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from ..models.schemas import FailureRecord
+from ..utils.numba_guard import disable_numba_jit
 
 
 class BeatTracker:
@@ -16,6 +17,7 @@ class BeatTracker:
         """Track beats and downbeats from audio file."""
 
         try:
+            disable_numba_jit()
             import librosa
         except ImportError as e:
             raise Exception(f"librosa not installed or import failed: {e}")

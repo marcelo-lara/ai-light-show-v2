@@ -14,6 +14,7 @@ from typing import Any
 
 from ..config import AnalysisContext
 from ..models.schemas import StepResult
+from ..utils.numba_guard import disable_numba_jit
 
 
 def _safe_load_json(path: Path) -> dict[str, Any] | None:
@@ -78,6 +79,7 @@ def run(ctx: AnalysisContext) -> StepResult:
 
     matplotlib.use("Agg")  # Headless backend
     import matplotlib.pyplot as plt
+    disable_numba_jit()
     import librosa
     import librosa.display
 

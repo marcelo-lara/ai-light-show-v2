@@ -1,11 +1,20 @@
 """Command line interface for the song analyzer."""
 
-import typer
+from __future__ import annotations
+
 from pathlib import Path
 import glob
+import os
+
+import typer
 
 from .config import AnalysisConfig
 from .pipeline import AnalysisPipeline
+from .utils.numba_guard import disable_numba_jit
+
+
+os.environ.setdefault("NUMBA_DISABLE_JIT", "1")
+disable_numba_jit()
 
 
 app = typer.Typer()
@@ -128,6 +137,54 @@ def analyze_all(
         raise typer.Exit(1)
     else:
         typer.echo("All songs analyzed successfully")
+
+
+# -- Celery broker helper ---------------------------------------------------
+import os
+import time
+import shlex
+from kombu import Connection
+
+
+@app.command()
+def listen(
+    broker: str = typer.Option(None, envvar="CELERY_BROKER_URL", help="Celery broker URL"),
+    start_worker: bool = typer.Option(False, help="Start a Celery worker after broker is reachable"),
+    concurrency: int = typer.Option(1, help="Worker concurrency if starting a worker"),
+    worker_args: str = typer.Option(None, envvar="CELERY_WORKER_ARGS", help="Additional args for the celery worker command")
+):
+    """Wait for the Celery broker to become available and optionally start a worker.
+
+    Uses Kombu's Connection to perform a broker-level connection check which is
+    more accurate than a raw Redis ping (works for different broker backends).
+
+    If `--start-worker` is passed, this will exec into the `celery` CLI so the
+    container acts as the worker process. `worker_args` may be read from the
+    `CELERY_WORKER_ARGS` env var when not provided on the CLI.
+    """
+
+    broker = broker or "redis://localhost:6379/0"
+    worker_args = worker_args or os.environ.get("CELERY_WORKER_ARGS", "-A tasks.celery_app.celery_app worker --loglevel=info")
+
+    typer.echo(f"Waiting for Celery broker at {broker} ...")
+    while True:
+        try:
+            with Connection(broker) as conn:
+                conn.connect()
+            typer.echo("Broker is reachable")
+            break
+        except Exception as e:
+            typer.echo(f"Broker not available yet: {e}")
+            time.sleep(1)
+
+    if start_worker:
+        # Build the command and replace the current process with the celery worker
+        cmd = shlex.split(worker_args)
+        # Ensure celery binary is first if not specified
+        if cmd[0] != "celery":
+            cmd.insert(0, "celery")
+        typer.echo(f"Starting Celery worker: {' '.join(cmd)}")
+        os.execvp(cmd[0], cmd)
 
 
 if __name__ == "__main__":

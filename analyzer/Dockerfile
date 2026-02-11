@@ -1,16 +1,27 @@
-FROM python:3.11-slim AS base
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04 AS base
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV VENV_PATH=/opt/venv
-ENV PATH="/opt/venv/bin:${PATH}"
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    VENV_PATH=/opt/venv \
+    PATH="/opt/venv/bin:${PATH}" \
+    PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu121 \
+    DEBIAN_FRONTEND=noninteractive \
+    HOME=/app \
+    TORCH_HOME=/app/.cache/torch \
+    HF_HOME=/app/.cache/hf \
+    NUMBA_CACHE_DIR=/app/.cache/numba \
+    NUMBA_DISABLE_JIT=1 \
+    MPLCONFIGDIR=/app/.cache/matplotlib
 
-# system deps for audio processing
+# system deps for audio processing + Python runtime
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg libsndfile1 && \
+    apt-get install -y --no-install-recommends python3 python3-venv python3-pip ffmpeg libsndfile1 && \
     rm -rf /var/lib/apt/lists/*
 
-RUN python -m venv $VENV_PATH
+RUN mkdir -p /app/.cache/torch /app/.cache/numba /app/.cache/matplotlib /app/.cache/hf /app/temp_files && \
+    chmod -R 777 /app/.cache /app/temp_files
+
+RUN python3 -m venv $VENV_PATH
 
 WORKDIR /app
 

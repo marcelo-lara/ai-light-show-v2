@@ -8,6 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from ..config import AnalysisContext
 from ..io.json_write import write_json
 from ..models.schemas import StepResult, SectionsArtifact
+from ..utils.numba_guard import disable_numba_jit
 
 
 def run(ctx: AnalysisContext) -> StepResult:
@@ -65,6 +66,7 @@ def extract_sections(audio_path: str) -> list[dict]:
     """Extract song sections using OpenL3 embeddings and novelty detection."""
 
     try:
+        disable_numba_jit()
         import openl3
         import librosa
     except ImportError:
@@ -177,6 +179,7 @@ def extract_sections(audio_path: str) -> list[dict]:
 def _fallback_sections(audio_path: str) -> list[dict]:
     """Fallback section detection using energy and spectral features."""
 
+    disable_numba_jit()
     import librosa
 
     # Load audio

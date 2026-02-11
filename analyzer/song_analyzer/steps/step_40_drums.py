@@ -6,6 +6,7 @@ import numpy as np
 from ..config import AnalysisContext
 from ..io.json_write import write_json
 from ..models.schemas import StepResult, OnsetsArtifact
+from ..utils.numba_guard import disable_numba_jit
 
 
 def run(ctx: AnalysisContext) -> StepResult:
@@ -62,6 +63,7 @@ def run(ctx: AnalysisContext) -> StepResult:
 def extract_drum_events(audio_path: str) -> list[dict]:
     """Extract drum events from audio using onset strength."""
 
+    disable_numba_jit()
     import librosa
 
     # Load audio
@@ -94,6 +96,7 @@ def extract_drum_events(audio_path: str) -> list[dict]:
 def classify_drum_hit(y: np.ndarray, sr: int, time_s: float) -> str:
     """Simple heuristic classification of drum hits."""
 
+    disable_numba_jit()
     import librosa
 
     # Extract a short window around the hit
