@@ -19,35 +19,27 @@ services:
   worker:
     build:
       context: ./analyzer
-    entrypoint: ["python", "-m", "song_analyzer.cli", "listen"]
-    command: ["--start-worker"]
-    user: "1000:1000"
+    entrypoint: ["/app/startup.sh"]
+    command: ["celery", "-A", "tasks.celery_app.celery_app", "worker", "--loglevel=info", "--concurrency=1", "-Q", "celery"]
     depends_on:
       - redis
     volumes:
       - ./backend:/app/backend
-      - ./backend/songs:/app/songs
-      - analyzer_model_cache:/app/.cache
-      - ./backend/metadata:/app/metadata
+      - ./backend/songs:/app/backend/songs
+      - ./backend/metadata:/app/backend/metadata
       - ./analyzer/temp_files:/app/temp_files
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - PYTHONPATH=/app/backend:/app
       - CELERY_IMPORTS=tasks.analyze
-      - CELERY_WORKER_ARGS=-A tasks.celery_app.celery_app worker --loglevel=info --concurrency=1
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - NUMBA_DISABLE_JIT=1
-      - NUMBA_CACHE_DIR=/app/.cache/numba
-      - XDG_CACHE_HOME=/app/.cache
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      - ANALYZER_LOG_LEVEL=DEBUG
+    healthcheck:
+      test: ["CMD-SHELL", "/app/worker_healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
 
   frontend:
@@ -58,6 +50,38 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+  analyzer:
+    build:
+      context: ./analyzer
+      args:
+        BUILD_UID: ${UID:-1000}
+        BUILD_GID: ${GID:-1000}
+    restart: unless-stopped
+    depends_on:
+      - redis
+    # Start a GPU-capable Celery worker that listens for analyzer tasks.
+    entrypoint: ["/app/startup.sh"]
+    command: ["celery", "-A", "tasks.celery_app.celery_app", "worker", "--loglevel=info", "--concurrency=1", "-Q", "analyzer"]
+    volumes:
+      - ./backend:/app/backend
+      - ./backend/songs:/app/songs
+      - ./backend/metadata:/app/metadata
+      - ./analyzer/temp_files:/app/temp_files
+      - analyzer_model_cache:/home/appuser/.cache
+    environment:
+      - PYTHONPATH=/app/backend:/app
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_IMPORTS=tasks.analyze
+      - ANALYZER_LOG_LEVEL=DEBUG
+    healthcheck:
+      test: ["CMD-SHELL", "/app/worker_healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    runtime: nvidia
 
 volumes:
   analyzer_model_cache:

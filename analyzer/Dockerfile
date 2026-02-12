@@ -1,27 +1,16 @@
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04 AS base
+FROM python:3.11-slim AS base
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    VENV_PATH=/opt/venv \
-    PATH="/opt/venv/bin:${PATH}" \
-    PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu121 \
-    DEBIAN_FRONTEND=noninteractive \
-    HOME=/app \
-    TORCH_HOME=/app/.cache/torch \
-    HF_HOME=/app/.cache/hf \
-    NUMBA_CACHE_DIR=/app/.cache/numba \
-    NUMBA_DISABLE_JIT=1 \
-    MPLCONFIGDIR=/app/.cache/matplotlib
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV VENV_PATH=/opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
 
-# system deps for audio processing + Python runtime
+# system deps for audio processing
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 python3-venv python3-pip ffmpeg libsndfile1 && \
+    apt-get install -y --no-install-recommends ffmpeg libsndfile1 && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /app/.cache/torch /app/.cache/numba /app/.cache/matplotlib /app/.cache/hf /app/temp_files && \
-    chmod -R 777 /app/.cache /app/temp_files
-
-RUN python3 -m venv $VENV_PATH
+RUN python -m venv $VENV_PATH
 
 WORKDIR /app
 
@@ -41,10 +30,21 @@ COPY pyproject.toml requirements.txt ./
 COPY song_analyzer ./song_analyzer
 COPY main.py ./main.py
 COPY split_stems.py ./split_stems.py
+COPY startup.sh /app/startup.sh
+COPY worker_healthcheck.sh /app/worker_healthcheck.sh
 
 # install the actual analyzer package without re-resolving dependencies
-RUN pip install --no-cache-dir --no-deps .
+RUN pip install --no-cache-dir --no-deps . && \
+    chmod +x /app/startup.sh /app/worker_healthcheck.sh
+ARG BUILD_UID=1000
+ARG BUILD_GID=1000
 
-# User creation removed; container will run as root
+# Create dedicated non-root user and set ownership for application directories
+RUN groupadd -g ${BUILD_GID} appuser && \
+    useradd -m -u ${BUILD_UID} -g appuser -s /bin/bash appuser && \
+    chown -R appuser:appuser /app /opt/venv
+
+USER appuser
+
 ENTRYPOINT ["python", "-m", "song_analyzer.cli"]
 CMD ["--help"]
