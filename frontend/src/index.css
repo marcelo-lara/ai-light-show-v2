@@ -453,7 +453,7 @@ button:focus-visible {
 
 .customRangeSliderValue {
   min-width: 42px;
-  height: 40px;
+  height: 20px;
   display: grid;
   place-items: center;
   border-radius: 4px;
