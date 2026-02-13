@@ -18,12 +18,15 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
   const redChannel = channels.red
   const greenChannel = channels.green
   const blueChannel = channels.blue
-  const strobeChannel = channels.strobe
-  const dimmerChannel = channels.dim ?? channels.dimmer
+  const dimChannel = channels.dim
   const redValue = readChannel(dmxValues, redChannel)
   const greenValue = readChannel(dmxValues, greenChannel)
   const blueValue = readChannel(dmxValues, blueChannel)
-  const dimValue = readChannel(dmxValues, dimmerChannel)
+  const dimValue = readChannel(dmxValues, dimChannel)
+
+  const sliderChannels = Object.entries(channels).filter(
+    ([channelName]) => !['red', 'green', 'blue'].includes(channelName)
+  )
 
   const selectedPreset =
     RGB_PRESETS.find((preset) => {
@@ -40,8 +43,8 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
     writeChannel(onDmxChange, greenChannel, green)
     writeChannel(onDmxChange, blueChannel, blue)
 
-    if (dimmerChannel) {
-      writeChannel(onDmxChange, dimmerChannel, preset.name === 'Off' ? 0 : 255)
+    if (dimChannel) {
+      writeChannel(onDmxChange, dimChannel, preset.name === 'Off' ? 0 : 255)
     }
   }
 
@@ -96,20 +99,14 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
             onInput={(value) => writeChannel(onDmxChange, blueChannel, value)}
           />
         ) : null}
-        {strobeChannel ? (
+        {sliderChannels.map(([channelName, channelNum]) => (
           <DmxSlider
-            label="Strobe"
-            value={readChannel(dmxValues, strobeChannel)}
-            onInput={(value) => writeChannel(onDmxChange, strobeChannel, value)}
+            key={`${fixture.id}-${channelName}`}
+            label={channelName}
+            value={readChannel(dmxValues, channelNum)}
+            onInput={(value) => writeChannel(onDmxChange, channelNum, value)}
           />
-        ) : null}
-        {dimmerChannel ? (
-          <DmxSlider
-            label="Dimmer"
-            value={dimValue}
-            onInput={(value) => writeChannel(onDmxChange, dimmerChannel, value)}
-          />
-        ) : null}
+        ))}
       </div>
     </section>
   )

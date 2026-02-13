@@ -32,9 +32,9 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange }) {
   const colorOptions = getWheelOptions(fixture, 'color')
   const goboOptions = getWheelOptions(fixture, 'gobo')
 
-  const prismChannel = channels.prism ?? channels.speed
-  const strobeChannel = channels.strobe ?? channels.shutter
-  const dimmerChannel = channels.dim ?? channels.dimmer
+  const sliderChannels = Object.entries(channels).filter(([channelName]) => {
+    return !['pan_msb', 'pan_lsb', 'tilt_msb', 'tilt_lsb', 'color', 'gobo'].includes(channelName)
+  })
 
   const handlePadChange = (nextPan, nextTilt) => {
     write16(onDmxChange, panMsbChannel, panLsbChannel, nextPan)
@@ -85,27 +85,14 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange }) {
             onSelect={(value) => writeChannel(onDmxChange, goboChannel, value)}
           />
 
-          {prismChannel ? (
+          {sliderChannels.map(([channelName, channelNum]) => (
             <DmxSlider
-              label="Prism"
-              value={readChannel(dmxValues, prismChannel)}
-              onInput={(value) => writeChannel(onDmxChange, prismChannel, value)}
+              key={`${fixture.id}-${channelName}`}
+              label={channelName}
+              value={readChannel(dmxValues, channelNum)}
+              onInput={(value) => writeChannel(onDmxChange, channelNum, value)}
             />
-          ) : null}
-          {strobeChannel ? (
-            <DmxSlider
-              label="Strobe"
-              value={readChannel(dmxValues, strobeChannel)}
-              onInput={(value) => writeChannel(onDmxChange, strobeChannel, value)}
-            />
-          ) : null}
-          {dimmerChannel ? (
-            <DmxSlider
-              label="Dimmer"
-              value={readChannel(dmxValues, dimmerChannel)}
-              onInput={(value) => writeChannel(onDmxChange, dimmerChannel, value)}
-            />
-          ) : null}
+          ))}
         </div>
       </div>
     </section>
