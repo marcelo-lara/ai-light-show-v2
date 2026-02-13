@@ -4,6 +4,10 @@ function clampUnit(value) {
   return Math.max(0, Math.min(1, value))
 }
 
+function clamp16(value) {
+  return Math.max(0, Math.min(65535, Math.round(Number(value) || 0)))
+}
+
 export default function XYPad({ pan16, tilt16, onChange }) {
   const draggingRef = useRef(false)
 
@@ -36,6 +40,32 @@ export default function XYPad({ pan16, tilt16, onChange }) {
     }
   }
 
+  const onKeyDown = (e) => {
+    const currentPan = clamp16(pan16)
+    const currentTilt = clamp16(tilt16)
+    const step = e.shiftKey ? 256 : 1
+
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      onChange?.(clamp16(currentPan - step), currentTilt)
+      return
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      onChange?.(clamp16(currentPan + step), currentTilt)
+      return
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      onChange?.(currentPan, clamp16(currentTilt - step))
+      return
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      onChange?.(currentPan, clamp16(currentTilt + step))
+    }
+  }
+
   const xPercent = Math.max(0, Math.min(100, (Number(pan16 || 0) / 65535) * 100))
   const yPercent = Math.max(0, Math.min(100, (Number(tilt16 || 0) / 65535) * 100))
 
@@ -47,6 +77,8 @@ export default function XYPad({ pan16, tilt16, onChange }) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
         onPointerCancel={onPointerEnd}
+        onKeyDown={onKeyDown}
+        tabIndex={0}
         role="application"
         aria-label="Pan tilt pad"
       >

@@ -9,7 +9,7 @@ export default function CustomRangeSlider({
   value = 0,
   onInput,
   ariaLabel = 'Range slider',
-  showValue = true,
+  showValue = false,
 }) {
   const numericMin = Number(min)
   const numericMax = Number(max)

@@ -394,17 +394,20 @@ button:focus-visible {
 .customRangeSlider {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0;
 }
 
 .customRangeSliderInput {
   --slider-fill-color: #3f6df6;
   --slider-track-color: #4a4a4a;
   --slider-fill: 0%;
+  --slider-track-height: 1px;
+  --slider-thumb-width: 10px;
+  --slider-thumb-height: 20px;
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
-  height: 1px;
+  height: var(--slider-track-height);
   border-radius: 999px;
   background: linear-gradient(
     to right,
@@ -416,7 +419,7 @@ button:focus-visible {
 }
 
 .customRangeSliderInput::-webkit-slider-runnable-track {
-  height: 1px;
+  height: var(--slider-track-height);
   border-radius: 999px;
   background: transparent;
 }
@@ -424,29 +427,29 @@ button:focus-visible {
 .customRangeSliderInput::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 10px;
-  height: 20px;
+  width: var(--slider-thumb-width);
+  height: var(--slider-thumb-height);
   border: none;
-  margin-top: -10px;
+  margin-top: calc((var(--slider-track-height) - var(--slider-thumb-height)) / 2);
   background: var(--slider-fill-color);
   box-shadow: 0 0 0 2px rgba(20, 20, 20, 0.28);
 }
 
 .customRangeSliderInput::-moz-range-track {
-  height: 1px;
+  height: var(--slider-track-height);
   border-radius: 999px;
   background: transparent;
 }
 
 .customRangeSliderInput::-moz-range-progress {
-  height: 2px;
+  height: var(--slider-track-height);
   border-radius: 999px;
   background: var(--slider-fill-color);
 }
 
 .customRangeSliderInput::-moz-range-thumb {
-  width: 10px;
-  height: 20px;
+  width: var(--slider-thumb-width);
+  height: var(--slider-thumb-height);
   border: none;
   background: var(--slider-fill-color);
 }
@@ -604,9 +607,20 @@ button:focus-visible {
   gap: 6px;
 }
 
+.wheelRowHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .wheelRowLabel {
   font-size: 13px;
   font-weight: 600;
+}
+
+.wheelRowValue {
+  font-size: 12px;
 }
 
 .wheelButtonGrid {
@@ -632,23 +646,56 @@ button:focus-visible {
   color: #fff;
 }
 
-.sliderRow {
+.dmxSlider {
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
-.sliderRowHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.dmxSliderLabel {
   font-size: 13px;
+  font-weight: 500;
+}
+
+.dmxSliderControl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.dmxSliderControl .customRangeSlider {
+  min-width: 0;
+}
+
+.dmxSliderControl .customRangeSliderInput {
+  --slider-track-height: 1px;
+  --slider-thumb-width: 10px;
+  --slider-thumb-height: 20px;
+}
+
+.dmxSliderValue {
+  min-width: 42px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: #3f6df6;
 }
 
 .rgbPresetGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
+}
+
+.rgbPresetHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .rgbPresetButton {
@@ -671,6 +718,16 @@ button:focus-visible {
   display: block;
   padding: 5px 6px;
   font-size: 11px;
+}
+
+.rgbPresetButtonActive {
+  border-color: #93adff;
+  box-shadow: inset 0 0 0 1px #93adff;
+}
+
+.xyPad:focus {
+  outline: 2px solid #93adff;
+  outline-offset: 1px;
 }
 
 .dmxEmpty {

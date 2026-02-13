@@ -1,4 +1,4 @@
-import ChannelSlider from './ChannelSlider.jsx'
+import DmxSlider from './DmxSlider.jsx'
 import WheelButtonRow from './WheelButtonRow.jsx'
 import XYPad from './XYPad.jsx'
 import {
@@ -86,25 +86,22 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange }) {
           />
 
           {prismChannel ? (
-            <ChannelSlider
+            <DmxSlider
               label="Prism"
-              channelNum={prismChannel}
               value={readChannel(dmxValues, prismChannel)}
               onInput={(value) => writeChannel(onDmxChange, prismChannel, value)}
             />
           ) : null}
           {strobeChannel ? (
-            <ChannelSlider
+            <DmxSlider
               label="Strobe"
-              channelNum={strobeChannel}
               value={readChannel(dmxValues, strobeChannel)}
               onInput={(value) => writeChannel(onDmxChange, strobeChannel, value)}
             />
           ) : null}
           {dimmerChannel ? (
-            <ChannelSlider
+            <DmxSlider
               label="Dimmer"
-              channelNum={dimmerChannel}
               value={readChannel(dmxValues, dimmerChannel)}
               onInput={(value) => writeChannel(onDmxChange, dimmerChannel, value)}
             />

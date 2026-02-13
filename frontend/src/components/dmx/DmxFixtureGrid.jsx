@@ -1,4 +1,4 @@
-import ChannelSlider from './ChannelSlider.jsx'
+import DmxSlider from './DmxSlider.jsx'
 import MovingHeadCard from './MovingHeadCard.jsx'
 import RgbParCard from './RgbParCard.jsx'
 import { readChannel, writeChannel } from './dmxUtils.js'
@@ -11,10 +11,9 @@ function GenericFixtureCard({ fixture, dmxValues, onDmxChange }) {
       </header>
       <div class="dmxCardBody">
         {Object.entries(fixture?.channels || {}).map(([channelName, channelNum]) => (
-          <ChannelSlider
+          <DmxSlider
             key={`${fixture.id}-${channelName}`}
             label={channelName}
-            channelNum={channelNum}
             value={readChannel(dmxValues, channelNum)}
             onInput={(value) => writeChannel(onDmxChange, channelNum, value)}
           />
