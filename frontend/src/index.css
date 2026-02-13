@@ -389,3 +389,360 @@ button:focus-visible {
 .pageBody {
   min-height: 0;
 }
+
+/* Custom range slider (DMX control) */
+.customRangeSlider {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.customRangeSliderInput {
+  --slider-fill-color: #3f6df6;
+  --slider-track-color: #4a4a4a;
+  --slider-fill: 0%;
+  --slider-track-height: 1px;
+  --slider-thumb-width: 10px;
+  --slider-thumb-height: 20px;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: var(--slider-track-height);
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--slider-fill-color) var(--slider-fill),
+    var(--slider-track-color) var(--slider-fill)
+  );
+  outline: none;
+  cursor: pointer;
+}
+
+.customRangeSliderInput::-webkit-slider-runnable-track {
+  height: var(--slider-track-height);
+  border-radius: 999px;
+  background: transparent;
+}
+
+.customRangeSliderInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--slider-thumb-width);
+  height: var(--slider-thumb-height);
+  border: none;
+  margin-top: calc((var(--slider-track-height) - var(--slider-thumb-height)) / 2);
+  background: var(--slider-fill-color);
+  box-shadow: 0 0 0 2px rgba(20, 20, 20, 0.28);
+}
+
+.customRangeSliderInput::-moz-range-track {
+  height: var(--slider-track-height);
+  border-radius: 999px;
+  background: transparent;
+}
+
+.customRangeSliderInput::-moz-range-progress {
+  height: var(--slider-track-height);
+  border-radius: 999px;
+  background: var(--slider-fill-color);
+}
+
+.customRangeSliderInput::-moz-range-thumb {
+  width: var(--slider-thumb-width);
+  height: var(--slider-thumb-height);
+  border: none;
+  background: var(--slider-fill-color);
+}
+
+.customRangeSliderValue {
+  min-width: 42px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: #3f6df6;
+}
+
+/* DMX Control page */
+.dmxPage {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+}
+
+.dmxHeader {
+  margin-bottom: 0;
+}
+
+.dmxBody {
+  min-height: 0;
+  overflow: auto;
+}
+
+.dmxGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(360px, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+
+.dmxCard {
+  border: 1px solid #3a3a3a;
+  background: #202020;
+  min-width: 0;
+}
+
+.dmxCardHeader {
+  border-bottom: 1px solid #3a3a3a;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dmxCardHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dmxCardBody {
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.dmxArmButton {
+  border: 1px solid #5a5a5a;
+  border-radius: 0;
+  background: #2b2b2b;
+  min-height: 30px;
+  padding: 2px 12px;
+  font-size: 14px;
+}
+
+.movingHeadLayout {
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.movingHeadLeft,
+.movingHeadRight {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.xyPadWrap {
+  display: grid;
+  gap: 8px;
+}
+
+.xyPad {
+  position: relative;
+  height: 200px;
+  border: 1px solid #5a5a5a;
+  background: #262626;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.xyPadCrosshair {
+  position: absolute;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.xyPadCrosshairX {
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  border-top: 1px dashed #8a8a8a;
+}
+
+.xyPadCrosshairY {
+  left: 50%;
+  top: 10%;
+  bottom: 10%;
+  border-left: 1px dashed #8a8a8a;
+}
+
+.xyPadMarker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #bdbdbd;
+  background: #2a2a2a;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.xyPadReadout {
+  font-size: 12px;
+}
+
+.poiGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.poiButton {
+  border: 1px solid #676767;
+  border-radius: 0;
+  background: #2b2b2b;
+  color: #e5e5e5;
+  font-size: 14px;
+  padding: 6px 8px;
+}
+
+.wheelRow {
+  display: grid;
+  gap: 6px;
+}
+
+.wheelRowHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wheelRowLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wheelRowValue {
+  font-size: 12px;
+}
+
+.wheelButtonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 6px;
+}
+
+.wheelButton {
+  border: 1px solid #787878;
+  border-radius: 0;
+  padding: 6px 4px;
+  min-height: 34px;
+  background: #2b2b2b;
+  color: #e7e7e7;
+  font-size: 11px;
+  line-height: 1.1;
+}
+
+.wheelButtonActive {
+  border-color: #93adff;
+  background: #345ecf;
+  color: #fff;
+}
+
+.dmxSlider {
+  display: grid;
+  gap: 4px;
+}
+
+.dmxSliderLabel {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.dmxSliderControl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.dmxSliderControl .customRangeSlider {
+  min-width: 0;
+}
+
+.dmxSliderControl .customRangeSliderInput {
+  --slider-track-height: 1px;
+  --slider-thumb-width: 10px;
+  --slider-thumb-height: 20px;
+}
+
+.dmxSliderValue {
+  min-width: 42px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: #3f6df6;
+}
+
+.rgbPresetGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.rgbPresetHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rgbPresetButton {
+  border: 1px solid #666;
+  border-radius: 0;
+  background: #2b2b2b;
+  color: #f4f4f4;
+  padding: 0;
+  overflow: hidden;
+}
+
+.rgbPresetButton::before {
+  content: '';
+  display: block;
+  height: 20px;
+  background: var(--preset-color, #777);
+}
+
+.rgbPresetButton span {
+  display: block;
+  padding: 5px 6px;
+  font-size: 11px;
+}
+
+.rgbPresetButtonActive {
+  border-color: #93adff;
+  box-shadow: inset 0 0 0 1px #93adff;
+}
+
+.xyPad:focus {
+  outline: 2px solid #93adff;
+  outline-offset: 1px;
+}
+
+.dmxEmpty {
+  border: 1px solid #3a3a3a;
+  padding: 12px;
+}
+
+@media (max-width: 1200px) {
+  .dmxGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 840px) {
+  .movingHeadLayout {
+    grid-template-columns: 1fr;
+  }
+}
