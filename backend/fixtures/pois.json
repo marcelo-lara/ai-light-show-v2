@@ -1,0 +1,38 @@
+[
+    {
+        "id": "piano",
+        "name": "Piano",
+        "location": {"x": 0.5, "y": 0.5, "z": 0}
+    },
+    {
+        "id": "table",
+        "name": "Table",
+        "location": {"x": 0.5, "y": 0.5, "z": 0}
+    },
+    {
+        "id": "sofa",
+        "name": "Sofa",
+        "location": {"x": 0.5, "y": 0.5, "z": 0}
+    },
+    {
+        "id": "dark_desk",
+        "name": "Dark Desk",
+        "location": {"x": 0.5, "y": 0.5, "z": 0}
+    },
+    {
+        "id": "inblue_desk",
+        "name": "Inblue Desk",
+        "location": {"x": 0.5, "y": 0.5, "z": 0}
+    },
+    {
+        "id": "wall",
+        "name": "Wall",
+        "location": {"x": 0.5, "y": 0.5, "z": 0}
+    },
+    {
+        "id": "ceiling_station",
+        "name": "Ceiling Station",
+        "location": {"x": 0.5, "y": 0.5, "z": 0}
+    }
+
+]
