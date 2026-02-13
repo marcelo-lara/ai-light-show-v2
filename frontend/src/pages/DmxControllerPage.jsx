@@ -1,15 +1,21 @@
+import { useAppState } from '../app/state.jsx'
+import DmxFixtureGrid from '../components/dmx/DmxFixtureGrid.jsx'
+
 export default function DmxControllerPage() {
+  const { fixtures, dmxValues, actions } = useAppState()
+
   return (
-    <div class="page">
-      <div class="pageHeader">
-        <h2>DMX Controller</h2>
-        <div class="muted">POIs, chasers, and a virtual console per fixture.</div>
+    <div class="page dmxPage">
+      <div class="pageHeader dmxHeader">
+        <h2>DMX Control</h2>
+        <div class="muted">Fixture-first controls with XY pan/tilt, wheel mapping, presets, and direct DMX.</div>
       </div>
-      <div class="pageBody">
-        <div class="card">
-          <div class="cardTitle">Not implemented yet</div>
-          <div class="muted">This page will follow the Lo‑Fi layout next.</div>
-        </div>
+      <div class="pageBody dmxBody">
+        <DmxFixtureGrid
+          fixtures={fixtures}
+          dmxValues={dmxValues}
+          onDmxChange={actions.handleDmxChange}
+        />
       </div>
     </div>
   )
