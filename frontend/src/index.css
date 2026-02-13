@@ -389,3 +389,76 @@ button:focus-visible {
 .pageBody {
   min-height: 0;
 }
+
+/* Custom range slider (DMX control) */
+.customRangeSlider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.customRangeSliderInput {
+  --slider-fill-color: #3f6df6;
+  --slider-track-color: #4a4a4a;
+  --slider-fill: 0%;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--slider-fill-color) var(--slider-fill),
+    var(--slider-track-color) var(--slider-fill)
+  );
+  outline: none;
+  cursor: pointer;
+}
+
+.customRangeSliderInput::-webkit-slider-runnable-track {
+  height: 1px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.customRangeSliderInput::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 20px;
+  border: none;
+  margin-top: -10px;
+  background: var(--slider-fill-color);
+  box-shadow: 0 0 0 2px rgba(18, 18, 18, 0.45);
+}
+
+.customRangeSliderInput::-moz-range-track {
+  height: 1px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.customRangeSliderInput::-moz-range-progress {
+  height: 2px;
+  border-radius: 999px;
+  background: var(--slider-fill-color);
+}
+
+.customRangeSliderInput::-moz-range-thumb {
+  width: 10px;
+  height: 20px;
+  border: none;
+  background: var(--slider-fill-color);
+}
+
+.customRangeSliderValue {
+  min-width: 42px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: #3f6df6;
+}

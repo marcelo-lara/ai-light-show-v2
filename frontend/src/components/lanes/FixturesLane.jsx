@@ -1,3 +1,5 @@
+import CustomRangeSlider from '../ui/CustomRangeSlider.jsx'
+
 export default function FixturesLane({ fixtures, dmxValues, onDmxChange, timecode }) {
   return (
     <div class="panel">
@@ -18,17 +20,14 @@ export default function FixturesLane({ fixtures, dmxValues, onDmxChange, timecod
                     style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}
                   >
                     <span>{channelName}</span>
-                    <span>
-                      Ch {channelNum}: {dmxValues[channelNum] || 0}
-                    </span>
+                    <span>Ch {channelNum}</span>
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="255"
+                  <CustomRangeSlider
+                    min={0}
+                    max={255}
                     value={dmxValues[channelNum] || 0}
-                    onInput={(e) => onDmxChange(channelNum, parseInt(e.target.value))}
-                    style={{ width: '100%' }}
+                    ariaLabel={`${fixture.name} ${channelName}`}
+                    onInput={(nextValue) => onDmxChange(channelNum, nextValue)}
                   />
                 </div>
               ))}
