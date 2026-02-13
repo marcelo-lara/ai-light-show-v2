@@ -415,6 +415,177 @@ button:focus-visible {
   cursor: pointer;
 }
 
+/* DMX page specific styles */
+.dmxPage {
+  padding-bottom: 24px;
+}
+.dmxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dmxGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .dmxGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.dmxCard {
+  background: #202020;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px;
+}
+.dmxCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.dmxCardBody {
+  display: flex;
+  gap: 12px;
+  padding-top: 4px;
+}
+.movingHeadLayout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.xyPad {
+  width: 220px;
+  height: 140px;
+  background: linear-gradient(180deg, #171717, #1c1c1c);
+  border: 1px solid #333;
+  border-radius: 6px;
+  position: relative;
+  touch-action: none;
+}
+.xyPadCrosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.xyPadMarker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 2px rgba(18,18,18,0.6);
+  background: #3f6df6;
+  pointer-events: none;
+}
+.poiGrid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.wheelRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.wheelButton {
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #141414;
+  color: rgba(255,255,255,0.9);
+  padding: 4px 8px;
+  font-size: 12px;
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wheelButtonLabel {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 88px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wheelButtonActive {
+  background: linear-gradient(90deg,#4a6df6,#7b7fff);
+  color: white;
+  border-color: rgba(74,109,246,0.3);
+}
+.wheelPager {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: 6px;
+}
+.wheelPagerButton {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #111;
+  color: rgba(255,255,255,0.9);
+  font-size: 12px;
+}
+.wheelPagerButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.wheelPagerIndicator {
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  padding: 4px 6px;
+}
+.sliderRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.rgbPresetGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.rgbPresetButton {
+  width: 100%;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+.customRangeSliderInput {
+  --slider-fill-color: #3f6df6;
+  --slider-track-color: #4a4a4a;
+  --slider-fill: 0%;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--slider-fill-color) var(--slider-fill),
+    var(--slider-track-color) var(--slider-fill)
+  );
+  outline: none;
+  cursor: pointer;
+}
+
 .customRangeSliderInput::-webkit-slider-runnable-track {
   height: 1px;
   border-radius: 999px;
