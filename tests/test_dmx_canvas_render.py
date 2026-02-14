@@ -388,3 +388,78 @@ def test_dmx_canvas_renders_moving_head_sweep_peaks_at_preset():
     pan_end = (int(view_end[1 - 1]) << 8) | int(view_end[2 - 1])
     assert abs(pan_end - end_pan) <= 1
     assert int(view_end[5 - 1]) == 0
+
+
+def test_dmx_canvas_renders_moving_head_sweep_center_2s_mid_and_end():
+    sm = StateManager(Path('.'))
+    head = MovingHead(
+        id='head_el150',
+        name='Head EL-150',
+        type='moving_head',
+        channels={
+            'pan_msb': 1,
+            'pan_lsb': 2,
+            'tilt_msb': 3,
+            'tilt_lsb': 4,
+            'speed': 5,
+            'dim': 6,
+            'shutter': 7,
+        },
+        location={'x': 0.4, 'y': 0, 'z': 0},
+        presets=[],
+    )
+    sm.fixtures = [head]
+
+    center_pan = (0 + 65535) // 2
+    center_tilt = (70 + 3363) // 2
+    span_pan = 1000
+    span_tilt = 600
+    start_pan = center_pan - span_pan // 2
+    start_tilt = center_tilt - span_tilt // 2
+    end_pan = center_pan + span_pan // 2
+    end_tilt = center_tilt + span_tilt // 2
+
+    sm.song_length_seconds = 3.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            CueEntry(
+                time=0.0,
+                fixture_id='head_el150',
+                effect='sweep',
+                duration=2.0,
+                data={
+                    'pan': center_pan,
+                    'tilt': center_tilt,
+                    'span_pan': span_pan,
+                    'span_tilt': span_tilt,
+                },
+            ),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+    frame_start = int(round(0.0 * FPS))
+    frame_mid = int(round(1.0 * FPS))
+    frame_end = int(round(2.0 * FPS))
+
+    view_start = canvas.frame_view(frame_start)
+    pan_start = (int(view_start[1 - 1]) << 8) | int(view_start[2 - 1])
+    tilt_start = (int(view_start[3 - 1]) << 8) | int(view_start[4 - 1])
+    assert abs(pan_start - start_pan) <= 1
+    assert abs(tilt_start - start_tilt) <= 1
+    assert int(view_start[6 - 1]) == 0
+
+    view_mid = canvas.frame_view(frame_mid)
+    pan_mid = (int(view_mid[1 - 1]) << 8) | int(view_mid[2 - 1])
+    tilt_mid = (int(view_mid[3 - 1]) << 8) | int(view_mid[4 - 1])
+    assert abs(pan_mid - center_pan) <= 1
+    assert abs(tilt_mid - center_tilt) <= 1
+    assert int(view_mid[6 - 1]) == 255
+
+    view_end = canvas.frame_view(frame_end)
+    pan_end = (int(view_end[1 - 1]) << 8) | int(view_end[2 - 1])
+    tilt_end = (int(view_end[3 - 1]) << 8) | int(view_end[4 - 1])
+    assert abs(pan_end - end_pan) <= 1
+    assert abs(tilt_end - end_tilt) <= 1
+    assert int(view_end[6 - 1]) == 0
