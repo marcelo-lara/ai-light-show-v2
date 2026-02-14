@@ -142,6 +142,40 @@ def test_dmx_canvas_renders_full_rgb_and_persists():
     assert view_last[4 - 1] == 30
 
 
+def test_dmx_canvas_renders_flash_starts_full_and_ends_off():
+    sm = StateManager(Path('.'))
+    parcan = Parcan(
+        id='parcan_1',
+        name='ParCan 1',
+        type='parcan',
+        channels={'dim': 1, 'red': 2, 'green': 3, 'blue': 4},
+        location={'x': 0.0, 'y': 0, 'z': 0},
+    )
+    sm.fixtures = [parcan]
+
+    sm.song_length_seconds = 2.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            CueEntry(time=0.0, fixture_id='parcan_1', effect='flash', duration=1.0, data={}),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+    frame_start = int(round(0.0 * FPS))
+    frame_end = int(round(1.0 * FPS))
+
+    view_start = canvas.frame_view(frame_start)
+    assert view_start[2 - 1] == 255
+    assert view_start[3 - 1] == 255
+    assert view_start[4 - 1] == 255
+
+    view_end = canvas.frame_view(frame_end)
+    assert view_end[2 - 1] == 0
+    assert view_end[3 - 1] == 0
+    assert view_end[4 - 1] == 0
+
+
 def test_dmx_canvas_renders_strobe_rgb_toggles_and_ends_on():
     sm = StateManager(Path('.'))
     parcan = Parcan(
@@ -257,6 +291,44 @@ def test_dmx_canvas_renders_moving_head_seek_preset_16bit():
     tilt = (int(view0[3 - 1]) << 8) | int(view0[4 - 1])
     assert pan == ((120 << 8) | 35)
     assert tilt == ((20 << 8) | 11)
+
+
+def test_dmx_canvas_renders_moving_head_flash_starts_full_and_ends_off():
+    sm = StateManager(Path('.'))
+    head = MovingHead(
+        id='head_1',
+        name='Head 1',
+        type='moving_head',
+        channels={
+            'pan_msb': 1,
+            'pan_lsb': 2,
+            'tilt_msb': 3,
+            'tilt_lsb': 4,
+            'dim': 5,
+            'shutter': 6,
+        },
+        location={'x': 0.0, 'y': 0, 'z': 0},
+        presets=[],
+    )
+    sm.fixtures = [head]
+
+    sm.song_length_seconds = 2.0
+    sm.cue_sheet = CueSheet(
+        song_filename='test_song',
+        entries=[
+            CueEntry(time=0.0, fixture_id='head_1', effect='flash', duration=1.0, data={}),
+        ],
+    )
+
+    canvas = sm._render_cue_sheet_to_canvas()
+    frame_start = int(round(0.0 * FPS))
+    frame_end = int(round(1.0 * FPS))
+
+    view_start = canvas.frame_view(frame_start)
+    assert view_start[5 - 1] == 255
+
+    view_end = canvas.frame_view(frame_end)
+    assert view_end[5 - 1] == 0
 
 
 def test_dmx_canvas_renders_moving_head_sweep_peaks_at_preset():

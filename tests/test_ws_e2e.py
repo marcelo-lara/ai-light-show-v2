@@ -55,6 +55,7 @@ class PreviewStateStub:
         self.preview_end_event = asyncio.Event()
         self.preview_lifetime = float(preview_lifetime)
         self.output_tick = 0
+        self.persisted_tick = 0
 
     async def get_is_playing(self):
         return bool(self.is_playing)
@@ -91,6 +92,7 @@ class PreviewStateStub:
 
         async def finish_preview_soon():
             await asyncio.sleep(self.preview_lifetime)
+            self.persisted_tick = self.output_tick
             self.preview_active = False
             self.preview_request_id = None
             self.preview_end_event.set()
@@ -113,6 +115,11 @@ class PreviewStateStub:
         if self.preview_active:
             self.output_tick = (self.output_tick + 1) % 256
             universe[16] = self.output_tick
+            self.persisted_tick = self.output_tick
+            return universe
+
+        if self.persisted_tick:
+            universe[16] = self.persisted_tick
         return universe
 
 
@@ -244,4 +251,5 @@ async def test_preview_streams_temporary_canvas_to_artnet(tmp_path):
     assert len(artnet.updates) >= 2
     unique_frames = {packet[16] for packet in artnet.updates}
     assert len(unique_frames) >= 2
-    assert artnet.updates[-1][16] == 0
+    assert artnet.updates[-1][16] == state.persisted_tick
+    assert artnet.updates[-1][16] > 0
