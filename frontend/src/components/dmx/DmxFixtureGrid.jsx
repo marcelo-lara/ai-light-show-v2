@@ -1,9 +1,10 @@
 import DmxSlider from './DmxSlider.jsx'
 import MovingHeadCard from './MovingHeadCard.jsx'
 import RgbParCard from './RgbParCard.jsx'
+import EffectPreviewControls from './EffectPreviewControls.jsx'
 import { readChannel, writeChannel } from './dmxUtils.js'
 
-function GenericFixtureCard({ fixture, dmxValues, onDmxChange }) {
+function GenericFixtureCard({ fixture, dmxValues, onDmxChange, onPreviewEffect, isPlaybackActive }) {
   return (
     <section class="dmxCard">
       <header class="dmxCardHeader">
@@ -16,14 +17,26 @@ function GenericFixtureCard({ fixture, dmxValues, onDmxChange }) {
             label={channelName}
             value={readChannel(dmxValues, channelNum)}
             onInput={(value) => writeChannel(onDmxChange, channelNum, value)}
+            disabled={isPlaybackActive}
           />
         ))}
+        <EffectPreviewControls
+          fixture={fixture}
+          disabled={isPlaybackActive}
+          onPreview={onPreviewEffect}
+        />
       </div>
     </section>
   )
 }
 
-export default function DmxFixtureGrid({ fixtures, dmxValues, onDmxChange }) {
+export default function DmxFixtureGrid({
+  fixtures,
+  dmxValues,
+  onDmxChange,
+  onPreviewEffect,
+  isPlaybackActive,
+}) {
   if (!Array.isArray(fixtures) || fixtures.length === 0) {
     return <div class="dmxEmpty muted">No fixtures loaded.</div>
   }
@@ -38,6 +51,8 @@ export default function DmxFixtureGrid({ fixtures, dmxValues, onDmxChange }) {
               fixture={fixture}
               dmxValues={dmxValues}
               onDmxChange={onDmxChange}
+              onPreviewEffect={onPreviewEffect}
+              disabled={isPlaybackActive}
             />
           )
         }
@@ -49,6 +64,8 @@ export default function DmxFixtureGrid({ fixtures, dmxValues, onDmxChange }) {
               fixture={fixture}
               dmxValues={dmxValues}
               onDmxChange={onDmxChange}
+              onPreviewEffect={onPreviewEffect}
+              disabled={isPlaybackActive}
             />
           )
         }
@@ -59,6 +76,8 @@ export default function DmxFixtureGrid({ fixtures, dmxValues, onDmxChange }) {
             fixture={fixture}
             dmxValues={dmxValues}
             onDmxChange={onDmxChange}
+            onPreviewEffect={onPreviewEffect}
+            isPlaybackActive={isPlaybackActive}
           />
         )
       })}

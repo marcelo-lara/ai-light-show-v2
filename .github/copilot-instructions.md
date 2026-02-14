@@ -14,12 +14,15 @@
 - Fixture types own effect math via `Fixture.render_effect(...)` implemented in subclasses (see [backend/models/fixtures](../backend/models/fixtures)).
 
 ## Message protocol (WebSocket)
-- `initial`: sent on connect with `fixtures`, `cues`, `song`, and `playback` (see `send_initial_state` in [backend/api/websocket.py](../backend/api/websocket.py)).
+- `initial`: sent on connect with `fixtures`, `cues`, `song`, `playback`, and `status` (see `send_initial_state` in [backend/api/websocket.py](../backend/api/websocket.py)).
 - `delta`: `{type:"delta", channel, value}` updates the editor DMX state and is broadcast.
-	- While playing, backend **ignores deltas for output** (authoring edits are still recorded when you add cues).
+  - While playing, backend rejects deltas (`delta_rejected`) and does not apply authoring edits.
 - `timecode`: `{type:"timecode", time}` selects the nearest DMX canvas frame and updates Art-Net output.
 - `seek`: `{type:"seek", time}` explicit jump; backend selects the correct frame immediately (frame skipping allowed).
 - `playback`: `{type:"playback", playing}` toggles backend playback state (used to ignore live edits during playback).
+- `status`: backend broadcast with global state `{isPlaying, previewActive, preview}`.
+- `preview_effect`: `{type:"preview_effect", fixture_id, effect, duration, data}` triggers temporary preview render when paused.
+- `preview_status`: backend broadcast with preview lifecycle (`active`, `request_id`, optional reason/details).
 - `add_cue`: `{type:"add_cue", time, name}` records actions into the cue sheet (currently `set_channels` per fixture).
 - `cues_updated`: broadcast after cue changes with the full cue sheet.
 - `load_song`: `{type:"load_song", filename}` loads song metadata + cue sheet, rebuilds the canvas, and re-sends initial state.
@@ -38,12 +41,13 @@
   PYTHONPATH=./backend $(pyenv which python) -m pytest -q
   ```
 
-- Docker compose runs both services; frontend at http://localhost:3000, backend at http://localhost:8000 (see [README.md](../README.md)).
+- Docker compose runs both services; frontend at http://localhost:5000, backend at http://localhost:5001 (see [README.md](../README.md)).
 
 ## Project-specific conventions
 - DMX channels are 1-based in messages and fixtures; `StateManager` stores a 0-based list of length 512.
 - `ArtNetService` sends frames at 60 FPS to `ARTNET_IP`/`ARTNET_PORT` in [backend/services/artnet.py](../backend/services/artnet.py).
 - Startup “arm” behavior uses `fixture.arm` values to preset channels before sending (see `arm_fixture`).
+- **LLM change requirement:** whenever any fixture effect is added, removed, renamed, or its parameter contract is changed in backend models/fixtures data, update [frontend/src/components/dmx/effectPreviewConfig.js](../frontend/src/components/dmx/effectPreviewConfig.js) in the same change so UI effect options and parameter forms stay in sync.
 
 ## Canonical architecture doc
 - See [docs/architecture.md](../docs/architecture.md) for the detailed, up-to-date architecture.

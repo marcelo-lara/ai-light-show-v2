@@ -1,9 +1,11 @@
 import asyncio
+import contextlib
 import math
 from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 import json
 from urllib.parse import quote
+from uuid import uuid4
 from models.fixture import Fixture, Parcan, MovingHead
 from models.cue import CueSheet, CueEntry
 from models.song import Song, SongMetadata
@@ -32,9 +34,51 @@ class StateManager:
         self.song_length_seconds: float = 0.0
         self.canvas_dirty: bool = False
         self.current_frame_index: int = 0
+        self.preview_active: bool = False
+        self.preview_task: Optional[asyncio.Task] = None
+        self.preview_canvas: Optional[DMXCanvas] = None
+        self.preview_request_id: Optional[str] = None
+        self.preview_fixture_id: Optional[str] = None
+        self.preview_effect: Optional[str] = None
+        self.preview_duration: float = 0.0
         # Highest 1-based DMX channel referenced by any fixture channel map.
         # Used to limit payload sizes when sending full-frame snapshots to the frontend.
         self.max_used_channel: int = 0
+
+    def _get_fixture(self, fixture_id: str) -> Optional[Fixture]:
+        return next((fixture for fixture in self.fixtures if fixture.id == fixture_id), None)
+
+    def _fixture_supported_effects(self, fixture: Fixture) -> set[str]:
+        runtime_effects = {
+            "moving_head": {"set_channels", "move_to", "seek", "strobe", "full", "flash", "sweep"},
+            "parcan": {"set_channels", "flash", "strobe", "fade_in", "full"},
+            "rgb": {"set_channels", "flash", "strobe", "fade_in", "full"},
+        }.get((fixture.type or "").lower(), {"set_channels"})
+
+        declared = {
+            str(effect).strip().lower()
+            for effect in (fixture.effects or [])
+            if str(effect).strip()
+        }
+        if not declared:
+            return runtime_effects
+        return runtime_effects.intersection(declared)
+
+    async def get_status(self) -> Dict[str, Any]:
+        async with self.lock:
+            preview = None
+            if self.preview_active:
+                preview = {
+                    "requestId": self.preview_request_id,
+                    "fixtureId": self.preview_fixture_id,
+                    "effect": self.preview_effect,
+                    "duration": float(self.preview_duration),
+                }
+            return {
+                "isPlaying": bool(self.is_playing),
+                "previewActive": bool(self.preview_active),
+                "preview": preview,
+            }
 
     def _infer_song_length_seconds(self, metadata: SongMetadata) -> float:
         # Prefer explicit metadata if it ever gets added later.
@@ -162,6 +206,13 @@ class StateManager:
             self.is_playing = False
             self.timecode = 0.0
             self.current_frame_index = 0
+            self.preview_active = False
+            self.preview_task = None
+            self.preview_canvas = None
+            self.preview_request_id = None
+            self.preview_fixture_id = None
+            self.preview_effect = None
+            self.preview_duration = 0.0
             self.canvas_dirty = False
             self.canvas = self._render_cue_sheet_to_canvas()
             # Debug: indicate canvas render completion for visibility in Docker logs
@@ -179,15 +230,115 @@ class StateManager:
         """Update the editor universe with a live edit.
 
         Returns whether this edit should be applied to output immediately.
-        During playback we ignore live edits for output (but still track them for authoring).
+        During playback edits are disabled.
         """
         async with self.lock:
+            if self.is_playing:
+                return False
             if 1 <= channel <= DMX_CHANNELS and 0 <= value <= 255:
                 self.editor_universe[channel - 1] = value
-                if not self.is_playing:
+                if not self.is_playing and not self.preview_active:
                     self.output_universe[channel - 1] = value
                     return True
             return False
+
+    async def start_preview_effect(
+        self,
+        fixture_id: str,
+        effect: str,
+        duration: float,
+        data: Optional[Dict[str, Any]],
+        request_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        cancel_task: Optional[asyncio.Task] = None
+
+        async with self.lock:
+            if self.is_playing:
+                return {"ok": False, "reason": "playback_active"}
+
+            fixture = self._get_fixture(str(fixture_id or "").strip())
+            if not fixture:
+                return {"ok": False, "reason": "fixture_not_found"}
+
+            normalized_effect = str(effect or "").strip().lower()
+            if normalized_effect not in self._fixture_supported_effects(fixture):
+                return {"ok": False, "reason": "effect_not_supported"}
+
+            preview_duration = float(duration or 0.0)
+            if preview_duration <= 0:
+                return {"ok": False, "reason": "invalid_duration"}
+
+            rid = str(request_id or uuid4())
+
+            if self.preview_task:
+                cancel_task = self.preview_task
+
+            base_universe = bytearray(self.editor_universe)
+            self.preview_canvas = self._render_preview_canvas(
+                fixture=fixture,
+                effect=normalized_effect,
+                duration=preview_duration,
+                data=data or {},
+                base_universe=base_universe,
+            )
+            self.preview_request_id = rid
+            self.preview_fixture_id = fixture.id
+            self.preview_effect = normalized_effect
+            self.preview_duration = preview_duration
+            self.preview_active = True
+            self.output_universe[:] = self.preview_canvas.frame_view(0)
+
+            self.preview_task = asyncio.create_task(self._run_preview(rid))
+
+        if cancel_task:
+            cancel_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await cancel_task
+
+        return {
+            "ok": True,
+            "requestId": rid,
+            "fixtureId": fixture_id,
+            "effect": normalized_effect,
+            "duration": float(preview_duration),
+        }
+
+    async def cancel_preview(self) -> bool:
+        task: Optional[asyncio.Task] = None
+        async with self.lock:
+            if not self.preview_active and not self.preview_task:
+                return False
+
+            task = self.preview_task
+            self.preview_active = False
+            self.preview_task = None
+            self.preview_canvas = None
+            self.preview_request_id = None
+            self.preview_fixture_id = None
+            self.preview_effect = None
+            self.preview_duration = 0.0
+
+            if self.is_playing:
+                self.current_frame_index = self._time_to_frame_index(self.timecode)
+                self._apply_canvas_frame_to_output(self.current_frame_index)
+            else:
+                self.output_universe[:] = self.editor_universe
+
+        if task:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+        return True
+
+    async def wait_for_preview_end(self, request_id: str) -> None:
+        task: Optional[asyncio.Task] = None
+        async with self.lock:
+            if self.preview_request_id != request_id:
+                return
+            task = self.preview_task
+        if task:
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
     async def get_output_universe(self) -> bytearray:
         async with self.lock:
@@ -258,14 +409,36 @@ class StateManager:
                 json.dump(self.cue_sheet.dict(), f, indent=2)
 
     async def set_playback_state(self, is_playing: bool) -> None:
+        task_to_cancel: Optional[asyncio.Task] = None
         async with self.lock:
             self.is_playing = bool(is_playing)
+            if self.is_playing:
+                if self.preview_task:
+                    task_to_cancel = self.preview_task
+                self.preview_active = False
+                self.preview_task = None
+                self.preview_canvas = None
+                self.preview_request_id = None
+                self.preview_fixture_id = None
+                self.preview_effect = None
+                self.preview_duration = 0.0
+                self.current_frame_index = self._time_to_frame_index(self.timecode)
+                self._apply_canvas_frame_to_output(self.current_frame_index)
+            elif not self.preview_active:
+                self.output_universe[:] = self.editor_universe
+
+        if task_to_cancel:
+            task_to_cancel.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task_to_cancel
 
     async def seek_timecode(self, timecode: float) -> None:
         """Hard jump to a timecode (frame skipping allowed)."""
         async with self.lock:
             self.timecode = float(timecode or 0.0)
             self.current_frame_index = self._time_to_frame_index(self.timecode)
+            if self.preview_active and not self.is_playing:
+                return
             self._apply_canvas_frame_to_output(self.current_frame_index)
 
     async def update_timecode(self, timecode: float) -> None:
@@ -341,6 +514,74 @@ class StateManager:
             canvas.set_frame(frame_index, universe)
 
         return canvas
+
+    def _render_preview_canvas(
+        self,
+        *,
+        fixture: Fixture,
+        effect: str,
+        duration: float,
+        data: Dict[str, Any],
+        base_universe: bytearray,
+    ) -> DMXCanvas:
+        total_frames = max(1, int(math.ceil(float(duration) * FPS)) + 1)
+        canvas = DMXCanvas.allocate(fps=FPS, total_frames=total_frames)
+        universe = bytearray(base_universe)
+        render_state: Dict[str, Any] = {}
+
+        end_frame = total_frames - 1
+        for frame_index in range(total_frames):
+            fixture.render_effect(
+                universe,
+                effect=effect,
+                frame_index=frame_index,
+                start_frame=0,
+                end_frame=end_frame,
+                fps=FPS,
+                data=data,
+                render_state=render_state,
+            )
+            canvas.set_frame(frame_index, universe)
+
+        return canvas
+
+    async def _run_preview(self, request_id: str) -> None:
+        try:
+            async with self.lock:
+                if not self.preview_canvas or self.preview_request_id != request_id:
+                    return
+                total_frames = self.preview_canvas.total_frames
+
+            for frame_index in range(total_frames):
+                async with self.lock:
+                    if self.preview_request_id != request_id or not self.preview_canvas:
+                        return
+                    if self.is_playing:
+                        return
+                    self.output_universe[:] = self.preview_canvas.frame_view(frame_index)
+
+                if frame_index + 1 < total_frames:
+                    await asyncio.sleep(1.0 / FPS)
+        except asyncio.CancelledError:
+            raise
+        finally:
+            async with self.lock:
+                if self.preview_request_id != request_id:
+                    return
+
+                self.preview_active = False
+                self.preview_task = None
+                self.preview_canvas = None
+                self.preview_request_id = None
+                self.preview_fixture_id = None
+                self.preview_effect = None
+                self.preview_duration = 0.0
+
+                if self.is_playing:
+                    self.current_frame_index = self._time_to_frame_index(self.timecode)
+                    self._apply_canvas_frame_to_output(self.current_frame_index)
+                else:
+                    self.output_universe[:] = self.editor_universe
 
     def _dump_canvas_debug(self, song_filename: str) -> None:
         """Write a LOG debug file of non-empty frames to backend/cues.

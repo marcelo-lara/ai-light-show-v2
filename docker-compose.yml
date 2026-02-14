@@ -10,6 +10,8 @@ services:
     environment:
       - DMX_NODE_IP=192.168.10.221
       - FPS=60
+      - ARTNET_DEBUG=${ARTNET_DEBUG:-0}
+      - ARTNET_DEBUG_FILE=${ARTNET_DEBUG_FILE:-}
     restart: unless-stopped
 
   # redis:

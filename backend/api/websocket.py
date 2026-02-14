@@ -2,7 +2,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from typing import List
 import json
 import asyncio
-from store.state import StateManager
+from store.state import StateManager, FPS
 from services.artnet import ArtNetService
 from services.song_service import SongService
 from pathlib import Path
@@ -44,6 +44,7 @@ class WebSocketManager:
         fixtures = [f.dict() for f in self.state_manager.fixtures]
         cues = self.state_manager.cue_sheet.dict() if self.state_manager.cue_sheet else None
         song = self.state_manager.current_song.dict() if self.state_manager.current_song else None
+        status = await self.state_manager.get_status()
         initial_state = {
             "type": "initial",
             "fixtures": fixtures,
@@ -52,10 +53,14 @@ class WebSocketManager:
             "playback": {
                 "fps": 60,
                 "songLengthSeconds": getattr(self.state_manager, "song_length_seconds", 0.0),
-                "isPlaying": getattr(self.state_manager, "is_playing", False),
+                "isPlaying": status.get("isPlaying", False),
             },
+            "status": status,
         }
         await websocket.send_json(initial_state)
+
+    async def broadcast_status(self):
+        await self.broadcast({"type": "status", "status": await self.state_manager.get_status()})
 
     async def send_dmx_frame_snapshot(self, websocket: WebSocket) -> None:
         """Send the current output universe as a compact snapshot.
@@ -132,12 +137,48 @@ class WebSocketManager:
             except Exception:
                 pass
 
+    async def _watch_preview_completion(self, request_id: str):
+        try:
+            await self.state_manager.wait_for_preview_end(request_id)
+            universe = await self.state_manager.get_output_universe()
+            await self.artnet_service.update_universe(universe)
+            await self.broadcast({
+                "type": "preview_status",
+                "active": False,
+                "request_id": request_id,
+            })
+            await self.broadcast_status()
+        except Exception:
+            pass
+
+    async def _stream_preview_to_artnet(self, request_id: str):
+        try:
+            while True:
+                status = await self.state_manager.get_status()
+                preview = status.get("preview") if isinstance(status, dict) else None
+                if not status.get("previewActive"):
+                    break
+                if not isinstance(preview, dict):
+                    break
+                if str(preview.get("requestId") or "") != str(request_id):
+                    break
+
+                universe = await self.state_manager.get_output_universe()
+                await self.artnet_service.update_universe(universe)
+                await asyncio.sleep(1.0 / FPS)
+        except Exception:
+            pass
+
     async def handle_message(self, websocket: WebSocket, data: str):
         try:
             message = json.loads(data)
             msg_type = message.get("type")
 
             if msg_type == "delta":
+                if await self.state_manager.get_is_playing():
+                    await websocket.send_json({"type": "delta_rejected", "reason": "playback_active"})
+                    return
+
                 channel = message.get("channel")
                 value = message.get("value")
                 should_apply = await self.state_manager.update_dmx_channel(channel, value)
@@ -168,6 +209,40 @@ class WebSocketManager:
             elif msg_type == "playback":
                 playing = bool(message.get("playing", False))
                 await self.state_manager.set_playback_state(playing)
+                await self.broadcast_status()
+
+            elif msg_type == "preview_effect":
+                result = await self.state_manager.start_preview_effect(
+                    fixture_id=str(message.get("fixture_id") or ""),
+                    effect=str(message.get("effect") or ""),
+                    duration=float(message.get("duration") or 0.0),
+                    data=message.get("data") or {},
+                    request_id=message.get("request_id"),
+                )
+
+                if result.get("ok"):
+                    universe = await self.state_manager.get_output_universe()
+                    await self.artnet_service.update_universe(universe)
+                    await self.broadcast({
+                        "type": "preview_status",
+                        "active": True,
+                        "request_id": result.get("requestId"),
+                        "fixture_id": result.get("fixtureId"),
+                        "effect": result.get("effect"),
+                        "duration": result.get("duration"),
+                    })
+                    asyncio.create_task(self._stream_preview_to_artnet(str(result.get("requestId") or "")))
+                    asyncio.create_task(self._watch_preview_completion(str(result.get("requestId") or "")))
+                else:
+                    await websocket.send_json({
+                        "type": "preview_status",
+                        "active": False,
+                        "reason": result.get("reason", "preview_rejected"),
+                        "fixture_id": message.get("fixture_id"),
+                        "effect": message.get("effect"),
+                    })
+
+                await self.broadcast_status()
 
             elif msg_type == "add_cue":
                 timecode = message.get("time")

@@ -20,6 +20,13 @@ AI Light Show v2 has three main modules:
 2. Backend updates the editor universe (and output universe when paused).
 3. Backend broadcasts `delta` to keep UIs in sync.
 
+### Preview loop (paused only)
+
+1. Frontend sends `{type:"preview_effect", fixture_id, effect, duration, data}`.
+2. Backend rejects if playback is active.
+3. If accepted, backend renders a temporary in-memory preview canvas and drives Art-Net from it.
+4. Backend broadcasts `preview_status` and global `status` updates; preview is never persisted to cues/files.
+
 ### Analysis loop (async)
 
 1. Frontend requests analysis: `{type:"analyze_song", filename, ...}`.
@@ -37,12 +44,17 @@ AI Light Show v2 has three main modules:
 
 Backend → Frontend:
 
-- `initial`: `{ fixtures, cues, song, playback:{ fps, songLengthSeconds, isPlaying } }`
+- `initial`: `{ fixtures, cues, song, playback:{ fps, songLengthSeconds, isPlaying }, status }`
 - `delta`: `{ channel, value }`
+- `delta_rejected`: `{ reason }` (when playback is active)
 - `dmx_frame`: `{ time, values }` (paused seek-preview)
 - `cues_updated`: `{ cues }`
+- `status`: `{ status:{ isPlaying, previewActive, preview? } }`
+- `preview_status`: `{ active, request_id, fixture_id?, effect?, duration?, reason? }`
 - `analyze_progress`: `{ task_id, state, meta }`
 - `analyze_result`: `{ task_id, state, result }`
+- `task_submitted`: `{ task_id }`
+- `task_error`: `{ task_id?, message }`
 
 Frontend → Backend:
 
@@ -50,6 +62,7 @@ Frontend → Backend:
 - `timecode`
 - `seek`
 - `playback`
+- `preview_effect`
 - `add_cue`
 - `load_song`
 - `analyze_song`

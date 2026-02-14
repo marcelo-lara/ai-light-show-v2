@@ -1,4 +1,5 @@
 import DmxSlider from './DmxSlider.jsx'
+import EffectPreviewControls from './EffectPreviewControls.jsx'
 import WheelButtonRow from './WheelButtonRow.jsx'
 import XYPad from './XYPad.jsx'
 import {
@@ -11,7 +12,7 @@ import {
   writeChannel,
 } from './dmxUtils.js'
 
-export default function MovingHeadCard({ fixture, dmxValues, onDmxChange }) {
+export default function MovingHeadCard({ fixture, dmxValues, onDmxChange, onPreviewEffect, disabled = false }) {
   const channels = fixture?.channels || {}
   const presets = Array.isArray(fixture?.presets) ? fixture.presets : []
 
@@ -45,14 +46,19 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange }) {
     <section class="dmxCard">
       <header class="dmxCardHeader">
         <h3>{fixture?.name || 'Moving Head'}</h3>
-        <button type="button" class="dmxArmButton" onClick={() => applyArmValues(fixture, onDmxChange)}>
+        <button
+          type="button"
+          class="dmxArmButton"
+          onClick={() => applyArmValues(fixture, onDmxChange)}
+          disabled={disabled}
+        >
           Arm
         </button>
       </header>
 
       <div class="dmxCardBody movingHeadLayout">
         <div class="movingHeadLeft">
-          <XYPad pan16={pan16} tilt16={tilt16} onChange={handlePadChange} />
+          <XYPad pan16={pan16} tilt16={tilt16} onChange={handlePadChange} disabled={disabled} />
           <div class="poiGrid">
             {presets.length === 0 ? (
               <div class="muted">No POI presets</div>
@@ -63,6 +69,7 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange }) {
                   key={`${fixture.id}-${preset.name}`}
                   class="poiButton"
                   onClick={() => applyPresetValues(fixture, preset, onDmxChange)}
+                  disabled={disabled}
                 >
                   {preset.name}
                 </button>
@@ -77,12 +84,14 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange }) {
             currentValue={readChannel(dmxValues, colorChannel)}
             options={colorOptions}
             onSelect={(value) => writeChannel(onDmxChange, colorChannel, value)}
+            disabled={disabled}
           />
           <WheelButtonRow
             label="Gobo"
             currentValue={readChannel(dmxValues, goboChannel)}
             options={goboOptions}
             onSelect={(value) => writeChannel(onDmxChange, goboChannel, value)}
+            disabled={disabled}
           />
 
           {sliderChannels.map(([channelName, channelNum]) => (
@@ -91,9 +100,16 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange }) {
               label={channelName}
               value={readChannel(dmxValues, channelNum)}
               onInput={(value) => writeChannel(onDmxChange, channelNum, value)}
+              disabled={disabled}
             />
           ))}
         </div>
+
+        <EffectPreviewControls
+          fixture={fixture}
+          disabled={disabled}
+          onPreview={onPreviewEffect}
+        />
       </div>
     </section>
   )
