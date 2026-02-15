@@ -56,9 +56,16 @@ function buildPoiOptions(fixture, pois) {
     }
   }
 
-  return Array.from(byId.entries())
-    .map(([value, label]) => ({ value, label }))
-    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+  const options = Array.from(byId.entries()).map(([value, label]) => ({ value, label }))
+  return options.sort((a, b) => {
+    const aValue = String(a.value || '')
+    const bValue = String(b.value || '')
+    const aPrimary = String(a.label || '').replace(/\s*\([^)]*\)\s*$/, '')
+    const bPrimary = String(b.label || '').replace(/\s*\([^)]*\)\s*$/, '')
+    const byName = aPrimary.localeCompare(bPrimary, undefined, { sensitivity: 'base' })
+    if (byName !== 0) return byName
+    return aValue.localeCompare(bValue, undefined, { sensitivity: 'base' })
+  })
 }
 
 export default function EffectPreviewControls({ fixture, pois, disabled, onPreview }) {

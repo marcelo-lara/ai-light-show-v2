@@ -23,6 +23,15 @@ export default function MovingHeadCard({
 }) {
   const channels = fixture?.channels || {}
   const poiList = Array.isArray(pois) ? pois : []
+  const sortedPoiList = [...poiList].sort((a, b) => {
+    const aName = String(a?.name || a?.id || '')
+    const bName = String(b?.name || b?.id || '')
+    const byName = aName.localeCompare(bName, undefined, { sensitivity: 'base' })
+    if (byName !== 0) return byName
+    const aId = String(a?.id || '')
+    const bId = String(b?.id || '')
+    return aId.localeCompare(bId, undefined, { sensitivity: 'base' })
+  })
   const poiTargets = fixture?.poi_targets && typeof fixture.poi_targets === 'object' ? fixture.poi_targets : {}
 
   const panMsbChannel = channels.pan_msb
@@ -90,10 +99,10 @@ export default function MovingHeadCard({
         <div class="movingHeadLeft">
           <XYPad pan16={pan16} tilt16={tilt16} onChange={handlePadChange} disabled={disabled} />
           <div class="poiGrid">
-            {poiList.length === 0 ? (
+            {sortedPoiList.length === 0 ? (
               <div class="muted">No POI presets</div>
             ) : (
-              poiList.map((poi) => {
+              sortedPoiList.map((poi) => {
                 const poiId = String(poi?.id || '')
                 const hasMapping = !!resolvePoiPanTilt16(poiTargets[poiId])
                 return (
