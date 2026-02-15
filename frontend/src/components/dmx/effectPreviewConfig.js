@@ -21,10 +21,14 @@ const PARAM_SCHEMAS = {
       { key: 'tilt', label: 'Tilt', kind: 'int', min: 0, max: 65535, step: 1, defaultValue: 32768 },
     ],
     sweep: [
-      { key: 'pan', label: 'Center Pan', kind: 'int', min: 0, max: 65535, step: 1, defaultValue: 32768 },
-      { key: 'tilt', label: 'Center Tilt', kind: 'int', min: 0, max: 65535, step: 1, defaultValue: 32768 },
-      { key: 'span_pan', label: 'Span Pan', kind: 'int', min: -65535, max: 65535, step: 1, defaultValue: 20000 },
-      { key: 'span_tilt', label: 'Span Tilt', kind: 'int', min: -65535, max: 65535, step: 1, defaultValue: 0 },
+      { key: 'subject_POI', label: 'Subject POI', kind: 'string', defaultValue: 'piano' },
+      { key: 'start_POI', label: 'Start POI', kind: 'string', defaultValue: 'table' },
+      { key: 'end_POI', label: 'End POI (optional)', kind: 'string', defaultValue: '' },
+      { key: 'duration', label: 'Duration (s)', kind: 'float', min: 0.05, max: 30.0, step: 0.05, defaultValue: 1.0 },
+      { key: 'max_dim', label: 'Max Dim (0-1)', kind: 'float', min: 0, max: 1, step: 0.01, defaultValue: 1.0 },
+      { key: 'easing', label: 'Easing (s)', kind: 'float', min: 0, max: 10, step: 0.05, defaultValue: 0.0 },
+      { key: 'arc_strength', label: 'Arc Strength', kind: 'float', min: -0.1, max: 0.1, step: 0.001, defaultValue: 0.015 },
+      { key: 'subject_close_ratio', label: 'Subject close ratio', kind: 'float', min: 0.01, max: 1.0, step: 0.01, defaultValue: 0.1 },
     ],
     strobe: [
       { key: 'rate', label: 'Rate Hz', kind: 'float', min: 0.1, max: 30.0, step: 0.1, defaultValue: 10.0 },

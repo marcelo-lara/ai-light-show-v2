@@ -75,6 +75,30 @@ class MovingHead(Fixture):
                 continue
         return None
 
+    def _find_poi_target_values(self, poi_key: Any) -> Optional[Dict[str, Any]]:
+        if poi_key is None:
+            return None
+
+        needle = str(poi_key).strip().lower()
+        if not needle:
+            return None
+
+        poi_targets = self.poi_targets if isinstance(self.poi_targets, dict) else {}
+        for key, values in poi_targets.items():
+            try:
+                if str(key).strip().lower() == needle and isinstance(values, dict):
+                    return values
+            except Exception:
+                continue
+        return None
+
+    def _resolve_poi_pan_tilt_u16(self, poi_key: Any) -> Tuple[Optional[int], Optional[int]]:
+        poi_values = self._find_poi_target_values(poi_key) or {}
+        return (
+            self._parse_axis_target_u16("pan", poi_values),
+            self._parse_axis_target_u16("tilt", poi_values),
+        )
+
     def _parse_axis_target_u16(self, axis: str, payload: Dict[str, Any]) -> Optional[int]:
         if not isinstance(payload, dict):
             return None

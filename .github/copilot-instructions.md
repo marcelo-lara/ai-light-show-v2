@@ -38,7 +38,13 @@
 - Run tests locally using the `ai-light` Python environment (pyenv virtualenv). Example:
 
   ```bash
-  PYTHONPATH=./backend $(pyenv which python) -m pytest -q
+  PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q
+  ```
+
+- After each test run, rebuild/restart Docker containers before any live/manual validation:
+
+  ```bash
+  docker compose down && docker compose up --build -d
   ```
 
 - Docker compose runs both services; frontend at http://localhost:5000, backend at http://localhost:5001 (see [README.md](../README.md)).

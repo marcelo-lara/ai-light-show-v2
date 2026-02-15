@@ -141,6 +141,7 @@ export default function MovingHeadCard({
 
         <EffectPreviewControls
           fixture={fixture}
+          pois={pois}
           disabled={disabled}
           onPreview={onPreviewEffect}
         />

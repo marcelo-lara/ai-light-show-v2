@@ -49,6 +49,12 @@ Use the `ai-light` Python environment and include both repository root and backe
 PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q
 ```
 
+After each test run, rebuild/restart containers before the next live/manual validation:
+
+```bash
+docker compose down && docker compose up --build -d
+```
+
 ## Docker
 
 ```bash
