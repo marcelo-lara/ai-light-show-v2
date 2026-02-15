@@ -42,12 +42,14 @@ class WebSocketManager:
 
     async def send_initial_state(self, websocket: WebSocket):
         fixtures = [f.dict() for f in self.state_manager.fixtures]
+        pois = await self.state_manager.get_pois() if hasattr(self.state_manager, "get_pois") else []
         cues = self.state_manager.cue_sheet.dict() if self.state_manager.cue_sheet else None
         song = self.state_manager.current_song.dict() if self.state_manager.current_song else None
         status = await self.state_manager.get_status()
         initial_state = {
             "type": "initial",
             "fixtures": fixtures,
+            "pois": pois,
             "cues": cues,
             "song": song,
             "playback": {
@@ -295,6 +297,63 @@ class WebSocketManager:
                 # Mock echo
                 response = f"Echo: {prompt}"
                 await websocket.send_json({"type": "chat_response", "message": response})
+
+            elif msg_type == "save_poi_target":
+                fixture_id = str(message.get("fixture_id") or "")
+                poi_id = str(message.get("poi_id") or "")
+                pan = message.get("pan")
+                tilt = message.get("tilt")
+
+                if await self.state_manager.get_is_playing():
+                    await websocket.send_json({
+                        "type": "save_poi_target_result",
+                        "ok": False,
+                        "reason": "playback_active",
+                        "fixture_id": fixture_id,
+                        "poi_id": poi_id,
+                    })
+                    return
+
+                if not hasattr(self.state_manager, "update_fixture_poi_target"):
+                    await websocket.send_json({
+                        "type": "save_poi_target_result",
+                        "ok": False,
+                        "reason": "feature_unavailable",
+                        "fixture_id": fixture_id,
+                        "poi_id": poi_id,
+                    })
+                    return
+
+                try:
+                    pan_u16 = int(pan)
+                    tilt_u16 = int(tilt)
+                except Exception:
+                    await websocket.send_json({
+                        "type": "save_poi_target_result",
+                        "ok": False,
+                        "reason": "invalid_payload",
+                        "fixture_id": fixture_id,
+                        "poi_id": poi_id,
+                    })
+                    return
+
+                result = await self.state_manager.update_fixture_poi_target(
+                    fixture_id=fixture_id,
+                    poi_id=poi_id,
+                    pan=pan_u16,
+                    tilt=tilt_u16,
+                )
+
+                await websocket.send_json({
+                    "type": "save_poi_target_result",
+                    **result,
+                })
+
+                if result.get("ok"):
+                    await self.broadcast({
+                        "type": "fixtures_updated",
+                        "fixtures": [f.dict() for f in self.state_manager.fixtures],
+                    })
 
         except Exception as e:
             print(f"Error handling message: {e}")

@@ -49,11 +49,28 @@ class MovingHead(Fixture):
         if not preset_name:
             return None
         needle = str(preset_name).strip().lower()
+
+        poi_targets = self.poi_targets if isinstance(self.poi_targets, dict) else {}
+
+        # Allow direct POI-id resolution (e.g. preset="piano").
+        for poi_id, values in poi_targets.items():
+            try:
+                if str(poi_id).strip().lower() == needle and isinstance(values, dict):
+                    return values
+            except Exception:
+                continue
+
         for p in self.presets or []:
             try:
                 if str(p.get("name", "")).strip().lower() == needle:
                     values = p.get("values")
-                    return values if isinstance(values, dict) else None
+                    if isinstance(values, dict):
+                        return values
+                    poi_id = p.get("poi_id")
+                    if poi_id is not None:
+                        linked_values = poi_targets.get(str(poi_id))
+                        if isinstance(linked_values, dict):
+                            return linked_values
             except Exception:
                 continue
         return None

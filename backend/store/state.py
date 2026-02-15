@@ -26,6 +26,8 @@ class StateManager:
         # "output" universe is what we actually send to Art-Net.
         self.output_universe: bytearray = bytearray(DMX_CHANNELS)
         self.fixtures: List[Fixture] = []
+        self.pois: List[Dict[str, Any]] = []
+        self.fixtures_path: Optional[Path] = None
         self.current_song: Optional[Song] = None
         self.cue_sheet: Optional[CueSheet] = None
         self.timecode: float = 0.0
@@ -125,6 +127,7 @@ class StateManager:
 
     async def load_fixtures(self, fixtures_path: Path):
         async with self.lock:
+            self.fixtures_path = Path(fixtures_path)
             with open(fixtures_path, 'r') as f:
                 data = json.load(f)
                 fixtures: List[Fixture] = []
@@ -157,6 +160,71 @@ class StateManager:
             self.output_universe = bytearray(DMX_CHANNELS)
             self._apply_arm(self.editor_universe)
             self._apply_arm(self.output_universe)
+
+    async def load_pois(self, pois_path: Path):
+        async with self.lock:
+            with open(pois_path, 'r') as f:
+                data = json.load(f)
+
+            if isinstance(data, list):
+                self.pois = [item for item in data if isinstance(item, dict)]
+            else:
+                self.pois = []
+
+    async def get_pois(self) -> List[Dict[str, Any]]:
+        async with self.lock:
+            return [dict(poi) for poi in self.pois]
+
+    async def save_fixtures(self) -> None:
+        if not self.fixtures_path:
+            raise RuntimeError("fixtures_path_not_set")
+
+        fixtures_payload = [fixture.dict() for fixture in self.fixtures]
+        self.fixtures_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.fixtures_path, 'w') as f:
+            json.dump(fixtures_payload, f, indent=2)
+
+    async def update_fixture_poi_target(self, fixture_id: str, poi_id: str, pan: int, tilt: int) -> Dict[str, Any]:
+        async with self.lock:
+            fixture = self._get_fixture(str(fixture_id or "").strip())
+            if not fixture:
+                return {"ok": False, "reason": "fixture_not_found"}
+
+            if (fixture.type or "").lower() not in {"moving_head", "moving-head"}:
+                return {"ok": False, "reason": "fixture_not_moving_head"}
+
+            normalized_poi_id = str(poi_id or "").strip()
+            if not normalized_poi_id:
+                return {"ok": False, "reason": "invalid_poi_id"}
+
+            poi_exists = any(
+                str((poi or {}).get("id") or "").strip() == normalized_poi_id
+                for poi in self.pois
+            )
+            if not poi_exists:
+                return {"ok": False, "reason": "poi_not_found"}
+
+            pan_u16 = max(0, min(65535, int(pan)))
+            tilt_u16 = max(0, min(65535, int(tilt)))
+
+            poi_targets = fixture.poi_targets if isinstance(fixture.poi_targets, dict) else {}
+            poi_targets[normalized_poi_id] = {
+                "pan": pan_u16,
+                "tilt": tilt_u16,
+            }
+            fixture.poi_targets = poi_targets
+
+            await self.save_fixtures()
+
+            return {
+                "ok": True,
+                "fixture_id": fixture.id,
+                "poi_id": normalized_poi_id,
+                "values": {
+                    "pan": pan_u16,
+                    "tilt": tilt_u16,
+                },
+            }
 
     async def get_is_playing(self) -> bool:
         async with self.lock:

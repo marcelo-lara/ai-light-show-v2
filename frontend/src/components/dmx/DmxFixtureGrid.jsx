@@ -32,9 +32,11 @@ function GenericFixtureCard({ fixture, dmxValues, onDmxChange, onPreviewEffect, 
 
 export default function DmxFixtureGrid({
   fixtures,
+  pois,
   dmxValues,
   onDmxChange,
   onPreviewEffect,
+  onSavePoiTarget,
   isPlaybackActive,
 }) {
   if (!Array.isArray(fixtures) || fixtures.length === 0) {
@@ -49,9 +51,11 @@ export default function DmxFixtureGrid({
             <MovingHeadCard
               key={fixture.id}
               fixture={fixture}
+              pois={pois}
               dmxValues={dmxValues}
               onDmxChange={onDmxChange}
               onPreviewEffect={onPreviewEffect}
+              onSavePoiTarget={onSavePoiTarget}
               disabled={isPlaybackActive}
             />
           )

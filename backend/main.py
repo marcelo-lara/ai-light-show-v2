@@ -30,6 +30,8 @@ async def lifespan(app: FastAPI):
 
     # Startup
     fixtures_path = backend_path / "fixtures" / "fixtures.json"
+    pois_path = backend_path / "fixtures" / "pois.json"
+    await state_manager.load_pois(pois_path)
     await state_manager.load_fixtures(fixtures_path)
     # Arm fixtures
     for fixture in state_manager.fixtures:

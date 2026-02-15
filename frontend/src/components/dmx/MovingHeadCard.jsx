@@ -4,17 +4,26 @@ import WheelButtonRow from './WheelButtonRow.jsx'
 import XYPad from './XYPad.jsx'
 import {
   applyArmValues,
-  applyPresetValues,
   compose16,
   getWheelOptions,
   readChannel,
+  resolvePoiPanTilt16,
   write16,
   writeChannel,
 } from './dmxUtils.js'
 
-export default function MovingHeadCard({ fixture, dmxValues, onDmxChange, onPreviewEffect, disabled = false }) {
+export default function MovingHeadCard({
+  fixture,
+  pois,
+  dmxValues,
+  onDmxChange,
+  onPreviewEffect,
+  onSavePoiTarget,
+  disabled = false,
+}) {
   const channels = fixture?.channels || {}
-  const presets = Array.isArray(fixture?.presets) ? fixture.presets : []
+  const poiList = Array.isArray(pois) ? pois : []
+  const poiTargets = fixture?.poi_targets && typeof fixture.poi_targets === 'object' ? fixture.poi_targets : {}
 
   const panMsbChannel = channels.pan_msb
   const panLsbChannel = channels.pan_lsb
@@ -42,6 +51,27 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange, onPrev
     write16(onDmxChange, tiltMsbChannel, tiltLsbChannel, nextTilt)
   }
 
+  const handlePoiClick = (event, poi) => {
+    const poiId = String(poi?.id || '')
+    if (!poiId) return
+
+    if (event?.shiftKey) {
+      onSavePoiTarget?.({
+        fixtureId: fixture?.id,
+        poiId,
+        pan16,
+        tilt16,
+      })
+      return
+    }
+
+    const target = resolvePoiPanTilt16(poiTargets[poiId])
+    if (!target) return
+
+    write16(onDmxChange, panMsbChannel, panLsbChannel, target.pan16)
+    write16(onDmxChange, tiltMsbChannel, tiltLsbChannel, target.tilt16)
+  }
+
   return (
     <section class="dmxCard">
       <header class="dmxCardHeader">
@@ -60,20 +90,24 @@ export default function MovingHeadCard({ fixture, dmxValues, onDmxChange, onPrev
         <div class="movingHeadLeft">
           <XYPad pan16={pan16} tilt16={tilt16} onChange={handlePadChange} disabled={disabled} />
           <div class="poiGrid">
-            {presets.length === 0 ? (
+            {poiList.length === 0 ? (
               <div class="muted">No POI presets</div>
             ) : (
-              presets.map((preset) => (
-                <button
-                  type="button"
-                  key={`${fixture.id}-${preset.name}`}
-                  class="poiButton"
-                  onClick={() => applyPresetValues(fixture, preset, onDmxChange)}
-                  disabled={disabled}
-                >
-                  {preset.name}
-                </button>
-              ))
+              poiList.map((poi) => {
+                const poiId = String(poi?.id || '')
+                const hasMapping = !!resolvePoiPanTilt16(poiTargets[poiId])
+                return (
+                  <button
+                    type="button"
+                    key={`${fixture.id}-${poiId}`}
+                    class={`poiButton ${hasMapping ? '' : 'poiButtonUnmapped'}`.trim()}
+                    onClick={(event) => handlePoiClick(event, poi)}
+                    disabled={disabled}
+                  >
+                    {poi?.name || poiId}
+                  </button>
+                )
+              })
             )}
           </div>
         </div>

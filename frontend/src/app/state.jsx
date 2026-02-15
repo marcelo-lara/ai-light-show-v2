@@ -5,6 +5,7 @@ const AppStateContext = createContext(null)
 
 export function AppStateProvider({ children }) {
   const [fixtures, setFixtures] = useState([])
+  const [pois, setPois] = useState([])
   const [cues, setCues] = useState([])
   const [song, setSong] = useState(null)
   const [dmxValues, setDmxValues] = useState({})
@@ -37,6 +38,7 @@ export function AppStateProvider({ children }) {
 
       if (data.type === 'initial') {
         setFixtures(data.fixtures || [])
+        setPois(data.pois || [])
         setCues(data.cues?.entries || [])
         setSong(data.song)
         const nextStatus = data.status || {
@@ -75,6 +77,8 @@ export function AppStateProvider({ children }) {
         }
       } else if (data.type === 'cues_updated') {
         setCues(data.cues?.entries || [])
+      } else if (data.type === 'fixtures_updated') {
+        setFixtures(data.fixtures || [])
       } else if (data.type === 'task_submitted') {
         setAnalysis((prev) => ({
           ...prev,
@@ -172,6 +176,16 @@ export function AppStateProvider({ children }) {
     })
   }
 
+  const handleSavePoiTarget = ({ fixtureId, poiId, pan16, tilt16 }) => {
+    sendMessage({
+      type: 'save_poi_target',
+      fixture_id: fixtureId,
+      poi_id: poiId,
+      pan: pan16,
+      tilt: tilt16,
+    })
+  }
+
   const registerAudioControls = (controls) => {
     audioControlsRef.current = controls
   }
@@ -197,6 +211,7 @@ export function AppStateProvider({ children }) {
   const value = useMemo(
     () => ({
       fixtures,
+      pois,
       cues,
       song,
       dmxValues,
@@ -212,12 +227,13 @@ export function AppStateProvider({ children }) {
         handleSeek,
         handlePlaybackChange,
         handlePreviewEffect,
+        handleSavePoiTarget,
         registerAudioControls,
         togglePlay,
         seekTo,
       },
     }),
-    [fixtures, cues, song, dmxValues, timecode, playing, analysis, status, previewStatus]
+    [fixtures, pois, cues, song, dmxValues, timecode, playing, analysis, status, previewStatus]
   )
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>

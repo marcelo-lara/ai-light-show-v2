@@ -602,6 +602,10 @@ button:focus-visible {
   padding: 6px 8px;
 }
 
+.poiButtonUnmapped {
+  font-style: italic;
+}
+
 .wheelRow {
   display: grid;
   gap: 6px;

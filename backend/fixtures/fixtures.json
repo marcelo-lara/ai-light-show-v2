@@ -34,14 +34,17 @@
     "presets": [
       {
         "name": "Piano",
-        "values": {
-          "pan_msb": 120,
-          "pan_lsb": 35,
-          "tilt_msb": 20,
-          "tilt_lsb": 11
-        }
+        "poi_id": "piano"
       }
     ],
+    "poi_targets": {
+      "piano": {
+        "pan_msb": 120,
+        "pan_lsb": 35,
+        "tilt_msb": 20,
+        "tilt_lsb": 11
+      }
+    },
     "effects": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
     "arm": {
       "shutter": 255
@@ -274,10 +277,23 @@
       "autoplay": 0,
       "reset": 0
     },
-    "presets": [],
+    "presets": [
+      {
+        "name": "Piano",
+        "poi_id": "piano"
+      }
+    ],
+    "poi_targets": {
+      "piano": {
+        "pan_msb": 64,
+        "pan_lsb": 0,
+        "tilt_msb": 18,
+        "tilt_lsb": 0
+      }
+    },
     "effects": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
     "arm": {
-      "dim": 255,
+      "dim": 0,
       "strobe": 0
     },
     "meta": {
@@ -392,7 +408,7 @@
     "presets": [],
     "effects": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
     "arm": {
-      "dim": 255,
+      "dim": 0,
       "strobe": 0
     },
     "meta": {
