@@ -3,11 +3,6 @@
     "id": "head_el150",
     "name": "Head EL-150",
     "type": "moving_head",
-    "location": {
-      "x": 0.4,
-      "y": 0,
-      "z": 0
-    },
     "channels": {
       "pan_msb": 1,
       "pan_lsb": 2,
@@ -95,7 +90,15 @@
         "tilt": 20961
       }
     },
-    "effects": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
+    "effects": [
+      "full",
+      "strobe",
+      "flash",
+      "fade_in",
+      "seek",
+      "move_to",
+      "sweep"
+    ],
     "arm": {
       "shutter": 255
     },
@@ -109,25 +112,25 @@
       },
       "value_mappings": {
         "color": {
-            "0": "White",
-            "25": "Orange",
-            "50": "Cyan",
-            "75": "Purple",
-            "100": "Yellow",
-            "125": "Green",
-            "150": "Blue",
-            "175": "Red"
+          "0": "White",
+          "25": "Orange",
+          "50": "Cyan",
+          "75": "Purple",
+          "100": "Yellow",
+          "125": "Green",
+          "150": "Blue",
+          "175": "Red"
         },
         "gobo": {
-            "0": "Open",
-            "25": "Tunnel",
-            "50": "BigOval",
-            "75": "SmallOval",
-            "100": "Squares",
-            "125": "Shapes",
-            "150": "Tribal",
-            "175": "Slashes"
-        }      
+          "0": "Open",
+          "25": "Tunnel",
+          "50": "BigOval",
+          "75": "SmallOval",
+          "100": "Squares",
+          "125": "Shapes",
+          "150": "Tribal",
+          "175": "Slashes"
+        }
       },
       "position_constraints": {
         "pan": {
@@ -139,18 +142,17 @@
           "max": 3363
         }
       }
-
+    },
+    "location": {
+      "x": 0.4,
+      "y": 0.0,
+      "z": 0.0
     }
   },
   {
     "id": "parcan_l",
     "name": "ParCan L",
     "type": "rgb",
-    "location": {
-      "x": 0.25,
-      "y": 0,
-      "z": 0
-    },
     "channels": {
       "dim": 16,
       "red": 17,
@@ -158,10 +160,15 @@
       "blue": 19,
       "strobe": 20
     },
-    "current_values": {
-    },
+    "current_values": {},
     "presets": [],
-    "effects": ["strobe", "flash", "fade_in", "full"],
+    "poi_targets": {},
+    "effects": [
+      "strobe",
+      "flash",
+      "fade_in",
+      "full"
+    ],
     "arm": {
       "dim": 255
     },
@@ -172,17 +179,17 @@
         "green": "color",
         "blue": "color"
       }
+    },
+    "location": {
+      "x": 0.25,
+      "y": 0.0,
+      "z": 0.0
     }
   },
   {
     "id": "parcan_r",
     "name": "ParCan R",
     "type": "rgb",
-    "location": {
-      "x": 0.75,
-      "y": 0,
-      "z": 0
-    },
     "channels": {
       "dim": 22,
       "red": 23,
@@ -200,7 +207,13 @@
       "program": 0
     },
     "presets": [],
-    "effects": ["strobe", "flash", "fade_in", "full"],
+    "poi_targets": {},
+    "effects": [
+      "strobe",
+      "flash",
+      "fade_in",
+      "full"
+    ],
     "arm": {
       "dim": 255
     },
@@ -211,17 +224,17 @@
         "green": "color",
         "blue": "color"
       }
+    },
+    "location": {
+      "x": 0.75,
+      "y": 0.0,
+      "z": 0.0
     }
   },
   {
     "id": "parcan_pl",
     "name": "Proton L",
     "type": "rgb",
-    "location": {
-      "x": 0,
-      "y": 0.1,
-      "z": 0
-    },
     "channels": {
       "dim": 28,
       "red": 29,
@@ -239,7 +252,13 @@
       "program": 0
     },
     "presets": [],
-    "effects": ["strobe", "flash", "fade_in", "full"],
+    "poi_targets": {},
+    "effects": [
+      "strobe",
+      "flash",
+      "fade_in",
+      "full"
+    ],
     "arm": {
       "dim": 255
     },
@@ -250,18 +269,17 @@
         "green": "color",
         "blue": "color"
       }
+    },
+    "location": {
+      "x": 0.0,
+      "y": 0.1,
+      "z": 0.0
     }
   },
   {
     "id": "parcan_pr",
     "name": "Proton R",
     "type": "rgb",
-    "location": {
-      "x": 1,
-      "y": 0.1,
-      "z": 0
-    },
-    
     "channels": {
       "dim": 35,
       "red": 36,
@@ -279,7 +297,13 @@
       "program": 0
     },
     "presets": [],
-    "effects": ["strobe", "flash", "fade_in", "full"],
+    "poi_targets": {},
+    "effects": [
+      "strobe",
+      "flash",
+      "fade_in",
+      "full"
+    ],
     "arm": {
       "dim": 255
     },
@@ -290,17 +314,17 @@
         "green": "color",
         "blue": "color"
       }
+    },
+    "location": {
+      "x": 1.0,
+      "y": 0.1,
+      "z": 0.0
     }
   },
   {
     "id": "mini_beam_prism_l",
     "name": "Mini Beam Prism (L)",
     "type": "moving_head",
-    "location": {
-      "x": 0.15,
-      "y": 0.2,
-      "z": 0
-    },
     "channels": {
       "pan_msb": 42,
       "pan_lsb": 43,
@@ -335,13 +359,71 @@
     ],
     "poi_targets": {
       "piano": {
-        "pan_msb": 64,
-        "pan_lsb": 0,
-        "tilt_msb": 18,
-        "tilt_lsb": 0
+        "pan": 44479,
+        "tilt": 6575
+      },
+      "table": {
+        "pan": 41376,
+        "tilt": 13664
+      },
+      "sofa": {
+        "pan": 42316,
+        "tilt": 19524
+      },
+      "ref_0_0_0": {
+        "pan": 47455,
+        "tilt": 0
+      },
+      "ref_1_0_0": {
+        "pan": 46762,
+        "tilt": 18701
+      },
+      "ref_1_1_0": {
+        "pan": 37886,
+        "tilt": 15584
+      },
+      "ref_1_1_1": {
+        "pan": 31812,
+        "tilt": 16929
+      },
+      "ref_0_1_1": {
+        "pan": 31484,
+        "tilt": 0
+      },
+      "ref_0_0_1": {
+        "pan": 58714,
+        "tilt": 0
+      },
+      "ref_0_1_0": {
+        "pan": 37512,
+        "tilt": 1388
+      },
+      "dark_desk": {
+        "pan": 42366,
+        "tilt": 0
+      },
+      "inblue_desk": {
+        "pan": 37991,
+        "tilt": 2417
+      },
+      "wall": {
+        "pan": 40717,
+        "tilt": 23982
+      },
+      "ceiling_station": {
+        "pan": 29801,
+        "tilt": 17058
       }
     },
-    "effects": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
+    "effects": [
+      "full",
+      "strobe",
+      "flash",
+      "fade_in",
+      "seek",
+      "move_to",
+      "sweep"
+    ],
     "arm": {
       "dim": 0,
       "strobe": 0
@@ -418,17 +500,17 @@
           "255": "Reset"
         }
       }
+    },
+    "location": {
+      "x": 0.15,
+      "y": 0.2,
+      "z": 0.0
     }
   },
   {
     "id": "mini_beam_prism_r",
     "name": "Mini Beam Prism (R)",
     "type": "moving_head",
-    "location": {
-      "x": 0.85,
-      "y": 0.2,
-      "z": 0
-    },
     "channels": {
       "pan_msb": 54,
       "pan_lsb": 55,
@@ -456,7 +538,73 @@
       "reset": 0
     },
     "presets": [],
-    "effects": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],
+    "poi_targets": {
+      "sofa": {
+        "pan": 45296,
+        "tilt": 5640
+      },
+      "piano": {
+        "pan": 42947,
+        "tilt": 22217
+      },
+      "table": {
+        "pan": 46332,
+        "tilt": 15402
+      },
+      "ref_0_0_0": {
+        "pan": 40657,
+        "tilt": 20425
+      },
+      "ref_1_0_0": {
+        "pan": 40718,
+        "tilt": 4271
+      },
+      "ref_1_1_0": {
+        "pan": 49646,
+        "tilt": 2408
+      },
+      "ref_1_1_1": {
+        "pan": 56516,
+        "tilt": 925
+      },
+      "ref_0_1_1": {
+        "pan": 57195,
+        "tilt": 17608
+      },
+      "ref_0_0_1": {
+        "pan": 27857,
+        "tilt": 24860
+      },
+      "ref_0_1_0": {
+        "pan": 50851,
+        "tilt": 17931
+      },
+      "dark_desk": {
+        "pan": 45440,
+        "tilt": 24399
+      },
+      "inblue_desk": {
+        "pan": 50718,
+        "tilt": 21141
+      },
+      "wall": {
+        "pan": 46617,
+        "tilt": 768
+      },
+      "ceiling_station": {
+        "pan": 59549,
+        "tilt": 22394
+      }
+    },
+    "effects": [
+      "full",
+      "strobe",
+      "flash",
+      "fade_in",
+      "seek",
+      "move_to",
+      "sweep"
+    ],
     "arm": {
       "dim": 0,
       "strobe": 0
@@ -533,6 +681,11 @@
           "255": "Reset"
         }
       }
+    },
+    "location": {
+      "x": 0.85,
+      "y": 0.2,
+      "z": 0.0
     }
   }
 ]
