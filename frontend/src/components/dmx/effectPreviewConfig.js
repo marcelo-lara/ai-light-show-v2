@@ -1,5 +1,5 @@
 const SUPPORTED_EFFECTS_BY_TYPE = {
-  moving_head: ['set_channels', 'move_to', 'seek', 'strobe', 'full', 'flash', 'sweep'],
+  moving_head: ['set_channels', 'move_to', 'move_to_poi', 'seek', 'strobe', 'full', 'flash', 'sweep'],
   parcan: ['set_channels', 'flash', 'strobe', 'fade_in', 'full'],
   rgb: ['set_channels', 'flash', 'strobe', 'fade_in', 'full'],
 }
@@ -16,6 +16,7 @@ const PARAM_SCHEMAS = {
       { key: 'pan', label: 'Pan', kind: 'int', min: 0, max: 65535, step: 1, defaultValue: 32768 },
       { key: 'tilt', label: 'Tilt', kind: 'int', min: 0, max: 65535, step: 1, defaultValue: 32768 },
     ],
+    move_to_poi: [{ key: 'target_POI', label: 'Target POI', kind: 'string', defaultValue: '' }],
     seek: [
       { key: 'pan', label: 'Pan', kind: 'int', min: 0, max: 65535, step: 1, defaultValue: 32768 },
       { key: 'tilt', label: 'Tilt', kind: 'int', min: 0, max: 65535, step: 1, defaultValue: 32768 },

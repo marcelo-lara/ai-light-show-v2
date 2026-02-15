@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, Tuple
 from models.fixtures.fixture import Fixture
 from .set_channels import handle as handle_set_channels
 from .move_to import handle as handle_move_to
+from .move_to_poi import handle as handle_move_to_poi
 from .seek import handle as handle_seek
 from .strobe import handle as handle_strobe
 from .full import handle as handle_full
@@ -202,6 +203,7 @@ class MovingHead(Fixture):
         effect_handlers = {
             "set_channels": handle_set_channels,
             "move_to": handle_move_to,
+            "move_to_poi": handle_move_to_poi,
             "seek": handle_seek,
             "strobe": handle_strobe,
             "full": handle_full,

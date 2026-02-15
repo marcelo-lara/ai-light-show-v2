@@ -52,7 +52,7 @@ class StateManager:
 
     def _fixture_supported_effects(self, fixture: Fixture) -> set[str]:
         runtime_effects = {
-            "moving_head": {"set_channels", "move_to", "seek", "strobe", "full", "flash", "sweep"},
+            "moving_head": {"set_channels", "move_to", "move_to_poi", "seek", "strobe", "full", "flash", "sweep"},
             "parcan": {"set_channels", "flash", "strobe", "fade_in", "full"},
             "rgb": {"set_channels", "flash", "strobe", "fade_in", "full"},
         }.get((fixture.type or "").lower(), {"set_channels"})

@@ -97,6 +97,7 @@
       "fade_in",
       "seek",
       "move_to",
+      "move_to_poi",
       "sweep"
     ],
     "arm": {
@@ -422,6 +423,7 @@
       "fade_in",
       "seek",
       "move_to",
+      "move_to_poi",
       "sweep"
     ],
     "arm": {
@@ -603,6 +605,7 @@
       "fade_in",
       "seek",
       "move_to",
+      "move_to_poi",
       "sweep"
     ],
     "arm": {
