@@ -1,4 +1,4 @@
-export default function WheelButtonRow({ label, currentValue, options, onSelect }) {
+export default function WheelButtonRow({ label, currentValue, options, onSelect, disabled = false }) {
   if (!Array.isArray(options) || options.length === 0) return null
 
   const selected = options.find((option) => Number(option.value) === Number(currentValue))
@@ -22,6 +22,7 @@ export default function WheelButtonRow({ label, currentValue, options, onSelect 
               onClick={() => onSelect?.(option.value)}
               title={`${option.label} (${option.value})`}
               aria-pressed={active}
+              disabled={disabled}
             >
               {option.label}
             </button>

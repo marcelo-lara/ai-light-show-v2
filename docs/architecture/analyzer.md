@@ -5,7 +5,8 @@ This document describes the `analyzer` module: the song analysis pipeline, how i
 ## Location
 
 - Source: `analyzer/` (main pipeline: `analyzer/song_analyzer/pipeline.py`)
-- CLI: `analyzer/implementation_backlog.md` and the `analyzer` image used for heavy GPU runs (optional)
+- CLI entrypoint: `python -m song_analyzer.cli` (module: `analyzer/song_analyzer/cli.py`)
+- Operational runbook: `docs/analyzer/README.md` and `docs/analyzer/worker-celery.md`
 
 ## Purpose
 

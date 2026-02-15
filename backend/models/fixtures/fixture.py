@@ -10,6 +10,7 @@ class Fixture(BaseModel, ABC):
     channels: Dict[str, int]
     current_values: Dict[str, Any] = {}
     presets: List[Dict[str, Any]] = []
+    poi_targets: Dict[str, Dict[str, Any]] = {}
     effects: List[str] = []
     arm: Dict[str, int] = {}
     meta: Dict[str, Any] = {}

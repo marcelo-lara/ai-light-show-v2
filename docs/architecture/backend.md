@@ -34,8 +34,9 @@ The backend is a FastAPI + asyncio service responsible for:
 
 Routing policy:
 
-- Paused: deltas update output (preview/edit mode).
-- Playing: output follows the DMX canvas; deltas only affect editor universe.
+- Paused: deltas update output (manual edit mode).
+- Playing: output follows the DMX canvas; manual delta edits are rejected.
+- Preview (paused only): temporary preview canvas overrides output for its duration, then output returns to editor universe.
 
 ## Runtime behavior
 
@@ -52,6 +53,15 @@ Routing policy:
 - `playback`: toggles backend play state.
 - `timecode`: while playing, selects nearest canvas frame.
 - `seek`: selects frame immediately; when paused also sends a snapshot (`dmx_frame`) so UI sliders match the preview.
+- If playback starts while a preview is active, preview is cancelled immediately.
+
+### Effect preview
+
+- Message: `preview_effect` with fixture/effect/duration/data payload.
+- Backend validates fixture + supported effect + duration.
+- Backend renders an in-memory temporary DMX canvas and streams frames to `output_universe`.
+- Preview is non-persistent (not written to cue sheet or disk).
+- Backend broadcasts `preview_status` and global `status` transitions.
 
 ## WebSocket protocol
 

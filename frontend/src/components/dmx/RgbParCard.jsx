@@ -1,4 +1,5 @@
 import DmxSlider from './DmxSlider.jsx'
+import EffectPreviewControls from './EffectPreviewControls.jsx'
 import { applyArmValues, readChannel, writeChannel } from './dmxUtils.js'
 
 const RGB_PRESETS = [
@@ -12,7 +13,7 @@ const RGB_PRESETS = [
   { name: 'Off', rgb: [0, 0, 0], swatch: '#3b3b3b' },
 ]
 
-export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
+export default function RgbParCard({ fixture, dmxValues, onDmxChange, onPreviewEffect, disabled = false }) {
   const channels = fixture?.channels || {}
 
   const redChannel = channels.red
@@ -52,7 +53,12 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
     <section class="dmxCard">
       <header class="dmxCardHeader">
         <h3>{fixture?.name || 'RGB Fixture'}</h3>
-        <button type="button" class="dmxArmButton" onClick={() => applyArmValues(fixture, onDmxChange)}>
+        <button
+          type="button"
+          class="dmxArmButton"
+          onClick={() => applyArmValues(fixture, onDmxChange)}
+          disabled={disabled}
+        >
           Arm
         </button>
       </header>
@@ -72,6 +78,7 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
               onClick={() => applyRgbPreset(preset)}
               title={preset.name}
               aria-pressed={selectedPreset?.name === preset.name}
+              disabled={disabled}
             >
               <span>{preset.name}</span>
             </button>
@@ -83,6 +90,7 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
             label="Red"
             value={redValue}
             onInput={(value) => writeChannel(onDmxChange, redChannel, value)}
+            disabled={disabled}
           />
         ) : null}
         {greenChannel ? (
@@ -90,6 +98,7 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
             label="Green"
             value={greenValue}
             onInput={(value) => writeChannel(onDmxChange, greenChannel, value)}
+            disabled={disabled}
           />
         ) : null}
         {blueChannel ? (
@@ -97,6 +106,7 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
             label="Blue"
             value={blueValue}
             onInput={(value) => writeChannel(onDmxChange, blueChannel, value)}
+            disabled={disabled}
           />
         ) : null}
         {sliderChannels.map(([channelName, channelNum]) => (
@@ -105,8 +115,15 @@ export default function RgbParCard({ fixture, dmxValues, onDmxChange }) {
             label={channelName}
             value={readChannel(dmxValues, channelNum)}
             onInput={(value) => writeChannel(onDmxChange, channelNum, value)}
+            disabled={disabled}
           />
         ))}
+
+        <EffectPreviewControls
+          fixture={fixture}
+          disabled={disabled}
+          onPreview={onPreviewEffect}
+        />
       </div>
     </section>
   )

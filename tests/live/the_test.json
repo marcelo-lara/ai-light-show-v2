@@ -1,0 +1,43 @@
+{
+  "name": "the test",
+  "request_id": "the-test-e6d91e4b",
+  "payload": {
+    "type": "preview_effect",
+    "request_id": "the-test-e6d91e4b",
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "sweep",
+    "duration": 10.0,
+    "data": {
+      "subject_POI": "table",
+      "start_POI": "ref_0_0_0",
+      "end_POI": "ref_1_1_1",
+      "duration": 10.0,
+      "easing": 5.0,
+      "max_dim": 1.0
+    }
+  },
+  "started": true,
+  "ended": true,
+  "active_elapsed_seconds": 10.316329154011328,
+  "events": [
+    {
+      "t": 447214.621606678,
+      "event": {
+        "type": "preview_status",
+        "active": true,
+        "request_id": "the-test-e6d91e4b",
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "sweep",
+        "duration": 10.0
+      }
+    },
+    {
+      "t": 447224.937935832,
+      "event": {
+        "type": "preview_status",
+        "active": false,
+        "request_id": "the-test-e6d91e4b"
+      }
+    }
+  ]
+}

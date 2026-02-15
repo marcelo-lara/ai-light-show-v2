@@ -1,6 +1,6 @@
 import CustomRangeSlider from '../ui/CustomRangeSlider.jsx'
 
-export default function DmxSlider({ label, value, onInput, min = 0, max = 255, step = 1 }) {
+export default function DmxSlider({ label, value, onInput, min = 0, max = 255, step = 1, disabled = false }) {
   const numericValue = Number.isFinite(Number(value)) ? Math.round(Number(value)) : 0
 
   return (
@@ -13,6 +13,7 @@ export default function DmxSlider({ label, value, onInput, min = 0, max = 255, s
           step={step}
           value={numericValue}
           onInput={onInput}
+          disabled={disabled}
           ariaLabel={label}
           showValue={false}
         />

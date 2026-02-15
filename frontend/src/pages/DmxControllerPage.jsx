@@ -2,7 +2,7 @@ import { useAppState } from '../app/state.jsx'
 import DmxFixtureGrid from '../components/dmx/DmxFixtureGrid.jsx'
 
 export default function DmxControllerPage() {
-  const { fixtures, dmxValues, actions } = useAppState()
+  const { fixtures, pois, dmxValues, actions, status } = useAppState()
 
   return (
     <div class="page dmxPage">
@@ -13,8 +13,12 @@ export default function DmxControllerPage() {
       <div class="pageBody dmxBody">
         <DmxFixtureGrid
           fixtures={fixtures}
+          pois={pois}
           dmxValues={dmxValues}
           onDmxChange={actions.handleDmxChange}
+          onPreviewEffect={actions.handlePreviewEffect}
+          onSavePoiTarget={actions.handleSavePoiTarget}
+          isPlaybackActive={!!status?.isPlaying}
         />
       </div>
     </div>

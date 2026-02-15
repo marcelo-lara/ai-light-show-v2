@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, Tuple
 from models.fixtures.fixture import Fixture
 from .set_channels import handle as handle_set_channels
 from .move_to import handle as handle_move_to
+from .move_to_poi import handle as handle_move_to_poi
 from .seek import handle as handle_seek
 from .strobe import handle as handle_strobe
 from .full import handle as handle_full
@@ -49,14 +50,55 @@ class MovingHead(Fixture):
         if not preset_name:
             return None
         needle = str(preset_name).strip().lower()
+
+        poi_targets = self.poi_targets if isinstance(self.poi_targets, dict) else {}
+
+        # Allow direct POI-id resolution (e.g. preset="piano").
+        for poi_id, values in poi_targets.items():
+            try:
+                if str(poi_id).strip().lower() == needle and isinstance(values, dict):
+                    return values
+            except Exception:
+                continue
+
         for p in self.presets or []:
             try:
                 if str(p.get("name", "")).strip().lower() == needle:
                     values = p.get("values")
-                    return values if isinstance(values, dict) else None
+                    if isinstance(values, dict):
+                        return values
+                    poi_id = p.get("poi_id")
+                    if poi_id is not None:
+                        linked_values = poi_targets.get(str(poi_id))
+                        if isinstance(linked_values, dict):
+                            return linked_values
             except Exception:
                 continue
         return None
+
+    def _find_poi_target_values(self, poi_key: Any) -> Optional[Dict[str, Any]]:
+        if poi_key is None:
+            return None
+
+        needle = str(poi_key).strip().lower()
+        if not needle:
+            return None
+
+        poi_targets = self.poi_targets if isinstance(self.poi_targets, dict) else {}
+        for key, values in poi_targets.items():
+            try:
+                if str(key).strip().lower() == needle and isinstance(values, dict):
+                    return values
+            except Exception:
+                continue
+        return None
+
+    def _resolve_poi_pan_tilt_u16(self, poi_key: Any) -> Tuple[Optional[int], Optional[int]]:
+        poi_values = self._find_poi_target_values(poi_key) or {}
+        return (
+            self._parse_axis_target_u16("pan", poi_values),
+            self._parse_axis_target_u16("tilt", poi_values),
+        )
 
     def _parse_axis_target_u16(self, axis: str, payload: Dict[str, Any]) -> Optional[int]:
         if not isinstance(payload, dict):
@@ -161,6 +203,7 @@ class MovingHead(Fixture):
         effect_handlers = {
             "set_channels": handle_set_channels,
             "move_to": handle_move_to,
+            "move_to_poi": handle_move_to_poi,
             "seek": handle_seek,
             "strobe": handle_strobe,
             "full": handle_full,
