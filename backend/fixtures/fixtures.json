@@ -39,10 +39,60 @@
     ],
     "poi_targets": {
       "piano": {
-        "pan_msb": 120,
-        "pan_lsb": 35,
-        "tilt_msb": 20,
-        "tilt_lsb": 11
+        "pan": 43949,
+        "tilt": 6323
+      },
+      "table": {
+        "pan": 41189,
+        "tilt": 13989
+      },
+      "sofa": {
+        "pan": 38294,
+        "tilt": 9410
+      },
+      "dark_desk": {
+        "pan": 45855,
+        "tilt": 11036
+      },
+      "inblue_desk": {
+        "pan": 46191,
+        "tilt": 18651
+      },
+      "wall": {
+        "pan": 36322,
+        "tilt": 11701
+      },
+      "ceiling_station": {
+        "pan": 49595,
+        "tilt": 38730
+      },
+      "ref_0_0_0": {
+        "pan": 45739,
+        "tilt": 1654
+      },
+      "ref_1_0_0": {
+        "pan": 38290,
+        "tilt": 1061
+      },
+      "ref_1_1_0": {
+        "pan": 38358,
+        "tilt": 18205
+      },
+      "ref_0_0_1": {
+        "pan": 58758,
+        "tilt": 0
+      },
+      "ref_1_1_1": {
+        "pan": 31177,
+        "tilt": 21989
+      },
+      "ref_0_1_1": {
+        "pan": 57275,
+        "tilt": 27171
+      },
+      "ref_0_1_0": {
+        "pan": 45782,
+        "tilt": 20961
       }
     },
     "effects": ["full", "strobe", "flash", "fade_in", "seek", "move_to", "sweep"],

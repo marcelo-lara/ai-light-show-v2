@@ -5,6 +5,7 @@ services:
       - "5001:5001"
     volumes:
       - ./backend/songs:/app/songs
+      - ./backend/fixtures:/app/fixtures
       - ./backend/cues:/app/cues
       - ./backend/metadata:/app/metadata
     environment:
