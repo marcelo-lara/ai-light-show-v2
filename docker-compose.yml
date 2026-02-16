@@ -4,6 +4,11 @@ services:
     volumes:
       - ./analyzer:/app/analyzer
       - ./backend/songs:/app/songs
+      - ./analyzer/meta:/app/meta
+    gpus: all
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     restart: unless-stopped
 
   backend:
