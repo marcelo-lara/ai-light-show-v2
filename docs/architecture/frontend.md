@@ -23,7 +23,6 @@ The UI is a routed, persistent 3-column app shell:
 Pages:
 
 - `frontend/src/pages/ShowControlPage.jsx`: waveform + lanes.
-- `frontend/src/pages/SongAnalysisPage.jsx`: placeholder.
 - `frontend/src/pages/DmxControllerPage.jsx`: placeholder.
 - `frontend/src/pages/ShowBuilderPage.jsx`: placeholder.
 

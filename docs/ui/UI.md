@@ -7,7 +7,6 @@ This doc describes the *current* frontend implementation.
 - Left menu: icon-only navigation.
 - Routes/pages:
   - `/show` — Show Control
-  - `/analysis` — Song Analysis (placeholder)
   - `/dmx` — DMX Controller (placeholder)
   - `/builder` — Show Builder (placeholder)
   - `/` redirects to `/show`
@@ -25,11 +24,6 @@ This doc describes the *current* frontend implementation.
   - Song parts lane (from metadata when available)
   - Cue sheet lane
   - Fixtures lane (DMX sliders)
-
-## Song Analysis (/analysis)
-
-- Current: placeholder page.
-- Not implemented in UI yet: song picking, analysis triggering, and results visualization.
 
 ## DMX Controller (/dmx)
 

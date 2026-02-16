@@ -6,7 +6,6 @@ import RightPanel from './layout/RightPanel.jsx'
 
 import RedirectToShow from './pages/RedirectToShow.jsx'
 import ShowControlPage from './pages/ShowControlPage.jsx'
-import SongAnalysisPage from './pages/SongAnalysisPage.jsx'
 import DmxControllerPage from './pages/DmxControllerPage.jsx'
 import ShowBuilderPage from './pages/ShowBuilderPage.jsx'
 
@@ -17,7 +16,6 @@ export function App() {
         <Router>
           <RedirectToShow path="/" />
           <ShowControlPage path="/show" />
-          <SongAnalysisPage path="/analysis" />
           <DmxControllerPage path="/dmx" />
           <ShowBuilderPage path="/builder" />
         </Router>

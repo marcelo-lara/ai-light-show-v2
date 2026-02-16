@@ -5,15 +5,12 @@ It intentionally does **not** include implementation details.
 
 ## Goals
 - Make song selection + playback feel like a cohesive “show control” app.
-- Make analysis/show-authoring repeatable: run analysis, inspect results, add notes, generate a plan.
 - Add authoring tools for reusable lighting building blocks (POIs, chasers/scenes).
 
 ## Guiding constraints (current architecture)
 - Backend currently exposes only a WebSocket at `/ws` (no REST yet).
 - Playback output uses a precomputed 60 FPS DMX canvas rendered from effect-based cues.
 - During playback, live “delta” edits are ignored for output.
-
-Decision: keep the backend WebSocket-only for the analysis workflow (trigger + progress updates).
 
 ---
 
@@ -41,7 +38,6 @@ Add a section selector (icons) to switch between the main areas.
 
 Sections:
 - **Show Control**: current main UI, playback + cue authoring.
-- **Song Analysis**: view/edit metadata; request (re)analysis; show LLM chat history.
 - **DMX Controller**: CRUD for chasers, scenes, and POI mappings.
 
 Acceptance criteria:
@@ -77,44 +73,7 @@ Dependencies:
 
 ---
 
-### Phase 2 — Analysis Workflow (service + UI)
-
-#### 5) Analysis Service (run pipeline on a selected song)
-Add a way to execute the analysis pipeline for a chosen song.
-
-Notes:
-- A stateless API could be OK *if* the frontend can receive progress updates.
-- Progress should be visible in the UI as discrete steps.
-
-Acceptance criteria:
-- User can request analysis for a song and see progress (step-by-step).
-- Resulting metadata files are created/updated deterministically for that song.
-- Failures are surfaced with an actionable error message.
-
-Dependencies:
-- Trigger analysis via WebSocket message(s) and stream progress as WebSocket events.
-
-#### 6) Song Analyzer UI
-UI for selecting a song, inspecting metadata, and understanding analysis output.
-
-Scope:
-- List songs (same source as Song Selection).
-- On select: show metadata and SVG plots to analyze the song IR.
-- Allow adding “LLM hints / instructions” into metadata.
-- Button: re-run analyzer to recreate/overwrite metadata (explicitly warn that all user hints will be lost).
-
-Acceptance criteria:
-- Metadata is readable and editable (for the fields we choose).
-- SVG plots render reliably for songs with metadata.
-- Re-analysis flow requires an explicit confirmation and clearly communicates overwrite behavior and completion.
-
-Dependencies:
-- Analysis trigger + progress mechanism (Feature 3).
-- Metadata file format/fields that are user-editable must be defined.
-
----
-
-### Phase 3 — Authoring Tools (DMX Controller)
+### Phase 2 — Authoring Tools (DMX Controller)
 
 #### 7) Chaser Designer
 UI to manage reusable chasers.
@@ -137,7 +96,7 @@ Dependencies:
 ## Later / Stretch
 
 ### 8) Show Plan Generation
-From the Song Analyzer UI, add a button to generate a show plan:
+Add a button to generate a show plan:
 - Generate cues for a segment of the song (effect-based cues for a time range), OR
 - Generate a plan for the whole song (storytelling instructions per segment).
 
@@ -151,7 +110,5 @@ Dependencies:
 ---
 
 ## Decisions (confirmed)
-- Analysis workflow uses WebSocket-only (trigger + progress events).
 - POIs + fixture mappings are stored globally under `backend/fixtures/`.
 - Chasers/scenes compile into the existing effect-based cue sheet.
-- Re-analysis overwrites metadata and deletes user hints.
