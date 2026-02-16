@@ -1,0 +1,29 @@
+{
+  "name": "smoke_test",
+  "timestamp_utc": "2026-02-15T03:22:17.752430+00:00",
+  "ws_url": "ws://localhost:5001/ws",
+  "payload": {
+    "type": "preview_effect",
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "sweep",
+    "duration": 10.0,
+    "data": {
+      "start_POI": "ref_0_0_0",
+      "subject_POI": "table",
+      "end_POI": "ref_1_0_0",
+      "duration": 10.0,
+      "max_dim": 255,
+      "easing": 5.0,
+      "arc_strength": 0.03,
+      "subject_close_ratio": 0.5
+    }
+  },
+  "result": {
+    "fixture_id": "mini_beam_prism_r",
+    "subject_close_ratio": 0.5,
+    "request_id": "8a8596ad-ed2b-494f-bb5d-7060b6cb7441",
+    "active_at_s": 0.012,
+    "ended_at_s": 10.314,
+    "elapsed_s": 10.314
+  }
+}

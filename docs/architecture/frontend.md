@@ -23,7 +23,8 @@ The UI is a routed, persistent 3-column app shell:
 Pages:
 
 - `frontend/src/pages/ShowControlPage.jsx`: waveform + lanes.
-- `frontend/src/pages/DmxControllerPage.jsx`: placeholder.
+- `frontend/src/pages/SongAnalysisPage.jsx`: analysis trigger + progress/status UI.
+- `frontend/src/pages/DmxControllerPage.jsx`: fixture-first DMX control cards + effect preview controls.
 - `frontend/src/pages/ShowBuilderPage.jsx`: placeholder.
 
 Core components:
@@ -32,23 +33,32 @@ Core components:
 - `frontend/src/components/player/WaveformHeader.jsx`: WaveSurfer integration and timecode emission.
 - `frontend/src/components/player/PlayerPanel.jsx`: always-visible player UI (right panel).
 - `frontend/src/components/chat/ChatSidePanel.jsx`: local chat history + outbound `chat` message.
-- `frontend/src/components/lanes/FixturesLane.jsx`: DMX sliders; sends `delta`.
+- `frontend/src/components/lanes/FixturesLane.jsx`: DMX sliders + effect preview controls for `/show`.
 - `frontend/src/components/lanes/CueSheetLane.jsx`: cue display.
 - `frontend/src/components/lanes/SongPartsLane.jsx`: song part display (from metadata when present).
+- `frontend/src/components/dmx/*`: DMX card components, XY controls, wheel controls, and effect preview config/forms.
+
+## Effect preview sync rule
+
+- Whenever fixture effects are added, removed, renamed, or their parameter contracts change in backend fixture/effect logic, update `frontend/src/components/dmx/effectPreviewConfig.js` in the same change.
+- This keeps fixture effect dropdown options and dynamic parameter forms aligned with backend runtime support.
 
 ## WebSocket contract usage
 
 Incoming:
 
-- `initial`: fixtures, cues, song, playback state.
+- `initial`: fixtures, cues, song, playback state, global status.
 - `delta`: remote edits (broadcast).
+- `delta_rejected`: rejected manual edit (playback active).
 - `dmx_frame`: paused seek-preview snapshots.
 - `cues_updated`: updated cue sheet.
-- Other message types may exist server-side, but the frontend currently only consumes the above.
+- `status`: global state (`isPlaying`, `previewActive`, preview info).
+- `preview_status`: preview accepted/rejected/lifecycle events.
+- `task_submitted`, `analyze_progress`, `analyze_result`, `task_error`: analysis lifecycle.
 
 Outgoing:
 
-- `delta`, `timecode`, `seek`, `playback`, `chat`.
+- `delta`, `timecode`, `seek`, `playback`, `preview_effect`, `chat`, `analyze_song`.
 
 ## Playback wiring
 
@@ -64,6 +74,8 @@ Outgoing:
 - The frontend audio timeline is authoritative.
 - While playing, the backend is driven by periodic `timecode` updates.
 - For seeks, the frontend sends `seek` immediately.
+- While playing, frontend edit + preview controls are disabled.
+- Preview is request-driven (`preview_effect`) and intentionally does not animate sliders.
 
 Implementation notes:
 

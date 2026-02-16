@@ -6,7 +6,7 @@ import CueSheetLane from '../components/lanes/CueSheetLane.jsx'
 import FixturesLane from '../components/lanes/FixturesLane.jsx'
 
 export default function ShowControlPage() {
-  const { fixtures, cues, song, dmxValues, timecode, actions } = useAppState()
+  const { fixtures, cues, song, dmxValues, timecode, actions, status } = useAppState()
 
   return (
     <div class="showControlPage">
@@ -25,7 +25,8 @@ export default function ShowControlPage() {
             fixtures={fixtures}
             dmxValues={dmxValues}
             onDmxChange={actions.handleDmxChange}
-            timecode={timecode}
+            onPreviewEffect={actions.handlePreviewEffect}
+            isPlaybackActive={!!status?.isPlaying}
           />
         </div>
       </div>

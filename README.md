@@ -1,69 +1,97 @@
 # AI Light Show v2
 
-A real-time DMX control system synchronized with audio playback.
+Real-time DMX show control with audio-synced playback, fixture-first editing, and Art-Net output.
 
-## Architecture
+## Current architecture
 
-- **Backend**: Python/FastAPI with asyncio, ArtNet UDP dispatcher, WebSocket API, in-memory state management.
-- **Frontend**: PReact with Vite, WaveSurfer.js for audio, real-time UI updates.
+- **Backend**: FastAPI + asyncio service with a single WebSocket API at `/ws`.
+- **State core**: `StateManager` maintains fixtures, cue sheet, editor/output universes, playback status, and precomputed DMX canvas.
+- **Output**: `ArtNetService` continuously sends the current output universe at 60 FPS.
+- **Frontend**: Preact + Vite app with a persistent shell (left menu, center content, right player/chat).
 
-## Setup
+## Runtime behavior (important)
 
-### Local Development
+- Audio timeline is frontend-authoritative.
+- While playing, backend output follows the song DMX canvas.
+- While playing, **manual edits and preview are disabled**.
+- While paused, manual edits (`delta`) can drive output directly.
+- Effect preview (`preview_effect`) renders a temporary in-memory canvas and sends it live to Art-Net without persistence.
 
-1. Backend:
+## Local development
+
+1. Backend
+
    ```bash
    cd backend
    python -m venv ai-light
-   source ai-light/bin/activate  # or pyenv local ai-light
+   source ai-light/bin/activate
    pip install -r requirements.txt
    python main.py
    ```
 
-2. Frontend:
+2. Frontend
+
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
 
-2a. Running tests
+3. App URL
 
-   - Use the `ai-light` Python environment (pyenv virtualenv) so tests can import backend modules. Example commands:
+   - Frontend dev server: http://localhost:5173
 
-     ```bash
-     # Use the pyenv-managed ai-light environment, then run tests with PYTHONPATH pointing at the backend package
-     PYTHONPATH=./backend $(pyenv which python) -m pytest -q
+## Tests
 
-     # Or, if your shell already activates the ai-light venv, a simpler form works:
-     PYTHONPATH=./backend python -m pytest -q
-     ```
+Use the `ai-light` Python environment and include both repository root and backend package on `PYTHONPATH`:
 
-3. Open http://localhost:5173
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q
+```
 
-### Docker
+After each test run, rebuild/restart containers before the next live/manual validation:
+
+```bash
+docker compose down && docker compose up --build -d
+```
+
+## Docker
 
 ```bash
 docker compose up --build
 ```
 
-Frontend on http://localhost:5000, backend on port 5001.
+- Frontend: http://localhost:5000
+- Backend: http://localhost:5001
 
-## Configuration
+## Art-Net debug mode
 
-- ArtNet IP: 192.168.10.221
-- Port: 6454
-- FPS: 60
+You can dump every sent DMX frame from `ArtNetService` for debugging.
 
-## Fixtures
+- `ARTNET_DEBUG=1` enables frame dumping.
+- `ARTNET_DEBUG_FILE=/path/to/artnet.log` writes dumps to a file (otherwise dumps to terminal).
 
-Defined in `backend/fixtures/fixtures.json`.
+Examples:
 
-Arm fixtures by setting "arm" channels and values from fixtures.json
+```bash
+# terminal dump
+ARTNET_DEBUG=1 python backend/main.py
 
-## Workflow
+# file dump
+ARTNET_DEBUG=1 ARTNET_DEBUG_FILE=./artnet-debug.log python backend/main.py
+```
 
-1. Load song via frontend.
-2. Adjust fixture sliders, deltas sent to backend.
-3. Use the Cue Sheet editor to add cues at the desired timecode.
-4. Playback syncs cues with audio.
+## Fixture/effect synchronization rule
+
+When backend fixture effects are added, removed, renamed, or their parameter contracts change, update:
+
+- `frontend/src/components/dmx/effectPreviewConfig.js`
+
+in the same change so preview effect options and parameter forms stay aligned.
+
+## Key docs
+
+- Architecture overview: `docs/architecture.md`
+- Backend architecture: `docs/architecture/backend.md`
+- Frontend architecture: `docs/architecture/frontend.md`
+- UI behavior: `docs/ui/UI.md`

@@ -602,6 +602,10 @@ button:focus-visible {
   padding: 6px 8px;
 }
 
+.poiButtonUnmapped {
+  font-style: italic;
+}
+
 .wheelRow {
   display: grid;
   gap: 6px;
@@ -725,6 +729,73 @@ button:focus-visible {
   box-shadow: inset 0 0 0 1px #93adff;
 }
 
+.fxPreviewBlock {
+  border-top: 1px dashed #555;
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.movingHeadLayout > .fxPreviewBlock {
+  grid-column: 1 / -1;
+}
+
+.fxPreviewTopRow {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1fr);
+  gap: 10px;
+}
+
+.fxPreviewMainInputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 8px;
+}
+
+.fxPreviewParams {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 8px;
+  align-content: start;
+}
+
+.fxField {
+  display: grid;
+  gap: 4px;
+}
+
+.fxFieldLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.fxInput,
+.fxSelect {
+  min-height: 30px;
+  border: 1px solid #5a5a5a;
+  border-radius: 0;
+  background: #2b2b2b;
+  color: #e7e7e7;
+  padding: 4px 8px;
+  width: 100%;
+}
+
+.fxPreviewButton {
+  width: 110px;
+  border: 1px solid #676767;
+  border-radius: 0;
+  background: #2b2b2b;
+  color: #e5e5e5;
+  padding: 6px 8px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .xyPad:focus {
   outline: 2px solid #93adff;
   outline-offset: 1px;
@@ -743,6 +814,11 @@ button:focus-visible {
 
 @media (max-width: 840px) {
   .movingHeadLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .fxPreviewTopRow,
+  .fxPreviewMainInputs {
     grid-template-columns: 1fr;
   }
 }

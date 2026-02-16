@@ -189,9 +189,11 @@
       "effect": "sweep",
       "duration": 1.6935485,
       "data": {
-        "preset": "Piano",
-        "span_pan": 2200,
-        "span_tilt": 180
+        "subject_POI": "piano",
+        "start_POI": "table",
+        "duration": 1.6935485,
+        "max_dim": 1.0,
+        "easing": 0.2
       },
       "name": "Head hypnotic: breathing sweep"
     },
@@ -1888,9 +1890,11 @@
       "effect": "sweep",
       "duration": 1.6935485,
       "data": {
-        "preset": "Piano",
-        "span_pan": 2200,
-        "span_tilt": 180
+        "subject_POI": "piano",
+        "start_POI": "table",
+        "duration": 1.6935485,
+        "max_dim": 1.0,
+        "easing": 0.2
       },
       "name": "Head hypnotic: breathing sweep"
     },
@@ -4845,9 +4849,11 @@
       "effect": "sweep",
       "duration": 1.6935485,
       "data": {
-        "preset": "Piano",
-        "span_pan": 2200,
-        "span_tilt": 180
+        "subject_POI": "piano",
+        "start_POI": "table",
+        "duration": 1.6935485,
+        "max_dim": 1.0,
+        "easing": 0.2
       },
       "name": "Head hypnotic: breathing sweep"
     },
@@ -6864,9 +6870,11 @@
       "effect": "sweep",
       "duration": 1.6935485,
       "data": {
-        "preset": "Piano",
-        "span_pan": 2200,
-        "span_tilt": 180
+        "subject_POI": "piano",
+        "start_POI": "table",
+        "duration": 1.6935485,
+        "max_dim": 1.0,
+        "easing": 0.2
       },
       "name": "Head hypnotic: breathing sweep"
     },
@@ -8883,9 +8891,11 @@
       "effect": "sweep",
       "duration": 1.6935485,
       "data": {
-        "preset": "Piano",
-        "span_pan": 2200,
-        "span_tilt": 180
+        "subject_POI": "piano",
+        "start_POI": "table",
+        "duration": 1.6935485,
+        "max_dim": 1.0,
+        "easing": 0.2
       },
       "name": "Head hypnotic: breathing sweep"
     },
@@ -11840,9 +11850,11 @@
       "effect": "sweep",
       "duration": 1.6935485,
       "data": {
-        "preset": "Piano",
-        "span_pan": 2200,
-        "span_tilt": 180
+        "subject_POI": "piano",
+        "start_POI": "table",
+        "duration": 1.6935485,
+        "max_dim": 1.0,
+        "easing": 0.2
       },
       "name": "Head hypnotic: breathing sweep"
     },
@@ -13859,9 +13871,11 @@
       "effect": "sweep",
       "duration": 1.6935485,
       "data": {
-        "preset": "Piano",
-        "span_pan": 2200,
-        "span_tilt": 180
+        "subject_POI": "piano",
+        "start_POI": "table",
+        "duration": 1.6935485,
+        "max_dim": 1.0,
+        "easing": 0.2
       },
       "name": "Head hypnotic: breathing sweep"
     },

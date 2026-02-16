@@ -8,7 +8,7 @@ function clamp16(value) {
   return Math.max(0, Math.min(65535, Math.round(Number(value) || 0)))
 }
 
-export default function XYPad({ pan16, tilt16, onChange }) {
+export default function XYPad({ pan16, tilt16, onChange, disabled = false }) {
   const draggingRef = useRef(false)
 
   const emitFromPointer = (target, clientX, clientY) => {
@@ -23,12 +23,14 @@ export default function XYPad({ pan16, tilt16, onChange }) {
   }
 
   const onPointerDown = (e) => {
+    if (disabled) return
     draggingRef.current = true
     e.currentTarget.setPointerCapture(e.pointerId)
     emitFromPointer(e.currentTarget, e.clientX, e.clientY)
   }
 
   const onPointerMove = (e) => {
+    if (disabled) return
     if (!draggingRef.current) return
     emitFromPointer(e.currentTarget, e.clientX, e.clientY)
   }
@@ -41,6 +43,7 @@ export default function XYPad({ pan16, tilt16, onChange }) {
   }
 
   const onKeyDown = (e) => {
+    if (disabled) return
     const currentPan = clamp16(pan16)
     const currentTilt = clamp16(tilt16)
     const step = e.shiftKey ? 256 : 1
@@ -78,9 +81,10 @@ export default function XYPad({ pan16, tilt16, onChange }) {
         onPointerUp={onPointerEnd}
         onPointerCancel={onPointerEnd}
         onKeyDown={onKeyDown}
-        tabIndex={0}
+        tabIndex={disabled ? -1 : 0}
         role="application"
         aria-label="Pan tilt pad"
+        aria-disabled={disabled}
       >
         <div class="xyPadCrosshair xyPadCrosshairX" />
         <div class="xyPadCrosshair xyPadCrosshairY" />

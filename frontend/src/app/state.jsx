@@ -5,11 +5,23 @@ const AppStateContext = createContext(null)
 
 export function AppStateProvider({ children }) {
   const [fixtures, setFixtures] = useState([])
+  const [pois, setPois] = useState([])
   const [cues, setCues] = useState([])
   const [song, setSong] = useState(null)
   const [dmxValues, setDmxValues] = useState({})
   const [timecode, setTimecode] = useState(0)
   const [playing, setPlaying] = useState(false)
+  const [status, setStatus] = useState({ isPlaying: false, previewActive: false, preview: null })
+  const [previewStatus, setPreviewStatus] = useState({ active: false, requestId: null, reason: null })
+
+  const [analysis, setAnalysis] = useState({
+    taskId: null,
+    state: null,
+    meta: null,
+    result: null,
+    error: null,
+    updatedAt: null,
+  })
 
   const wsRef = useRef(null)
   const isPlayingRef = useRef(false)
@@ -26,12 +38,30 @@ export function AppStateProvider({ children }) {
 
       if (data.type === 'initial') {
         setFixtures(data.fixtures || [])
+        setPois(data.pois || [])
         setCues(data.cues?.entries || [])
         setSong(data.song)
-        isPlayingRef.current = !!data.playback?.isPlaying
-        setPlaying(!!data.playback?.isPlaying)
+        const nextStatus = data.status || {
+          isPlaying: !!data.playback?.isPlaying,
+          previewActive: false,
+          preview: null,
+        }
+        isPlayingRef.current = !!nextStatus.isPlaying
+        setPlaying(!!nextStatus.isPlaying)
+        setStatus(nextStatus)
       } else if (data.type === 'delta') {
         setDmxValues((prev) => ({ ...prev, [data.channel]: data.value }))
+      } else if (data.type === 'status') {
+        const nextStatus = data.status || { isPlaying: false, previewActive: false, preview: null }
+        isPlayingRef.current = !!nextStatus.isPlaying
+        setPlaying(!!nextStatus.isPlaying)
+        setStatus(nextStatus)
+      } else if (data.type === 'preview_status') {
+        setPreviewStatus({
+          active: !!data.active,
+          requestId: data.request_id || null,
+          reason: data.reason || null,
+        })
       } else if (data.type === 'dmx_frame') {
         if (isPlayingRef.current) return
 
@@ -47,6 +77,43 @@ export function AppStateProvider({ children }) {
         }
       } else if (data.type === 'cues_updated') {
         setCues(data.cues?.entries || [])
+      } else if (data.type === 'fixtures_updated') {
+        setFixtures(data.fixtures || [])
+      } else if (data.type === 'task_submitted') {
+        setAnalysis((prev) => ({
+          ...prev,
+          taskId: data.task_id || null,
+          state: 'SUBMITTED',
+          meta: null,
+          result: null,
+          error: null,
+          updatedAt: Date.now(),
+        }))
+      } else if (data.type === 'analyze_progress') {
+        setAnalysis((prev) => ({
+          ...prev,
+          taskId: data.task_id || prev.taskId || null,
+          state: data.state || prev.state || null,
+          meta: data.meta || null,
+          error: null,
+          updatedAt: Date.now(),
+        }))
+      } else if (data.type === 'analyze_result') {
+        setAnalysis((prev) => ({
+          ...prev,
+          taskId: data.task_id || prev.taskId || null,
+          state: data.state || 'SUCCESS',
+          result: data.result ?? null,
+          updatedAt: Date.now(),
+        }))
+      } else if (data.type === 'task_error') {
+        setAnalysis((prev) => ({
+          ...prev,
+          taskId: data.task_id || prev.taskId || null,
+          state: 'ERROR',
+          error: data.message || 'Unknown error',
+          updatedAt: Date.now(),
+        }))
       }
     }
 
@@ -70,6 +137,7 @@ export function AppStateProvider({ children }) {
   }
 
   const handleDmxChange = (channel, value) => {
+    if (isPlayingRef.current) return
     setDmxValues((prev) => ({ ...prev, [channel]: value }))
     sendMessage({ type: 'delta', channel, value })
   }
@@ -88,6 +156,34 @@ export function AppStateProvider({ children }) {
     isPlayingRef.current = !!nextPlaying
     setPlaying(!!nextPlaying)
     sendMessage({ type: 'playback', playing: nextPlaying })
+  }
+
+  const handlePreviewEffect = ({ fixtureId, effect, duration, data }) => {
+    if (isPlayingRef.current) return
+
+    const requestId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+    sendMessage({
+      type: 'preview_effect',
+      request_id: requestId,
+      fixture_id: fixtureId,
+      effect,
+      duration,
+      data: data || {},
+    })
+  }
+
+  const handleSavePoiTarget = ({ fixtureId, poiId, pan16, tilt16 }) => {
+    sendMessage({
+      type: 'save_poi_target',
+      fixture_id: fixtureId,
+      poi_id: poiId,
+      pan: pan16,
+      tilt: tilt16,
+    })
   }
 
   const registerAudioControls = (controls) => {
@@ -115,23 +211,29 @@ export function AppStateProvider({ children }) {
   const value = useMemo(
     () => ({
       fixtures,
+      pois,
       cues,
       song,
       dmxValues,
       timecode,
       playing,
+      analysis,
+      status,
+      previewStatus,
       sendMessage,
       actions: {
         handleDmxChange,
         handleTimecodeUpdate,
         handleSeek,
         handlePlaybackChange,
+        handlePreviewEffect,
+        handleSavePoiTarget,
         registerAudioControls,
         togglePlay,
         seekTo,
       },
     }),
-    [fixtures, cues, song, dmxValues, timecode, playing]
+    [fixtures, pois, cues, song, dmxValues, timecode, playing, analysis, status, previewStatus]
   )
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>

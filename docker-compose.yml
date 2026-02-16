@@ -5,11 +5,14 @@ services:
       - "5001:5001"
     volumes:
       - ./backend/songs:/app/songs
+      - ./backend/fixtures:/app/fixtures
       - ./backend/cues:/app/cues
       - ./backend/metadata:/app/metadata
     environment:
       - DMX_NODE_IP=192.168.10.221
       - FPS=60
+      - ARTNET_DEBUG=${ARTNET_DEBUG:-0}
+      - ARTNET_DEBUG_FILE=${ARTNET_DEBUG_FILE:-}
     restart: unless-stopped
 
   frontend:

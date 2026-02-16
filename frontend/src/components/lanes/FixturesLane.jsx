@@ -1,6 +1,7 @@
 import DmxSlider from '../dmx/DmxSlider.jsx'
+import EffectPreviewControls from '../dmx/EffectPreviewControls.jsx'
 
-export default function FixturesLane({ fixtures, dmxValues, onDmxChange, timecode }) {
+export default function FixturesLane({ fixtures, dmxValues, onDmxChange, onPreviewEffect, isPlaybackActive }) {
   return (
     <div class="panel">
       <div class="panelHeader">
@@ -19,9 +20,15 @@ export default function FixturesLane({ fixtures, dmxValues, onDmxChange, timecod
                     label={`${channelName} (Ch ${channelNum})`}
                     value={dmxValues[channelNum] || 0}
                     onInput={(nextValue) => onDmxChange(channelNum, nextValue)}
+                    disabled={isPlaybackActive}
                   />
                 </div>
               ))}
+              <EffectPreviewControls
+                fixture={fixture}
+                disabled={isPlaybackActive}
+                onPreview={onPreviewEffect}
+              />
             </div>
           ))
         )}

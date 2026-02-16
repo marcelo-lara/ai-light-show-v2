@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from store.state import StateManager
@@ -18,14 +19,19 @@ async def lifespan(app: FastAPI):
     songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
     metadata_path = Path("/app/metadata") if Path("/app/metadata").exists() else backend_path / "metadata"
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
+
+    artnet_debug = os.getenv("ARTNET_DEBUG", "0").strip().lower() in {"1", "true", "yes", "on"}
+    artnet_debug_file = os.getenv("ARTNET_DEBUG_FILE") or None
     
     state_manager = StateManager(backend_path, songs_path, cues_path, metadata_path)
-    artnet_service = ArtNetService()
+    artnet_service = ArtNetService(debug=artnet_debug, debug_file=artnet_debug_file)
     song_service = SongService(songs_path, metadata_path)
     ws_manager = WebSocketManager(state_manager, artnet_service, song_service)
 
     # Startup
     fixtures_path = backend_path / "fixtures" / "fixtures.json"
+    pois_path = backend_path / "fixtures" / "pois.json"
+    await state_manager.load_pois(pois_path)
     await state_manager.load_fixtures(fixtures_path)
     # Arm fixtures
     for fixture in state_manager.fixtures:

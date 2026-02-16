@@ -8,6 +8,7 @@ export default function CustomRangeSlider({
   step = 1,
   value = 0,
   onInput,
+  disabled = false,
   ariaLabel = 'Range slider',
   showValue = false,
 }) {
@@ -34,6 +35,7 @@ export default function CustomRangeSlider({
         value={numericValue}
         aria-label={ariaLabel}
         onInput={handleInput}
+        disabled={disabled}
         style={{ '--slider-fill': `${percent}%` }}
       />
       {showValue && <div class="customRangeSliderValue">{numericValue}</div>}
