@@ -1,4 +1,11 @@
 services:
+  analyzer:
+    build: ./analyzer
+    volumes:
+      - ./analyzer:/app/analyzer
+      - ./backend/songs:/app/songs
+    restart: unless-stopped
+
   backend:
     build: ./backend
     ports:
