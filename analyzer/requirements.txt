@@ -1,0 +1,3 @@
+demucs
+torchcodec
+librosa
