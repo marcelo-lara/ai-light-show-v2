@@ -11,9 +11,17 @@ METADATA_PATH = "/app/meta"
 # 1. Select song
 SONG_PATH = "/app/songs/Yonaka - Seize the Power.mp3"
 
+
+def _song_name(song_path: str | Path) -> str:
+    return Path(song_path).expanduser().resolve().stem
+
+
+def _song_metadata_dir(song_path: str | Path, metadata_path: str | Path) -> Path:
+    return Path(metadata_path).expanduser().resolve() / _song_name(song_path)
+
+
 def _metadata_file_path(song_path: str | Path, metadata_path: str | Path) -> Path:
-    song_name = Path(song_path).expanduser().resolve().stem
-    return Path(metadata_path).expanduser().resolve() / f"{song_name}.json"
+    return _song_metadata_dir(song_path, metadata_path) / f"{_song_name(song_path)}.json"
 
 
 def _merge_json_file(path: Path, updates: dict) -> None:
@@ -36,33 +44,63 @@ def analyze_song(
 
     Current pipeline:
     1) Split stems with Demucs.
-    2) Placeholder for beat finding.
+    2) Find beats/downbeats and write beat artifacts.
     """
-    metadata_dir = Path(metadata_path).expanduser().resolve()
-    metadata_dir.mkdir(parents=True, exist_ok=True)
+    song_path = Path(song_path).expanduser().resolve()
+    metadata_root = Path(metadata_path).expanduser().resolve()
+    song_metadata_dir = _song_metadata_dir(song_path, metadata_root)
+    song_metadata_dir.mkdir(parents=True, exist_ok=True)
 
     stems_dir = split_stems(
         song_path=song_path,
         output_dir=stems_output_dir,
         model=MODEL_NAME,
         device=device,
-        metadata_dir=metadata_dir,
+        metadata_dir=song_metadata_dir,
     )
 
     # 2. Find beats and downbeats (librosa only)
     beat_data = find_beats_and_downbeats(song_path=song_path)
-    metadata_file = _metadata_file_path(song_path, metadata_dir)
+
+    beats_file = song_metadata_dir / "beats.json"
+    with open(beats_file, "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "beats": beat_data.get("beats", []),
+                "downbeats": beat_data.get("downbeats", []),
+            },
+            f,
+            indent=2,
+        )
+
+    metadata_file = _metadata_file_path(song_path, metadata_root)
     _merge_json_file(
         metadata_file,
         {
-            "beat_tracking": beat_data,
+            "song_name": song_path.stem,
+            "song_path": str(song_path),
+            "beat_tracking": {
+                "method": beat_data.get("method"),
+                "tempo_bpm": beat_data.get("tempo_bpm"),
+                "sample_rate": beat_data.get("sample_rate"),
+                "beat_count": beat_data.get("beat_count"),
+                "downbeat_count": beat_data.get("downbeat_count"),
+                "beat_strength_mean": beat_data.get("beat_strength_mean"),
+                "downbeat_strength_mean": beat_data.get("downbeat_strength_mean"),
+                "meter_assumption": beat_data.get("meter_assumption"),
+            },
+            "artifacts": {
+                "beats_file": str(beats_file),
+                "beats_file_name": beats_file.name,
+            },
         },
     )
 
     return {
-        "song_path": str(Path(song_path).expanduser().resolve()),
-        "metadata_path": str(metadata_dir),
+        "song_path": str(song_path),
+        "metadata_path": str(song_metadata_dir),
         "metadata_file": str(metadata_file),
+        "beats_file": str(beats_file),
         "stems_dir": str(stems_dir),
         "beat_tracking_method": beat_data.get("method"),
     }

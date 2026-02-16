@@ -29,6 +29,16 @@ def _demucs_base_command() -> list[str]:
     return [sys.executable, "-m", "demucs.separate"]
 
 
+def _merge_json_file(path: Path, updates: dict) -> None:
+    payload: dict = {}
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    payload.update(updates)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+
+
 def split_stems(
     song_path: str | Path,
     output_dir: str | Path,
@@ -81,19 +91,17 @@ def split_stems(
             [str(p.resolve()) for p in stems_dir.glob("*") if p.is_file()]
         )
         metadata_file = metadata_dir / f"{song_path.stem}.json"
-        with open(metadata_file, "w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "song_name": song_path.stem,
-                    "song_path": str(song_path),
-                    "model": model,
-                    "device": device,
-                    "stems_dir": str(stems_dir),
-                    "stems": stem_files,
-                },
-                f,
-                indent=2,
-            )
+        _merge_json_file(
+            metadata_file,
+            {
+                "song_name": song_path.stem,
+                "song_path": str(song_path),
+                "model": model,
+                "device": device,
+                "stems_dir": str(stems_dir),
+                "stems": stem_files,
+            },
+        )
 
     return stems_dir
 
@@ -143,11 +151,11 @@ def main() -> int:
         print(f"Running test split with provided song: {SONG_PATH}")
         try:
             stems_dir = split_stems(
-            song_path=SONG_PATH,
-            output_dir=TEMP_FILES_FOLDER,
-            model=MODEL_NAME,
-            device="cuda",
-        )
+                song_path=SONG_PATH,
+                output_dir=TEMP_FILES_FOLDER,
+                model=MODEL_NAME,
+                device="cuda",
+            )
         except (
             FileNotFoundError,
             ValueError,
