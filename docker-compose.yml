@@ -5,6 +5,7 @@ services:
       - ./analyzer:/app/analyzer
       - ./backend/songs:/app/songs
       - ./analyzer/meta:/app/meta
+      - analyzer_cache:/root/.cache
     gpus: all
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
@@ -31,7 +32,10 @@ services:
     build:
       context: ./frontend
     ports:
-      - "5000:80"
+      - "9000:80"
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  analyzer_cache:
