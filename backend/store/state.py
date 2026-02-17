@@ -15,11 +15,11 @@ FPS = 60
 MAX_SONG_SECONDS = 6 * 60
 
 class StateManager:
-    def __init__(self, backend_path: Path, songs_path: Path = None, cues_path: Path = None, metadata_path: Path = None):
+    def __init__(self, backend_path: Path, songs_path: Path = None, cues_path: Path = None, meta_path: Path = None):
         self.backend_path = backend_path
         self.songs_path = songs_path or backend_path / "songs"
         self.cues_path = cues_path or backend_path / "cues"
-        self.metadata_path = metadata_path or backend_path / "metadata"
+        self.meta_path = meta_path or backend_path / "meta"
         self.lock = asyncio.Lock()
         # "editor" universe reflects UI slider edits (always updated by deltas).
         self.editor_universe: bytearray = bytearray(DMX_CHANNELS)
@@ -238,20 +238,122 @@ class StateManager:
         async with self.lock:
             return int(self.max_used_channel)
 
+    def _meta_candidates(self, song_filename: str) -> List[Path]:
+        return [
+            self.meta_path / f"{song_filename}.json",
+            self.meta_path / song_filename / f"{song_filename}.json",
+            self.meta_path / song_filename / "meta.json",
+        ]
+
+    def _resolve_analyzer_artifact_path(self, raw_path: Any, meta_file: Path) -> Optional[Path]:
+        if not raw_path:
+            return None
+
+        text = str(raw_path).strip()
+        if not text:
+            return None
+
+        candidate = Path(text)
+        if candidate.exists():
+            return candidate
+
+        if candidate.is_absolute():
+            with contextlib.suppress(Exception):
+                parts = candidate.parts
+                if "meta" in parts:
+                    meta_idx = parts.index("meta")
+                    relative = Path(*parts[meta_idx + 1:])
+                    mapped = self.meta_path / relative
+                    if mapped.exists():
+                        return mapped
+
+        relative_candidate = meta_file.parent / text
+        if relative_candidate.exists():
+            return relative_candidate
+
+        return None
+
+    def _load_song_metadata(self, song_filename: str) -> SongMetadata:
+        meta_file: Optional[Path] = None
+        for candidate in self._meta_candidates(song_filename):
+            if candidate.exists():
+                meta_file = candidate
+                break
+
+        if not meta_file:
+            return SongMetadata(filename=song_filename, parts={}, hints={}, drums={})
+
+        with open(meta_file, 'r') as f:
+            meta_data = json.load(f)
+
+        if not isinstance(meta_data, dict):
+            return SongMetadata(filename=song_filename, parts={}, hints={}, drums={})
+
+        if "filename" not in meta_data:
+            meta_data["filename"] = song_filename
+
+        metadata = SongMetadata(**meta_data)
+
+        beat_tracking = meta_data.get("beat_tracking") or {}
+        tempo_bpm = beat_tracking.get("tempo_bpm")
+
+        beats: List[float] = []
+        downbeats: List[float] = []
+
+        artifacts = meta_data.get("artifacts") or {}
+        beats_path = self._resolve_analyzer_artifact_path(artifacts.get("beats_file"), meta_file)
+        if not beats_path:
+            fallback = meta_file.parent / "beats.json"
+            beats_path = fallback if fallback.exists() else None
+
+        if beats_path:
+            with contextlib.suppress(Exception):
+                with open(beats_path, 'r') as f:
+                    beats_data = json.load(f)
+                beats = [float(value) for value in (beats_data.get("beats") or [])]
+                downbeats = [float(value) for value in (beats_data.get("downbeats") or [])]
+
+        if not downbeats and beats:
+            downbeats = [beats[idx] for idx in range(0, len(beats), 4)]
+
+        hints = dict(metadata.hints or {})
+        drums = dict(metadata.drums or {})
+
+        existing_hint_beats = hints.get("beats")
+        existing_hint_downbeats = hints.get("downbeats")
+        existing_drum_beats = drums.get("beats")
+        existing_drum_downbeats = drums.get("downbeats")
+
+        if beats and not (isinstance(existing_hint_beats, list) and len(existing_hint_beats) > 0):
+            hints["beats"] = beats
+        if downbeats and not (isinstance(existing_hint_downbeats, list) and len(existing_hint_downbeats) > 0):
+            hints["downbeats"] = downbeats
+        if beats and not (isinstance(existing_drum_beats, list) and len(existing_drum_beats) > 0):
+            drums["beats"] = beats
+        if downbeats and not (isinstance(existing_drum_downbeats, list) and len(existing_drum_downbeats) > 0):
+            drums["downbeats"] = downbeats
+
+        if metadata.bpm is None and isinstance(tempo_bpm, (int, float)):
+            metadata.bpm = float(tempo_bpm)
+
+        if metadata.length is None:
+            if beats:
+                metadata.length = float(max(beats))
+            elif downbeats:
+                metadata.length = float(max(downbeats))
+
+        metadata.hints = hints
+        metadata.drums = drums
+        return metadata
+
     async def load_song(self, song_filename: str):
         async with self.lock:
             audio_url = None
             audio_file = self.songs_path / f"{song_filename}.mp3"
             if audio_file.exists():
                 audio_url = f"/songs/{quote(audio_file.name)}"
-            # Load metadata
-            metadata_file = self.metadata_path / f"{song_filename}.metadata.json"
-            if metadata_file.exists():
-                with open(metadata_file, 'r') as f:
-                    metadata_data = json.load(f)
-                    metadata = SongMetadata(**metadata_data)
-            else:
-                metadata = SongMetadata(filename=song_filename, parts={}, hints={}, drums={})
+
+            metadata = self._load_song_metadata(song_filename)
 
             self.current_song = Song(filename=song_filename, metadata=metadata, audioUrl=audio_url)
 
@@ -475,6 +577,77 @@ class StateManager:
             cue_file = cues_path / f"{self.cue_sheet.song_filename}.cue.json"
             with open(cue_file, 'w') as f:
                 json.dump(self.cue_sheet.dict(), f, indent=2)
+
+    async def save_song_sections(self, sections: List[Dict[str, Any]]) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.current_song:
+                return {"ok": False, "reason": "no_song_loaded"}
+
+            normalized: List[Dict[str, Any]] = []
+            for row in sections or []:
+                name = str((row or {}).get("name") or "").strip()
+                if not name:
+                    return {"ok": False, "reason": "invalid_name"}
+
+                try:
+                    start = float((row or {}).get("start"))
+                    end = float((row or {}).get("end"))
+                except Exception:
+                    return {"ok": False, "reason": "invalid_time"}
+
+                if not math.isfinite(start) or not math.isfinite(end) or end <= start:
+                    return {"ok": False, "reason": "invalid_range"}
+
+                normalized.append({"name": name, "start": start, "end": end})
+
+            normalized.sort(key=lambda item: item["start"])
+
+            for index in range(1, len(normalized)):
+                if normalized[index]["start"] < normalized[index - 1]["end"]:
+                    return {"ok": False, "reason": "overlap"}
+
+            unique_name_counts: Dict[str, int] = {}
+            parts: Dict[str, List[float]] = {}
+            for row in normalized:
+                base_name = row["name"]
+                count = unique_name_counts.get(base_name, 0) + 1
+                unique_name_counts[base_name] = count
+                key = base_name if count == 1 else f"{base_name} ({count})"
+                parts[key] = [float(row["start"]), float(row["end"])]
+
+            self.current_song.metadata.parts = parts
+            self.song_length_seconds = self._infer_song_length_seconds(self.current_song.metadata)
+
+            song_filename = self.current_song.filename
+            target_file: Optional[Path] = None
+            for candidate in self._meta_candidates(song_filename):
+                if candidate.exists():
+                    target_file = candidate
+                    break
+            if not target_file:
+                target_file = self.meta_path / song_filename / f"{song_filename}.json"
+
+            target_file.parent.mkdir(parents=True, exist_ok=True)
+
+            payload: Dict[str, Any] = {}
+            if target_file.exists():
+                with contextlib.suppress(Exception):
+                    with open(target_file, 'r') as handle:
+                        loaded = json.load(handle)
+                    if isinstance(loaded, dict):
+                        payload = loaded
+
+            if "filename" not in payload:
+                payload["filename"] = song_filename
+            payload["parts"] = parts
+
+            with open(target_file, 'w') as handle:
+                json.dump(payload, handle, indent=2)
+
+            return {
+                "ok": True,
+                "parts": parts,
+            }
 
     async def set_playback_state(self, is_playing: bool) -> None:
         task_to_cancel: Optional[asyncio.Task] = None

@@ -83,6 +83,18 @@ export function AppStateProvider({ children }) {
         setCues(data.cues?.entries || [])
       } else if (data.type === 'fixtures_updated') {
         setFixtures(data.fixtures || [])
+      } else if (data.type === 'sections_updated') {
+        const nextParts = data.parts && typeof data.parts === 'object' ? data.parts : {}
+        setSong((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            metadata: {
+              ...(prev.metadata || {}),
+              parts: nextParts,
+            },
+          }
+        })
       } else if (data.type === 'task_submitted') {
         setAnalysis((prev) => ({
           ...prev,

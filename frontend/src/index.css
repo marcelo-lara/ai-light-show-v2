@@ -495,9 +495,46 @@ button:focus-visible {
   gap: 8px;
 }
 
+.songAnalysisSectionActions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.songAnalysisSectionList {
+  display: grid;
+  gap: 6px;
+  max-height: 58vh;
+  overflow: auto;
+}
+
+.songAnalysisSectionRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(74px, 90px) minmax(74px, 90px) auto auto auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.songAnalysisSectionRowActive {
+  outline: 1px solid #9fb7ff;
+  background: #1c2338;
+}
+
+.songAnalysisSectionInput {
+  height: 28px;
+  border: 1px solid #676767;
+  border-radius: 0;
+  background: #1e1e1e;
+  color: #efefef;
+  padding: 4px 6px;
+}
+
 .songAnalysisBeatGrid {
   display: grid;
   gap: 4px;
+  height: clamp(220px, 58vh, 68vh);
+  overflow: auto;
+  align-content: start;
 }
 
 .songAnalysisBeatRow {
@@ -513,6 +550,15 @@ button:focus-visible {
   color: #f0f0f0;
   padding: 5px 6px;
   font-size: 12px;
+}
+
+.songAnalysisBeatCellDownbeat {
+  background: darkblue;
+}
+
+.songAnalysisBeatCellCurrent {
+  border-color: #9fb7ff;
+  color: #ffffff;
 }
 
 .songAnalysisMetaList {

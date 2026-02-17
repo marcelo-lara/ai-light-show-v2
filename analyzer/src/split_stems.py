@@ -46,7 +46,7 @@ def split_stems(
     device: str = "cuda",
     mp3: bool = False,
     jobs: int = 0,
-    metadata_dir: str | Path | None = None,
+    meta_dir: str | Path | None = None,
 ) -> Path:
     """Run Demucs and return the directory containing generated stems."""
     song_path = Path(song_path).expanduser().resolve()
@@ -84,15 +84,15 @@ def split_stems(
             f"{stems_dir}"
         )
 
-    if metadata_dir is not None:
-        metadata_dir = Path(metadata_dir).expanduser().resolve()
-        metadata_dir.mkdir(parents=True, exist_ok=True)
+    if meta_dir is not None:
+        meta_dir = Path(meta_dir).expanduser().resolve()
+        meta_dir.mkdir(parents=True, exist_ok=True)
         stem_files = sorted(
             [str(p.resolve()) for p in stems_dir.glob("*") if p.is_file()]
         )
-        metadata_file = metadata_dir / f"{song_path.stem}.json"
+        meta_file = meta_dir / f"{song_path.stem}.json"
         _merge_json_file(
-            metadata_file,
+            meta_file,
             {
                 "song_name": song_path.stem,
                 "song_path": str(song_path),
@@ -128,9 +128,9 @@ def parse_args() -> argparse.Namespace:
         help="Compute device used by Demucs.",
     )
     parser.add_argument(
-        "--metadata-dir",
+        "--meta-dir",
         default=None,
-        help="Optional metadata output directory. Writes {song_name}.json when set.",
+        help="Optional meta output directory. Writes {song_name}.json when set.",
     )
     parser.add_argument(
         "--mp3",
@@ -177,7 +177,7 @@ def main() -> int:
             device=args.device,
             mp3=args.mp3,
             jobs=args.jobs,
-            metadata_dir=args.metadata_dir,
+            meta_dir=args.meta_dir,
         )
     except (FileNotFoundError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
         print(f"Error: {exc}", file=sys.stderr)

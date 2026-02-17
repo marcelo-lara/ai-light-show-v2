@@ -254,6 +254,21 @@ class WebSocketManager:
                 if self.state_manager.cue_sheet:
                     await self.broadcast({"type": "cues_updated", "cues": self.state_manager.cue_sheet.dict()})
 
+            elif msg_type == "save_sections":
+                payload = message.get("sections")
+                if not isinstance(payload, list):
+                    await websocket.send_json({"type": "sections_save_result", "ok": False, "reason": "invalid_payload"})
+                    return
+
+                result = await self.state_manager.save_song_sections(payload)
+                await websocket.send_json({"type": "sections_save_result", **result})
+
+                if result.get("ok"):
+                    await self.broadcast({
+                        "type": "sections_updated",
+                        "parts": result.get("parts") or {},
+                    })
+
             elif msg_type == "load_song":
                 song_filename = message.get("filename")
                 await self.state_manager.load_song(song_filename)
@@ -281,7 +296,7 @@ class WebSocketManager:
                 # Submit Celery task
                 task = analyze_task.apply_async(args=[str(song_path)], kwargs={
                     "device": message.get("device", "auto"),
-                    "out_dir": str(self.song_service.metadata_path),
+                    "out_dir": str(self.song_service.meta_path),
                     "temp_dir": message.get("temp_dir", "/app/temp_files"),
                     "overwrite": bool(message.get("overwrite", False)),
                 })

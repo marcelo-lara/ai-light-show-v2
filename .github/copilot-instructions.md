@@ -31,7 +31,7 @@
 ## Domain data + storage
 - Fixtures are defined in JSON at [backend/fixtures/fixtures.json](../backend/fixtures/fixtures.json) and loaded on backend startup.
 - Cues are stored per song in [backend/cues](../backend/cues) as `{song}.cue.json` (written by `StateManager.save_cue_sheet()`), using the action-based schema.
-- Song metadata lives in [backend/metadata](../backend/metadata) as `{song}.metadata.json` and is loaded by `SongService`.
+- Song metadata lives in [backend/meta](../backend/meta) from analyzer output (typically `{song}/{song}.json`) and is loaded by `SongService`.
 
 ## Developer workflows
 - Local dev: backend in [backend/main.py](../backend/main.py) (`python main.py`) and frontend via Vite (`npm run dev`) per [README.md](../README.md).

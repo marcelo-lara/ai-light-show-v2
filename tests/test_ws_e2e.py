@@ -18,9 +18,9 @@ class FakeWS:
 
 
 class FakeSongService:
-    def __init__(self, songs_path: Path, metadata_path: Path):
+    def __init__(self, songs_path: Path, meta_path: Path):
         self.songs_path = songs_path
-        self.metadata_path = metadata_path
+        self.meta_path = meta_path
 
 
 class DummyState:
@@ -128,14 +128,14 @@ class PreviewStateStub:
 async def test_websocket_enqueues_task_and_receives_progress(tmp_path):
     # Prepare fake song file
     songs_dir = tmp_path / "songs"
-    metadata_dir = tmp_path / "metadata"
+    meta_dir = tmp_path / "meta"
     songs_dir.mkdir()
-    metadata_dir.mkdir()
+    meta_dir.mkdir()
     song_file = songs_dir / "test_song.mp3"
     song_file.write_text("dummy")
 
     # Create manager with stubs
-    manager = WebSocketManager(DummyState(), DummyArtNet(), FakeSongService(str(songs_dir), str(metadata_dir)))
+    manager = WebSocketManager(DummyState(), DummyArtNet(), FakeSongService(str(songs_dir), str(meta_dir)))
 
     # Prepare websocket and register as active connection
     ws = FakeWS()

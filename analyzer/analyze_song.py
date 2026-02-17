@@ -6,7 +6,7 @@ from pathlib import Path
 from src.beat_finder import find_beats_and_downbeats
 from src.split_stems import MODEL_NAME, TEMP_FILES_FOLDER, split_stems
 
-METADATA_PATH = "/app/meta"
+META_PATH = "/app/meta"
 
 # 1. Select song
 SONG_PATH = "/app/songs/Yonaka - Seize the Power.mp3"
@@ -16,12 +16,12 @@ def _song_name(song_path: str | Path) -> str:
     return Path(song_path).expanduser().resolve().stem
 
 
-def _song_metadata_dir(song_path: str | Path, metadata_path: str | Path) -> Path:
-    return Path(metadata_path).expanduser().resolve() / _song_name(song_path)
+def _song_meta_dir(song_path: str | Path, meta_path: str | Path) -> Path:
+    return Path(meta_path).expanduser().resolve() / _song_name(song_path)
 
 
-def _metadata_file_path(song_path: str | Path, metadata_path: str | Path) -> Path:
-    return _song_metadata_dir(song_path, metadata_path) / f"{_song_name(song_path)}.json"
+def _meta_file_path(song_path: str | Path, meta_path: str | Path) -> Path:
+    return _song_meta_dir(song_path, meta_path) / f"{_song_name(song_path)}.json"
 
 
 def _merge_json_file(path: Path, updates: dict) -> None:
@@ -36,7 +36,7 @@ def _merge_json_file(path: Path, updates: dict) -> None:
 
 def analyze_song(
     song_path: str | Path = SONG_PATH,
-    metadata_path: str | Path = METADATA_PATH,
+    meta_path: str | Path = META_PATH,
     stems_output_dir: str | Path = TEMP_FILES_FOLDER,
     device: str = "cuda",
 ) -> dict:
@@ -47,22 +47,22 @@ def analyze_song(
     2) Find beats/downbeats and write beat artifacts.
     """
     song_path = Path(song_path).expanduser().resolve()
-    metadata_root = Path(metadata_path).expanduser().resolve()
-    song_metadata_dir = _song_metadata_dir(song_path, metadata_root)
-    song_metadata_dir.mkdir(parents=True, exist_ok=True)
+    meta_root = Path(meta_path).expanduser().resolve()
+    song_meta_dir = _song_meta_dir(song_path, meta_root)
+    song_meta_dir.mkdir(parents=True, exist_ok=True)
 
     stems_dir = split_stems(
         song_path=song_path,
         output_dir=stems_output_dir,
         model=MODEL_NAME,
         device=device,
-        metadata_dir=song_metadata_dir,
+        meta_dir=song_meta_dir,
     )
 
     # 2. Find beats and downbeats (librosa only)
     beat_data = find_beats_and_downbeats(song_path=song_path)
 
-    beats_file = song_metadata_dir / "beats.json"
+    beats_file = song_meta_dir / "beats.json"
     with open(beats_file, "w", encoding="utf-8") as f:
         json.dump(
             {
@@ -73,9 +73,9 @@ def analyze_song(
             indent=2,
         )
 
-    metadata_file = _metadata_file_path(song_path, metadata_root)
+    meta_file = _meta_file_path(song_path, meta_root)
     _merge_json_file(
-        metadata_file,
+        meta_file,
         {
             "song_name": song_path.stem,
             "song_path": str(song_path),
@@ -98,8 +98,8 @@ def analyze_song(
 
     return {
         "song_path": str(song_path),
-        "metadata_path": str(song_metadata_dir),
-        "metadata_file": str(metadata_file),
+        "meta_path": str(song_meta_dir),
+        "meta_file": str(meta_file),
         "beats_file": str(beats_file),
         "stems_dir": str(stems_dir),
         "beat_tracking_method": beat_data.get("method"),

@@ -18,15 +18,15 @@ async def lifespan(app: FastAPI):
     
     # Use absolute paths for Docker containers, relative for local development
     songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
-    metadata_path = Path("/app/metadata") if Path("/app/metadata").exists() else backend_path / "metadata"
+    meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
 
     artnet_debug = os.getenv("ARTNET_DEBUG", "0").strip().lower() in {"1", "true", "yes", "on"}
     artnet_debug_file = os.getenv("ARTNET_DEBUG_FILE") or None
     
-    state_manager = StateManager(backend_path, songs_path, cues_path, metadata_path)
+    state_manager = StateManager(backend_path, songs_path, cues_path, meta_path)
     artnet_service = ArtNetService(debug=artnet_debug, debug_file=artnet_debug_file)
-    song_service = SongService(songs_path, metadata_path)
+    song_service = SongService(songs_path, meta_path)
     ws_manager = WebSocketManager(state_manager, artnet_service, song_service)
 
     # Startup

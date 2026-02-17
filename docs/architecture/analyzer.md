@@ -11,7 +11,7 @@ This document describes the `analyzer` module: the song analysis pipeline, how i
 ## Purpose
 
 - Extract deterministic metadata and derived artifacts for each song (stems, beatmaps, spectral features, run records).
-- Produce reproducible JSON metadata under the configured metadata directory (default: `backend/metadata/{song_slug}`).
+- Produce reproducible JSON metadata under the configured meta directory (default: `backend/meta/{song_slug}`).
 
 ## API / CLI
 
@@ -22,7 +22,7 @@ This document describes the `analyzer` module: the song analysis pipeline, how i
 
 - Celery task: `backend/tasks/analyze.py` exposes a Celery task `analyze_song` which:
   - Lazily imports `analyzer.song_analyzer` internals.
-  - Constructs `AnalysisConfig` with `songs_dir`, `metadata_dir`, `temp_dir`, and `device`.
+  - Constructs `AnalysisConfig` with `songs_dir`, `meta_dir`, `temp_dir`, and `device`.
   - Calls `pipeline.analyze_song(song_path, progress_callback=_progress_cb)`.
 
 - WebSocket flow: `backend/api/websocket.py` listens for messages `{type: "analyze_song", filename: ...}` and:
@@ -42,16 +42,15 @@ This document describes the `analyzer` module: the song analysis pipeline, how i
 
 ## Storage & outputs
 
-- Output directory: by default `backend/metadata/{song_slug}` (configurable via `out_dir` or `ANALYZER_METADATA_DIR`).
+- Output directory: by default `backend/meta/{song_slug}` (configurable via `out_dir`).
 - Temporary working dir: `analyzer/temp_files/{song_slug}` (configurable via `ANALYZER_TEMP_DIR`).
 - Run records and step artifact manifests are written into the song metadata directory (e.g., `run.json`).
 
 ## Docker & deployment notes
 
-- The project `docker-compose.yml` includes a `worker` service that runs the Celery worker and mounts `./analyzer` and song/metadata dirs.
+- The project `docker-compose.yml` includes a worker/analyzer service that mounts `./analyzer` and song/meta dirs.
 - Environment variables used in the worker/backend:
   - `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` (default: `redis://redis:6379/0`)
-  - `ANALYZER_METADATA_DIR` (optional override)
   - `ANALYZER_TEMP_DIR` (optional override)
   - `CELERY_IMPORTS` may be set to ensure the worker imports `tasks.analyze` on startup.
 

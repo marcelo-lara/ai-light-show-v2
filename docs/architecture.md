@@ -34,6 +34,12 @@ AI Light Show v2 has three main modules:
 3. Worker runs analyzer pipeline and updates Celery meta (and optionally Redis pub/sub).
 4. Backend polls task meta and broadcasts `analyze_progress` / `analyze_result`.
 
+### Meta source (Docker)
+
+- In Docker, backend reads song meta from `/app/meta` (mounted from `analyzer/meta`).
+- If `/app/meta` is unavailable, backend falls back to local `backend/meta`.
+- Backend accepts analyzer-style per-song JSON directories and song-level JSON files in the meta root.
+
 ## Module docs
 
 - Frontend: `docs/architecture/frontend.md`
