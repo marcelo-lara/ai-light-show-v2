@@ -102,7 +102,7 @@ body {
   height: 44px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  border-radius: 0;
   color: rgba(255, 255, 255, 0.75);
   border: 1px solid transparent;
 }
@@ -241,7 +241,7 @@ body {
   flex: 1;
   min-width: 0;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #3a3a3a;
   background: #1a1a1a;
   color: white;
@@ -266,7 +266,7 @@ body {
 .card {
   background: #202020;
   border: 1px solid #333;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 10px;
   margin-bottom: 10px;
 }
@@ -349,7 +349,7 @@ button:focus-visible {
 .playerSeek {
   height: 8px;
   background: #111;
-  border-radius: 8px;
+  border-radius: 0;
   position: relative;
   cursor: pointer;
 }
@@ -360,7 +360,7 @@ button:focus-visible {
   top: 0;
   bottom: 0;
   background: linear-gradient(90deg, #646cff, #7b7fff);
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .playerTime {
@@ -390,6 +390,158 @@ button:focus-visible {
   min-height: 0;
 }
 
+/* Song Analysis page */
+.songAnalysisPage {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+}
+
+.songAnalysisBody {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 10px;
+}
+
+.songAnalysisToolbar {
+  margin-bottom: 0;
+  display: grid;
+  grid-template-columns: minmax(400px, 1fr) minmax(260px, 420px);
+  gap: 10px;
+  align-items: center;
+}
+
+.songAnalysisControlGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.songAnalysisButton {
+  border: 1px solid #5a5a5a;
+  border-radius: 0;
+  background: #2b2b2b;
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.songAnalysisProgressWrap {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.songAnalysisProgressBlock {
+  display: grid;
+  gap: 5px;
+}
+
+.songAnalysisProgressLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.songAnalysisProgressTrack {
+  height: 8px;
+  border: 1px solid #4a4a4a;
+  background: #111;
+  position: relative;
+}
+
+.songAnalysisProgressFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #646cff, #7b7fff);
+}
+
+.songAnalysisGrid {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(260px, 0.9fr) minmax(320px, 1.15fr);
+  gap: 10px;
+  align-content: start;
+}
+
+.songAnalysisCard {
+  margin-bottom: 0;
+  min-height: 0;
+}
+
+.songAnalysisTagList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.songAnalysisTag {
+  border: 1px solid #676767;
+  border-radius: 0;
+  background: #2b2b2b;
+  color: #e5e5e5;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.songAnalysisBeatGrid {
+  display: grid;
+  gap: 4px;
+}
+
+.songAnalysisBeatRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.songAnalysisBeatCell {
+  border: 1px solid #676767;
+  border-radius: 0;
+  background: #2b2b2b;
+  color: #f0f0f0;
+  padding: 5px 6px;
+  font-size: 12px;
+}
+
+.songAnalysisMetaList {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.songAnalysisError {
+  color: #ff8c8c;
+}
+
+.songAnalysisChordGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.songAnalysisChordCell {
+  border: 1px solid #676767;
+  border-radius: 0;
+  background: #2b2b2b;
+  color: #f0f0f0;
+  min-height: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+
 /* Custom range slider (DMX control) */
 .customRangeSlider {
   display: flex;
@@ -408,7 +560,7 @@ button:focus-visible {
   -webkit-appearance: none;
   width: 100%;
   height: var(--slider-track-height);
-  border-radius: 999px;
+  border-radius: 0;
   background: linear-gradient(
     to right,
     var(--slider-fill-color) var(--slider-fill),
@@ -420,7 +572,7 @@ button:focus-visible {
 
 .customRangeSliderInput::-webkit-slider-runnable-track {
   height: var(--slider-track-height);
-  border-radius: 999px;
+  border-radius: 0;
   background: transparent;
 }
 
@@ -437,13 +589,13 @@ button:focus-visible {
 
 .customRangeSliderInput::-moz-range-track {
   height: var(--slider-track-height);
-  border-radius: 999px;
+  border-radius: 0;
   background: transparent;
 }
 
 .customRangeSliderInput::-moz-range-progress {
   height: var(--slider-track-height);
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--slider-fill-color);
 }
 
@@ -459,7 +611,7 @@ button:focus-visible {
   height: 20px;
   display: grid;
   place-items: center;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 700;
   color: #fff;
@@ -576,7 +728,7 @@ button:focus-visible {
   position: absolute;
   width: 12px;
   height: 12px;
-  border-radius: 50%;
+  border-radius: 0;
   border: 1px solid #bdbdbd;
   background: #2a2a2a;
   transform: translate(-50%, -50%);
@@ -682,7 +834,7 @@ button:focus-visible {
   height: 20px;
   display: grid;
   place-items: center;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 700;
   color: #fff;
@@ -807,6 +959,18 @@ select:disabled {
 }
 
 @media (max-width: 1200px) {
+  .songAnalysisToolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .songAnalysisProgressWrap {
+    grid-template-columns: 1fr;
+  }
+
+  .songAnalysisGrid {
+    grid-template-columns: 1fr;
+  }
+
   .dmxGrid {
     grid-template-columns: 1fr;
   }

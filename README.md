@@ -16,6 +16,7 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, an
 - While playing, **manual edits and preview are disabled**.
 - While paused, manual edits (`delta`) can drive output directly.
 - Effect preview (`preview_effect`) renders a temporary in-memory canvas and sends it live to Art-Net without persistence.
+- Default startup song target is `Yonaka - Seize the Power` (falls back to first available song).
 
 ## Local development
 

@@ -11,9 +11,11 @@ This doc describes the *current* frontend implementation.
   - `/dmx` — DMX Controller
   - `/builder` — Show Builder (placeholder)
   - `/` redirects to `/show`
+- Left menu order: Show Control → Song Analysis → DMX Controller → Show Builder.
 - Right panel (persistent):
   - Show Player (always visible)
   - LLM Chat (always visible)
+- Visual style rule: non-button UI elements use square corners; buttons remain rounded.
 
 ## Show Control (/show)
 
@@ -34,9 +36,19 @@ Show control behavior:
 
 ## Song Analysis (/analysis)
 
-- Shows the currently loaded song.
-- Includes `Start analysis` action (sends `analyze_song` message).
-- Displays task status, progress bar, current step/status metadata, and error text.
+- Default song on startup/connect: `Yonaka - Seize the Power` (when available).
+- If backend initial state has no song, frontend requests `load_song` for `Yonaka - Seize the Power`.
+- Top region reuses the waveform header (WaveSurfer) for the loaded song.
+- Toolbar controls:
+  - `Prev Section`, `Prev Beat`, `Play/Stop`, `Next Beat`, `Next Section`
+  - `Start analysis` action (sends `analyze_song`)
+  - Progress bar + current `step/status` label
+- Main 3-card layout:
+  - Left: `Downbeats / Beats`
+  - Middle: `Sections`
+  - Right: `Analysis Status` + `Chords`
+- Status card shows `Song`, `State`, `Task ID`, `Updated`, and error text (when present).
+- Beat/chord data is rendered from analysis result when available, with metadata fallback for beats.
 
 ## DMX Controller (/dmx)
 

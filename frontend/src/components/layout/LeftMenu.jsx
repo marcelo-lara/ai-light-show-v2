@@ -41,6 +41,25 @@ function MenuIcon({ name }) {
     )
   }
 
+  if (name === 'analysis') {
+    return (
+      <svg {...common}>
+        <path
+          d="M5 18V6M12 18V10M19 18V13"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+        <path
+          d="M4 18h16"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+      </svg>
+    )
+  }
+
   if (name === 'builder') {
     return (
       <svg {...common}>
@@ -76,6 +95,7 @@ export default function LeftMenu() {
     <nav class="leftMenu" aria-label="Main">
       <div class="leftMenuTop">
         <MenuItem to="/show" icon="home" label="Show Control" />
+        <MenuItem to="/analysis" icon="analysis" label="Song Analysis" />
         <MenuItem to="/dmx" icon="dmx" label="DMX Controller" />
         <MenuItem to="/builder" icon="builder" label="Show Builder" />
       </div>

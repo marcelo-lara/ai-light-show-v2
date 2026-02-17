@@ -33,6 +33,8 @@ services:
       context: ./frontend
     ports:
       - "9000:80"
+    volumes:
+      - ./analyzer/meta:/app/meta
     depends_on:
       - backend
     restart: unless-stopped

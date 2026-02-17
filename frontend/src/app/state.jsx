@@ -2,6 +2,7 @@ import { createContext } from 'preact'
 import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
 const AppStateContext = createContext(null)
+const DEFAULT_SONG_FILENAME = 'Yonaka - Seize the Power'
 
 export function AppStateProvider({ children }) {
   const [fixtures, setFixtures] = useState([])
@@ -41,6 +42,9 @@ export function AppStateProvider({ children }) {
         setPois(data.pois || [])
         setCues(data.cues?.entries || [])
         setSong(data.song)
+        if (!data.song) {
+          ws.send(JSON.stringify({ type: 'load_song', filename: DEFAULT_SONG_FILENAME }))
+        }
         const nextStatus = data.status || {
           isPlaying: !!data.playback?.isPlaying,
           previewActive: false,

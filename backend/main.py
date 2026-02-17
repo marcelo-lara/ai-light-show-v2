@@ -39,9 +39,9 @@ async def lifespan(app: FastAPI):
         await artnet_service.arm_fixture(fixture)
     # Start ArtNet
     await artnet_service.start()
-    # Load first song if available
+    # Load preferred default song if available
     songs = song_service.list_songs()
-    target_song = 'sono - keep control'
+    target_song = 'Yonaka - Seize the Power'
     if target_song in songs:
         await state_manager.load_song(target_song)
     elif songs:
