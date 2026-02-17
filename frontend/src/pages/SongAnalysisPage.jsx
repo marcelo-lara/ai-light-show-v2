@@ -210,6 +210,18 @@ export default function SongAnalysisPage() {
     [sectionMarkers, timecode]
   )
   const beatTargets = useMemo(() => findBeatTargets(beats, timecode), [beats, timecode])
+  const beatPhasePercent = useMemo(() => {
+    const prev = beatTargets.prev
+    const next = beatTargets.next
+    if (prev == null || next == null) return 0
+
+    const span = Number(next) - Number(prev)
+    if (!Number.isFinite(span) || span <= 0) return 0
+
+    const offset = Number(timecode) - Number(prev)
+    if (!Number.isFinite(offset)) return 0
+    return Math.max(0, Math.min(100, (offset / span) * 100))
+  }, [beatTargets, timecode])
   const activeSectionId = useMemo(() => {
     if (!sectionDraft.length) return null
 
@@ -417,6 +429,16 @@ export default function SongAnalysisPage() {
         />
 
         <div class="songAnalysisToolbar card">
+          <div class="songAnalysisBeatBarWrap">
+            <div class="songAnalysisBeatBarLabel muted">
+              <span>Beat Bar</span>
+              <span>{toLabel(timecode)}</span>
+            </div>
+            <div class="songAnalysisBeatBarTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(beatPhasePercent)}>
+              <div class="songAnalysisBeatBarFill" style={{ width: `${beatPhasePercent}%` }}></div>
+            </div>
+          </div>
+
           <div class="songAnalysisControlGroup">
             <button
               class="songAnalysisButton"

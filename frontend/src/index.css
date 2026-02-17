@@ -407,9 +407,37 @@ button:focus-visible {
 .songAnalysisToolbar {
   margin-bottom: 0;
   display: grid;
-  grid-template-columns: minmax(400px, 1fr) minmax(260px, 420px);
+  grid-template-columns: minmax(180px, 240px) minmax(360px, 1fr) minmax(260px, 420px);
   gap: 10px;
   align-items: center;
+}
+
+.songAnalysisBeatBarWrap {
+  display: grid;
+  gap: 5px;
+}
+
+.songAnalysisBeatBarLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.songAnalysisBeatBarTrack {
+  height: 8px;
+  border: 1px solid #4a4a4a;
+  background: #111;
+  position: relative;
+}
+
+.songAnalysisBeatBarFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #7b7fff;
 }
 
 .songAnalysisControlGroup {
