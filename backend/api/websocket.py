@@ -144,6 +144,8 @@ class WebSocketManager:
             await self.state_manager.wait_for_preview_end(request_id)
             universe = await self.state_manager.get_output_universe()
             await self.artnet_service.update_universe(universe)
+            is_playing = await self.state_manager.get_is_playing()
+            await self.artnet_service.set_continuous_send(is_playing)
             await self.broadcast({
                 "type": "preview_status",
                 "active": False,
@@ -211,6 +213,7 @@ class WebSocketManager:
             elif msg_type == "playback":
                 playing = bool(message.get("playing", False))
                 await self.state_manager.set_playback_state(playing)
+                await self.artnet_service.set_continuous_send(playing)
                 await self.broadcast_status()
 
             elif msg_type == "preview_effect":
@@ -233,6 +236,7 @@ class WebSocketManager:
                         "effect": result.get("effect"),
                         "duration": result.get("duration"),
                     })
+                    await self.artnet_service.set_continuous_send(True)
                     asyncio.create_task(self._stream_preview_to_artnet(str(result.get("requestId") or "")))
                     asyncio.create_task(self._watch_preview_completion(str(result.get("requestId") or "")))
                 else:
