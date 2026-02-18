@@ -143,6 +143,33 @@ export default function SongAnalysisPage() {
 
   const sectionMarkers = useMemo(() => getSectionMarkers(song?.metadata?.parts), [song])
   const sections = useMemo(() => parseSections(song?.metadata?.parts), [song])
+  const effectiveSectionDraft = useMemo(() => {
+    if (sectionDraft.length) return sectionDraft
+    return sections.map((section, index) => ({
+      id: section.id || `section-${index}`,
+      name: section.name,
+      start: String(section.start),
+      end: String(section.end),
+    }))
+  }, [sectionDraft, sections])
+  const sectionRegions = useMemo(
+    () =>
+      effectiveSectionDraft
+        .map((entry, index) => {
+          const start = Number(entry.start)
+          const end = Number(entry.end)
+          if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null
+          return {
+            id: String(entry.id || `section-${index}`),
+            name: String(entry.name || `Section ${index + 1}`),
+            start,
+            end,
+          }
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.start - b.start),
+      [effectiveSectionDraft]
+  )
 
   const downbeats = useMemo(
     () =>
@@ -165,9 +192,11 @@ export default function SongAnalysisPage() {
   )
 
   const beatEntries = useMemo(() => buildBeatEntries(downbeats, beats), [downbeats, beats])
+  const effectiveVisibleBeatCount =
+    visibleBeatCount > 0 ? visibleBeatCount : Math.min(40, beatEntries.length)
   const visibleBeatEntries = useMemo(
-    () => beatEntries.slice(0, Math.max(visibleBeatCount, 0)),
-    [beatEntries, visibleBeatCount]
+    () => beatEntries.slice(0, Math.max(effectiveVisibleBeatCount, 0)),
+    [beatEntries, effectiveVisibleBeatCount]
   )
   const currentBeatIndex = useMemo(() => {
     if (!beatEntries.length) return -1
@@ -222,10 +251,34 @@ export default function SongAnalysisPage() {
     if (!Number.isFinite(offset)) return 0
     return Math.max(0, Math.min(100, (offset / span) * 100))
   }, [beatTargets, timecode])
-  const activeSectionId = useMemo(() => {
-    if (!sectionDraft.length) return null
+  const barBeatLabel = useMemo(() => {
+    if (!beats.length || !downbeats.length) return '—.—'
 
-    const normalized = sectionDraft
+    let downbeatIndex = -1
+    for (let i = 0; i < downbeats.length; i++) {
+      if (downbeats[i] <= timecode) downbeatIndex = i
+      else break
+    }
+
+    const bar = downbeatIndex >= 0 ? downbeatIndex + 1 : 1
+    const barStart = downbeatIndex >= 0 ? downbeats[downbeatIndex] : downbeats[0]
+    const nextBarStart = downbeats[downbeatIndex + 1] ?? Number.POSITIVE_INFINITY
+
+    let beat = 0
+    for (let i = 0; i < beats.length; i++) {
+      const value = beats[i]
+      if (value < barStart) continue
+      if (value >= nextBarStart) break
+      if (value <= timecode) beat += 1
+      else break
+    }
+
+    return `${bar}.${Math.max(1, beat)}`
+  }, [beats, downbeats, timecode])
+  const activeSectionId = useMemo(() => {
+    if (!effectiveSectionDraft.length) return null
+
+    const normalized = effectiveSectionDraft
       .map((entry) => ({
         id: entry.id,
         start: Number(entry.start),
@@ -246,7 +299,7 @@ export default function SongAnalysisPage() {
     }
 
     return latest?.id || normalized[0]?.id || null
-  }, [sectionDraft, timecode])
+  }, [effectiveSectionDraft, timecode])
 
   useEffect(() => {
     setSectionDraft(
@@ -262,7 +315,7 @@ export default function SongAnalysisPage() {
   }, [sections])
 
   useEffect(() => {
-    setVisibleBeatCount(0)
+    setVisibleBeatCount(Math.min(Math.max(beatEntries.length, 0), 40))
   }, [song?.filename, beatEntries.length])
 
   useEffect(() => {
@@ -323,15 +376,18 @@ export default function SongAnalysisPage() {
 
   const addSectionRow = () => {
     markSectionsDirty()
-    setSectionDraft((prev) => [
-      ...prev,
-      {
-        id: `new-${Date.now()}-${prev.length}`,
-        name: '',
-        start: String(Number(timecode).toFixed(3)),
-        end: String(Number((timecode || 0) + 8).toFixed(3)),
-      },
-    ])
+    setSectionDraft((prev) => {
+      const next = [
+        ...prev,
+        {
+          id: `new-${Date.now()}-${prev.length}`,
+          name: '',
+          start: String(Number(timecode).toFixed(3)),
+          end: String(Number((timecode || 0) + 8).toFixed(3)),
+        },
+      ]
+      return next
+    })
   }
 
   const updateSectionField = (id, field, value) => {
@@ -351,7 +407,7 @@ export default function SongAnalysisPage() {
   const normalizeSectionsForSave = () => {
     const normalized = []
 
-    for (const row of sectionDraft) {
+    for (const row of effectiveSectionDraft) {
       const name = String(row.name || '').trim()
       const start = Number(row.start)
       const end = Number(row.end)
@@ -400,6 +456,24 @@ export default function SongAnalysisPage() {
     setSectionError('')
   }
 
+  const handleRegionsChange = (regions) => {
+    if (!Array.isArray(regions) || regions.length === 0) return
+    markSectionsDirty()
+    setSectionDraft((prev) => {
+      const byId = new Map(prev.map((entry) => [String(entry.id), entry]))
+      const next = regions.map((region, index) => {
+        const existing = byId.get(String(region.id))
+        return {
+          id: String(region.id || `region-${index}`),
+          name: String(region.name || existing?.name || `Section ${index + 1}`),
+          start: Number(region.start).toFixed(3),
+          end: Number(region.end).toFixed(3),
+        }
+      })
+      return next
+    })
+  }
+
   const progressPercent = computeProgressPercent(analysis?.meta)
   const progressLabel = `${Math.round(progressPercent)}%`
   const analysisState = analysis?.state || 'IDLE'
@@ -426,13 +500,16 @@ export default function SongAnalysisPage() {
           onSeek={actions.handleSeek}
           onPlaybackChange={actions.handlePlaybackChange}
           onRegisterAudioControls={actions.registerAudioControls}
+          sectionRegions={sectionRegions}
+          regionsEditable
+          onSectionRegionsChange={handleRegionsChange}
         />
 
         <div class="songAnalysisToolbar card">
           <div class="songAnalysisBeatBarWrap">
             <div class="songAnalysisBeatBarLabel muted">
               <span>Beat Bar</span>
-              <span>{toLabel(timecode)}</span>
+              <span>{barBeatLabel}</span>
             </div>
             <div class="songAnalysisBeatBarTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(beatPhasePercent)}>
               <div class="songAnalysisBeatBarFill" style={{ width: `${beatPhasePercent}%` }}></div>
@@ -501,7 +578,11 @@ export default function SongAnalysisPage() {
         <div class="songAnalysisGrid">
           <div class="card songAnalysisCard">
             <div class="cardTitle">Downbeats / Beats</div>
-            <div class="songAnalysisBeatGrid" ref={beatsPanelRef} onScroll={handleBeatScroll}>
+            <div
+              class="songAnalysisBeatGrid"
+              ref={beatsPanelRef}
+              onScroll={handleBeatScroll}
+            >
               {chunk(visibleBeatEntries, 4).length ? (
                 chunk(visibleBeatEntries, 4).map((row, rowIndex) => (
                   <div class="songAnalysisBeatRow" key={`row-${rowIndex}`}>
@@ -539,8 +620,8 @@ export default function SongAnalysisPage() {
             </div>
             {sectionError ? <div class="songAnalysisError">{sectionError}</div> : null}
             <div class="songAnalysisSectionList" ref={sectionListRef}>
-              {sectionDraft.length ? (
-                sectionDraft.map((section) => (
+              {effectiveSectionDraft.length ? (
+                effectiveSectionDraft.map((section) => (
                   <div
                     class={`songAnalysisSectionRow ${section.id === activeSectionId ? 'songAnalysisSectionRowActive' : ''}`}
                     key={section.id}

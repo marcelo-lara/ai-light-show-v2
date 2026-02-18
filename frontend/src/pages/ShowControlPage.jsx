@@ -19,7 +19,7 @@ export default function ShowControlPage() {
           onRegisterAudioControls={actions.registerAudioControls}
         />
         <div class="lanesGrid">
-          <SongPartsLane song={song} timecode={timecode} />
+          <SongPartsLane song={song} timecode={timecode} onSeek={actions.seekTo} />
           <CueSheetLane cues={cues} timecode={timecode} />
           <FixturesLane
             fixtures={fixtures}
