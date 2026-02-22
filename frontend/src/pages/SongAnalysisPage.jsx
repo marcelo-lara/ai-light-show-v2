@@ -480,10 +480,10 @@ export default function SongAnalysisPage() {
   const analysisStep = analysis?.meta?.step || analysis?.meta?.status || 'Waiting'
   const canStart = !!song?.filename && analysisState !== 'PENDING' && analysisState !== 'STARTED'
 
-  const startAnalysis = () => {
+  const reloadMetadata = () => {
     const filename = normalizeSongFilename(song?.filename)
     if (!filename) return
-    sendMessage({ type: 'analyze_song', filename, overwrite: true })
+    sendMessage({ type: 'load_song', filename })
   }
 
   return (
@@ -557,11 +557,11 @@ export default function SongAnalysisPage() {
           <div class="songAnalysisProgressWrap">
             <button
               class="songAnalysisButton"
-              onClick={startAnalysis}
+              onClick={reloadMetadata}
               disabled={!canStart}
               type="button"
             >
-              Start Analysis
+              Reload Metadata
             </button>
             <div class="songAnalysisProgressBlock">
               <div class="songAnalysisProgressLabel muted">

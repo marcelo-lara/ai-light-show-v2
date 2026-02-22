@@ -95,41 +95,6 @@ export function AppStateProvider({ children }) {
             },
           }
         })
-      } else if (data.type === 'task_submitted') {
-        setAnalysis((prev) => ({
-          ...prev,
-          taskId: data.task_id || null,
-          state: 'SUBMITTED',
-          meta: null,
-          result: null,
-          error: null,
-          updatedAt: Date.now(),
-        }))
-      } else if (data.type === 'analyze_progress') {
-        setAnalysis((prev) => ({
-          ...prev,
-          taskId: data.task_id || prev.taskId || null,
-          state: data.state || prev.state || null,
-          meta: data.meta || null,
-          error: null,
-          updatedAt: Date.now(),
-        }))
-      } else if (data.type === 'analyze_result') {
-        setAnalysis((prev) => ({
-          ...prev,
-          taskId: data.task_id || prev.taskId || null,
-          state: data.state || 'SUCCESS',
-          result: data.result ?? null,
-          updatedAt: Date.now(),
-        }))
-      } else if (data.type === 'task_error') {
-        setAnalysis((prev) => ({
-          ...prev,
-          taskId: data.task_id || prev.taskId || null,
-          state: 'ERROR',
-          error: data.message || 'Unknown error',
-          updatedAt: Date.now(),
-        }))
       }
     }
 

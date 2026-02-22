@@ -8,6 +8,7 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, an
 - **State core**: `StateManager` maintains fixtures, cue sheet, editor/output universes, playback status, and precomputed DMX canvas.
 - **Output**: `ArtNetService` continuously sends the current output universe at 60 FPS.
 - **Frontend**: Preact + Vite app with a persistent shell (left menu, center content, right player/chat).
+- **Analyzer**: Manual scripts producing song metadata files under `analyzer/meta/<song>/info.json`.
 
 ## Runtime behavior (important)
 
@@ -20,7 +21,14 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, an
 
 ## Local development
 
-1. Backend
+1. Run analyzer scripts manually to generate metadata:
+
+   ```bash
+   cd analyzer
+   python analyze_song.py /path/to/song.mp3
+   ```
+
+2. Backend
 
    ```bash
    cd backend
@@ -30,7 +38,7 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, an
    python main.py
    ```
 
-2. Frontend
+3. Frontend
 
    ```bash
    cd frontend
@@ -38,7 +46,7 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, an
    npm run dev
    ```
 
-3. App URL
+4. App URL
 
    - Frontend dev server: http://localhost:5173
 
@@ -64,6 +72,7 @@ docker compose up --build
 
 - Frontend: http://localhost:5000
 - Backend: http://localhost:5001
+- Analyzer: manual runs via `docker compose run analyzer python analyze_song.py /app/songs/song.mp3`
 
 ## Art-Net debug mode
 

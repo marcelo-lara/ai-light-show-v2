@@ -5,8 +5,6 @@ import pytest
 
 from backend.api.websocket import WebSocketManager
 from backend.store.state import StateManager
-from backend.tasks.celery_app import celery_app
-from backend.tasks.analyze import analyze_song
 
 
 class FakeWS:
@@ -125,38 +123,57 @@ class PreviewStateStub:
 
 
 @pytest.mark.asyncio
-async def test_websocket_enqueues_task_and_receives_progress(tmp_path):
-    # Prepare fake song file
-    songs_dir = tmp_path / "songs"
-    meta_dir = tmp_path / "meta"
-    songs_dir.mkdir()
+async def test_save_sections_persists_and_broadcasts(tmp_path):
+    backend_dir = tmp_path / "backend"
+    fixtures_dir = backend_dir / "fixtures"
+    fixtures_dir.mkdir(parents=True)
+    meta_dir = backend_dir / "meta"
     meta_dir.mkdir()
-    song_file = songs_dir / "test_song.mp3"
-    song_file.write_text("dummy")
 
-    # Create manager with stubs
-    manager = WebSocketManager(DummyState(), DummyArtNet(), FakeSongService(str(songs_dir), str(meta_dir)))
+    fixtures_path = fixtures_dir / "fixtures.json"
+    fixtures_path.write_text(json.dumps([]))
 
-    # Prepare websocket and register as active connection
-    ws = FakeWS()
-    manager.active_connections.append(ws)
+    state = StateManager(backend_dir)
+    await state.load_fixtures(fixtures_path)
 
-    # Configure Celery to run tasks eagerly and use in-memory backend
-    celery_app.conf.task_always_eager = True
-    celery_app.conf.result_backend = 'cache+memory://'
-    celery_app.conf.broker_url = 'memory://'
+    manager = WebSocketManager(state, DummyArtNet(), FakeSongService(str(tmp_path), str(meta_dir)))
+    ws_sender = FakeWS()
+    ws_observer = FakeWS()
+    manager.active_connections.extend([ws_sender, ws_observer])
 
-    # Send analyze_song message
-    msg = json.dumps({"type": "analyze_song", "filename": "test_song", "device": "auto", "temp_dir": str(tmp_path / 'temp'), "overwrite": False})
-    await manager.handle_message(ws, msg)
+    # Create initial metadata
+    song_meta = meta_dir / "test_song.json"
+    song_meta.write_text(json.dumps({
+        "filename": "test_song.mp3",
+        "length": 180,
+        "hints": {"drums": []},
+        "parts": {}
+    }))
 
-    # Allow background tracker to poll once
-    await asyncio.sleep(0.2)
+    await state.load_song("test_song")
 
-    # Assert we received a task_submitted and at least one progress or result
-    types = [m.get('type') for m in ws.sent]
-    assert 'task_submitted' in types
-    assert any(t in types for t in ('analyze_progress', 'analyze_result'))
+    await manager.handle_message(
+        ws_sender,
+        json.dumps({
+            "type": "save_sections",
+            "sections": [
+                {"name": "Intro", "start": 0, "end": 30},
+                {"name": "Verse", "start": 30, "end": 60}
+            ],
+        }),
+    )
+
+    save_results = [msg for msg in ws_sender.sent if msg.get("type") == "sections_save_result"]
+    assert save_results
+    assert save_results[-1].get("ok") is True
+
+    broadcast_events = [msg for msg in ws_observer.sent if msg.get("type") == "sections_updated"]
+    assert broadcast_events
+
+    # Check persisted
+    persisted = json.loads(song_meta.read_text())
+    assert persisted["parts"]["Intro"] == [0.0, 30.0]
+    assert persisted["parts"]["Verse"] == [30.0, 60.0]
 
 
 @pytest.mark.asyncio

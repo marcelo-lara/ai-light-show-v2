@@ -41,14 +41,15 @@ Show control behavior:
 - Top region reuses the waveform header (WaveSurfer) for the loaded song.
 - Toolbar controls:
   - `Prev Section`, `Prev Beat`, `Play/Stop`, `Next Beat`, `Next Section`
-  - `Start analysis` action (sends `analyze_song`)
-  - Progress bar + current `step/status` label
+  - `Reload Metadata` action (reloads song metadata from backend)
 - Main 3-card layout:
   - Left: `Downbeats / Beats`
   - Middle: `Sections`
   - Right: `Analysis Status` + `Chords`
-- Status card shows `Song`, `State`, `Task ID`, `Updated`, and error text (when present).
-- Beat/chord data is rendered from analysis result when available, with metadata fallback for beats.
+- Status card shows `Song`, `State`, `Updated`, and error text (when present).
+- Beat/chord data is rendered from metadata when available.
+- Prerequisite: run analyzer scripts manually to produce `analyzer/meta/<song>/info.json`.
+- Section editing: edit locally, backend tracks dirty state, save persists changes to metadata JSON.
 
 ## DMX Controller (/dmx)
 

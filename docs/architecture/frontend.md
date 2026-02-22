@@ -44,15 +44,15 @@ Core components:
 - Default song target: `Yonaka - Seize the Power`
 - Main layout:
 	- Top: shared `WaveformHeader`
-	- Toolbar: section/beat navigation, play/stop, `Start analysis`, progress indicator
+	- Toolbar: section/beat navigation, play/stop, `Reload Metadata`, progress indicator (removed)
 	- Cards (left → right):
 		- `Downbeats / Beats`
 		- `Sections`
 		- `Analysis Status` and `Chords`
 - Data sources:
-	- Analysis lifecycle from app state (`task_submitted`, `analyze_progress`, `analyze_result`, `task_error`)
 	- Beat fallback from song metadata hints/drums when analysis result is not available
 	- Frontend fallback load request when initial websocket state contains no song
+- Section editing: local changes mark backend dirty; explicit save persists to metadata JSON.
 
 ## Styling notes
 
@@ -75,11 +75,10 @@ Incoming:
 - `cues_updated`: updated cue sheet.
 - `status`: global state (`isPlaying`, `previewActive`, preview info).
 - `preview_status`: preview accepted/rejected/lifecycle events.
-- `task_submitted`, `analyze_progress`, `analyze_result`, `task_error`: analysis lifecycle.
 
 Outgoing:
 
-- `delta`, `timecode`, `seek`, `playback`, `preview_effect`, `chat`, `analyze_song`.
+- `delta`, `timecode`, `seek`, `playback`, `preview_effect`, `chat`, `load_song`.
 
 ## Playback wiring
 

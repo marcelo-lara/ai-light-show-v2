@@ -1,13 +1,4 @@
-.PHONY: redis backend worker up down test test-sweep test-live
-
-redis:
-	docker run -d --name ai-light-redis -p 6379:6379 redis:7
-
-backend:
-	PYTHONPATH=./backend $(shell which python3) -m uvicorn backend.main:app --host 0.0.0.0 --port 5001
-
-worker:
-	PYTHONPATH=./backend $(shell which celery) -A backend.tasks.celery_app.celery_app worker --loglevel=info
+.PHONY: up down test test-sweep test-live
 
 up:
 	docker-compose up -d

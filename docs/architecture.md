@@ -4,7 +4,7 @@ AI Light Show v2 has three main modules:
 
 - Frontend: audio playback + authoring UI.
 - Backend: DMX canvas renderer + Art-Net output + WebSocket control plane.
-- Analyzer: offline/async song analysis pipeline (Celery worker).
+- Analyzer: offline song analysis scripts producing metadata files.
 
 ## How the modules interact
 
@@ -27,12 +27,11 @@ AI Light Show v2 has three main modules:
 3. If accepted, backend renders a temporary in-memory preview canvas and drives Art-Net from it.
 4. Backend broadcasts `preview_status` and global `status` updates; preview is never persisted to cues/files.
 
-### Analysis loop (async)
+### Analysis loop (manual)
 
-1. Frontend requests analysis: `{type:"analyze_song", filename, ...}`.
-2. Backend enqueues a Celery task and returns `{type:"task_submitted", task_id}`.
-3. Worker runs analyzer pipeline and updates Celery meta (and optionally Redis pub/sub).
-4. Backend polls task meta and broadcasts `analyze_progress` / `analyze_result`.
+1. User runs analyzer scripts manually to produce metadata files under `analyzer/meta/<song>/info.json`.
+2. Frontend requests metadata reload: `{type:"reload_metadata"}` (or similar UI action).
+3. Backend reloads metadata from `/app/meta` and rebroadcasts initial state with updated song data.
 
 ### Meta source (Docker)
 
@@ -57,10 +56,6 @@ Backend → Frontend:
 - `cues_updated`: `{ cues }`
 - `status`: `{ status:{ isPlaying, previewActive, preview? } }`
 - `preview_status`: `{ active, request_id, fixture_id?, effect?, duration?, reason? }`
-- `analyze_progress`: `{ task_id, state, meta }`
-- `analyze_result`: `{ task_id, state, result }`
-- `task_submitted`: `{ task_id }`
-- `task_error`: `{ task_id?, message }`
 
 Frontend → Backend:
 
@@ -71,6 +66,5 @@ Frontend → Backend:
 - `preview_effect`
 - `add_cue`
 - `load_song`
-- `analyze_song`
 - `chat`
 
