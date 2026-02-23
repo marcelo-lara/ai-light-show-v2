@@ -7,13 +7,19 @@ export default defineConfig({
     timeout: 5000,
   },
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'http://127.0.0.1:9000',
+    baseURL: process.env.E2E_BASE_URL || 'http://127.0.0.1:4173',
     headless: true,
+  },
+  webServer: {
+    command: 'npm run dev -- --host 127.0.0.1 --port 4173',
+    url: process.env.E2E_BASE_URL || 'http://127.0.0.1:4173',
+    reuseExistingServer: true,
+    timeout: 120000,
   },
   projects: [
     {
-      name: 'firefox',
-      use: { browserName: 'firefox' },
+      name: 'chromium',
+      use: { browserName: 'chromium' },
     },
   ],
 })

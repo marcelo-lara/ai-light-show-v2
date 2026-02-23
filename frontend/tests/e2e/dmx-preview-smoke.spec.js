@@ -1,4 +1,93 @@
 import { expect, test } from '@playwright/test'
+import { installMockWebSocket } from './support/mock-websocket.js'
+
+const dmxFixtures = [
+  {
+    id: 'parcan_l',
+    name: 'ParCan L',
+    type: 'rgb',
+    channels: { red: 1, green: 2, blue: 3, dimmer: 4 },
+  },
+  {
+    id: 'parcan_r',
+    name: 'ParCan R',
+    type: 'rgb',
+    channels: { red: 11, green: 12, blue: 13, dimmer: 14 },
+  },
+  {
+    id: 'wash_1',
+    name: 'Wash 1',
+    type: 'rgb',
+    channels: { red: 21, green: 22, blue: 23, dimmer: 24 },
+  },
+  {
+    id: 'wash_2',
+    name: 'Wash 2',
+    type: 'rgb',
+    channels: { red: 31, green: 32, blue: 33, dimmer: 34 },
+  },
+  {
+    id: 'bar_1',
+    name: 'Bar 1',
+    type: 'rgb',
+    channels: { red: 41, green: 42, blue: 43, dimmer: 44 },
+  },
+  {
+    id: 'bar_2',
+    name: 'Bar 2',
+    type: 'rgb',
+    channels: { red: 51, green: 52, blue: 53, dimmer: 54 },
+  },
+  {
+    id: 'head_el150',
+    name: 'Head EL-150',
+    type: 'moving_head',
+    channels: {
+      pan_msb: 61,
+      pan_lsb: 62,
+      tilt_msb: 63,
+      tilt_lsb: 64,
+      color: 65,
+      gobo: 66,
+      dimmer: 67,
+      shutter: 68,
+    },
+    poi_targets: {
+      piano: { pan: 30755, tilt: 5131 },
+    },
+  },
+]
+
+const dmxPois = [
+  { id: 'audience_l', name: 'Audience L' },
+  { id: 'audience_r', name: 'Audience R' },
+  { id: 'backdrop', name: 'Backdrop' },
+  { id: 'center', name: 'Center' },
+  { id: 'crowd', name: 'Crowd' },
+  { id: 'drums', name: 'Drums' },
+  { id: 'floor', name: 'Floor' },
+  { id: 'guitar', name: 'Guitar' },
+  { id: 'keys', name: 'Keys' },
+  { id: 'piano', name: 'Piano' },
+  { id: 'riser', name: 'Riser' },
+  { id: 'table', name: 'Table' },
+  { id: 'vocal_l', name: 'Vocal L' },
+  { id: 'vocal_r', name: 'Vocal R' },
+]
+
+test.beforeEach(async ({ page }) => {
+  await installMockWebSocket(page, {
+    initialState: {
+      fixtures: dmxFixtures,
+      pois: dmxPois,
+      status: { isPlaying: false, previewActive: false, preview: null },
+      song: {
+        filename: 'E2E.mp3',
+        metadata: { length: 180, parts: {} },
+      },
+    },
+  })
+})
 
 test('dmx preview controls render and disable during playback', async ({ page }) => {
   await page.goto('/dmx')
@@ -15,35 +104,10 @@ test('dmx preview controls render and disable during playback', async ({ page })
   await expect(previewButtons.first()).toBeEnabled()
   await expect(effectSelects.first()).toBeEnabled()
 
-  await page.evaluate(async () => {
-    await new Promise((resolve, reject) => {
-      const ws = new WebSocket(`${window.location.origin.replace(/^http/, 'ws')}/ws`)
-      const timer = setTimeout(() => {
-        try {
-          ws.close()
-        } catch {
-          // no-op
-        }
-        reject(new Error('timeout sending playback true'))
-      }, 3000)
-
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ type: 'playback', playing: true }))
-        setTimeout(() => {
-          clearTimeout(timer)
-          try {
-            ws.close()
-          } catch {
-            // no-op
-          }
-          resolve(true)
-        }, 250)
-      }
-
-      ws.onerror = () => {
-        clearTimeout(timer)
-        reject(new Error('ws error sending playback true'))
-      }
+  await page.evaluate(() => {
+    window.__mockWsServer.broadcast({
+      type: 'status',
+      status: { isPlaying: true, previewActive: false, preview: null },
     })
   })
 
@@ -51,35 +115,10 @@ test('dmx preview controls render and disable during playback', async ({ page })
   await expect(effectSelects.first()).toBeDisabled()
   await expect(page.locator('input[type="range"]').first()).toBeDisabled()
 
-  await page.evaluate(async () => {
-    await new Promise((resolve, reject) => {
-      const ws = new WebSocket(`${window.location.origin.replace(/^http/, 'ws')}/ws`)
-      const timer = setTimeout(() => {
-        try {
-          ws.close()
-        } catch {
-          // no-op
-        }
-        reject(new Error('timeout sending playback false'))
-      }, 3000)
-
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ type: 'playback', playing: false }))
-        setTimeout(() => {
-          clearTimeout(timer)
-          try {
-            ws.close()
-          } catch {
-            // no-op
-          }
-          resolve(true)
-        }, 250)
-      }
-
-      ws.onerror = () => {
-        clearTimeout(timer)
-        reject(new Error('ws error sending playback false'))
-      }
+  await page.evaluate(() => {
+    window.__mockWsServer.broadcast({
+      type: 'status',
+      status: { isPlaying: false, previewActive: false, preview: null },
     })
   })
 
@@ -92,24 +131,6 @@ test('dmx parcan_l flash preview triggers temporary preview lifecycle', async ({
 
   await expect(page.getByRole('heading', { name: 'DMX Control' })).toBeVisible()
 
-  await page.evaluate(() => {
-    window.__previewEvents = []
-
-    const ws = new WebSocket(`${window.location.origin.replace(/^http/, 'ws')}/ws`)
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        if (data.type === 'preview_status') {
-          window.__previewEvents.push(data)
-        }
-      } catch {
-        // no-op
-      }
-    }
-
-    window.__previewWatcher = ws
-  })
-
   const parcanLCard = page.locator('.dmxCard', {
     has: page.getByRole('heading', { name: 'ParCan L' }),
   })
@@ -119,26 +140,12 @@ test('dmx parcan_l flash preview triggers temporary preview lifecycle', async ({
   await parcanLCard.getByRole('button', { name: 'Preview' }).click()
 
   await expect
-    .poll(async () =>
-      page.evaluate(() => window.__previewEvents.some((event) => event.active === true))
-    )
+    .poll(async () => page.evaluate(() => window.__mockWsServer.serverMessages.some((event) => event.type === 'preview_status' && event.active === true)))
     .toBeTruthy()
 
   await expect
-    .poll(async () =>
-      page.evaluate(() => window.__previewEvents.some((event) => event.active === false))
-    )
+    .poll(async () => page.evaluate(() => window.__mockWsServer.serverMessages.some((event) => event.type === 'preview_status' && event.active === false)))
     .toBeTruthy()
-
-  await page.evaluate(() => {
-    if (window.__previewWatcher) {
-      try {
-        window.__previewWatcher.close()
-      } catch {
-        // no-op
-      }
-    }
-  })
 })
 
 test('moving head shows all POIs and applies mapped POI target', async ({ page }) => {
@@ -172,47 +179,22 @@ test('moving head shift+click saves POI target', async ({ page }) => {
   })
   await expect(headCard).toBeVisible()
 
-  await page.evaluate(() => {
-    window.__fixtureUpdateEvents = []
-
-    const ws = new WebSocket(`${window.location.origin.replace(/^http/, 'ws')}/ws`)
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        if (data.type === 'fixtures_updated') {
-          window.__fixtureUpdateEvents.push(data)
-        }
-      } catch {
-        // no-op
-      }
-    }
-
-    window.__poiSaveWatcher = ws
-  })
-
   await headCard.getByRole('button', { name: 'Piano' }).click()
   await headCard.getByRole('button', { name: 'Piano' }).click({ modifiers: ['Shift'] })
 
   await expect
     .poll(async () =>
       page.evaluate(() =>
-        window.__fixtureUpdateEvents.some((event) => {
-          const fixtures = Array.isArray(event.fixtures) ? event.fixtures : []
-          const head = fixtures.find((fixture) => fixture.id === 'head_el150')
-          const target = head?.poi_targets?.piano
-          return target?.pan === 30755 && target?.tilt === 5131
+        window.__mockWsServer.getMessagesByType('save_poi_target').some((entry) => {
+          const message = entry?.message || {}
+          return (
+            message.fixture_id === 'head_el150' &&
+            message.poi_id === 'piano' &&
+            message.pan === 30755 &&
+            message.tilt === 5131
+          )
         })
       )
     )
     .toBeTruthy()
-
-  await page.evaluate(() => {
-    if (window.__poiSaveWatcher) {
-      try {
-        window.__poiSaveWatcher.close()
-      } catch {
-        // no-op
-      }
-    }
-  })
 })
