@@ -1,4 +1,17 @@
 services:
+  analyzer:
+    build: ./analyzer
+    volumes:
+      - ./analyzer:/app/analyzer
+      - ./backend/songs:/app/songs
+      - ./analyzer/meta:/app/meta
+      - analyzer_cache:/root/.cache
+    gpus: all
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    restart: unless-stopped
+
   backend:
     build: ./backend
     ports:
@@ -7,7 +20,7 @@ services:
       - ./backend/songs:/app/songs
       - ./backend/fixtures:/app/fixtures
       - ./backend/cues:/app/cues
-      - ./backend/metadata:/app/metadata
+      - ./analyzer/meta:/app/meta
     environment:
       - DMX_NODE_IP=192.168.10.221
       - FPS=60
@@ -15,53 +28,14 @@ services:
       - ARTNET_DEBUG_FILE=${ARTNET_DEBUG_FILE:-}
     restart: unless-stopped
 
-  # redis:
-  #   image: redis:7
-  #   restart: unless-stopped
-
-  # worker:
-  #   build:
-  #     context: ./analyzer
-  #   entrypoint: ["sh", "-c"]
-  #   command: "PYTHONPATH=/app/backend:/app celery -A tasks.celery_app.celery_app worker --loglevel=info --concurrency=1"
-  #   depends_on:
-  #     - redis
-  #   volumes:
-  #     - ./backend:/app/backend
-  #     - ./backend/songs:/app/backend/songs
-  #     - ./backend/metadata:/app/backend/metadata
-  #     - ./analyzer/temp_files:/app/temp_files
-  #   environment:
-  #     - CELERY_BROKER_URL=redis://redis:6379/0
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
-  #     - PYTHONPATH=/app/backend:/app
-  #     - CELERY_IMPORTS=tasks.analyze
-  #   restart: unless-stopped
-
   frontend:
     build:
       context: ./frontend
     ports:
-      - "5000:80"
+      - "9000:80"
     depends_on:
       - backend
     restart: unless-stopped
 
-  # analyzer:
-  #   build:
-  #     context: ./analyzer
-  #     args:
-  #       BUILD_UID: ${UID:-1000}
-  #       BUILD_GID: ${GID:-1000}
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./backend/songs:/app/songs
-  #     - ./backend/metadata:/app/metadata
-  #     - ./analyzer/temp_files:/app/temp_files
-  #     - analyzer_model_cache:/home/appuser/.cache
-  #   environment:
-  #     - PYTHONPATH=/app
-  #   runtime: nvidia
-
 volumes:
-  analyzer_model_cache:
+  analyzer_cache:

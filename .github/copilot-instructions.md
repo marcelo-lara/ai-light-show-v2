@@ -6,6 +6,7 @@
 - Backend is FastAPI + asyncio in [backend/main.py](../backend/main.py); it wires `StateManager`, `ArtNetService`, `SongService`, and `WebSocketManager` at startup and exposes only a WebSocket at `/ws`.
 - Real-time DMX flow: frontend sends WebSocket messages → `WebSocketManager.handle_message()` → `StateManager` updates → `ArtNetService` sends ArtDMX UDP packets (see [backend/api/websocket.py](../backend/api/websocket.py), [backend/store/state.py](../backend/store/state.py), and [backend/services/artnet.py](../backend/services/artnet.py)).
 - UI is Preact + Vite + preact-router + WaveSurfer. Entry is [frontend/src/App.jsx](../frontend/src/App.jsx); shared state + WebSocket logic lives in [frontend/src/app/state.jsx](../frontend/src/app/state.jsx); routed pages are under [frontend/src/pages](../frontend/src/pages). The UI uses a persistent app shell with a left icon menu and a right panel (player + chat).
+- Analyzer: manual scripts producing song metadata files under `analyzer/meta/<song>/info.json`; backend loads from `/app/meta` (mounted from `analyzer/meta` in Docker).
 
 ## Playback model (DMX canvas)
 - Cue sheets are **action-based** (not snapshot-only): each entry has `time`, `fixture_id`, `action`, `duration`, `data` (see [backend/models/cue.py](../backend/models/cue.py)).
@@ -31,7 +32,8 @@
 ## Domain data + storage
 - Fixtures are defined in JSON at [backend/fixtures/fixtures.json](../backend/fixtures/fixtures.json) and loaded on backend startup.
 - Cues are stored per song in [backend/cues](../backend/cues) as `{song}.cue.json` (written by `StateManager.save_cue_sheet()`), using the action-based schema.
-- Song metadata lives in [backend/metadata](../backend/metadata) as `{song}.metadata.json` and is loaded by `SongService`.
+- Song metadata is produced offline by analyzer scripts (`analyzer/analyze_song.py`) and stored as `analyzer/meta/<song>/info.json`; backend loads this on startup or reload.
+- Backend tracks `is_dirty` in memory for user edits (e.g., song sections); persisted only on explicit save via `save_sections` message.
 
 ## Developer workflows
 - Local dev: backend in [backend/main.py](../backend/main.py) (`python main.py`) and frontend via Vite (`npm run dev`) per [README.md](../README.md).

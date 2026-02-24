@@ -20,6 +20,7 @@ class ArtNetService:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.running = False
+        self.continuous_send = False
         self.debug = bool(debug)
         self.debug_file_path = Path(debug_file) if debug_file else None
         if self.debug_file_path is not None:
@@ -32,6 +33,9 @@ class ArtNetService:
     async def stop(self):
         self.running = False
         self.sock.close()
+
+    async def set_continuous_send(self, continuous: bool):
+        self.continuous_send = bool(continuous)
 
     async def update_universe(self, universe: UniverseLike):
         if isinstance(universe, memoryview):
@@ -69,6 +73,10 @@ class ArtNetService:
             await asyncio.sleep(0.01)  # small sleep to not hog CPU
 
     async def send_artnet(self):
+        current_packet = bytes(self.dmx_universe)
+        if not self.continuous_send and current_packet == self.last_packet:
+            return  # Don't send if not continuous and no change
+
         # Build packet
         packet = bytearray()
         packet.extend(b'Art-Net\x00')  # ID
@@ -79,7 +87,6 @@ class ArtNetService:
         packet.extend((0x02, 0x00))  # Data length = 512
         packet.extend(self.dmx_universe)
 
-        current_packet = bytes(self.dmx_universe)
         if self.debug:
             await self._debug_dump(current_packet)
 

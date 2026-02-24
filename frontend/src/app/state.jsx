@@ -2,6 +2,7 @@ import { createContext } from 'preact'
 import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
 const AppStateContext = createContext(null)
+const DEFAULT_SONG_FILENAME = 'Yonaka - Seize the Power'
 
 export function AppStateProvider({ children }) {
   const [fixtures, setFixtures] = useState([])
@@ -41,6 +42,9 @@ export function AppStateProvider({ children }) {
         setPois(data.pois || [])
         setCues(data.cues?.entries || [])
         setSong(data.song)
+        if (!data.song) {
+          ws.send(JSON.stringify({ type: 'load_song', filename: DEFAULT_SONG_FILENAME }))
+        }
         const nextStatus = data.status || {
           isPlaying: !!data.playback?.isPlaying,
           previewActive: false,
@@ -79,41 +83,18 @@ export function AppStateProvider({ children }) {
         setCues(data.cues?.entries || [])
       } else if (data.type === 'fixtures_updated') {
         setFixtures(data.fixtures || [])
-      } else if (data.type === 'task_submitted') {
-        setAnalysis((prev) => ({
-          ...prev,
-          taskId: data.task_id || null,
-          state: 'SUBMITTED',
-          meta: null,
-          result: null,
-          error: null,
-          updatedAt: Date.now(),
-        }))
-      } else if (data.type === 'analyze_progress') {
-        setAnalysis((prev) => ({
-          ...prev,
-          taskId: data.task_id || prev.taskId || null,
-          state: data.state || prev.state || null,
-          meta: data.meta || null,
-          error: null,
-          updatedAt: Date.now(),
-        }))
-      } else if (data.type === 'analyze_result') {
-        setAnalysis((prev) => ({
-          ...prev,
-          taskId: data.task_id || prev.taskId || null,
-          state: data.state || 'SUCCESS',
-          result: data.result ?? null,
-          updatedAt: Date.now(),
-        }))
-      } else if (data.type === 'task_error') {
-        setAnalysis((prev) => ({
-          ...prev,
-          taskId: data.task_id || prev.taskId || null,
-          state: 'ERROR',
-          error: data.message || 'Unknown error',
-          updatedAt: Date.now(),
-        }))
+      } else if (data.type === 'sections_updated') {
+        const nextParts = data.parts && typeof data.parts === 'object' ? data.parts : {}
+        setSong((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            metadata: {
+              ...(prev.metadata || {}),
+              parts: nextParts,
+            },
+          }
+        })
       }
     }
 

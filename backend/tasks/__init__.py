@@ -1,1 +1,1 @@
-"""Tasks package for Celery tasks."""
+"""Tasks package."""

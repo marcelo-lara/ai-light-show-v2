@@ -23,7 +23,7 @@ The UI is a routed, persistent 3-column app shell:
 Pages:
 
 - `frontend/src/pages/ShowControlPage.jsx`: waveform + lanes.
-- `frontend/src/pages/SongAnalysisPage.jsx`: analysis trigger + progress/status UI.
+- `frontend/src/pages/SongAnalysisPage.jsx`: waveform + analysis toolbar + beats/sections/status cards.
 - `frontend/src/pages/DmxControllerPage.jsx`: fixture-first DMX control cards + effect preview controls.
 - `frontend/src/pages/ShowBuilderPage.jsx`: placeholder.
 
@@ -37,6 +37,27 @@ Core components:
 - `frontend/src/components/lanes/CueSheetLane.jsx`: cue display.
 - `frontend/src/components/lanes/SongPartsLane.jsx`: song part display (from metadata when present).
 - `frontend/src/components/dmx/*`: DMX card components, XY controls, wheel controls, and effect preview config/forms.
+
+## Song Analysis page structure
+
+- Route: `/analysis`
+- Default song target: `Yonaka - Seize the Power`
+- Main layout:
+	- Top: shared `WaveformHeader`
+	- Toolbar: section/beat navigation, play/stop, `Reload Metadata`, progress indicator (removed)
+	- Cards (left → right):
+		- `Downbeats / Beats`
+		- `Sections`
+		- `Analysis Status` and `Chords`
+- Data sources:
+	- Beat fallback from song metadata hints/drums when analysis result is not available
+	- Frontend fallback load request when initial websocket state contains no song
+- Section editing: local changes mark backend dirty; explicit save persists to metadata JSON.
+
+## Styling notes
+
+- Current UI style uses square corners for non-button elements.
+- Buttons remain rounded via base button styling.
 
 ## Effect preview sync rule
 
@@ -54,11 +75,10 @@ Incoming:
 - `cues_updated`: updated cue sheet.
 - `status`: global state (`isPlaying`, `previewActive`, preview info).
 - `preview_status`: preview accepted/rejected/lifecycle events.
-- `task_submitted`, `analyze_progress`, `analyze_result`, `task_error`: analysis lifecycle.
 
 Outgoing:
 
-- `delta`, `timecode`, `seek`, `playback`, `preview_effect`, `chat`, `analyze_song`.
+- `delta`, `timecode`, `seek`, `playback`, `preview_effect`, `chat`, `load_song`.
 
 ## Playback wiring
 

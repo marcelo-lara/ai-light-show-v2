@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 class SongMetadata(BaseModel):
     filename: str
-    length: Optional[float] = None  # seconds (may be absent from analyzer output)
+    length: Optional[float] = None  # seconds
     bpm: Optional[float] = None
     key: Optional[str] = None
     parts: Dict[str, List[float]] = Field(default_factory=dict)

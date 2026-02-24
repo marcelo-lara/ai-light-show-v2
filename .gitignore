@@ -189,3 +189,5 @@ pytest_debug.log
 
 # macOS
 .DS_Store
+
+test-results/

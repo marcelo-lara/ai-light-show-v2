@@ -1,47 +1,20 @@
-FROM python:3.11-slim AS base
+FROM python:3.10-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV VENV_PATH=/opt/venv
-ENV PATH="/opt/venv/bin:${PATH}"
+WORKDIR /app/analyzer
 
-# system deps for audio processing
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg libsndfile1 && \
-    rm -rf /var/lib/apt/lists/*
+# Minimal system packages frequently needed by audio tooling.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN python -m venv $VENV_PATH
+COPY requirements.txt ./requirements.txt
 
-WORKDIR /app
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-FROM base AS deps
-WORKDIR /deps
-COPY requirements.txt ./
+COPY src ./src
+RUN mkdir -p ./temp_files
 
-# pre-install pinned requirements so rebuild only reruns when this list changes
-RUN pip install --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt
-
-FROM base AS final
-WORKDIR /app
-COPY --from=deps $VENV_PATH $VENV_PATH
-
-COPY pyproject.toml requirements.txt ./
-COPY song_analyzer ./song_analyzer
-COPY main.py ./main.py
-COPY split_stems.py ./split_stems.py
-
-# install the actual analyzer package without re-resolving dependencies
-RUN pip install --no-cache-dir --no-deps .
-ARG BUILD_UID=1000
-ARG BUILD_GID=1000
-
-# Create dedicated non-root user and set ownership for application directories
-RUN groupadd -g ${BUILD_GID} appuser && \
-    useradd -m -u ${BUILD_UID} -g appuser -s /bin/bash appuser && \
-    chown -R appuser:appuser /app /opt/venv
-
-USER appuser
-
-ENTRYPOINT ["python", "-m", "song_analyzer.cli"]
-CMD ["--help"]
+# Keep the container alive for interactive/debug workflows
+# until it is explicitly stopped.
+CMD ["tail", "-f", "/dev/null"]
