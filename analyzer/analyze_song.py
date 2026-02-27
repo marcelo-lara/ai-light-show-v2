@@ -21,6 +21,11 @@ def warn(message: str) -> None:
     print(f"WARNING: {message}")
 
 
+def _is_escape_input(value: str) -> bool:
+    normalized = value.strip().lower()
+    return normalized in {"\x1b", "esc", "escape"}
+
+
 def _round_floats(value):
     if isinstance(value, float):
         return round(value, 3)
@@ -71,9 +76,12 @@ def choose_song_dialog(songs: List[Path]) -> Optional[Path]:
         return None
     for i, s in enumerate(songs, start=1):
         print(f"{i}. {s.name}")
-    print("0. Cancel")
+    print("0. Cancel (Esc also cancels)")
     try:
-        choice = int(input("Choose a song number: ").strip())
+        raw_choice = input("Choose a song number: ").strip()
+        if _is_escape_input(raw_choice):
+            return None
+        choice = int(raw_choice)
     except Exception:
         warn("Invalid selection")
         return None
@@ -379,8 +387,11 @@ def main() -> int:
         print("1. Split Stems")
         print("2. Beat Finder")
         print("3. Essentia Analysis")
-        print("4. Exit")
+        print("9. Exit (Esc also exits)")
         choice = input("Choose an option: ").strip()
+        if _is_escape_input(choice) or choice == "9":
+            print("Exiting.")
+            break
         if choice == "0":
             songs = list_songs()
             selection = choose_song_dialog(songs)
@@ -401,9 +412,6 @@ def main() -> int:
                 warn(f"Current song file does not exist: {current_song}")
                 continue
             run_essentia_analysis_for(current_song)
-        elif choice == "4":
-            print("Exiting.")
-            break
         else:
             warn("Invalid choice")
 
