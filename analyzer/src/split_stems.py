@@ -22,6 +22,18 @@ TEMP_FILES_FOLDER = "/app/analyzer/temp_files/"
 MODEL_NAME = "htdemucs"
 
 
+def _round_floats(value):
+    if isinstance(value, float):
+        return round(value, 3)
+    if isinstance(value, dict):
+        return {k: _round_floats(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_round_floats(v) for v in value]
+    if isinstance(value, tuple):
+        return [_round_floats(v) for v in value]
+    return value
+
+
 def _demucs_base_command() -> list[str]:
     """Return the best available command for Demucs."""
     if which("demucs") is not None:
@@ -36,7 +48,7 @@ def _merge_json_file(path: Path, updates: dict) -> None:
             payload = json.load(f)
     payload.update(updates)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2)
+        json.dump(_round_floats(payload), f, indent=2)
 
 
 def split_stems(
@@ -90,20 +102,8 @@ def split_stems(
         stem_files = sorted(
             [str(p.resolve()) for p in stems_dir.glob("*") if p.is_file()]
         )
-        meta_file = meta_dir / f"{song_path.stem}.json"
-        _merge_json_file(
-            meta_file,
-            {
-                "song_name": song_path.stem,
-                "song_path": str(song_path),
-                "model": model,
-                "device": device,
-                "stems_dir": str(stems_dir),
-                "stems": stem_files,
-            },
-        )
 
-    return stems_dir
+    return stems_dir, stem_files
 
 
 def parse_args() -> argparse.Namespace:

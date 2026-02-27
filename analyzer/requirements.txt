@@ -1,3 +1,4 @@
 demucs
 torchcodec
 librosa
+matplotlib
