@@ -1,4 +1,23 @@
 services:
+  song-metadata-mcp:
+    build: ./mcp/song_metadata
+    volumes:
+      - ./analyzer/meta:/app/meta:ro
+    environment:
+      - SONG_METADATA_MCP_META_ROOT=/app/meta
+      - SONG_METADATA_MCP_HOST=0.0.0.0
+      - SONG_METADATA_MCP_PORT=8081
+      - SONG_METADATA_MCP_TRANSPORT=sse
+      - SONG_METADATA_MCP_MAX_RAW_POINTS=${SONG_METADATA_MCP_MAX_RAW_POINTS:-20000}
+      - SONG_METADATA_MCP_DEFAULT_MAX_POINTS=${SONG_METADATA_MCP_DEFAULT_MAX_POINTS:-5000}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8081/sse >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
   analyzer:
     build: ./analyzer
     volumes:
