@@ -68,3 +68,19 @@ Frontend → Backend:
 - `load_song`
 - `chat`
 
+## Reference
+In the xLights ecosystem, there are several file extensions you will encounter. Each serves a specific purpose in the workflow—from design and sequencing to the final "rendered" output you are interested in.
+
+.fseq (Falcon Sequence): This is the primary rendered file. 
+When you "Save" or "Render All" in xLights, it generates this binary file. 
+It maps every channel to a byte value (0–255) for every frame (20, 40 or 55 FPS). 
+It is designed to be played by FPP (Falcon Pi Player) or uploaded directly to controllers.
+
+Summary Table for Quick Reference
+
+| Extension | Type | Content |
+| --- | --- | --- |
+| .fseq | Binary (Rendered) | Raw byte arrays for Art-Net/DMX output.
+| .xsq | XML (Source) | The sequence timeline and effect settings.
+| .xml | XML (Config) | The hardware controller and prop layout settings.
+| .eseq | Binary (Effect) | Byte arrays for a single model/prop only.
