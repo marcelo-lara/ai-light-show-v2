@@ -20,7 +20,7 @@
 - Real-time DMX flow: frontend sends WebSocket messages → `WebSocketManager.handle_message()` → `StateManager` updates → `ArtNetService` sends ArtDMX UDP packets (see [backend/api/websocket.py](../backend/api/websocket.py), [backend/store/state.py](../backend/store/state.py), and [backend/services/artnet.py](../backend/services/artnet.py)).
 - UI is Preact + Vite + preact-router + WaveSurfer. Entry is [frontend/src/App.jsx](../frontend/src/App.jsx); shared state + WebSocket logic lives in [frontend/src/app/state.jsx](../frontend/src/app/state.jsx); routed pages are under [frontend/src/pages](../frontend/src/pages). The UI uses a persistent app shell with a left icon menu and a right panel (player + chat).
 - Analyzer: manual scripts producing song metadata files under `analyzer/meta/<song>/info.json`; backend loads from `/app/meta` (mounted from `analyzer/meta` in Docker).
-- LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service (see [llm-server/README.md](../llm-server/README.md), [llm-server/agent-gateway/README.md](../llm-server/agent-gateway/README.md), [mcp/song_metadata/README.md](../mcp/song_metadata/README.md), and [CODEX_INSTRUCTIONS.md](../CODEX_INSTRUCTIONS.md)).
+- LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service (see [llm-server/README.md](../llm-server/README.md), [llm-server/agent-gateway/README.md](../llm-server/agent-gateway/README.md), [mcp/song_metadata/README.md](../mcp/song_metadata/README.md).
 
 ## Playback model (DMX canvas)
 - Cue sheets are **action-based** (not snapshot-only): each entry has `time`, `fixture_id`, `action`, `duration`, `data` (see [backend/models/cue.py](../backend/models/cue.py)).
