@@ -1,47 +1,82 @@
-# Analyzer
+# Analyzer Module (LLM Guide)
 
-This module analyzes songs for beats, stems, and audio features using Essentia.
+Offline song analysis pipeline that generates metadata consumed by backend playback and MCP query services.
 
-TODO: implement a unified "info.json" manager, so every analysis step could add their artifacts.
+## Purpose
 
-## Running
+- Generate beat/downbeat timing and musical descriptors.
+- Produce per-song metadata under `analyzer/meta/<song>/`.
+- Feed timing/feature truth to backend and `mcp/song_metadata`.
 
-**Always run inside Docker.**
+## Entry points
 
-### Start the Analyzer Container
+- `analyze_song.py`: orchestrates analyzer tasks from CLI/interactive flow.
+- `src/beat_finder.py`: beat/downbeat extraction.
+- `src/split_stems.py`: Demucs-based stem extraction.
+- `src/essentia_analysis/`: Essentia feature extraction and plotting helpers.
+
+## Inputs and outputs
+
+### Input sources
+
+- Song files from `/app/songs` in Docker (mapped from `backend/songs`).
+
+### Output structure
+
+- `analyzer/meta/<song>/info.json`: canonical song metadata.
+- `analyzer/meta/<song>/beats.json`: analyzer beat/downbeat times.
+- `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
+- `analyzer/meta/<song>/essentia/*.svg`: optional plots.
+- `analyzer/meta/<song>/stems/*`: separated stems when stem split is enabled.
+
+Backend and MCP treat this folder as read-only input data.
+
+## Run workflows
+
+Use Docker so dependencies (Essentia/Demucs/toolchain) remain consistent.
+
+### Start container
+
 ```bash
 docker compose up analyzer --build
 ```
 
-### Interactive Mode
+### Interactive mode
+
 ```bash
 docker compose exec analyzer python analyze_song.py
 ```
-Follow the menu prompts to select songs and analyses.
 
-### CLI Mode
-Run specific analyses non-interactively:
+### CLI mode
+
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --essentia-analysis --beat-finder
 ```
 
-#### CLI Options
-- `--song <filename>`: Song file name in `/app/songs` (recommended to pass explicitly)
-- `--split-stems`: Run Demucs stem separation
-- `--beat-finder`: Run librosa beat and downbeat detection
-- `--essentia-analysis`: Run Essentia analysis (key, BPM, beats, rhythm descriptors, onsets, beat loudness)
+### Common CLI flags
 
-### Outputs
-- **Beats**: `/app/meta/<song>/beats.json` (beat/downbeat times)
-- **Stems**: `/app/meta/<song>/stems/` (separated audio files)
-- **Essentia**: `/app/meta/<song>/essentia/<artifact>.json` (features) and `<artifact>.svg` (plots) for mix and stems
-- **Metadata**: `/app/meta/<song>/info.json` updated with artifact paths
+- `--song <filename>`: song in `/app/songs`.
+- `--split-stems`: run Demucs separation.
+- `--beat-finder`: run beat/downbeat extraction.
+- `--essentia-analysis`: run Essentia analysis bundle.
 
-## Testing
+## Contract with other modules
 
-Use the real analyzer flow to verify Essentia analysis:
+- `backend/` loads metadata from `/app/meta` (mounted from `analyzer/meta`).
+- `mcp/song_metadata/` indexes analyzer outputs for tool queries.
+- Do not emit schema-breaking changes in `info.json` or feature files without updating backend + MCP consumers in the same change.
+
+## LLM contributor checklist
+
+1. Keep output schema deterministic and JSON-serializable.
+2. Prefer additive metadata fields; if breaking changes are required, update all consumers atomically.
+3. Keep feature names and file naming stable across songs.
+4. Validate with at least one real song end-to-end.
+
+## Verification
+
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --essentia-analysis
 ```
 
-Then confirm artifacts exist in `/app/meta/Armin - Revolution/essentia/` (e.g., `rhythm.json`, `loudness_envelope.json`, etc.).
+Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable JSON.

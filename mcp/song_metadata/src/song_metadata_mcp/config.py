@@ -20,7 +20,7 @@ def load_settings() -> Settings:
     return Settings(
         meta_root=Path(os.getenv("SONG_METADATA_MCP_META_ROOT", "/app/meta")),
         host=os.getenv("SONG_METADATA_MCP_HOST", "0.0.0.0"),
-        port=int(os.getenv("SONG_METADATA_MCP_PORT", "8081")),
+        port=int(os.getenv("SONG_METADATA_MCP_PORT", "8089")),
         transport=os.getenv("SONG_METADATA_MCP_TRANSPORT", "sse"),
         max_raw_points=int(os.getenv("SONG_METADATA_MCP_MAX_RAW_POINTS", "20000")),
         default_max_points=int(os.getenv("SONG_METADATA_MCP_DEFAULT_MAX_POINTS", "5000")),

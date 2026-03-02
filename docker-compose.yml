@@ -3,20 +3,54 @@ services:
     build: ./mcp/song_metadata
     volumes:
       - ./analyzer/meta:/app/meta:ro
+    ports:
+      - "8089:8089"
     environment:
       - SONG_METADATA_MCP_META_ROOT=/app/meta
       - SONG_METADATA_MCP_HOST=0.0.0.0
-      - SONG_METADATA_MCP_PORT=8081
+      - SONG_METADATA_MCP_PORT=8089
       - SONG_METADATA_MCP_TRANSPORT=sse
       - SONG_METADATA_MCP_MAX_RAW_POINTS=${SONG_METADATA_MCP_MAX_RAW_POINTS:-20000}
       - SONG_METADATA_MCP_DEFAULT_MAX_POINTS=${SONG_METADATA_MCP_DEFAULT_MAX_POINTS:-5000}
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8081/sse >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "python - << 'PY'\nimport socket\ns=socket.socket();\ns.settimeout(1)\ntry:\n  s.connect(('127.0.0.1',8089))\n  print('ok')\n  raise SystemExit(0)\nexcept Exception as e:\n  raise SystemExit(1)\nfinally:\n  s.close()\nPY"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s
     restart: unless-stopped
+
+  llm-server:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: llm-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./llm-server/models:/models
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    command: >
+      -m /models/Phi-3.5-mini-instruct.Q4_K_M.gguf
+      --host 0.0.0.0 --port 8080
+      --ctx-size 4096
+      --threads 8
+      --n-gpu-layers 999
+
+  agent-gateway:
+    build: ./llm-server/agent-gateway
+    container_name: agent-gateway
+    ports:
+      - "8090:8090"
+    environment:
+      - LLM_BASE_URL=http://llm-server:8080
+      - MCP_BASE_URL=http://song-metadata-mcp:8089
+    depends_on:
+      - song-metadata-mcp
 
   analyzer:
     build: ./analyzer

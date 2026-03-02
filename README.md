@@ -1,68 +1,72 @@
 # AI Light Show v2
 
-Real-time DMX show control with audio-synced playback, fixture-first editing, and Art-Net output.
+Real-time DMX show control with audio-synced playback, fixture-first editing, Art-Net output, and local LLM tooling.
 
-## Current architecture
+## System architecture
 
-- **Backend**: FastAPI + asyncio service with a single WebSocket API at `/ws`.
-- **State core**: `StateManager` maintains fixtures, cue sheet, editor/output universes, playback status, and precomputed DMX canvas.
-- **Output**: `ArtNetService` continuously sends the current output universe at 60 FPS.
-- **Frontend**: Preact + Vite app with a persistent shell (left menu, center content, right player/chat).
-- **Analyzer**: Manual scripts producing song metadata files under `analyzer/meta/<song>/info.json`.
+AI Light Show is split into six primary modules:
 
-## Runtime behavior (important)
+- **frontend/**: Preact UI, WaveSurfer playback, and WebSocket control client.
+- **backend/**: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
+- **analyzer/**: Offline metadata generation (`analyzer/meta/<song>/...`).
+- **mcp/song_metadata/**: MCP server exposing read-only metadata query tools over SSE.
+- **llm-server/agent-gateway/**: OpenAI-compatible gateway that translates model tool calls to MCP JSON-RPC.
+- **tests/**: backend/analyzer integration and regression tests.
 
-- Audio timeline is frontend-authoritative.
-- While playing, backend output follows the song DMX canvas.
-- While playing, **manual edits and preview are disabled**.
-- While paused, manual edits (`delta`) can drive output directly.
-- Effect preview (`preview_effect`) renders a temporary in-memory canvas and sends it live to Art-Net without persistence.
-- Default startup song target is `Yonaka - Seize the Power` (falls back to first available song).
+### Canonical runtime flow
+
+1. Frontend drives playback timeline and sends `timecode` / `seek` / `playback` over `/ws`.
+2. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
+3. While paused, frontend edits (`delta`) update editor/output universes directly.
+4. Preview requests (`preview_effect`) render temporary in-memory output only (no persistence).
+5. Analyzer writes song metadata; backend consumes it from `/app/meta` in Docker.
+6. MCP server exposes metadata tools; agent-gateway forwards LLM tool calls to MCP.
+
+### Important behavior constraints
+
+- Frontend audio timeline is authoritative.
+- While playing, backend rejects manual channel edits and preview requests.
+- Cue sheets are action-based and rendered into a full 60 FPS DMX canvas on song load.
+- Default startup song target is `Yonaka - Seize the Power` (fallback: first available).
+
+## Module documentation (LLM-first)
+
+- [analyzer/README.md](analyzer/README.md)
+- [backend/README.md](backend/README.md)
+- [frontend/README.md](frontend/README.md)
+- [llm-server/README.md](llm-server/README.md)
+- [mcp/README.md](mcp/README.md)
+- [tests/README.md](tests/README.md)
 
 ## Local development
 
-1. Run analyzer scripts manually to generate metadata:
-
-   ```bash
-   cd analyzer
-   python analyze_song.py /path/to/song.mp3
-   ```
-
-2. Backend
-
-   ```bash
-   cd backend
-   python -m venv ai-light
-   source ai-light/bin/activate
-   pip install -r requirements.txt
-   python main.py
-   ```
-
-3. Frontend
-
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-4. App URL
-
-   - Frontend dev server: http://localhost:5173
-
-## Tests
-
-Use the `ai-light` Python environment and include both repository root and backend package on `PYTHONPATH`:
+### 1) Generate metadata (manual)
 
 ```bash
-PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q
+cd analyzer
+python analyze_song.py /path/to/song.mp3
 ```
 
-After each test run, rebuild/restart containers before the next live/manual validation:
+### 2) Run backend
 
 ```bash
-docker compose down && docker compose up --build -d
+cd backend
+python -m venv ai-light
+source ai-light/bin/activate
+pip install -r requirements.txt
+python main.py
 ```
+
+### 3) Run frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+- Frontend dev URL: http://localhost:5173
+- Backend API/WS URL: http://localhost:5001 (`/ws`)
 
 ## Docker
 
@@ -70,38 +74,49 @@ docker compose down && docker compose up --build -d
 docker compose up --build
 ```
 
-- Frontend: http://localhost:5000
+- Frontend: http://localhost:9000
 - Backend: http://localhost:5001
-- Analyzer: manual runs via `docker compose run analyzer python analyze_song.py /app/songs/song.mp3`
+- LLM server: http://localhost:8080
+- Agent gateway: http://localhost:8090
+- Song metadata MCP: http://localhost:8089
+- Analyzer: run manually via `docker compose run analyzer ...`
+
+## Tests
+
+Use the `ai-light` Python environment:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q
+```
+
+After test runs, rebuild/restart containers before manual validation:
+
+```bash
+docker compose down && docker compose up --build -d
+```
 
 ## Art-Net debug mode
 
-You can dump every sent DMX frame from `ArtNetService` for debugging.
-
-- `ARTNET_DEBUG=1` enables frame dumping.
-- `ARTNET_DEBUG_FILE=/path/to/artnet.log` writes dumps to a file (otherwise dumps to terminal).
-
-Examples:
+- `ARTNET_DEBUG=1` enables frame logging.
+- `ARTNET_DEBUG_FILE=/path/to/artnet.log` writes logs to file.
 
 ```bash
-# terminal dump
 ARTNET_DEBUG=1 python backend/main.py
-
-# file dump
 ARTNET_DEBUG=1 ARTNET_DEBUG_FILE=./artnet-debug.log python backend/main.py
 ```
 
-## Fixture/effect synchronization rule
+## Cross-module change rule
 
-When backend fixture effects are added, removed, renamed, or their parameter contracts change, update:
+When backend fixture effects are added, removed, renamed, or their parameters change, update:
 
 - `frontend/src/components/dmx/effectPreviewConfig.js`
 
-in the same change so preview effect options and parameter forms stay aligned.
+in the same change.
 
-## Key docs
+## Reference docs
 
-- Architecture overview: `docs/architecture.md`
-- Backend architecture: `docs/architecture/backend.md`
-- Frontend architecture: `docs/architecture/frontend.md`
-- UI behavior: `docs/ui/UI.md`
+- `docs/architecture.md`
+- `docs/architecture/backend.md`
+- `docs/architecture/frontend.md`
+- `docs/architecture/analyzer.md`
+- `docs/ui/UI.md`
