@@ -1,0 +1,79 @@
+/* Base token contract (use CSS variables in components) */
+:root {
+  --bg: #0b0f14;
+  --panel: #0f1620;
+  --card: #121c28;
+  --card-2: #0e1722;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.64);
+  --faint: rgba(255, 255, 255, 0.42);
+
+  --accent: #69a7ff;
+  --accent-2: #7ef0c2;
+
+  --ok: #46d37a;
+  --warn: #ffb020;
+  --err: #ff5c5c;
+
+  --focus: rgba(105, 167, 255, 0.65);
+
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+
+  --r: 14px;
+  --r2: 20px;
+
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+/* Theme: Default Dark */
+:root[data-theme="dark"] {}
+
+/* Theme: Tokyo Dark-ish */
+:root[data-theme="tokyo-dark"] {
+  --bg: #0a0c12;
+  --panel: #0f111a;
+  --card: #141827;
+  --card-2: #101423;
+
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  --accent: #7aa2f7;
+  --accent-2: #9ece6a;
+
+  --ok: #9ece6a;
+  --warn: #e0af68;
+  --err: #f7768e;
+
+  --focus: rgba(122, 162, 247, 0.65);
+}
+
+/* Theme: Light (optional) */
+:root[data-theme="light"] {
+  --bg: #f7f8fb;
+  --panel: #ffffff;
+  --card: #ffffff;
+  --card-2: #f2f4f9;
+
+  --border: rgba(0, 0, 0, 0.10);
+  --border-strong: rgba(0, 0, 0, 0.18);
+
+  --text: rgba(0, 0, 0, 0.86);
+  --muted: rgba(0, 0, 0, 0.60);
+  --faint: rgba(0, 0, 0, 0.40);
+
+  --accent: #2f6fed;
+  --accent-2: #0aa370;
+
+  --ok: #0aa370;
+  --warn: #c07a00;
+  --err: #d64545;
+
+  --focus: rgba(47, 111, 237, 0.35);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
