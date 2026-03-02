@@ -44,7 +44,7 @@ class StateManager:
         self.preview_effect: Optional[str] = None
         self.preview_duration: float = 0.0
         # Highest 1-based DMX channel referenced by any fixture channel map.
-        # Used to limit payload sizes when sending full-frame snapshots to the frontend.
+        # Used to limit payload sizes when sending full-frame snapshots to clients.
         self.max_used_channel: int = 0
 
     def _get_fixture(self, fixture_id: str) -> Optional[Fixture]:
@@ -145,7 +145,7 @@ class StateManager:
                     fixtures.append(obj)
                 self.fixtures = fixtures
 
-            # Compute highest referenced 1-based channel for smaller frontend snapshots.
+            # Compute highest referenced 1-based channel for smaller client snapshots.
             max_ch = 0
             for fixture in self.fixtures:
                 for ch in (fixture.channels or {}).values():

@@ -6,15 +6,13 @@ Use these module guides first, then drill into architecture detail docs.
 
 - Project overview: [../README.md](../README.md)
 - Backend module: [../backend/README.md](../backend/README.md)
-- Frontend module: [../frontend/README.md](../frontend/README.md)
 - Analyzer module: [../analyzer/README.md](../analyzer/README.md)
 - LLM server + gateway: [../llm-server/README.md](../llm-server/README.md)
 - MCP services: [../mcp/README.md](../mcp/README.md)
 - Tests module: [../tests/README.md](../tests/README.md)
 
-AI Light Show v2 is split into six primary modules:
+AI Light Show v2 is split into five primary modules:
 
-- Frontend: Preact UI, WaveSurfer playback, and WebSocket control client.
 - Backend: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
 - Analyzer: offline metadata generation in `analyzer/meta/<song>/...`.
 - MCP song metadata service: read-only metadata query tools over SSE.
@@ -25,28 +23,28 @@ AI Light Show v2 is split into six primary modules:
 
 ### Canonical runtime flow
 
-1. Frontend drives playback timeline and sends `timecode` / `seek` / `playback` over `/ws`.
+1. A control client drives playback timeline and sends `timecode` / `seek` / `playback` over `/ws`.
 2. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
-3. While paused, frontend edits (`delta`) update editor/output universes directly.
+3. While paused, client edits (`delta`) update editor/output universes directly.
 4. Preview requests (`preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata and backend reads it from `/app/meta` in Docker.
 6. MCP exposes metadata tools and the agent gateway forwards LLM tool calls.
 
 ### Real-time playback loop
 
-1. Frontend plays audio and sends `{type:"timecode", time:<seconds>}` while playing.
+1. Client plays audio and sends `{type:"timecode", time:<seconds>}` while playing.
 2. Backend maps time → frame index and selects the nearest precomputed DMX canvas frame.
 3. Backend’s Art-Net service continuously emits `output_universe` at ~60 FPS.
 
 ### Authoring loop (paused)
 
-1. Frontend sends live `{type:"delta", channel, value}` while editing.
+1. Client sends live `{type:"delta", channel, value}` while editing.
 2. Backend updates the editor universe (and output universe when paused).
 3. Backend broadcasts `delta` to keep UIs in sync.
 
 ### Preview loop (paused only)
 
-1. Frontend sends `{type:"preview_effect", fixture_id, effect, duration, data}`.
+1. Client sends `{type:"preview_effect", fixture_id, effect, duration, data}`.
 2. Backend rejects if playback is active.
 3. If accepted, backend renders a temporary in-memory preview canvas and drives Art-Net from it.
 4. Backend broadcasts `preview_status` and global `status` updates; preview is never persisted to cues/files.
@@ -64,17 +62,16 @@ AI Light Show v2 is split into six primary modules:
 
 ## Module docs
 
-- Frontend module guide: [../frontend/README.md](../frontend/README.md)
 - Backend module guide: [../backend/README.md](../backend/README.md)
 - Analyzer module guide: [../analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [../llm-server/README.md](../llm-server/README.md)
 - MCP module guide: [../mcp/README.md](../mcp/README.md)
 - Test module guide: [../tests/README.md](../tests/README.md)
-- Deep architecture docs: [backend architecture](architecture/backend.md), [frontend architecture](architecture/frontend.md), [analyzer architecture](architecture/analyzer.md)
+- Deep architecture docs: [backend architecture](architecture/backend.md), [analyzer architecture](architecture/analyzer.md)
 
 ## WebSocket protocol (canonical)
 
-Backend → Frontend:
+Backend → Client:
 
 - `initial`: `{ fixtures, cues, song, playback:{ fps, songLengthSeconds, isPlaying }, status }`
 - `delta`: `{ channel, value }`
@@ -84,7 +81,7 @@ Backend → Frontend:
 - `status`: `{ status:{ isPlaying, previewActive, preview? } }`
 - `preview_status`: `{ active, request_id, fixture_id?, effect?, duration?, reason? }`
 
-Frontend → Backend:
+Client → Backend:
 
 - `delta`
 - `timecode`

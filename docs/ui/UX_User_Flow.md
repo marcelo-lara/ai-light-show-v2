@@ -2,10 +2,10 @@
 
 ## Workflow
 
-### Preparation
+### Preparation (outside the UI)
 - The user add a song into /backend/songs
 - The user executes the /analyzer/analyze_song.py
-- The user opens the UI in "Song Analysis"
+- When complete: the user start the flow from the UI.
 
 ### Song Analysis
 Goal: Adjust the song metadata and exact timecode.

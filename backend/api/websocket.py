@@ -20,8 +20,8 @@ class WebSocketManager:
         self.active_connections.append(websocket)
         # Send initial state
         await self.send_initial_state(websocket)
-        # If we're not playing, also send a full-frame snapshot so the frontend's
-        # fixtures lane reflects current values (including arm defaults).
+        # If we're not playing, also send a full-frame snapshot so the client's
+        # fixtures view reflects current values (including arm defaults).
         if not await self.state_manager.get_is_playing():
             await self.send_dmx_frame_snapshot(websocket)
 
@@ -56,7 +56,7 @@ class WebSocketManager:
         """Send the current output universe as a compact snapshot.
 
         Payload is limited to the highest channel referenced by any fixture.
-        The frontend treats this as authoritative for the fixtures lane while paused.
+        The client treats this as authoritative for fixture UI while paused.
         """
         max_used = await self.state_manager.get_max_used_channel()
         universe = await self.state_manager.get_output_universe()
@@ -141,7 +141,7 @@ class WebSocketManager:
                 await self.state_manager.seek_timecode(timecode)
                 universe = await self.state_manager.get_output_universe()
                 await self.artnet_service.update_universe(universe)
-                # While paused, seeking should also update the frontend fixtures lane
+                # While paused, seeking should also update the client fixtures view
                 # by sending the closest canvas frame (no streaming during playback).
                 if not await self.state_manager.get_is_playing():
                     await self.send_dmx_frame_snapshot(websocket)

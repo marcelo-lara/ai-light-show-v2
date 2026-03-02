@@ -22,7 +22,7 @@ The UI must support a production workflow from preparation to show execution wit
 
 ## Navigation and app shell (target)
 
-- Main routes:
+- Main blocks:
   - `/analysis` - Song Analysis
   - `/builder` - Show Builder
   - `/dmx` - DMX Controller
@@ -159,5 +159,4 @@ The UI must support a production workflow from preparation to show execution wit
 ## Relationship to current docs
 
 - `docs/ui/UX_User_Flow.md`: source of truth for workflow and user goals.
-- `docs/ui/UI.md`: current implementation snapshot.
 - `docs/ui/UI_Future_state.md` (this file): target UI behavior aligned to source-of-truth flow.

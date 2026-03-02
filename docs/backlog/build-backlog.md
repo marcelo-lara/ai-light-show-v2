@@ -84,7 +84,7 @@ Dependencies:
 
 #### Story FND-2.1 (P0)
 Status: unknown
-User story: As frontend and backend teams, we need a message/event catalog so real-time interactions are deterministic.
+User story: As client and backend teams, we need a message/event catalog so real-time interactions are deterministic.
 Acceptance criteria:
 - Event catalog includes command, response, and error events for all flows.
 - Payload examples exist for each event.
