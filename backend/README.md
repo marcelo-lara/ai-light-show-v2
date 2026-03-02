@@ -28,23 +28,17 @@ FastAPI + asyncio runtime responsible for real-time DMX state management and Art
 
 ### Client → Backend
 
-- `delta`: set a single DMX channel (paused only).
-- `timecode`: continuous playback sync updates.
-- `seek`: jump to a specific time and emit nearest frame.
-- `playback`: toggle play/pause behavior.
-- `preview_effect`: render temporary effect preview.
-- `add_cue`: persist action cue at time.
-- `load_song`: switch song and rebuild canvas.
-- `save_sections`, `save_poi_target`, `chat`.
+- `hello`: handshake, requesting a fresh snapshot.
+- `intent`: backend-routed intent envelope with `{req_id, name, payload}`.
+	- Supported names include transport (`transport.play|pause|stop|jump_to_time`),
+		fixture (`fixture.set_arm|set_values|preview_effect`), and
+		LLM (`llm.send_prompt|cancel`).
 
 ### Backend → Client
 
-- `initial`: full boot state payload.
-- `status`: global playback/preview state.
-- `delta`, `delta_rejected`.
-- `dmx_frame`: frame snapshot (usually paused/seek states).
-- `cues_updated`, `fixtures_updated`, `sections_updated`.
-- `preview_status`.
+- `snapshot`: full authoritative state + `seq`.
+- `patch`: event-driven state changes + `seq` and list of `{path, value}` updates.
+- `event`: info/warning/error notifications (including LLM stream chunks).
 
 ## Data and file contracts
 

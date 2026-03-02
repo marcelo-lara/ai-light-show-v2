@@ -5,7 +5,21 @@ export type UiState = {
   selectedFixtureId?: string;
 };
 
-let ui: UiState = { route: "home" };
+const ROUTE_KEY = "ui_route";
+
+function readRoute(): Route {
+  try {
+    const value = localStorage.getItem(ROUTE_KEY);
+    if (value === "home" || value === "song_analysis" || value === "show_builder" || value === "dmx_control") {
+      return value;
+    }
+  } catch {
+    // ignore
+  }
+  return "home";
+}
+
+let ui: UiState = { route: readRoute() };
 const listeners = new Set<() => void>();
 
 export function getUiState(): UiState {
@@ -23,6 +37,11 @@ function emit() {
 
 export function setRoute(route: Route) {
   ui = { ...ui, route };
+  try {
+    localStorage.setItem(ROUTE_KEY, route);
+  } catch {
+    // ignore
+  }
   emit();
 }
 

@@ -77,3 +77,210 @@
   --focus: rgba(47, 111, 237, 0.35);
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+#app {
+  min-height: 100dvh;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 220px 1fr 360px;
+  min-height: 100dvh;
+  gap: 12px;
+  padding: 12px;
+}
+
+.sidebar,
+.right-panel,
+.main-content {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.nav-btn,
+.btn {
+  border: 1px solid var(--border-strong);
+  background: var(--card-2);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.nav-btn.active,
+.btn.primary {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 20%, var(--card-2));
+}
+
+.main-content {
+  overflow: auto;
+}
+
+.view h1 {
+  margin-top: 0;
+}
+
+.right-panel {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 10px;
+  background: var(--card);
+}
+
+.card-header {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.status-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
+.badge.ok {
+  border-color: var(--ok);
+}
+
+.badge.warn {
+  border-color: var(--warn);
+}
+
+.badge.err {
+  border-color: var(--err);
+}
+
+.theme-select,
+select,
+textarea,
+input[type="range"] {
+  width: 100%;
+  background: var(--card-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+}
+
+.prompt-row,
+.control-stack,
+.fixture-grid,
+.llm-chat {
+  display: grid;
+  gap: 10px;
+}
+
+.prompt-actions,
+.effect-tray {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-history {
+  max-height: 300px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.chat-msg {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.chat-msg p {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+
+.fixture-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.fixture-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.fixture-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+}
+
+.slider-row input {
+  grid-column: 1 / -1;
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.subpanel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--card);
+  margin-bottom: 10px;
+}

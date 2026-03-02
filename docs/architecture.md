@@ -23,31 +23,31 @@ AI Light Show v2 is split into five primary modules:
 
 ### Canonical runtime flow
 
-1. A control client drives playback timeline and sends `timecode` / `seek` / `playback` over `/ws`.
-2. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
-3. While paused, client edits (`delta`) update editor/output universes directly.
-4. Preview requests (`preview_effect`) render temporary in-memory output only (no persistence).
+1. Frontend sends `hello` and receives backend-authoritative `snapshot` + `patch` updates over `/ws`.
+2. Frontend emits only `intent` payloads; backend applies all domain logic and broadcasts state changes.
+3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
+4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata and backend reads it from `/app/meta` in Docker.
 6. MCP exposes metadata tools and the agent gateway forwards LLM tool calls.
 
 ### Real-time playback loop
 
-1. Client plays audio and sends `{type:"timecode", time:<seconds>}` while playing.
+1. Client sends `intent` actions for transport control while backend remains authoritative for playback state.
 2. Backend maps time → frame index and selects the nearest precomputed DMX canvas frame.
 3. Backend’s Art-Net service continuously emits `output_universe` at ~60 FPS.
 
 ### Authoring loop (paused)
 
-1. Client sends live `{type:"delta", channel, value}` while editing.
-2. Backend updates the editor universe (and output universe when paused).
-3. Backend broadcasts `delta` to keep UIs in sync.
+1. Client sends `{type:"intent", name:"fixture.set_values", payload:{...}}` while editing.
+2. Backend updates output/editor universes according to lock/playback status.
+3. Backend broadcasts `patch` updates to keep UIs in sync.
 
 ### Preview loop (paused only)
 
-1. Client sends `{type:"preview_effect", fixture_id, effect, duration, data}`.
+1. Client sends `{type:"intent", name:"fixture.preview_effect", payload:{...}}`.
 2. Backend rejects if playback is active.
 3. If accepted, backend renders a temporary in-memory preview canvas and drives Art-Net from it.
-4. Backend broadcasts `preview_status` and global `status` updates; preview is never persisted to cues/files.
+4. Backend broadcasts `event` notifications and `patch` updates; preview is never persisted to cues/files.
 
 ### Analysis loop (manual)
 
@@ -73,26 +73,14 @@ AI Light Show v2 is split into five primary modules:
 
 Backend → Client:
 
-- `initial`: `{ fixtures, cues, song, playback:{ fps, songLengthSeconds, isPlaying }, status }`
-- `delta`: `{ channel, value }`
-- `delta_rejected`: `{ reason }` (when playback is active)
-- `dmx_frame`: `{ time, values }` (paused seek-preview)
-- `cues_updated`: `{ cues }`
-- `status`: `{ status:{ isPlaying, previewActive, preview? } }`
-- `preview_status`: `{ active, request_id, fixture_id?, effect?, duration?, reason? }`
+- `snapshot`: `{ type:"snapshot", seq, state }`
+- `patch`: `{ type:"patch", seq, changes:[{path, value}] }`
+- `event`: `{ type:"event", level, message, data? }`
 
 Client → Backend:
 
-- `delta`
-- `timecode`
-- `seek`
-- `playback`
-- `preview_effect`
-- `add_cue`
-- `load_song`
-- `chat`
-- `save_sections`
-- `save_poi_target`
+- `hello`
+- `intent`: `{ type:"intent", req_id, name, payload }`
 
 ## Appendix: background on rendered sequence artifacts and ecosystem terms
 

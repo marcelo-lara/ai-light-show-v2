@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "dev": "deno run -A --watch dev.ts",
+    "serve": "deno run -A dev.ts"
+  },
+  "imports": {
+    "@std/http": "jsr:@std/http@^1.0.21",
+    "@std/media-types": "jsr:@std/media-types@^1.1.0",
+    "@std/path": "jsr:@std/path@^1.1.0",
+    "esbuild": "npm:esbuild@0.25.1"
+  }
+}

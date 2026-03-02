@@ -2,6 +2,7 @@ import { initBackendState, applyPatch, applySnapshot } from "../shared/state/bac
 import { initTheme } from "../shared/state/theme_state.ts";
 import { WsClient } from "../shared/transport/ws_client.ts";
 import type { ConnectionState, WsInbound } from "../shared/transport/protocol.ts";
+import { addAssistantMessage, addSystemMessage, appendStreamingChunk, finishStreaming } from "../features/llm_chat/llm_state.ts";
 
 // If you inject bootstrap JSON in HTML, expose it as window.__BOOTSTRAP_STATE__
 declare global {
@@ -17,9 +18,20 @@ export type BootContext = {
 export function boot(ctx: BootContext) {
   initTheme(); // apply theme ASAP to avoid FOUC
   // 1) hydration/bootstrap
-  const bootstrap = (window.__BOOTSTRAP_STATE__ ?? null) as any;
+  const injected = (window.__BOOTSTRAP_STATE__ ?? null) as any;
+  let bootstrap = injected;
+
+  if (!bootstrap?.state) {
+    try {
+      const raw = localStorage.getItem("last_snapshot");
+      if (raw) bootstrap = JSON.parse(raw);
+    } catch {
+      // ignore storage parsing errors
+    }
+  }
+
   if (bootstrap && typeof bootstrap === "object" && bootstrap.state) {
-    initBackendState(bootstrap.state, { stale: true, seq: bootstrap.seq ?? 0 });
+    initBackendState(bootstrap.state, { stale: true, seq: Number(bootstrap.seq ?? 0) });
   } else {
     initBackendState(undefined, { stale: true, seq: 0 });
   }
@@ -30,9 +42,31 @@ export function boot(ctx: BootContext) {
       (globalThis as any).__WS_STATE__ = s;
     },
     onMessage: (m: WsInbound) => {
-      if (m.type === "snapshot") applySnapshot(m);
-      else if (m.type === "patch") applyPatch(m);
-      else console.log("event:", m);
+      if (m.type === "snapshot") {
+        applySnapshot(m);
+        try {
+          localStorage.setItem("last_snapshot", JSON.stringify({ seq: m.seq, state: m.state }));
+        } catch {
+          // ignore storage errors
+        }
+      } else if (m.type === "patch") {
+        applyPatch(m);
+      } else if (m.type === "event") {
+        const data = (m.data ?? {}) as Record<string, unknown>;
+        if (data.domain === "llm" && typeof data.chunk === "string") {
+          appendStreamingChunk(data.chunk);
+          if (data.done === true) finishStreaming();
+          return;
+        }
+        if (data.domain === "llm" && typeof data.message === "string") {
+          addAssistantMessage(data.message);
+          finishStreaming();
+          return;
+        }
+        if (m.level === "error") {
+          addSystemMessage(m.message, "error");
+        }
+      }
     },
   });
 

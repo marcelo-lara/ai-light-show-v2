@@ -1,12 +1,14 @@
-from fastapi import WebSocket, WebSocketDisconnect
-from typing import List
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
 import json
-import asyncio
-from store.state import StateManager, FPS
+
+from fastapi import WebSocket, WebSocketDisconnect
+
 from services.artnet import ArtNetService
 from services.song_service import SongService
-from pathlib import Path
-import os
+from store.state import StateManager
+
 
 class WebSocketManager:
     def __init__(self, state_manager: StateManager, artnet_service: ArtNetService, song_service: SongService):
@@ -14,283 +16,317 @@ class WebSocketManager:
         self.artnet_service = artnet_service
         self.song_service = song_service
         self.active_connections: List[WebSocket] = []
+        self.seq: int = 0
+        self.fixture_armed: Dict[str, bool] = {}
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-        # Send initial state
-        await self.send_initial_state(websocket)
-        # If we're not playing, also send a full-frame snapshot so the client's
-        # fixtures view reflects current values (including arm defaults).
-        if not await self.state_manager.get_is_playing():
-            await self.send_dmx_frame_snapshot(websocket)
+        self._ensure_arm_state_initialized()
+        await self.send_snapshot(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
-    async def send_initial_state(self, websocket: WebSocket):
-        fixtures = [f.dict() for f in self.state_manager.fixtures]
-        pois = await self.state_manager.get_pois() if hasattr(self.state_manager, "get_pois") else []
-        cues = self.state_manager.cue_sheet.dict() if self.state_manager.cue_sheet else None
-        song = self.state_manager.current_song.dict() if self.state_manager.current_song else None
-        status = await self.state_manager.get_status()
-        initial_state = {
-            "type": "initial",
-            "fixtures": fixtures,
-            "pois": pois,
-            "cues": cues,
-            "song": song,
-            "playback": {
-                "fps": 60,
-                "songLengthSeconds": getattr(self.state_manager, "song_length_seconds", 0.0),
-                "isPlaying": status.get("isPlaying", False),
-            },
-            "status": status,
+    async def send_snapshot(self, websocket: WebSocket):
+        state = await self._build_frontend_state()
+        msg = {
+            "type": "snapshot",
+            "seq": self._next_seq(),
+            "state": state,
         }
-        await websocket.send_json(initial_state)
-
-    async def broadcast_status(self):
-        await self.broadcast({"type": "status", "status": await self.state_manager.get_status()})
-
-    async def send_dmx_frame_snapshot(self, websocket: WebSocket) -> None:
-        """Send the current output universe as a compact snapshot.
-
-        Payload is limited to the highest channel referenced by any fixture.
-        The client treats this as authoritative for fixture UI while paused.
-        """
-        max_used = await self.state_manager.get_max_used_channel()
-        universe = await self.state_manager.get_output_universe()
-        timecode = await self.state_manager.get_timecode()
-        values = list(universe[:max(0, min(len(universe), int(max_used)))])
-        await websocket.send_json({
-            "type": "dmx_frame",
-            "time": float(timecode),
-            "values": values,
-        })
+        await websocket.send_json(msg)
 
     async def broadcast(self, message: dict):
+        stale: List[WebSocket] = []
         for connection in self.active_connections:
             try:
                 await connection.send_json(message)
-            except:
-                pass
+            except Exception:
+                stale.append(connection)
+        for connection in stale:
+            self.disconnect(connection)
 
-    async def _watch_preview_completion(self, request_id: str):
-        try:
-            await self.state_manager.wait_for_preview_end(request_id)
-            universe = await self.state_manager.get_output_universe()
-            await self.artnet_service.update_universe(universe)
-            is_playing = await self.state_manager.get_is_playing()
-            await self.artnet_service.set_continuous_send(is_playing)
-            await self.broadcast({
-                "type": "preview_status",
-                "active": False,
-                "request_id": request_id,
-            })
-            await self.broadcast_status()
-        except Exception:
-            pass
-
-    async def _stream_preview_to_artnet(self, request_id: str):
-        try:
-            while True:
-                status = await self.state_manager.get_status()
-                preview = status.get("preview") if isinstance(status, dict) else None
-                if not status.get("previewActive"):
-                    break
-                if not isinstance(preview, dict):
-                    break
-                if str(preview.get("requestId") or "") != str(request_id):
-                    break
-
-                universe = await self.state_manager.get_output_universe()
-                await self.artnet_service.update_universe(universe)
-                await asyncio.sleep(1.0 / FPS)
-        except Exception:
-            pass
+    async def broadcast_event(self, level: str, message: str, data: Optional[Dict[str, Any]] = None):
+        payload: Dict[str, Any] = {
+            "type": "event",
+            "level": level,
+            "message": message,
+        }
+        if data is not None:
+            payload["data"] = data
+        await self.broadcast(payload)
 
     async def handle_message(self, websocket: WebSocket, data: str):
         try:
             message = json.loads(data)
-            msg_type = message.get("type")
+        except Exception:
+            await websocket.send_json({
+                "type": "event",
+                "level": "error",
+                "message": "invalid_json",
+            })
+            return
 
-            if msg_type == "delta":
-                if await self.state_manager.get_is_playing():
-                    await websocket.send_json({"type": "delta_rejected", "reason": "playback_active"})
-                    return
+        msg_type = message.get("type")
 
-                channel = message.get("channel")
-                value = message.get("value")
-                should_apply = await self.state_manager.update_dmx_channel(channel, value)
-                if should_apply:
-                    universe = await self.state_manager.get_output_universe()
-                    await self.artnet_service.update_universe(universe)
-                # Broadcast delta
-                await self.broadcast({"type": "delta", "channel": channel, "value": value})
+        if msg_type == "hello":
+            await self.send_snapshot(websocket)
+            return
 
-            elif msg_type == "timecode":
-                timecode = message.get("time")
-                # While paused, the backend must NOT be driven by timecode updates.
-                if await self.state_manager.get_is_playing():
-                    await self.state_manager.update_timecode(timecode)
-                    universe = await self.state_manager.get_output_universe()
-                    await self.artnet_service.update_universe(universe)
+        if msg_type != "intent":
+            await websocket.send_json({
+                "type": "event",
+                "level": "warning",
+                "message": "unsupported_message_type",
+                "data": {"type": msg_type},
+            })
+            return
 
-            elif msg_type == "seek":
-                timecode = message.get("time")
-                await self.state_manager.seek_timecode(timecode)
-                universe = await self.state_manager.get_output_universe()
-                await self.artnet_service.update_universe(universe)
-                # While paused, seeking should also update the client fixtures view
-                # by sending the closest canvas frame (no streaming during playback).
-                if not await self.state_manager.get_is_playing():
-                    await self.send_dmx_frame_snapshot(websocket)
+        name = str(message.get("name") or "")
+        payload = message.get("payload") or {}
+        if not isinstance(payload, dict):
+            payload = {}
 
-            elif msg_type == "playback":
-                playing = bool(message.get("playing", False))
-                await self.state_manager.set_playback_state(playing)
-                await self.artnet_service.set_continuous_send(playing)
-                await self.broadcast_status()
+        before = await self._build_frontend_state()
+        changed = await self._apply_intent(name, payload)
 
-            elif msg_type == "preview_effect":
-                result = await self.state_manager.start_preview_effect(
-                    fixture_id=str(message.get("fixture_id") or ""),
-                    effect=str(message.get("effect") or ""),
-                    duration=float(message.get("duration") or 0.0),
-                    data=message.get("data") or {},
-                    request_id=message.get("request_id"),
-                )
+        if changed:
+            after = await self._build_frontend_state()
+            await self._broadcast_patch(before, after)
 
-                if result.get("ok"):
-                    universe = await self.state_manager.get_output_universe()
-                    await self.artnet_service.update_universe(universe)
-                    await self.broadcast({
-                        "type": "preview_status",
-                        "active": True,
-                        "request_id": result.get("requestId"),
-                        "fixture_id": result.get("fixtureId"),
-                        "effect": result.get("effect"),
-                        "duration": result.get("duration"),
-                    })
-                    await self.artnet_service.set_continuous_send(True)
-                    asyncio.create_task(self._stream_preview_to_artnet(str(result.get("requestId") or "")))
-                    asyncio.create_task(self._watch_preview_completion(str(result.get("requestId") or "")))
-                else:
-                    await websocket.send_json({
-                        "type": "preview_status",
-                        "active": False,
-                        "reason": result.get("reason", "preview_rejected"),
-                        "fixture_id": message.get("fixture_id"),
-                        "effect": message.get("effect"),
-                    })
+    async def _apply_intent(self, name: str, payload: Dict[str, Any]) -> bool:
+        self._ensure_arm_state_initialized()
 
-                await self.broadcast_status()
+        if name == "transport.play":
+            await self.state_manager.set_playback_state(True)
+            await self.artnet_service.set_continuous_send(True)
+            return True
 
-            elif msg_type == "add_cue":
-                timecode = message.get("time")
-                name = message.get("name")
-                await self.state_manager.add_cue_entry(timecode, name)
-                # Broadcast updated cue sheet (add_cue now appends multiple effect entries).
-                if self.state_manager.cue_sheet:
-                    await self.broadcast({"type": "cues_updated", "cues": self.state_manager.cue_sheet.dict()})
+        if name == "transport.pause":
+            await self.state_manager.set_playback_state(False)
+            await self.artnet_service.set_continuous_send(False)
+            return True
 
-            elif msg_type == "save_sections":
-                payload = message.get("sections")
-                if not isinstance(payload, list):
-                    await websocket.send_json({"type": "sections_save_result", "ok": False, "reason": "invalid_payload"})
-                    return
+        if name == "transport.stop":
+            await self.state_manager.set_playback_state(False)
+            await self.state_manager.seek_timecode(0.0)
+            universe = await self.state_manager.get_output_universe()
+            await self.artnet_service.update_universe(universe)
+            await self.artnet_service.set_continuous_send(False)
+            return True
 
-                result = await self.state_manager.save_song_sections(payload)
-                await websocket.send_json({"type": "sections_save_result", **result})
+        if name == "transport.jump_to_time":
+            raw = payload.get("time_ms")
+            try:
+                target = max(0.0, float(str(raw)) / 1000.0)
+            except Exception:
+                await self.broadcast_event("error", "invalid_time_ms")
+                return False
+            await self.state_manager.seek_timecode(target)
+            universe = await self.state_manager.get_output_universe()
+            await self.artnet_service.update_universe(universe)
+            return True
 
-                if result.get("ok"):
-                    await self.broadcast({
-                        "type": "sections_updated",
-                        "parts": result.get("parts") or {},
-                    })
+        if name == "transport.jump_to_section":
+            await self.broadcast_event("warning", "jump_to_section_not_implemented")
+            return False
 
-            elif msg_type == "load_song":
-                song_filename = message.get("filename")
-                await self.state_manager.load_song(song_filename)
-                universe = await self.state_manager.get_output_universe()
-                await self.artnet_service.update_universe(universe)
-                # Broadcast new state
-                for conn in self.active_connections:
-                    await self.send_initial_state(conn)
-                    if not await self.state_manager.get_is_playing():
-                        await self.send_dmx_frame_snapshot(conn)
+        if name == "fixture.set_arm":
+            fixture_id = str(payload.get("fixture_id") or "")
+            if not fixture_id:
+                await self.broadcast_event("error", "fixture_id_required")
+                return False
+            self.fixture_armed[fixture_id] = bool(payload.get("armed", False))
+            return True
 
-            elif msg_type == "chat":
-                prompt = message.get("message")
-                # Mock echo
-                response = f"Echo: {prompt}"
-                await websocket.send_json({"type": "chat_response", "message": response})
+        if name == "fixture.set_values":
+            fixture_id = str(payload.get("fixture_id") or "")
+            values = payload.get("values") or {}
+            if not fixture_id or not isinstance(values, dict):
+                await self.broadcast_event("error", "invalid_fixture_values_payload")
+                return False
 
-            elif msg_type == "save_poi_target":
-                prompt = message.get("message")
-                # Mock echo
-                response = f"Echo: {prompt}"
-                await websocket.send_json({"type": "chat_response", "message": response})
+            fixture = next((f for f in self.state_manager.fixtures if f.id == fixture_id), None)
+            if not fixture:
+                await self.broadcast_event("error", "fixture_not_found", {"fixture_id": fixture_id})
+                return False
 
-            elif msg_type == "save_poi_target":
-                fixture_id = str(message.get("fixture_id") or "")
-                poi_id = str(message.get("poi_id") or "")
-                pan = message.get("pan")
-                tilt = message.get("tilt")
-
-                if await self.state_manager.get_is_playing():
-                    await websocket.send_json({
-                        "type": "save_poi_target_result",
-                        "ok": False,
-                        "reason": "playback_active",
-                        "fixture_id": fixture_id,
-                        "poi_id": poi_id,
-                    })
-                    return
-
-                if not hasattr(self.state_manager, "update_fixture_poi_target"):
-                    await websocket.send_json({
-                        "type": "save_poi_target_result",
-                        "ok": False,
-                        "reason": "feature_unavailable",
-                        "fixture_id": fixture_id,
-                        "poi_id": poi_id,
-                    })
-                    return
-
+            should_flush = False
+            for channel_name, value in values.items():
+                if channel_name not in fixture.channels:
+                    continue
                 try:
-                    pan_u16 = int(pan)
-                    tilt_u16 = int(tilt)
+                    v = int(value)
                 except Exception:
-                    await websocket.send_json({
-                        "type": "save_poi_target_result",
-                        "ok": False,
-                        "reason": "invalid_payload",
-                        "fixture_id": fixture_id,
-                        "poi_id": poi_id,
-                    })
-                    return
+                    continue
+                channel = int(fixture.channels[channel_name])
+                applied = await self.state_manager.update_dmx_channel(channel, max(0, min(255, v)))
+                should_flush = should_flush or applied
 
-                result = await self.state_manager.update_fixture_poi_target(
-                    fixture_id=fixture_id,
-                    poi_id=poi_id,
-                    pan=pan_u16,
-                    tilt=tilt_u16,
-                )
+            if should_flush:
+                universe = await self.state_manager.get_output_universe()
+                await self.artnet_service.update_universe(universe)
 
-                await websocket.send_json({
-                    "type": "save_poi_target_result",
-                    **result,
-                })
+            return True
 
-                if result.get("ok"):
-                    await self.broadcast({
-                        "type": "fixtures_updated",
-                        "fixtures": [f.dict() for f in self.state_manager.fixtures],
-                    })
+        if name == "fixture.preview_effect":
+            fixture_id = str(payload.get("fixture_id") or "")
+            effect = str(payload.get("effect_id") or "")
+            duration_ms = payload.get("duration_ms")
+            params = payload.get("params") or {}
 
-        except Exception as e:
-            print(f"Error handling message: {e}")
+            try:
+                duration = max(0.0, float(str(duration_ms)) / 1000.0)
+            except Exception:
+                duration = 0.5
+
+            result = await self.state_manager.start_preview_effect(
+                fixture_id=fixture_id,
+                effect=effect,
+                duration=duration,
+                data=params if isinstance(params, dict) else {},
+                request_id=None,
+            )
+
+            if not result.get("ok"):
+                await self.broadcast_event("warning", "preview_rejected", result)
+                return False
+
+            universe = await self.state_manager.get_output_universe()
+            await self.artnet_service.update_universe(universe)
+            await self.artnet_service.set_continuous_send(True)
+            await self.broadcast_event("info", "preview_started", result)
+            return True
+
+        if name == "fixture.stop_preview":
+            await self.broadcast_event("warning", "stop_preview_not_implemented")
+            return False
+
+        if name == "llm.send_prompt":
+            prompt = str(payload.get("prompt") or "").strip()
+            if not prompt:
+                await self.broadcast_event("error", "prompt_required")
+                return False
+
+            await self.broadcast_event("info", "llm_stream", {
+                "domain": "llm",
+                "chunk": "Echo: ",
+                "done": False,
+            })
+            await self.broadcast_event("info", "llm_stream", {
+                "domain": "llm",
+                "chunk": prompt,
+                "done": True,
+            })
+            return False
+
+        if name == "llm.cancel":
+            await self.broadcast_event("info", "llm_cancelled", {"domain": "llm"})
+            return False
+
+        await self.broadcast_event("warning", "unknown_intent", {"name": name})
+        return False
+
+    async def _build_frontend_state(self) -> Dict[str, Any]:
+        status = await self.state_manager.get_status()
+        timecode = await self.state_manager.get_timecode()
+        universe = await self.state_manager.get_output_universe()
+
+        is_playing = bool(status.get("isPlaying", False))
+        playback_state = "playing" if is_playing else ("stopped" if timecode <= 0.001 else "paused")
+        show_state = "running" if is_playing else "idle"
+
+        section_name = self._section_name_for_time(timecode)
+        bpm = None
+        if self.state_manager.current_song and self.state_manager.current_song.metadata:
+            bpm = self.state_manager.current_song.metadata.bpm
+
+        fixtures = {}
+        for fixture in self.state_manager.fixtures:
+            channels = {}
+            for channel_name, channel_num in (fixture.channels or {}).items():
+                try:
+                    idx = int(channel_num) - 1
+                    if 0 <= idx < len(universe):
+                        channels[channel_name] = int(universe[idx])
+                except Exception:
+                    continue
+
+            ftype = str(fixture.type or "").lower()
+            capabilities: Dict[str, Any] = {}
+            if "moving" in ftype and "head" in ftype:
+                capabilities["pan_tilt"] = True
+            if "rgb" in ftype or {"red", "green", "blue"}.issubset(set((fixture.channels or {}).keys())):
+                capabilities["rgb"] = True
+
+            fixtures[fixture.id] = {
+                "id": fixture.id,
+                "name": fixture.name,
+                "type": fixture.type,
+                "armed": bool(self.fixture_armed.get(fixture.id, True)),
+                "values": dict(fixture.current_values or {}),
+                "channels": channels,
+                "capabilities": capabilities,
+            }
+
+        return {
+            "system": {
+                "show_state": show_state,
+                "edit_lock": is_playing,
+            },
+            "playback": {
+                "state": playback_state,
+                "time_ms": int(round(timecode * 1000.0)),
+                "bpm": bpm,
+                "section_name": section_name,
+            },
+            "fixtures": fixtures,
+        }
+
+    async def _broadcast_patch(self, before: Dict[str, Any], after: Dict[str, Any]):
+        changes = []
+        keys = sorted(set(before.keys()) | set(after.keys()))
+        for key in keys:
+            if before.get(key) != after.get(key):
+                changes.append({"path": [key], "value": after.get(key)})
+
+        if not changes:
+            return
+
+        await self.broadcast({
+            "type": "patch",
+            "seq": self._next_seq(),
+            "changes": changes,
+        })
+
+    def _section_name_for_time(self, timecode: float) -> Optional[str]:
+        song = self.state_manager.current_song
+        if not song or not song.metadata or not song.metadata.parts:
+            return None
+
+        t = float(timecode)
+        for name, rng in song.metadata.parts.items():
+            if isinstance(rng, list) and len(rng) >= 2:
+                try:
+                    start = float(rng[0])
+                    end = float(rng[1])
+                except Exception:
+                    continue
+                if start <= t <= end:
+                    return str(name)
+        return None
+
+    def _ensure_arm_state_initialized(self):
+        if self.fixture_armed:
+            return
+        for fixture in self.state_manager.fixtures:
+            self.fixture_armed[fixture.id] = True
+
+    def _next_seq(self) -> int:
+        self.seq += 1
+        return self.seq
 
 async def websocket_endpoint(websocket: WebSocket, manager: WebSocketManager):
     await manager.connect(websocket)
@@ -300,5 +336,3 @@ async def websocket_endpoint(websocket: WebSocket, manager: WebSocketManager):
             await manager.handle_message(websocket, data)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-
-    # end

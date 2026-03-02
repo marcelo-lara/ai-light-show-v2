@@ -6,7 +6,7 @@ Project-level Python tests for analyzer, DMX rendering, and WebSocket behaviors.
 
 - `test_analyzer_beat_comparison.py`: analyzer beat comparison/regression checks.
 - `test_dmx_canvas_render.py`: DMX canvas rendering correctness checks.
-- `test_ws_e2e.py`: WebSocket-level integration behavior.
+- `test_ws_e2e.py`: WebSocket protocol behavior for `hello`/`intent` and `snapshot`/`patch`/`event`.
 - `live/`: manual or semi-manual live validation payloads.
 
 ## Run tests

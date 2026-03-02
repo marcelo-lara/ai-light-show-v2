@@ -14,10 +14,10 @@ AI Light Show is split into five primary modules:
 
 ### Canonical runtime flow
 
-1. A control client sends `timecode` / `seek` / `playback` over `/ws`.
-2. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
-3. While paused, client edits (`delta`) update editor/output universes directly.
-4. Preview requests (`preview_effect`) render temporary in-memory output only (no persistence).
+1. Frontend connects to `/ws`, sends `hello`, and receives backend-authoritative `snapshot` + `patch` updates.
+2. UI emits only `intent` messages; backend applies domain logic and rebroadcasts state deltas.
+3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
+4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata; backend consumes it from `/app/meta` in Docker.
 6. MCP server exposes metadata tools; agent-gateway forwards LLM tool calls to MCP.
 
@@ -64,6 +64,7 @@ docker compose up --build
 ```
 
 - Backend: http://localhost:5001
+- Frontend: http://localhost:5173
 - LLM server: http://localhost:8080
 - Agent gateway: http://localhost:8090
 - Song metadata MCP: http://localhost:8089
