@@ -3,9 +3,9 @@ import httpx, orjson
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-from mcp_sse_client import McpSseConnection  # persistent SSE client you added
+from mcp_client import McpSseConnection
 
 log = logging.getLogger("agent-gateway")
 logging.basicConfig(level=logging.INFO)
@@ -76,11 +76,46 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # ---- MCP tool wrapper ----
-# IMPORTANT: You MUST map these to the real MCP tool names after you inspect tools/list.
 MCP_TOOL_MAP = {
-    # "mcp_get_onsets": "YOUR_REAL_MCP_TOOL_NAME_FOR_ONSETS",
-    # "mcp_get_sections": "YOUR_REAL_MCP_TOOL_NAME_FOR_SECTIONS",
+    "mcp_get_onsets": "query_feature",
+    "mcp_get_sections": "get_song_overview",
 }
+
+
+def normalize_mcp_tool_call(tool_name: str, args: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+    real_tool = MCP_TOOL_MAP[tool_name]
+
+    if tool_name == "mcp_get_sections":
+        song = args.get("song") or args.get("song_id")
+        if not song:
+            raise HTTPException(400, "mcp_get_sections requires 'song' or 'song_id'")
+        return real_tool, {"song": song}
+
+    if tool_name == "mcp_get_onsets":
+        song = args.get("song") or args.get("song_id")
+        if not song:
+            raise HTTPException(400, "mcp_get_onsets requires 'song' or 'song_id'")
+
+        feature = args.get("feature", "analyzer.beats")
+        normalized = {
+            "song": song,
+            "feature": feature,
+            "mode": args.get("mode", "summary"),
+            "include_raw": args.get("include_raw", False),
+        }
+
+        if "start_time" in args:
+            normalized["start_time"] = args["start_time"]
+        if "end_time" in args:
+            normalized["end_time"] = args["end_time"]
+        if "max_points" in args:
+            normalized["max_points"] = args["max_points"]
+        if "time_tolerance_ms" in args:
+            normalized["time_tolerance_ms"] = args["time_tolerance_ms"]
+
+        return real_tool, normalized
+
+    return real_tool, args
 
 async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
     if tool_name not in MCP_TOOL_MAP:
@@ -92,19 +127,19 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
             "hint": "Call /debug/mcp/tools and map MCP_TOOL_MAP to real tool names."
         }
 
-    real_tool = MCP_TOOL_MAP[tool_name]
+    real_tool, normalized_args = normalize_mcp_tool_call(tool_name, args)
     # MCP JSON-RPC tools/call
     req = {
         "jsonrpc": "2.0",
         "id": int(asyncio.get_event_loop().time() * 1000) % 1000000000,
         "method": "tools/call",
-        "params": {"name": real_tool, "arguments": args}
+        "params": {"name": real_tool, "arguments": normalized_args}
     }
     try:
         resp = await mcp.request(req, timeout=15)
         return resp
     except Exception as e:
-        return {"error": "MCP_CALL_FAILED", "detail": str(e), "tool": tool_name, "args": args}
+        return {"error": "MCP_CALL_FAILED", "detail": str(e), "tool": tool_name, "args": normalized_args}
 
 @app.get("/health")
 async def health():
@@ -114,7 +149,10 @@ async def health():
 async def debug_mcp_tools():
     # List MCP tools so you can fill MCP_TOOL_MAP
     req = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
-    return await mcp.request(req, timeout=10)
+    try:
+        return await mcp.request(req, timeout=10)
+    except Exception as error:
+        raise HTTPException(503, f"MCP unavailable: {error}") from error
 
 @app.post("/v1/chat/completions")
 async def chat_completions(req: ChatRequest):

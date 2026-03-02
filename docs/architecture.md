@@ -1,12 +1,36 @@
 # AI Light Show v2 — Architecture
 
-AI Light Show v2 has three main modules:
+## Start here for LLMs
 
-- Frontend: audio playback + authoring UI.
-- Backend: DMX canvas renderer + Art-Net output + WebSocket control plane.
-- Analyzer: offline song analysis scripts producing metadata files.
+Use these module guides first, then drill into architecture detail docs.
+
+- Project overview: [../README.md](../README.md)
+- Backend module: [../backend/README.md](../backend/README.md)
+- Frontend module: [../frontend/README.md](../frontend/README.md)
+- Analyzer module: [../analyzer/README.md](../analyzer/README.md)
+- LLM server + gateway: [../llm-server/README.md](../llm-server/README.md)
+- MCP services: [../mcp/README.md](../mcp/README.md)
+- Tests module: [../tests/README.md](../tests/README.md)
+
+AI Light Show v2 is split into six primary modules:
+
+- Frontend: Preact UI, WaveSurfer playback, and WebSocket control client.
+- Backend: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
+- Analyzer: offline metadata generation in `analyzer/meta/<song>/...`.
+- MCP song metadata service: read-only metadata query tools over SSE.
+- LLM agent gateway: OpenAI-compatible wrapper that maps tool calls to MCP JSON-RPC.
+- Tests: analyzer/backend integration and regression coverage.
 
 ## How the modules interact
+
+### Canonical runtime flow
+
+1. Frontend drives playback timeline and sends `timecode` / `seek` / `playback` over `/ws`.
+2. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
+3. While paused, frontend edits (`delta`) update editor/output universes directly.
+4. Preview requests (`preview_effect`) render temporary in-memory output only (no persistence).
+5. Analyzer writes song metadata and backend reads it from `/app/meta` in Docker.
+6. MCP exposes metadata tools and the agent gateway forwards LLM tool calls.
 
 ### Real-time playback loop
 
@@ -30,8 +54,7 @@ AI Light Show v2 has three main modules:
 ### Analysis loop (manual)
 
 1. User runs analyzer scripts manually to produce metadata files under `analyzer/meta/<song>/info.json`.
-2. Frontend requests metadata reload: `{type:"reload_metadata"}` (or similar UI action).
-3. Backend reloads metadata from `/app/meta` and rebroadcasts initial state with updated song data.
+2. Backend loads metadata on song load from `/app/meta` and rebroadcasts initial state.
 
 ### Meta source (Docker)
 
@@ -41,9 +64,13 @@ AI Light Show v2 has three main modules:
 
 ## Module docs
 
-- Frontend: `docs/architecture/frontend.md`
-- Backend: `docs/architecture/backend.md`
-- Analyzer: `docs/architecture/analyzer.md`
+- Frontend module guide: [../frontend/README.md](../frontend/README.md)
+- Backend module guide: [../backend/README.md](../backend/README.md)
+- Analyzer module guide: [../analyzer/README.md](../analyzer/README.md)
+- LLM stack guide: [../llm-server/README.md](../llm-server/README.md)
+- MCP module guide: [../mcp/README.md](../mcp/README.md)
+- Test module guide: [../tests/README.md](../tests/README.md)
+- Deep architecture docs: [backend architecture](architecture/backend.md), [frontend architecture](architecture/frontend.md), [analyzer architecture](architecture/analyzer.md)
 
 ## WebSocket protocol (canonical)
 
@@ -67,8 +94,11 @@ Frontend → Backend:
 - `add_cue`
 - `load_song`
 - `chat`
+- `save_sections`
+- `save_poi_target`
 
-## Reference
+## Appendix: background on rendered sequence artifacts and ecosystem terms
+
 In the xLights ecosystem, there are several file extensions you will encounter. Each serves a specific purpose in the workflow—from design and sequencing to the final "rendered" output you are interested in.
 
 .fseq (Falcon Sequence): This is the primary rendered file. 

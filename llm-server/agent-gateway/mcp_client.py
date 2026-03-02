@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
@@ -31,6 +32,7 @@ class McpSseConnection:
 
         self._ready = asyncio.Event()  # set when endpoint/session is known
         self._pending: Dict[Any, asyncio.Future] = {}
+        self._initialized_session_id: Optional[str] = None
 
         self._lock = asyncio.Lock()
 
@@ -63,6 +65,7 @@ class McpSseConnection:
             try:
                 self._ready.clear()
                 self._conn = None
+                self._initialized_session_id = None
 
                 url = f"{self.base_url}/sse"
                 async with self._client.stream(
@@ -87,11 +90,11 @@ class McpSseConnection:
                         # 1) Endpoint event gives us session + messages URL
                         if event_name == "endpoint":
                             # data like: /messages/?session_id=...
-                            m = re.search(r"session_id=([a-f0-9]+)", data)
+                            m = re.search(r"session_id=([^&\s]+)", data)
                             if not m:
                                 continue
                             session_id = m.group(1)
-                            messages_url = f"{self.base_url}{data}"
+                            messages_url = data if data.startswith("http") else f"{self.base_url}{data}"
 
                             self._conn = McpConnInfo(session_id=session_id, messages_url=messages_url)
                             self._ready.set()
@@ -119,6 +122,54 @@ class McpSseConnection:
                 self._pending.clear()
                 await asyncio.sleep(0.25)
 
+    async def _post_request_and_wait(self, msg: Dict[str, Any], timeout: float) -> Dict[str, Any]:
+        assert self._conn is not None
+
+        msg_id = msg["id"]
+        loop = asyncio.get_event_loop()
+        fut = loop.create_future()
+        self._pending[msg_id] = fut
+
+        try:
+            r = await self._client.post(self._conn.messages_url, json=msg)
+            r.raise_for_status()  # MCP typically returns 202 Accepted
+            return await asyncio.wait_for(fut, timeout=timeout)
+        except Exception:
+            pending = self._pending.pop(msg_id, None)
+            if pending and not pending.done():
+                pending.cancel()
+            raise
+
+    async def _initialize_if_needed(self) -> None:
+        assert self._conn is not None
+        if self._initialized_session_id == self._conn.session_id:
+            return
+
+        init_request = {
+            "jsonrpc": "2.0",
+            "id": int(time.time_ns() % 1_000_000_000),
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "agent-gateway", "version": "1.0.0"},
+            },
+        }
+        response = await self._post_request_and_wait(init_request, timeout=10.0)
+
+        if "error" in response:
+            raise RuntimeError(f"MCP initialize failed: {response['error']}")
+
+        notification = {
+            "jsonrpc": "2.0",
+            "method": "notifications/initialized",
+            "params": {},
+        }
+        notify_response = await self._client.post(self._conn.messages_url, json=notification)
+        notify_response.raise_for_status()
+
+        self._initialized_session_id = self._conn.session_id
+
     async def request(self, msg: Dict[str, Any], timeout: float = 10.0) -> Dict[str, Any]:
         """
         Send a JSON-RPC message and wait for response with matching id.
@@ -132,13 +183,7 @@ class McpSseConnection:
 
         assert self._conn is not None
 
-        msg_id = msg["id"]
-        loop = asyncio.get_event_loop()
-        fut = loop.create_future()
-        self._pending[msg_id] = fut
+        if msg.get("method") != "initialize":
+            await self._initialize_if_needed()
 
-        # POST to the SAME session's messages URL
-        r = await self._client.post(self._conn.messages_url, json=msg)
-        r.raise_for_status()  # MCP typically returns 202 Accepted
-
-        return await asyncio.wait_for(fut, timeout=timeout)
+        return await self._post_request_and_wait(msg, timeout=timeout)

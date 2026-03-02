@@ -2,11 +2,25 @@
 ## Development policy
 - **NEVER keep deprecated code.** Remove deprecated helpers and dead code; do not retain compatibility shims.
 - **NEVER consider backwards compatibility.** Breaking changes are acceptable — prefer clarity and correctness over preserving legacy APIs.
+
+## Documentation map (use these first)
+- Project overview: [README.md](../README.md)
+- Canonical architecture index: [docs/architecture.md](../docs/architecture.md)
+- Backend module guide: [backend/README.md](../backend/README.md)
+- Frontend module guide: [frontend/README.md](../frontend/README.md)
+- Analyzer module guide: [analyzer/README.md](../analyzer/README.md)
+- LLM stack guide: [llm-server/README.md](../llm-server/README.md)
+- Agent gateway guide: [llm-server/agent-gateway/README.md](../llm-server/agent-gateway/README.md)
+- MCP module guide: [mcp/README.md](../mcp/README.md)
+- Song metadata MCP guide: [mcp/song_metadata/README.md](../mcp/song_metadata/README.md)
+- Test module guide: [tests/README.md](../tests/README.md)
+
 ## Big-picture architecture
 - Backend is FastAPI + asyncio in [backend/main.py](../backend/main.py); it wires `StateManager`, `ArtNetService`, `SongService`, and `WebSocketManager` at startup and exposes only a WebSocket at `/ws`.
 - Real-time DMX flow: frontend sends WebSocket messages → `WebSocketManager.handle_message()` → `StateManager` updates → `ArtNetService` sends ArtDMX UDP packets (see [backend/api/websocket.py](../backend/api/websocket.py), [backend/store/state.py](../backend/store/state.py), and [backend/services/artnet.py](../backend/services/artnet.py)).
 - UI is Preact + Vite + preact-router + WaveSurfer. Entry is [frontend/src/App.jsx](../frontend/src/App.jsx); shared state + WebSocket logic lives in [frontend/src/app/state.jsx](../frontend/src/app/state.jsx); routed pages are under [frontend/src/pages](../frontend/src/pages). The UI uses a persistent app shell with a left icon menu and a right panel (player + chat).
 - Analyzer: manual scripts producing song metadata files under `analyzer/meta/<song>/info.json`; backend loads from `/app/meta` (mounted from `analyzer/meta` in Docker).
+- LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service (see [llm-server/README.md](../llm-server/README.md), [llm-server/agent-gateway/README.md](../llm-server/agent-gateway/README.md), [mcp/song_metadata/README.md](../mcp/song_metadata/README.md), and [CODEX_INSTRUCTIONS.md](../CODEX_INSTRUCTIONS.md)).
 
 ## Playback model (DMX canvas)
 - Cue sheets are **action-based** (not snapshot-only): each entry has `time`, `fixture_id`, `action`, `duration`, `data` (see [backend/models/cue.py](../backend/models/cue.py)).
@@ -49,7 +63,8 @@
   docker compose down && docker compose up --build -d
   ```
 
-- Docker compose runs both services; frontend at http://localhost:5000, backend at http://localhost:5001 (see [README.md](../README.md)).
+- Full compose stack also includes LLM/MCP services: llama.cpp (`:8080`), agent-gateway (`:8090`), song-metadata-mcp (`:8089`) per [README.md](../README.md).
+- Docker compose serves frontend at http://localhost:9000 and backend at http://localhost:5001 (see [README.md](../README.md)).
 
 ## Project-specific conventions
 - DMX channels are 1-based in messages and fixtures; `StateManager` stores a 0-based list of length 512.
@@ -59,6 +74,9 @@
 
 ## Canonical architecture doc
 - See [docs/architecture.md](../docs/architecture.md) for the detailed, up-to-date architecture.
+
+## Documentation update rule
+- If you change architecture, protocol, ports, module responsibilities, or workflows, update the relevant module README(s) and [README.md](../README.md) in the same change.
 
 ## Integration points
 - Art-Net UDP packet format is hand-built in [backend/services/artnet.py](../backend/services/artnet.py).
