@@ -47,12 +47,6 @@ This document describes the `analyzer` module: the song analysis scripts, how th
 - Common issues:
   - Analyzer heavy models: long-running steps may need GPUs; use the analyzer image/runtime configured for `nvidia` if available.
 
-## Required code changes for manual workflow
-
-- Remove `analyze_song` message handling from `WebSocketManager.handle_message` in [backend/api/websocket.py](backend/api/websocket.py).
-- Remove task lifecycle message handling (`task_submitted`, `analyze_progress`, `analyze_result`, `task_error`) from [frontend/src/app/state.jsx](frontend/src/app/state.jsx).
-- Relabel/rewire "Start analysis" action to "Reload Metadata" in [frontend/src/pages/SongAnalysisPage.jsx](frontend/src/pages/SongAnalysisPage.jsx) to send `load_song` or similar reload message.
-
 ---
 Reference: `analyzer/analyze_song.py`, `backend/store/state.py`, `backend/api/websocket.py`.
 

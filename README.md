@@ -4,9 +4,8 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, Ar
 
 ## System architecture
 
-AI Light Show is split into six primary modules:
+AI Light Show is split into five primary modules:
 
-- **frontend/**: Preact UI, WaveSurfer playback, and WebSocket control client.
 - **backend/**: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
 - **analyzer/**: Offline metadata generation (`analyzer/meta/<song>/...`).
 - **mcp/song_metadata/**: MCP server exposing read-only metadata query tools over SSE.
@@ -15,16 +14,16 @@ AI Light Show is split into six primary modules:
 
 ### Canonical runtime flow
 
-1. Frontend drives playback timeline and sends `timecode` / `seek` / `playback` over `/ws`.
+1. A control client sends `timecode` / `seek` / `playback` over `/ws`.
 2. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
-3. While paused, frontend edits (`delta`) update editor/output universes directly.
+3. While paused, client edits (`delta`) update editor/output universes directly.
 4. Preview requests (`preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata; backend consumes it from `/app/meta` in Docker.
 6. MCP server exposes metadata tools; agent-gateway forwards LLM tool calls to MCP.
 
 ### Important behavior constraints
 
-- Frontend audio timeline is authoritative.
+- Client playback timeline is authoritative.
 - While playing, backend rejects manual channel edits and preview requests.
 - Cue sheets are action-based and rendered into a full 60 FPS DMX canvas on song load.
 - Default startup song target is `Yonaka - Seize the Power` (fallback: first available).
@@ -33,7 +32,6 @@ AI Light Show is split into six primary modules:
 
 - [analyzer/README.md](analyzer/README.md)
 - [backend/README.md](backend/README.md)
-- [frontend/README.md](frontend/README.md)
 - [llm-server/README.md](llm-server/README.md)
 - [mcp/README.md](mcp/README.md)
 - [tests/README.md](tests/README.md)
@@ -57,15 +55,6 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### 3) Run frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-- Frontend dev URL: http://localhost:5173
 - Backend API/WS URL: http://localhost:5001 (`/ws`)
 
 ## Docker
@@ -74,7 +63,6 @@ npm run dev
 docker compose up --build
 ```
 
-- Frontend: http://localhost:9000
 - Backend: http://localhost:5001
 - LLM server: http://localhost:8080
 - Agent gateway: http://localhost:8090
@@ -107,16 +95,11 @@ ARTNET_DEBUG=1 ARTNET_DEBUG_FILE=./artnet-debug.log python backend/main.py
 
 ## Cross-module change rule
 
-When backend fixture effects are added, removed, renamed, or their parameters change, update:
-
-- `frontend/src/components/dmx/effectPreviewConfig.js`
-
-in the same change.
+When backend fixture effects are added, removed, renamed, or their parameters change, update protocol documentation and any active control client in the same change.
 
 ## Reference docs
 
 - `docs/architecture.md`
 - `docs/architecture/backend.md`
-- `docs/architecture/frontend.md`
 - `docs/architecture/analyzer.md`
-- `docs/ui/UI.md`
+- `docs/ui/UI_Future_state.md`

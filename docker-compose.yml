@@ -81,14 +81,5 @@ services:
       - ARTNET_DEBUG_FILE=${ARTNET_DEBUG_FILE:-}
     restart: unless-stopped
 
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "9000:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-
 volumes:
   analyzer_cache:

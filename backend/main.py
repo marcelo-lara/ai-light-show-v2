@@ -76,10 +76,10 @@ app = FastAPI(lifespan=lifespan, title="AI Light Show v2 Backend")
 songs_directory = Path("/app/songs") if Path("/app/songs").exists() else Path(__file__).parent / "songs"
 app.mount("/songs", StaticFiles(directory=songs_directory), name="songs")
 
-# CORS for frontend
+# CORS for browser-based control clients
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify frontend URL
+    allow_origins=["*"],  # In production, specify allowed client origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

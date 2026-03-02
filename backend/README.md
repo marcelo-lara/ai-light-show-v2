@@ -21,12 +21,12 @@ FastAPI + asyncio runtime responsible for real-time DMX state management and Art
 
 1. On startup, backend loads fixtures/POIs/cues, arms fixtures, starts Art-Net, and loads default song if available.
 2. Song load builds a precomputed 60 FPS DMX canvas for the full song window.
-3. Frontend sends timeline and authoring messages via WebSocket.
+3. A control client sends timeline and authoring messages via WebSocket.
 4. Backend updates output universe and Art-Net stream based on playback state.
 
 ## WebSocket protocol essentials
 
-### Frontend → Backend
+### Client → Backend
 
 - `delta`: set a single DMX channel (paused only).
 - `timecode`: continuous playback sync updates.
@@ -37,7 +37,7 @@ FastAPI + asyncio runtime responsible for real-time DMX state management and Art
 - `load_song`: switch song and rebuild canvas.
 - `save_sections`, `save_poi_target`, `chat`.
 
-### Backend → Frontend
+### Backend → Client
 
 - `initial`: full boot state payload.
 - `status`: global playback/preview state.
@@ -74,6 +74,6 @@ Default local URL: `http://localhost:5001`.
 ## LLM contributor checklist
 
 1. Preserve message compatibility unless intentionally changing protocol.
-2. Update frontend state handling when protocol fields change.
+2. Update client state handling when protocol fields change.
 3. Keep cue/effect behavior deterministic at 60 FPS.
-4. If fixture effect contracts change, update `frontend/src/components/dmx/effectPreviewConfig.js` in the same PR.
+4. If fixture effect contracts change, update protocol documentation and active client implementation in the same PR.

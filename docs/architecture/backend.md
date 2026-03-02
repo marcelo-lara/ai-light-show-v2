@@ -4,7 +4,7 @@ The backend is a FastAPI + asyncio service responsible for:
 
 - Maintaining show state (fixtures, cues, playback state).
 - Rendering a precomputed 60 FPS DMX canvas for the loaded song.
-- Selecting the correct frame for the frontend-provided timecode/seek.
+- Selecting the correct frame for the client-provided timecode/seek.
 - Emitting Art-Net DMX frames continuously.
 - Providing the *only* control plane via WebSocket at `/ws`.
 
@@ -48,7 +48,7 @@ Routing policy:
 4. Load a default song (first available or a preferred name).
 5. Build DMX canvas and sync frame 0 to output.
 
-### Playback (frontend-authoritative time)
+### Playback (client-authoritative time)
 
 - `playback`: toggles backend play state.
 - `timecode`: while playing, selects nearest canvas frame.
