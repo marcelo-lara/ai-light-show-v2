@@ -32,6 +32,11 @@
   flex: 1;
 }
 
+.song-player-col-zoom {
+  border-left: 1px dashed var(--border-strong);
+  padding-left: 24px;
+}
+
 .song-player-title {
   font-size: 13px;
 }

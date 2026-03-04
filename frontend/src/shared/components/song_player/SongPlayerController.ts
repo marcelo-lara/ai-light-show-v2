@@ -25,7 +25,7 @@ import { rebuildSongRegions } from "./logic/regions.ts";
 import { Waveform } from "./ui/Waveform.ts";
 import { TransportControls } from "./ui/TransportControls.ts";
 import { PlaybackReadout } from "./ui/PlaybackReadout.ts";
-import { PlayerOptions } from "./ui/PlayerOptions.ts";
+import { PlayerOptions, ZoomControl } from "./ui/PlayerOptions.ts";
 import { Layout } from "./ui/Layout.ts";
 
 export class SongPlayerController {
@@ -93,7 +93,6 @@ export class SongPlayerController {
       loopToggle,
       showSectionsToggle,
       showDownbeatsToggle,
-      zoomSlider,
     } = PlayerOptions({
       onLoopToggle: (checked) => {
         this.implicitLoopSectionIndex = null;
@@ -103,7 +102,11 @@ export class SongPlayerController {
       },
       onShowSectionsToggle: () => this.rebuildRegions(),
       onShowDownbeatsToggle: () => this.rebuildRegions(),
-      onZoomChange: () => this.applyZoom(),
+    });
+
+    const { container: zoomContainer, zoomSlider } = ZoomControl({
+      initialZoom: 40,
+      onZoom: () => this.applyZoom(),
     });
 
     this.root = Layout({
@@ -111,6 +114,7 @@ export class SongPlayerController {
       barBeat: barBeatEl,
       transport: transportContainer,
       options: optionsContainer,
+      zoom: zoomContainer,
       position: positionEl,
     });
 

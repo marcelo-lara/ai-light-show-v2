@@ -4,13 +4,11 @@ export function PlayerOptions(callbacks: {
   onLoopToggle: (checked: boolean) => void;
   onShowSectionsToggle: (checked: boolean) => void;
   onShowDownbeatsToggle: (checked: boolean) => void;
-  onZoomChange: (value: number) => void;
 }): {
   container: HTMLElement;
   loopToggle: HTMLInputElement;
   showSectionsToggle: HTMLInputElement;
   showDownbeatsToggle: HTMLInputElement;
-  zoomSlider: HTMLInputElement;
 } {
   const container = document.createElement("div");
   container.className = "song-player-options";
@@ -32,23 +30,40 @@ export function PlayerOptions(callbacks: {
   const showSections = toggle("Sections", true, callbacks.onShowSectionsToggle);
   const showDownbeats = toggle("Downbeats", true, callbacks.onShowDownbeatsToggle);
 
-  const zoom = Slider({
-    label: "zoom",
-    min: 10,
-    max: 180,
-    step: 10,
-    value: 40,
-    onInput: callbacks.onZoomChange,
-    className: "song-player-zoom",
-  });
-
-  container.append(loop.labelEl, showSections.labelEl, showDownbeats.labelEl, zoom);
+  container.append(loop.labelEl, showSections.labelEl, showDownbeats.labelEl);
 
   return {
     container,
     loopToggle: loop.inputEl,
     showSectionsToggle: showSections.inputEl,
     showDownbeatsToggle: showDownbeats.inputEl,
+  };
+}
+
+export function ZoomControl(opts: {
+  initialZoom: number;
+  onZoom: (val: number) => void;
+}): {
+  container: HTMLElement;
+  zoomSlider: HTMLInputElement;
+} {
+  const container = document.createElement("div");
+  container.className = "song-player-zoom-container";
+
+  const zoom = Slider({
+    label: "zoom",
+    min: 10,
+    max: 180,
+    step: 10,
+    value: opts.initialZoom,
+    onInput: opts.onZoom,
+    className: "song-player-zoom",
+  });
+
+  container.appendChild(zoom);
+
+  return {
+    container,
     zoomSlider: (zoom as any).input,
   };
 }
