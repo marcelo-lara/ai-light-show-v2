@@ -1,0 +1,33 @@
+.llm-chat {
+  display: grid;
+  gap: 10px;
+}
+
+.chat-history {
+  max-height: 300px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.chat-msg {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.chat-msg p {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+
+.prompt-row {
+  display: grid;
+  gap: 10px;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 8px;
+}

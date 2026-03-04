@@ -1,0 +1,9 @@
+.slider-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+}
+
+.slider-row input {
+  grid-column: 1 / -1;
+}

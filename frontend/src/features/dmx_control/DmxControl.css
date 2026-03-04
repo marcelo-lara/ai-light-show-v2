@@ -1,0 +1,25 @@
+.fixture-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.fixture-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.fixture-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.effect-tray {
+  display: flex;
+  gap: 8px;
+}

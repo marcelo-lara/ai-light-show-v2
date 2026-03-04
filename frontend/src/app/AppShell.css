@@ -1,0 +1,19 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 50px 1fr 360px;
+  min-height: 100dvh;
+  gap: 0;
+  padding: 0;
+}
+
+.main-content {
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px;
+}
+
+.view h1 {
+  margin-top: 0;
+}

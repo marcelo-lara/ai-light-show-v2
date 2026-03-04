@@ -12,6 +12,13 @@ export function renderDocument(opts: RenderOptions): string {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Light Show v2</title>
     <link rel="stylesheet" href="/src/app/themes.css" />
+    <link rel="stylesheet" href="/src/app/AppShell.css" />
+    <link rel="stylesheet" href="/src/shared/components/layout/Sidebar.css" />
+    <link rel="stylesheet" href="/src/shared/components/layout/RightPanel.css" />
+    <link rel="stylesheet" href="/src/shared/components/controls/Slider.css" />
+    <link rel="stylesheet" href="/src/shared/components/song_player/ui/SongPlayer.css" />
+    <link rel="stylesheet" href="/src/features/dmx_control/DmxControl.css" />
+    <link rel="stylesheet" href="/src/features/llm_chat/LlmChat.css" />
   </head>
   <body>
     <div id="app"></div>

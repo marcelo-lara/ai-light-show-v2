@@ -1,41 +1,38 @@
 export type SliderProps = {
-	label: string;
-	min: number;
-	max: number;
-	value: number;
-	step?: number;
-	onInput?: (value: number) => void;
-	onCommit?: (value: number) => void;
+  label?: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onInput: (value: number) => void;
+  className?: string;
 };
 
 export function Slider(props: SliderProps): HTMLElement {
-	const wrap = document.createElement("label");
-	wrap.className = "slider-row";
+  const container = document.createElement("label");
+  container.className = `slider-row ${props.className ?? ""}`;
 
-	const title = document.createElement("span");
-	title.textContent = props.label;
+  if (props.label) {
+    const labelText = document.createElement("span");
+    labelText.textContent = props.label;
+    container.appendChild(labelText);
+  }
 
-	const value = document.createElement("span");
-	value.className = "mono";
-	value.textContent = String(props.value);
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = String(props.min);
+  input.max = String(props.max);
+  input.step = String(props.step);
+  input.value = String(props.value);
 
-	const input = document.createElement("input");
-	input.type = "range";
-	input.min = String(props.min);
-	input.max = String(props.max);
-	input.step = String(props.step ?? 1);
-	input.value = String(props.value);
+  input.addEventListener("input", () => {
+    props.onInput(Number(input.value));
+  });
 
-	input.addEventListener("input", () => {
-		const next = Number(input.value);
-		value.textContent = String(next);
-		props.onInput?.(next);
-	});
+  container.appendChild(input);
 
-	input.addEventListener("change", () => {
-		props.onCommit?.(Number(input.value));
-	});
+  // Expose the input element for direct manipulation if needed
+  (container as any).input = input;
 
-	wrap.append(title, value, input);
-	return wrap;
+  return container;
 }

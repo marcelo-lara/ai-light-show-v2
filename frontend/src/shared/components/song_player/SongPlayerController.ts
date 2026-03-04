@@ -8,12 +8,11 @@ import {
   transportPlay,
   transportStop,
 } from "../../transport/transport_intents.ts";
-import { formatMs } from "./time.ts";
-import type { Section } from "./types.ts";
+import { formatMs } from "./logic/time.ts";
+import type { Section } from "./types/types.ts";
 import {
   cleanSortedNumeric,
   computeBarBeatLabel,
-  findCurrentSectionIndex,
   getImplicitLoopSectionIndex,
   getNextBeatTimeMs,
   getNextSectionTargetIndex,
@@ -21,8 +20,13 @@ import {
   getPrevSectionTargetIndex,
   normalizeSections,
   songFingerprint,
-} from "./song_logic.ts";
-import { rebuildSongRegions } from "./regions.ts";
+} from "./logic/song_logic.ts";
+import { rebuildSongRegions } from "./logic/regions.ts";
+import { Waveform } from "./ui/Waveform.ts";
+import { TransportControls } from "./ui/TransportControls.ts";
+import { PlaybackReadout } from "./ui/PlaybackReadout.ts";
+import { PlayerOptions } from "./ui/PlayerOptions.ts";
+import { Layout } from "./ui/Layout.ts";
 
 export class SongPlayerController {
   root: HTMLElement;
@@ -64,116 +68,66 @@ export class SongPlayerController {
   private appliedZoomValue: number | null = null;
 
   constructor() {
-    const root = document.createElement("section");
-    root.className = "card song-player";
-
-    const waveformWrap = document.createElement("div");
-    waveformWrap.className = "song-player-waveform";
-
-    const songLabel = document.createElement("div");
-    songLabel.className = "song-player-title muted";
-    songLabel.textContent = "No song loaded";
-
-    const waveform = document.createElement("div");
-    waveform.className = "song-player-wave";
-
-    waveformWrap.append(songLabel, waveform);
-
-    const controls = document.createElement("div");
-    controls.className = "song-player-controls";
-
-    const barBeat = document.createElement("div");
-    barBeat.className = "song-player-barbeat mono";
-    barBeat.textContent = "1.1";
-
-    const transport = document.createElement("div");
-    transport.className = "song-player-transport";
-
-    const prevSection = this.button("Prev Section", () => this.jumpPrevSection());
-    const prevBeat = this.button("Prev Beat", () => this.jumpPrevBeat());
-    const stop = this.button("Stop", () => this.handleStop());
-    const playPause = this.button("Play", () => this.togglePlayPause());
-    const nextBeat = this.button("Next Beat", () => this.jumpNextBeat());
-    const nextSection = this.button("Next Section", () => this.jumpNextSection());
-
-    transport.append(prevSection, prevBeat, stop, playPause, nextBeat, nextSection);
-
-    const options = document.createElement("div");
-    options.className = "song-player-options";
-
-    const loop = document.createElement("label");
-    loop.className = "song-player-inline-toggle";
-    const loopInput = document.createElement("input");
-    loopInput.type = "checkbox";
-    loopInput.addEventListener("change", () => {
-      this.implicitLoopSectionIndex = null;
-      if (loopInput.checked) {
-        this.primeImplicitLoopFromCurrentTime();
-      }
+    const { container: waveformContainer, wave: waveform, title: songLabel } = Waveform();
+    const {
+      container: transportContainer,
+      prevSectionBtn,
+      prevBeatBtn,
+      stopBtn,
+      playPauseBtn,
+      nextBeatBtn,
+      nextSectionBtn,
+    } = TransportControls({
+      onPrevSection: () => this.jumpPrevSection(),
+      onPrevBeat: () => this.jumpPrevBeat(),
+      onStop: () => this.handleStop(),
+      onPlayPause: () => this.togglePlayPause(),
+      onNextBeat: () => this.jumpNextBeat(),
+      onNextSection: () => this.jumpNextSection(),
     });
-    const loopText = document.createElement("span");
-    loopText.textContent = "Loop Regions";
-    loop.append(loopInput, loopText);
 
-    const showRegions = document.createElement("label");
-    showRegions.className = "song-player-inline-toggle";
-    const showRegionsInput = document.createElement("input");
-    showRegionsInput.type = "checkbox";
-    showRegionsInput.checked = true;
-    showRegionsInput.addEventListener("change", () => this.rebuildRegions());
-    const showRegionsText = document.createElement("span");
-    showRegionsText.textContent = "Show Sections";
-    showRegions.append(showRegionsInput, showRegionsText);
+    const { barBeatEl, positionEl } = PlaybackReadout();
 
-    const showDownbeats = document.createElement("label");
-    showDownbeats.className = "song-player-inline-toggle";
-    const showDownbeatsInput = document.createElement("input");
-    showDownbeatsInput.type = "checkbox";
-    showDownbeatsInput.checked = true;
-    showDownbeatsInput.addEventListener("change", () => this.rebuildRegions());
-    const showDownbeatsText = document.createElement("span");
-    showDownbeatsText.textContent = "Show Downbeats";
-    showDownbeats.append(showDownbeatsInput, showDownbeatsText);
-
-    const zoomWrap = document.createElement("label");
-    zoomWrap.className = "song-player-zoom";
-    const zoomText = document.createElement("span");
-    zoomText.textContent = "Zoom";
-    const zoomInput = document.createElement("input");
-    zoomInput.type = "range";
-    zoomInput.min = "10";
-    zoomInput.max = "180";
-    zoomInput.step = "10";
-    zoomInput.value = "40";
-    zoomInput.addEventListener("input", () => {
-      this.applyZoom();
+    const {
+      container: optionsContainer,
+      loopToggle,
+      showSectionsToggle,
+      showDownbeatsToggle,
+      zoomSlider,
+    } = PlayerOptions({
+      onLoopToggle: (checked) => {
+        this.implicitLoopSectionIndex = null;
+        if (checked) {
+          this.primeImplicitLoopFromCurrentTime();
+        }
+      },
+      onShowSectionsToggle: () => this.rebuildRegions(),
+      onShowDownbeatsToggle: () => this.rebuildRegions(),
+      onZoomChange: () => this.applyZoom(),
     });
-    zoomWrap.append(zoomText, zoomInput);
 
-    options.append(loop, showRegions, showDownbeats, zoomWrap);
+    this.root = Layout({
+      waveform: waveformContainer,
+      barBeat: barBeatEl,
+      transport: transportContainer,
+      options: optionsContainer,
+      position: positionEl,
+    });
 
-    const position = document.createElement("div");
-    position.className = "song-player-position mono muted";
-    position.textContent = "0:00 / 0:00";
-
-    controls.append(barBeat, transport, options, position);
-    root.append(waveformWrap, controls);
-
-    this.root = root;
     this.waveformEl = waveform;
-    this.barBeatEl = barBeat;
-    this.positionEl = position;
-    this.playPauseBtn = playPause;
-    this.zoomInput = zoomInput;
-    this.showRegionsInput = showRegionsInput;
-    this.showDownbeatsInput = showDownbeatsInput;
+    this.barBeatEl = barBeatEl;
+    this.positionEl = positionEl;
+    this.playPauseBtn = playPauseBtn;
+    this.zoomInput = zoomSlider;
+    this.showRegionsInput = showSectionsToggle;
+    this.showDownbeatsInput = showDownbeatsToggle;
     this.songLabelEl = songLabel;
 
-    this.prevSectionBtn = prevSection;
-    this.prevBeatBtn = prevBeat;
-    this.nextBeatBtn = nextBeat;
-    this.nextSectionBtn = nextSection;
-    this.loopToggle = loopInput;
+    this.prevSectionBtn = prevSectionBtn;
+    this.prevBeatBtn = prevBeatBtn;
+    this.nextBeatBtn = nextBeatBtn;
+    this.nextSectionBtn = nextSectionBtn;
+    this.loopToggle = loopToggle;
 
     this.updateControlAvailability();
   }
@@ -241,14 +195,6 @@ export class SongPlayerController {
     this.loopToggle.title = hasSections
       ? "Loop within selected section, or capture and loop the next section when none is selected"
       : "No sections available for loop regions";
-  }
-
-  private button(label: string, onClick: () => void): HTMLButtonElement {
-    const btn = document.createElement("button");
-    btn.className = "btn";
-    btn.textContent = label;
-    btn.addEventListener("click", onClick);
-    return btn;
   }
 
   private async togglePlayPause() {
@@ -385,10 +331,11 @@ export class SongPlayerController {
       progressColor: "var(--accent-2)",
       cursorColor: "var(--text)",
       height: 110,
-      width: "1900",
+      hideScrollbar: false,
+      fillParent: true,
+      width: "100%",
       minPxPerSec: 50,
       normalize: true,
-
       dragToSeek: true,
     });
 
@@ -576,7 +523,7 @@ export class SongPlayerController {
     if (this.appliedZoomValue === nextZoom) return;
 
     try {
-        console.log("Applying zoom:", nextZoom);
+      console.log("Applying zoom:", nextZoom);
       this.waveSurfer.zoom(nextZoom);
       this.appliedZoomValue = nextZoom;
     } catch {
