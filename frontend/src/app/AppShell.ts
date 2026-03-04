@@ -1,10 +1,10 @@
 import { Sidebar } from "../shared/components/layout/Sidebar.ts";
 import { RightPanel } from "../shared/components/layout/RightPanel.ts";
 import { getUiState, subscribeUiState } from "../shared/state/ui_state.ts";
-import { HomeView } from "../features/home/HomeView.ts";
 import { SongAnalysisView } from "../features/song_analysis/SongAnalysisView.ts";
 import { ShowBuilderView } from "../features/show_builder/ShowBuilderView.ts";
 import { DmxControlView } from "../features/dmx_control/DmxControlView.ts";
+import { ShowControlView } from "../features/show_control/ShowControlView.ts";
 import { subscribeBackendStore } from "../shared/state/backend_state.ts";
 import { subscribeLlmState } from "../features/llm_chat/llm_state.ts";
 
@@ -13,7 +13,7 @@ function renderMain(): HTMLElement {
 	if (route === "song_analysis") return SongAnalysisView();
 	if (route === "show_builder") return ShowBuilderView();
 	if (route === "dmx_control") return DmxControlView();
-	return HomeView();
+	return ShowControlView();
 }
 
 export function mountAppShell(root: HTMLElement) {

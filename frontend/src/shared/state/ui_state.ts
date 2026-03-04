@@ -1,4 +1,4 @@
-export type Route = "home" | "song_analysis" | "show_builder" | "dmx_control";
+export type Route = "song_analysis" | "show_builder" | "dmx_control" | "show_control";
 
 export type UiState = {
   route: Route;
@@ -10,13 +10,13 @@ const ROUTE_KEY = "ui_route";
 function readRoute(): Route {
   try {
     const value = localStorage.getItem(ROUTE_KEY);
-    if (value === "home" || value === "song_analysis" || value === "show_builder" || value === "dmx_control") {
+    if (value === "song_analysis" || value === "show_builder" || value === "dmx_control" || value === "show_control") {
       return value;
     }
   } catch {
     // ignore
   }
-  return "home";
+  return "song_analysis";
 }
 
 let ui: UiState = { route: readRoute() };

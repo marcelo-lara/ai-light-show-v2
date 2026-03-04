@@ -2,6 +2,7 @@
 ## Development policy
 - **NEVER keep deprecated code.** Remove deprecated helpers and dead code; do not retain compatibility shims.
 - **NEVER consider backwards compatibility.** Breaking changes are acceptable — prefer clarity and correctness over preserving legacy APIs.
+- **ALWAYS use 'ai-light' Python environment.** Use the pyenv virtualenv named `ai-light` for all local Python development.
 
 ## Documentation map (use these first)
 - Project overview: [README.md](../README.md)
