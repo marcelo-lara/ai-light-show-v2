@@ -39,6 +39,17 @@ FastAPI + asyncio runtime responsible for real-time DMX state management and Art
 - `snapshot`: full authoritative state + `seq`.
 - `patch`: event-driven state changes + `seq` and list of `{path, value}` updates.
 - `event`: info/warning/error notifications (including LLM stream chunks).
+- `state.song` payload includes current song metadata for shared player UIs:
+	- `filename`, `audio_url`, `length_s`, `bpm`
+	- `sections[]` with `{name,start_s,end_s}`
+	- `beats[]` and `downbeats[]`
+
+### Browser-owned playback/timecode sync
+
+- Browser player is authoritative for local audio playback and local timeline progression.
+- While browser playback is active, frontend sends `transport.jump_to_time` every 10 seconds.
+- Frontend sends immediate `transport.jump_to_time` on play/pause/seek/stop transitions.
+- Backend uses synced timecode to select nearest DMX canvas frame and drive Art-Net output.
 
 ## Data and file contracts
 

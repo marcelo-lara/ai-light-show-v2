@@ -32,9 +32,11 @@ AI Light Show v2 is split into five primary modules:
 
 ### Real-time playback loop
 
-1. Client sends `intent` actions for transport control while backend remains authoritative for playback state.
-2. Backend maps time → frame index and selects the nearest precomputed DMX canvas frame.
-3. Backend’s Art-Net service continuously emits `output_universe` at ~60 FPS.
+1. Browser-owned player controls real audio playback and local timecode progression.
+2. Client sends transport `intent` actions (`transport.play|pause|stop|jump_to_time`) and syncs current timecode to backend every 10 seconds while playing.
+3. Client also sends immediate `transport.jump_to_time` syncs on play, pause, seek, and stop.
+4. Backend maps time → frame index and selects the nearest precomputed DMX canvas frame.
+5. Backend’s Art-Net service continuously emits `output_universe` at ~60 FPS.
 
 ### Authoring loop (paused)
 

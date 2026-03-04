@@ -74,7 +74,24 @@ export type BackendState = {
     section_name?: string;
   };
   fixtures?: Record<string, FixtureState>;
+  song?: SongState | null;
   // Add other domains as backend evolves: analysis, show_builder, pois, etc.
+};
+
+export type SongState = {
+  filename?: string;
+  audio_url?: string | null;
+  length_s?: number | null;
+  bpm?: number | null;
+  sections?: SongSection[];
+  beats?: number[];
+  downbeats?: number[];
+};
+
+export type SongSection = {
+  name: string;
+  start_s: number;
+  end_s: number;
 };
 
 export type FixtureState = {

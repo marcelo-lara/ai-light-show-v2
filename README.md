@@ -24,6 +24,8 @@ AI Light Show is split into five primary modules:
 ### Important behavior constraints
 
 - Client playback timeline is authoritative.
+- Browser player owns real audio playback and local timecode.
+- Frontend syncs timecode to backend every 10 seconds while playing, plus immediate sync on play/pause/seek/stop.
 - While playing, backend rejects manual channel edits and preview requests.
 - Cue sheets are action-based and rendered into a full 60 FPS DMX canvas on song load.
 - Default startup song target is `Yonaka - Seize the Power` (fallback: first available).

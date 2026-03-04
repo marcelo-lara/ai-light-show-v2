@@ -1,4 +1,5 @@
 {
+  "nodeModulesDir": "auto",
   "tasks": {
     "dev": "deno run -A --watch dev.ts",
     "serve": "deno run -A dev.ts"

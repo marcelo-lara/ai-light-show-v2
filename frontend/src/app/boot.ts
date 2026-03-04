@@ -17,6 +17,15 @@ export type BootContext = {
 
 export function boot(ctx: BootContext) {
   initTheme(); // apply theme ASAP to avoid FOUC
+
+  try {
+    const ws = new URL(ctx.wsUrl);
+    const protocol = ws.protocol === "wss:" ? "https:" : "http:";
+    (globalThis as any).__BACKEND_HTTP_ORIGIN__ = `${protocol}//${ws.host}`;
+  } catch {
+    // ignore invalid ws url
+  }
+
   // 1) hydration/bootstrap
   const injected = (window.__BOOTSTRAP_STATE__ ?? null) as any;
   let bootstrap = injected;

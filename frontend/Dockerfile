@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY . .
 
+RUN deno install
 RUN deno cache dev.ts
 
 EXPOSE 5173

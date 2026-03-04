@@ -1,0 +1,8 @@
+{
+  "name": "ai-light-show-frontend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "wavesurfer.js": "7.8.15"
+  }
+}

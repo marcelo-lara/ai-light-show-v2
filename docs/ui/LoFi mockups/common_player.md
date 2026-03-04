@@ -34,3 +34,10 @@ Format: 1.1 (bar.beat) in big numbers
 
 - Zoom level of the WaveSurfer component
 
+## Runtime contract
+
+- Browser owns real audio playback and local timecode progression.
+- While playing, client syncs backend timecode every 10 seconds.
+- Client also sends immediate backend timecode sync on play, pause, seek, and stop.
+- Controls are enabled when required song metadata exists (`beats` for beat nav, `sections` for section nav/loop).
+

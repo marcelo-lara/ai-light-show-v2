@@ -271,6 +271,8 @@ class WebSocketManager:
                 "capabilities": capabilities,
             }
 
+        song_payload = self._build_song_payload()
+
         return {
             "system": {
                 "show_state": show_state,
@@ -283,6 +285,61 @@ class WebSocketManager:
                 "section_name": section_name,
             },
             "fixtures": fixtures,
+            "song": song_payload,
+        }
+
+    def _build_song_payload(self) -> Optional[Dict[str, Any]]:
+        song = self.state_manager.current_song
+        if not song:
+            return None
+
+        metadata = getattr(song, "metadata", None)
+        hints = getattr(metadata, "hints", {}) or {}
+        drums = getattr(metadata, "drums", {}) or {}
+        parts = getattr(metadata, "parts", {}) or {}
+
+        sections: List[Dict[str, Any]] = []
+        for name, rng in parts.items():
+            if not isinstance(rng, list) or len(rng) < 2:
+                continue
+            try:
+                start = float(rng[0])
+                end = float(rng[1])
+            except Exception:
+                continue
+            sections.append({
+                "name": str(name),
+                "start_s": start,
+                "end_s": end,
+            })
+
+        sections.sort(key=lambda item: float(item.get("start_s", 0.0)))
+
+        def _pick_numeric_list(*candidates: Any) -> List[float]:
+            for candidate in candidates:
+                if not isinstance(candidate, list):
+                    continue
+                picked: List[float] = []
+                for value in candidate:
+                    try:
+                        picked.append(float(value))
+                    except Exception:
+                        continue
+                if picked:
+                    return picked
+            return []
+
+        beats = _pick_numeric_list(hints.get("beats"), drums.get("beats"))
+        downbeats = _pick_numeric_list(hints.get("downbeats"), drums.get("downbeats"))
+
+        return {
+            "filename": str(getattr(song, "filename", "") or ""),
+            "audio_url": getattr(song, "audioUrl", None),
+            "length_s": getattr(metadata, "length", None),
+            "bpm": getattr(metadata, "bpm", None),
+            "sections": sections,
+            "beats": beats,
+            "downbeats": downbeats,
         }
 
     async def _broadcast_patch(self, before: Dict[str, Any], after: Dict[str, Any]):

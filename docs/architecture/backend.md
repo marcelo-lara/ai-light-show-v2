@@ -48,12 +48,13 @@ Routing policy:
 4. Load a default song (first available or a preferred name).
 5. Build DMX canvas and sync frame 0 to output.
 
-### Playback (client-authoritative time)
+### Playback (browser-authoritative time)
 
-- `playback`: toggles backend play state.
-- `timecode`: while playing, selects nearest canvas frame.
-- `seek`: selects frame immediately; when paused also sends a snapshot (`dmx_frame`) so UI sliders match the preview.
-- If playback starts while a preview is active, preview is cancelled immediately.
+- Frontend uses `intent` transport actions (`transport.play|pause|stop|jump_to_time`).
+- Browser player owns local audio playback and local timecode progression.
+- While playing, frontend syncs backend timecode every 10 seconds via `transport.jump_to_time`.
+- Frontend also sends immediate `transport.jump_to_time` on play/pause/seek/stop actions.
+- Backend maps synced timecode to nearest precomputed DMX canvas frame for Art-Net output.
 
 ### Effect preview
 
