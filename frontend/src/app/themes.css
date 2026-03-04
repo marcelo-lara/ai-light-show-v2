@@ -333,6 +333,7 @@ input[type="range"] {
   border: 1px solid var(--border);
   background: var(--card-2);
   padding: 6px;
+  max-width: 1900px;
 }
 
 .song-player-controls {

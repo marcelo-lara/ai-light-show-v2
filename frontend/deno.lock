@@ -14,7 +14,7 @@
     "jsr:@std/path@^1.1.4": "1.1.4",
     "jsr:@std/streams@^1.0.17": "1.0.17",
     "npm:esbuild@0.25.1": "0.25.1",
-    "npm:wavesurfer.js@7.8.15": "7.8.15"
+    "npm:wavesurfer.js@7.12.1": "7.12.1"
   },
   "jsr": {
     "@std/cli@1.0.28": {
@@ -171,8 +171,8 @@
         "@esbuild/win32-x64"
       ]
     },
-    "wavesurfer.js@7.8.15": {
-      "integrity": "sha512-fWNnQt5BEGzuoJ7HRxfvpT1rOEI1AmCGPZ/+7QDkDVN/m2vIBeLVQ+5vENRMz1YwvZ/u1No0UV492/o8G++KXQ=="
+    "wavesurfer.js@7.12.1": {
+      "integrity": "sha512-NswPjVHxk0Q1F/VMRemCPUzSojjuHHisQrBqQiRXg7MVbe3f5vQ6r0rTTXA/a/neC/4hnOEC4YpXca4LpH0SUg=="
     }
   },
   "workspace": {
@@ -184,7 +184,7 @@
     ],
     "packageJson": {
       "dependencies": [
-        "npm:wavesurfer.js@7.8.15"
+        "npm:wavesurfer.js@7.12.1"
       ]
     }
   }

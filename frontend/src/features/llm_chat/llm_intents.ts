@@ -1,5 +1,6 @@
 import type { IntentMsg } from "../../shared/transport/protocol.ts";
 import { addSystemMessage, addUserMessage, setLlmStatus } from "./llm_state.ts";
+import { makeId } from "../../shared/utils/id.ts";
 
 function wsSend(msg: IntentMsg) {
   const ws = (globalThis as any).__WS_CLIENT__;
@@ -8,7 +9,7 @@ function wsSend(msg: IntentMsg) {
 }
 
 function reqId() {
-  return crypto.randomUUID();
+  return makeId();
 }
 
 export function sendPrompt(prompt: string) {

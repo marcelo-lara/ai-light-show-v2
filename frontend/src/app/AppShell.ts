@@ -7,6 +7,7 @@ import { DmxControlView } from "../features/dmx_control/DmxControlView.ts";
 import { ShowControlView } from "../features/show_control/ShowControlView.ts";
 import { subscribeBackendStore } from "../shared/state/backend_state.ts";
 import { subscribeLlmState } from "../features/llm_chat/llm_state.ts";
+import { refreshSongPlayer } from "../shared/components/song_player/SongPlayer.ts";
 
 function renderMain(): HTMLElement {
 	const route = getUiState().route;
@@ -17,25 +18,48 @@ function renderMain(): HTMLElement {
 }
 
 export function mountAppShell(root: HTMLElement) {
-	const render = () => {
-		root.innerHTML = "";
+	root.innerHTML = "";
 
-		const layout = document.createElement("div");
-		layout.className = "app-shell";
+	const layout = document.createElement("div");
+	layout.className = "app-shell";
 
-		const sidebar = Sidebar();
-		const main = document.createElement("main");
-		main.className = "main-content";
-		main.appendChild(renderMain());
-		const right = RightPanel();
+	let sidebar = Sidebar();
+	const main = document.createElement("main");
+	main.className = "main-content";
+	main.appendChild(renderMain());
+	let right = RightPanel();
 
-		layout.append(sidebar, main, right);
-		root.appendChild(layout);
+	layout.append(sidebar, main, right);
+	root.appendChild(layout);
+
+	const renderRoute = () => {
+		const nextSidebar = Sidebar();
+		layout.replaceChild(nextSidebar, sidebar);
+		sidebar = nextSidebar;
+
+		main.replaceChildren(renderMain());
 	};
 
-	render();
+	const renderRight = () => {
+		const nextRight = RightPanel();
+		layout.replaceChild(nextRight, right);
+		right = nextRight;
+	};
 
-	subscribeUiState(render);
-	subscribeBackendStore(render);
-	subscribeLlmState(render);
+	subscribeUiState(() => {
+		renderRoute();
+		renderRight();
+	});
+
+	subscribeBackendStore(() => {
+		if (getUiState().route === "dmx_control") {
+			main.replaceChildren(renderMain());
+		}
+		refreshSongPlayer();
+		renderRight();
+	});
+
+	subscribeLlmState(() => {
+		renderRight();
+	});
 }

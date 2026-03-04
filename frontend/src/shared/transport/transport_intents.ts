@@ -1,4 +1,5 @@
 import type { IntentMsg } from "./protocol.ts";
+import { makeId } from "../utils/id.ts";
 
 function wsSend(msg: IntentMsg) {
   const ws = (globalThis as any).__WS_CLIENT__;
@@ -7,7 +8,7 @@ function wsSend(msg: IntentMsg) {
 }
 
 function reqId() {
-  return crypto.randomUUID();
+  return makeId();
 }
 
 export function transportPlay() {

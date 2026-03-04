@@ -1,3 +1,5 @@
+import { makeId } from "../../shared/utils/id.ts";
+
 export type LlmStatus = "idle" | "streaming" | "error";
 
 export type ChatRole = "user" | "assistant" | "system";
@@ -38,7 +40,7 @@ export function setLlmStatus(status: LlmStatus, lastError?: string) {
 export function addUserMessage(text: string) {
   state = {
     ...state,
-    messages: [...state.messages, { id: crypto.randomUUID(), role: "user", text }],
+    messages: [...state.messages, { id: makeId(), role: "user", text }],
   };
   emit();
 }
@@ -46,7 +48,7 @@ export function addUserMessage(text: string) {
 export function addAssistantMessage(text: string) {
   state = {
     ...state,
-    messages: [...state.messages, { id: crypto.randomUUID(), role: "assistant", text }],
+    messages: [...state.messages, { id: makeId(), role: "assistant", text }],
     status: "idle",
     streamingText: "",
   };
@@ -57,7 +59,7 @@ export function addSystemMessage(text: string, kind: "info" | "error" = "info") 
   state = {
     ...state,
     status: kind === "error" ? "error" : state.status,
-    messages: [...state.messages, { id: crypto.randomUUID(), role: "system", text, kind }],
+    messages: [...state.messages, { id: makeId(), role: "system", text, kind }],
   };
   emit();
 }
@@ -75,7 +77,7 @@ export function finishStreaming() {
   if (state.streamingText.trim().length > 0) {
     state = {
       ...state,
-      messages: [...state.messages, { id: crypto.randomUUID(), role: "assistant", text: state.streamingText }],
+      messages: [...state.messages, { id: makeId(), role: "assistant", text: state.streamingText }],
       streamingText: "",
       status: "idle",
     };
