@@ -5,6 +5,8 @@
   --card: #121c28;
   --card-2: #0e1722;
 
+  --side-menu: #171718;
+
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
 
@@ -114,7 +116,6 @@ body {
 .right-panel,
 .main-content {
   background: var(--panel);
-  border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 12px;
 }
