@@ -9,7 +9,27 @@ services:
       - BACKEND_WS_HOST=localhost:5001
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "deno eval \"await fetch('http://localhost:5173/health')\""]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     restart: unless-stopped
+
+  qa:
+    build:
+      context: .
+      dockerfile: qa/Dockerfile
+    profiles: ["qa"]
+    depends_on:
+      frontend:
+        condition: service_healthy
+    environment:
+      - BASE_URL=http://frontend:5173
+    volumes:
+      - ./qa/artifacts:/app/qa/artifacts
+    shm_size: "1gb"
+    restart: "no"
 
   song-metadata-mcp:
     build: ./mcp/song_metadata

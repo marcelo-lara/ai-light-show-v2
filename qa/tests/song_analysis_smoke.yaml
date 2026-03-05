@@ -1,0 +1,24 @@
+name: Song Analysis - Smoke
+
+base_url: "http://frontend:5173"
+
+steps:
+  - goto: "/"
+
+  - click:
+      role: "button"
+      name: "Song Analysis"
+
+  - expect:
+      visible:
+        css: "[data-testid='song-analysis-page']"
+
+  - expect:
+      count:
+        css: "[data-testid='song-analysis-column']"
+        equals: 3
+
+  - expect:
+      texts:
+        css: "[data-testid='song-analysis-column-title']"
+        equals: ["Beats", "Sections", "Detections"]
