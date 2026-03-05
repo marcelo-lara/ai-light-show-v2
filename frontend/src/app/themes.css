@@ -14,7 +14,7 @@
   --muted: rgba(255, 255, 255, 0.64);
   --faint: rgba(255, 255, 255, 0.42);
 
-  --accent: #69a7ff;
+  --accent: #9000dd;
   --accent-2: #7ef0c2;
 
   --ok: #46d37a;
@@ -268,25 +268,6 @@ input[type="range"] {
 .chat-msg p {
   margin: 4px 0 0;
   white-space: pre-wrap;
-}
-
-.fixture-grid {
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-}
-
-.fixture-card {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--card);
-  padding: 10px;
-  display: grid;
-  gap: 8px;
-}
-
-.fixture-card-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
 }
 
 .mono {

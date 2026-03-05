@@ -6,16 +6,17 @@
 }
 
 .slider-value {
-  min-width: 2.5em;
   text-align: right;
   font-family: monospace;
-  font-size: 0.9em;
-  color: #ccc;
+  font-size: 0.8em;
+  background-color: var(--accent);
+  color: var(--text);
+  padding: 0.2em;  
 }
 
 /* Custom range slider (DMX control) */
 .slider-row input {
-  --slider-fill-color: #3f6df6;
+  --slider-fill-color: var(--accent);
   --slider-track-color: #4a4a4a;
   --slider-fill: 50%;
   --slider-track-height: 2px;
