@@ -11,7 +11,8 @@
   font-size: 0.8em;
   background-color: var(--accent);
   color: var(--text);
-  padding: 0.2em;  
+  padding: 0.2em;
+  min-width: 2.4em
 }
 
 /* Custom range slider (DMX control) */
