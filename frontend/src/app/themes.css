@@ -184,7 +184,6 @@ body {
 }
 
 .card {
-  border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 10px;
   background: var(--card);

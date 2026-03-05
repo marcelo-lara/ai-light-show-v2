@@ -6,8 +6,6 @@ import { SongPlayer } from "../../shared/components/song_player/SongPlayer.ts";
 export function SongAnalysisView(): HTMLElement {
 	const wrap = document.createElement("section");
 	wrap.className = "view";
-	const title = document.createElement("h1");
-	title.textContent = "Song Analysis";
-	wrap.append(title, SongPlayer(), AnalysisPlot(), BeatTable(), ChordsPanel());
+	wrap.append(SongPlayer(), AnalysisPlot(), BeatTable(), ChordsPanel());
 	return wrap;
 }

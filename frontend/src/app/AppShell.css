@@ -9,9 +9,7 @@
 .main-content {
   overflow: auto;
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 12px;
+  padding: 0 12px;
 }
 
 .view h1 {

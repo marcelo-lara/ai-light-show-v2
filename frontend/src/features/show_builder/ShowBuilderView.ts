@@ -6,8 +6,6 @@ import { SongPlayer } from "../../shared/components/song_player/SongPlayer.ts";
 export function ShowBuilderView(): HTMLElement {
 	const wrap = document.createElement("section");
 	wrap.className = "view";
-	const title = document.createElement("h1");
-	title.textContent = "Show Builder";
-	wrap.append(title, SongPlayer(), SongProgression(), EffectPlaylist(), EffectPicker());
+	wrap.append(SongPlayer(), SongProgression(), EffectPlaylist(), EffectPicker());
 	return wrap;
 }

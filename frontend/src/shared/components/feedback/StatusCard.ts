@@ -47,7 +47,7 @@ export function StatusCard(): HTMLElement {
   content.appendChild(row("Edits", Badge(cap(model.edits), model.edits === "locked" ? "warn" : "ok")));
   content.appendChild(row("ARM", Badge(model.arm, "default")));
   content.appendChild(row("LLM", Badge(cap(model.llm), llmTone(model.llm))));
-  content.appendChild(row("Sync", Badge(model.stale ? "Stale" : "Live", model.stale ? "warn" : "ok")));
+  content.appendChild(row("Sync", Badge(model.stale ? "Stale" : "Connected", model.stale ? "warn" : "ok")));
 
   const themeRow = document.createElement("label");
   themeRow.className = "status-row";

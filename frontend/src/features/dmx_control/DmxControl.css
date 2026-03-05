@@ -23,3 +23,15 @@
   display: flex;
   gap: 8px;
 }
+
+.dmx-arm {
+  width: 48px;
+  height: 24px;
+  padding: 0;
+  font-size: 0.6rem;
+}
+
+.fixture-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}

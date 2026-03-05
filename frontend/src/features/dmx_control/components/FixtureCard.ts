@@ -31,8 +31,8 @@ export function FixtureCard(_props: FixtureCardProps) {
 
   const armButton = document.createElement("button");
   armButton.type = "button";
-  armButton.className = `btn ${props.fixture.armed ? "primary" : ""}`.trim();
-  armButton.textContent = props.fixture.armed ? "ARMED" : "DISARMED";
+  armButton.className = `btn dmx-arm ${props.fixture.armed ? "primary" : ""}`.trim();
+  armButton.textContent = props.fixture.armed ? "ARMED" : "ARM";
   armButton.addEventListener("click", () => {
     setArm(props.fixture.id, !props.fixture.armed);
   });
