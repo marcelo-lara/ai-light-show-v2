@@ -25,11 +25,26 @@ export function Slider(props: SliderProps): HTMLElement {
   input.step = String(props.step);
   input.value = String(props.value);
 
+  const valueDisplay = document.createElement("div");
+  valueDisplay.className = "slider-value";
+  valueDisplay.textContent = String(props.value);
+
+  const updateFill = () => {
+    const percent = ((Number(input.value) - props.min) / (props.max - props.min)) * 100;
+    input.style.setProperty("--slider-fill", `${percent}%`);
+    valueDisplay.textContent = input.value;
+  };
+
   input.addEventListener("input", () => {
+    updateFill();
     props.onInput(Number(input.value));
   });
 
+  // Initial fill state
+  updateFill();
+
   container.appendChild(input);
+  container.appendChild(valueDisplay);
 
   // Expose the input element for direct manipulation if needed
   (container as any).input = input;
