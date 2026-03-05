@@ -52,9 +52,9 @@ export function ZoomControl(opts: {
 
   const zoom = Slider({
     label: "zoom",
-    min: 10,
+    min: 1,
     max: 180,
-    step: 10,
+    step: 5,
     value: opts.initialZoom,
     onInput: opts.onZoom,
     className: "song-player-zoom",
