@@ -5,6 +5,22 @@ base_url: "http://frontend:5173"
 steps:
   - goto: "/"
 
+  - expect:
+      text:
+        css: "[data-testid='ws-status']"
+        equals: "connected"
+        timeout: 15000
+
+  - expect:
+      text:
+        css: "[data-testid='sync-status']"
+        equals: "Connected"
+        timeout: 15000
+
+  - expect:
+      visible:
+        css: "[data-testid='song-card']"
+
   - click:
       role: "button"
       name: "Song Analysis"

@@ -41,13 +41,13 @@ export function StatusCard(): HTMLElement {
   const content = document.createElement("div");
   content.className = "status-grid";
 
-  content.appendChild(row("WS", Badge(model.ws, wsTone(model.ws))));
+  content.appendChild(row("WS", Badge(model.ws, wsTone(model.ws), "ws-status"), "ws-label"));
   content.appendChild(row("Show", Badge(cap(model.show), showTone(model.show))));
   content.appendChild(row("Playback", Badge(`${cap(model.playback.state)} @ ${model.playback.time}`, playbackTone(model.playback.state))));
   content.appendChild(row("Edits", Badge(cap(model.edits), model.edits === "locked" ? "warn" : "ok")));
   content.appendChild(row("ARM", Badge(model.arm, "default")));
   content.appendChild(row("LLM", Badge(cap(model.llm), llmTone(model.llm))));
-  content.appendChild(row("Sync", Badge(model.stale ? "Stale" : "Connected", model.stale ? "warn" : "ok")));
+  content.appendChild(row("Sync", Badge(model.stale ? "Stale" : "Connected", model.stale ? "warn" : "ok", "sync-status"), "sync-label"));
 
   const themeRow = document.createElement("label");
   themeRow.className = "status-row";
@@ -70,10 +70,11 @@ export function StatusCard(): HTMLElement {
   return Card(content, { title: "Status" });
 }
 
-function row(label: string, value: HTMLElement): HTMLElement {
+function row(label: string, value: HTMLElement, labelTestId?: string): HTMLElement {
   const wrapper = document.createElement("div");
   wrapper.className = "status-row";
   const left = document.createElement("span");
+  if (labelTestId) left.setAttribute("data-testid", labelTestId);
   left.textContent = label;
   wrapper.append(left, value);
   return wrapper;

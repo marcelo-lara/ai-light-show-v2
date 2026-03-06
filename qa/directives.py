@@ -26,6 +26,12 @@ def do_expect(page: Page, expect_spec: dict):
         css = expect_spec["visible"]["css"]
         print(f"STEP: expect visible css={css}")
         expect(page.locator(css)).to_be_visible()
+    elif "text" in expect_spec:
+        css = expect_spec["text"]["css"]
+        text = expect_spec["text"]["equals"]
+        timeout = expect_spec["text"].get("timeout", 5000)
+        print(f"STEP: expect text css={css} equals='{text}' timeout={timeout}")
+        expect(page.locator(css)).to_have_text(text, timeout=timeout)
     elif "count" in expect_spec:
         css = expect_spec["count"]["css"]
         count = expect_spec["count"]["equals"]
