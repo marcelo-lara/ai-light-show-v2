@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="playerPrev" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24">
+  <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <defs>
+    <style>
+      .st0 {
+        stroke: #868686;
+      }
+
+      .st0, .st1 {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2px;
+      }
+
+      .st1 {
+        stroke: #000cfe;
+      }
+    </style>
+  </defs>
+  <path id="vector" class="st0" d="M22.5,3.24h0c0-1.41-1.62-2.23-2.77-1.41L7.42,10.58c-.97.7-.97,2.13,0,2.82l12.31,8.76c1.16.82,2.77,0,2.77-1.41V3.23s0,0,0,0Z"/>
+  <path id="vector1" data-name="vector" class="st1" d="M1.5,22.5V1.5"/>
+</svg>
