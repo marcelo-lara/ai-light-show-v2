@@ -32,6 +32,7 @@ export class SongPlayerController {
   private barBeatEl: HTMLElement;
   private positionEl: HTMLElement;
   private playPauseBtn: HTMLButtonElement;
+  private updatePlayPauseIcon: (playing: boolean) => void;
   private zoomInput: HTMLInputElement;
   private showRegionsInput: HTMLInputElement;
   private showDownbeatsInput: HTMLInputElement;
@@ -70,6 +71,7 @@ export class SongPlayerController {
       playPauseBtn,
       nextBeatBtn,
       nextSectionBtn,
+      updatePlayPauseIcon,
     } = TransportControls({
       onPrevSection: () => this.jumpPrevSection(),
       onPrevBeat: () => this.jumpPrevBeat(),
@@ -78,6 +80,9 @@ export class SongPlayerController {
       onNextBeat: () => this.jumpNextBeat(),
       onNextSection: () => this.jumpNextSection(),
     });
+
+    this.playPauseBtn = playPauseBtn;
+    this.updatePlayPauseIcon = updatePlayPauseIcon;
 
     const { barBeatEl, positionEl } = PlaybackReadout();
 
@@ -147,13 +152,13 @@ export class SongPlayerController {
       },
       onFinish: () => {
         this.isPlaying = false;
-        this.playPauseBtn.textContent = "Play";
+        this.updatePlayPauseIcon(false);
         this.playbackSync.stop();
         this.playbackSync.syncNow(this.localTimeMs);
       },
       onPlay: () => {
         this.isPlaying = true;
-        this.playPauseBtn.textContent = "Pause";
+        this.updatePlayPauseIcon(true);
         if (this.loopToggle.checked && this.selectedSectionIndex === null) {
           this.primeImplicitLoopFromCurrentTime();
         }
@@ -162,7 +167,7 @@ export class SongPlayerController {
       onPause: () => {
         if (!this.isPlaying) return;
         this.isPlaying = false;
-        this.playPauseBtn.textContent = "Play";
+        this.updatePlayPauseIcon(false);
         this.playbackSync.stop();
         this.playbackSync.syncNow(this.localTimeMs);
       },
@@ -221,7 +226,7 @@ export class SongPlayerController {
       this.renderReadout();
     }
 
-    this.playPauseBtn.textContent = this.isPlaying ? "Pause" : "Play";
+    this.updatePlayPauseIcon(this.isPlaying);
     this.updateControlAvailability();
   }
 

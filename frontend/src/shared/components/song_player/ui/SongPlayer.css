@@ -53,13 +53,50 @@
 
 .song-player-transport {
   display: flex;
-  gap: 4px;
+  gap: 8px;
+  align-items: center;
 }
 
 .song-player-transport .btn {
-  padding: 6px 8px;
-  font-size: 12px;
-  min-width: 60px;
+  border: 0;
+  background: var(--card-2);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  place-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.song-player-transport .btn:hover {
+  background: var(--border-strong);
+}
+
+.song-player-transport .play-pause-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--accent);
+  color: white;
+  border-radius: 12px;
+}
+
+.song-player-transport .play-pause-btn:hover {
+  background: color-mix(in oklab, var(--accent) 80%, white);
+}
+
+.transport-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.play-pause-btn .transport-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
 }
 
 .song-player-options {

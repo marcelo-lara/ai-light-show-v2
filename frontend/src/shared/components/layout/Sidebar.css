@@ -37,6 +37,10 @@
   height: 24px;
 }
 
+.nav-icon .svg-accent {
+  stroke: var(--accent);
+}
+
 .nav-btn.active {
   border-color: var(--accent);
   background: color-mix(in oklab, var(--accent) 20%, var(--card-2));
