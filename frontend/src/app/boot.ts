@@ -51,6 +51,7 @@ export function boot(ctx: BootContext) {
       (globalThis as any).__WS_STATE__ = s;
     },
     onMessage: (m: WsInbound) => {
+      console.log("WS Dispatching Message:", m.type, m);
       if (m.type === "snapshot") {
         applySnapshot(m);
         try {

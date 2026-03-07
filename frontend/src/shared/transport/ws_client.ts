@@ -36,6 +36,7 @@ export class WsClient {
       try {
         const msg = JSON.parse(ev.data) as WsInbound;
         this.handlers.onMessage(msg);
+        console.log("WS received:", msg);
       } catch (e) {
         console.warn("WS parse error:", e);
       }

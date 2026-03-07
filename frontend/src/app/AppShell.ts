@@ -8,6 +8,7 @@ import { ShowControlView } from "../features/show_control/ShowControlView.ts";
 import { subscribeBackendStore } from "../shared/state/backend_state.ts";
 import { subscribeLlmState } from "../features/llm_chat/llm_state.ts";
 import { refreshSongPlayer } from "../shared/components/song_player/SongPlayer.ts";
+import { selectFixtureVms } from "../features/dmx_control/fixture_selectors.ts";
 
 function renderMain(): HTMLElement {
 	const route = getUiState().route;
@@ -26,7 +27,8 @@ export function mountAppShell(root: HTMLElement) {
 	let sidebar = Sidebar();
 	const main = document.createElement("main");
 	main.className = "main-content";
-	main.appendChild(renderMain());
+	let currentMain: HTMLElement = renderMain();
+	main.appendChild(currentMain);
 	let right = RightPanel();
 
 	layout.append(sidebar, main, right);
@@ -37,7 +39,8 @@ export function mountAppShell(root: HTMLElement) {
 		layout.replaceChild(nextSidebar, sidebar);
 		sidebar = nextSidebar;
 
-		main.replaceChildren(renderMain());
+		currentMain = renderMain();
+		main.replaceChildren(currentMain);
 	};
 
 	const renderRight = () => {
@@ -52,8 +55,30 @@ export function mountAppShell(root: HTMLElement) {
 	});
 
 	subscribeBackendStore(() => {
+		console.log("BackendStore updated, current route:", getUiState().route);
+		const vms = selectFixtureVms();
+		console.log(`Store update: ${vms.length} fixtures available`);
+
 		if (getUiState().route === "dmx_control") {
-			main.replaceChildren(renderMain());
+			// If we previously had 0 fixtures and now have some, force a full re-render
+			// to replace the "No fixtures" message with the actual grid.
+			const wasEmpty = main.innerText.includes("No fixtures in backend snapshot");
+			
+			if (wasEmpty && vms.length > 0) {
+				console.log("Fixtures arrived, forcing full re-render of Grid");
+				currentMain = renderMain();
+				main.replaceChildren(currentMain);
+			} else if (currentMain && (currentMain as any).updateFixtures) {
+				console.log("Performing partial update for DMX Control");
+				(currentMain as any).updateFixtures(vms);
+			} else {
+				console.log("No partial update available, re-rendering DmxControlView");
+				currentMain = renderMain();
+				main.replaceChildren(currentMain);
+			}
+		} else {
+			currentMain = renderMain();
+			main.replaceChildren(currentMain);
 		}
 		refreshSongPlayer();
 		renderRight();

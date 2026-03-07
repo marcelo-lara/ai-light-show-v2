@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 import json
+import asyncio
+import time
+import logging
 
 from fastapi import WebSocket, WebSocketDisconnect
 
-from services.artnet import ArtNetService
-from services.song_service import SongService
-from store.state import StateManager
+logger = logging.getLogger(__name__)
 
 
 class WebSocketManager:
@@ -18,6 +19,12 @@ class WebSocketManager:
         self.active_connections: List[WebSocket] = []
         self.seq: int = 0
         self.fixture_armed: Dict[str, bool] = {}
+        
+        # Throttling state
+        self._last_broadcast_time = 0.0
+        self._broadcast_throttle_ms = 50  # ~20 FPS for state updates
+        self._pending_broadcast_task: Optional[asyncio.Task] = None
+        self._last_state_snapshot: Optional[Dict[str, Any]] = None
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -31,11 +38,16 @@ class WebSocketManager:
 
     async def send_snapshot(self, websocket: WebSocket):
         state = await self._build_frontend_state()
+        self._last_state_snapshot = state # track last state for future patching
         msg = {
             "type": "snapshot",
             "seq": self._next_seq(),
             "state": state,
         }
+        logger.info(f"[WS] Sending snapshot to client (seq={msg['seq']}) with {len(state.get('fixtures', {}))} fixtures")
+        # Log fixtures state specifically as requested
+        for fid, fstate in state.get("fixtures", {}).items():
+            logger.debug(f"[WS] Fixture {fid}: values={fstate.get('values')}")
         await websocket.send_json(msg)
 
     async def broadcast(self, message: dict):
@@ -89,12 +101,53 @@ class WebSocketManager:
         if not isinstance(payload, dict):
             payload = {}
 
-        before = await self._build_frontend_state()
+        if not self._last_state_snapshot:
+            self._last_state_snapshot = await self._build_frontend_state()
+
         changed = await self._apply_intent(name, payload)
 
         if changed:
-            after = await self._build_frontend_state()
-            await self._broadcast_patch(before, after)
+            await self._schedule_broadcast()
+
+    async def _schedule_broadcast(self):
+        """Schedules a throttled broadcast of the current state."""
+        now = time.time()
+        time_since_last = (now - self._last_broadcast_time) * 1000.0
+
+        if self._pending_broadcast_task and not self._pending_broadcast_task.done():
+            # Already a broadcast pending, it will pick up the latest state
+            return
+
+        if time_since_last >= self._broadcast_throttle_ms:
+            # Enough time has passed, broadcast immediately
+            await self._execute_broadcast()
+        else:
+            # Schedule for later
+            delay = (self._broadcast_throttle_ms - time_since_last) / 1000.0
+            self._pending_broadcast_task = asyncio.create_task(self._delayed_broadcast(delay))
+
+    async def _delayed_broadcast(self, delay: float):
+        await asyncio.sleep(delay)
+        await self._execute_broadcast()
+
+    async def _execute_broadcast(self):
+        if not self.active_connections:
+            return
+
+        new_state = await self._build_frontend_state()
+        if self._last_state_snapshot:
+            await self._broadcast_patch(self._last_state_snapshot, new_state)
+        else:
+            # Fallback if no last snapshot exists (should be rare after first snapshot)
+            logger.warning("[WS] No previous snapshot to patch against, sending full snapshot")
+            await self.broadcast({
+                "type": "snapshot",
+                "seq": self._next_seq(),
+                "state": new_state,
+            })
+            
+        self._last_state_snapshot = new_state
+        self._last_broadcast_time = time.time()
 
     async def _apply_intent(self, name: str, payload: Dict[str, Any]) -> bool:
         self._ensure_arm_state_initialized()
@@ -154,16 +207,77 @@ class WebSocketManager:
                 return False
 
             should_flush = False
+            channel_types = fixture.meta.get("channel_types", {})
+            
             for channel_name, value in values.items():
-                if channel_name not in fixture.channels:
+                ctype = channel_types.get(channel_name)
+                print(f"[DEBUG] WS: setting {channel_name} to {value} for {fixture_id}, ctype={ctype}")
+                
+                # Check for preset/POI handling
+                if channel_name == "preset":
+                    preset_id = str(value)
+                    # Check if it's a POI for moving heads
+                    if hasattr(fixture, "_find_preset_values"):
+                        preset_values = fixture._find_preset_values(preset_id)
+                        if preset_values:
+                            # Recurse or apply direct values from the preset/POI
+                            # For simplicity we apply pan/tilt directly if present
+                            for k, v in preset_values.items():
+                                if k in ("pan", "tilt"):
+                                    # Assuming 16-bit for these
+                                    msb_key, lsb_key = f"{k}_msb", f"{k}_lsb"
+                                    if msb_key in fixture.channels and lsb_key in fixture.channels:
+                                        iv = int(v)
+                                        msb, lsb = (iv >> 8) & 0xFF, iv & 0xFF
+                                        applied_msb = await self.state_manager.update_dmx_channel(int(fixture.channels[msb_key]), msb)
+                                        applied_lsb = await self.state_manager.update_dmx_channel(int(fixture.channels[lsb_key]), lsb)
+                                        should_flush = should_flush or applied_msb or applied_lsb
                     continue
-                try:
-                    v = int(value)
-                except Exception:
-                    continue
-                channel = int(fixture.channels[channel_name])
-                applied = await self.state_manager.update_dmx_channel(channel, max(0, min(255, v)))
-                should_flush = should_flush or applied
+
+                # Check for position_16bit handling
+                if ctype == "position_16bit":
+                    msb_key = f"{channel_name}_msb"
+                    lsb_key = f"{channel_name}_lsb"
+                    if msb_key in fixture.channels and lsb_key in fixture.channels:
+                        try:
+                            v = int(value)
+                            msb, lsb = (v >> 8) & 0xFF, v & 0xFF
+                            
+                            applied_msb = await self.state_manager.update_dmx_channel(int(fixture.channels[msb_key]), msb)
+                            applied_lsb = await self.state_manager.update_dmx_channel(int(fixture.channels[lsb_key]), lsb)
+                            should_flush = should_flush or applied_msb or applied_lsb
+                        except Exception:
+                            continue
+                elif channel_name in fixture.channels:
+                    # Single-byte channel
+                    try:
+                        v = int(value)
+                        applied = await self.state_manager.update_dmx_channel(int(fixture.channels[channel_name]), max(0, min(255, v)))
+                        print(f"[DEBUG] WS: update_dmx_channel({fixture.channels[channel_name]}, {v}) -> {applied}")
+                        should_flush = should_flush or applied
+                    except Exception as e:
+                        print(f"[DEBUG] WS: exception in single-byte: {e}")
+                        continue
+                elif ctype in fixture.channels:
+                    # Logical name 'ctype' itself if maps to a fixture channel
+                    try:
+                        v = int(value)
+                        applied = await self.state_manager.update_dmx_channel(int(fixture.channels[ctype]), max(0, min(255, v)))
+                        print(f"[DEBUG] WS: update_dmx_channel({fixture.channels[ctype]}, {v}) [BY CTYPE] -> {applied}")
+                        should_flush = should_flush or applied
+                    except Exception as e:
+                        print(f"[DEBUG] WS: exception in ctype-byte: {e}")
+                        continue
+                else:
+                    # Fallback for raw channel names if not in types but in channels
+                    # This handles things like "dim", "red", etc. that may not be in channel_types explicitly
+                    if channel_name in fixture.channels:
+                        try:
+                            v = int(value)
+                            applied = await self.state_manager.update_dmx_channel(int(fixture.channels[channel_name]), max(0, min(255, v)))
+                            should_flush = should_flush or applied
+                        except Exception:
+                            continue
 
             if should_flush:
                 universe = await self.state_manager.get_output_universe()
@@ -245,19 +359,41 @@ class WebSocketManager:
 
         fixtures = {}
         for fixture in self.state_manager.fixtures:
-            channels = {}
-            for channel_name, channel_num in (fixture.channels or {}).items():
-                try:
-                    idx = int(channel_num) - 1
-                    if 0 <= idx < len(universe):
-                        channels[channel_name] = int(universe[idx])
-                except Exception:
-                    continue
-
+            # We use meta/channel_types to determine which logical values to send.
+            # If a channel is position_16bit, we combine MSB/LSB from the universe.
+            # Otherwise, we use the raw 8-bit value from the universe.
+            
+            logical_values = {}
+            channel_types = fixture.meta.get("channel_types", {})
+            
+            # Identify which base names are parts of 16-bit values
+            processed_channels = set()
             ftype = str(fixture.type or "").lower()
             capabilities: Dict[str, Any] = {}
             if "moving" in ftype and "head" in ftype:
                 capabilities["pan_tilt"] = True
+            
+            for channel_name, channel_type in channel_types.items():
+                if channel_type == "position_16bit":
+                    msb_key = f"{channel_name}_msb"
+                    lsb_key = f"{channel_name}_lsb"
+                    if msb_key in fixture.channels and lsb_key in fixture.channels:
+                        msb_idx = int(fixture.channels[msb_key]) - 1
+                        lsb_idx = int(fixture.channels[lsb_key]) - 1
+                        if 0 <= msb_idx < len(universe) and 0 <= lsb_idx < len(universe):
+                            val = (int(universe[msb_idx]) << 8) | int(universe[lsb_idx])
+                            logical_values[channel_name] = val
+                        processed_channels.add(msb_key)
+                        processed_channels.add(lsb_key)
+                else:
+                    # Single byte channel mapped by type (dimmer, color, etc.)
+                    target_channel_name = channel_type
+                    if target_channel_name in fixture.channels:
+                        idx = int(fixture.channels[target_channel_name]) - 1
+                        if 0 <= idx < len(universe):
+                            logical_values[channel_name] = int(universe[idx])
+                            processed_channels.add(target_channel_name)
+
             if "rgb" in ftype or {"red", "green", "blue"}.issubset(set((fixture.channels or {}).keys())):
                 capabilities["rgb"] = True
 
@@ -266,8 +402,7 @@ class WebSocketManager:
                 "name": fixture.name,
                 "type": fixture.type,
                 "armed": bool(self.fixture_armed.get(fixture.id, True)),
-                "values": dict(fixture.current_values or {}),
-                "channels": channels,
+                "values": logical_values,
                 "capabilities": capabilities,
             }
 
@@ -286,6 +421,7 @@ class WebSocketManager:
             },
             "fixtures": fixtures,
             "song": song_payload,
+            "pois": await self.state_manager.get_pois(),
         }
 
     def _build_song_payload(self) -> Optional[Dict[str, Any]]:
@@ -352,9 +488,15 @@ class WebSocketManager:
         if not changes:
             return
 
+        seq = self._next_seq()
+        logger.info(f"[WS] Broadcasting patch (seq={seq}) with {len(changes)} changes")
+        for change in changes:
+            if change["path"] == ["fixtures"]:
+                logger.debug(f"[WS] Fixtures changed: {json.dumps(change['value'], indent=2)}")
+
         await self.broadcast({
             "type": "patch",
-            "seq": self._next_seq(),
+            "seq": seq,
             "changes": changes,
         })
 
@@ -386,10 +528,13 @@ class WebSocketManager:
         return self.seq
 
 async def websocket_endpoint(websocket: WebSocket, manager: WebSocketManager):
+    logger.info(f"[WS] Connect request from {websocket.client}")
     await manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
+            logger.debug(f"[WS] Message received: {data[:100]}...")
             await manager.handle_message(websocket, data)
     except WebSocketDisconnect:
+        logger.info("[WS] Disconnected")
         manager.disconnect(websocket)

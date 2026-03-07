@@ -75,7 +75,18 @@ export type BackendState = {
   };
   fixtures?: Record<string, FixtureState>;
   song?: SongState | null;
+  pois?: Poi[];
   // Add other domains as backend evolves: analysis, show_builder, pois, etc.
+};
+
+export type Poi = {
+  id: string;
+  name: string;
+  location: {
+    x: number;
+    y: number;
+    z: number;
+  };
 };
 
 export type SongState = {

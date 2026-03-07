@@ -5,12 +5,14 @@ export type SliderProps = {
   step: number;
   value: number;
   onInput: (value: number) => void;
+  onCommit?: (value: number) => void;
   className?: string;
 };
 
 export function Slider(props: SliderProps): HTMLElement {
   const container = document.createElement("label");
   container.className = `slider-row ${props.className ?? ""}`;
+  let isDragging = false;
 
   if (props.label) {
     const labelText = document.createElement("span");
@@ -35,10 +37,31 @@ export function Slider(props: SliderProps): HTMLElement {
     valueDisplay.textContent = input.value;
   };
 
+  input.addEventListener("mousedown", () => { isDragging = true; });
+  input.addEventListener("touchstart", () => { isDragging = true; }, { passive: true });
+  
+  const endDrag = () => {
+    if (isDragging) {
+      isDragging = false;
+      if (props.onCommit) props.onCommit(Number(input.value));
+    }
+  };
+
+  window.addEventListener("mouseup", endDrag);
+  window.addEventListener("touchend", endDrag);
+
   input.addEventListener("input", () => {
     updateFill();
     props.onInput(Number(input.value));
   });
+
+  // Method to update value from outside only if not dragging
+  (container as any).setValue = (val: number) => {
+    if (!isDragging) {
+      input.value = String(val);
+      updateFill();
+    }
+  };
 
   // Initial fill state
   updateFill();
@@ -46,8 +69,7 @@ export function Slider(props: SliderProps): HTMLElement {
   container.appendChild(input);
   container.appendChild(valueDisplay);
 
-  // Expose the input element for direct manipulation if needed
-  (container as any).input = input;
-
   return container;
 }
+
+

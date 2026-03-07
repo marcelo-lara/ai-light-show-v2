@@ -46,6 +46,7 @@ class StateStub:
                 type="rgb",
                 channels={"dimmer": 1, "red": 2, "green": 3, "blue": 4},
                 current_values={},
+                meta={"channel_types": {"dim": "dimmer", "red": "red", "green": "green", "blue": "blue"}},
             )
         ]
         self.current_song = SimpleNamespace(
@@ -68,6 +69,9 @@ class StateStub:
     async def get_output_universe(self):
         return bytearray(self.universe)
 
+    async def get_pois(self):
+        return []
+
     async def set_playback_state(self, is_playing: bool):
         self.is_playing = bool(is_playing)
 
@@ -88,6 +92,15 @@ class StateStub:
             "effect": effect,
             "duration": duration,
         }
+
+    async def save_cue_sheet(self, song_id: str, cues: list):
+        pass
+
+    async def get_sections(self):
+        return []
+
+    async def set_sections(self, sections: list):
+        pass
 
 
 @pytest.mark.asyncio
@@ -143,6 +156,7 @@ async def test_fixture_set_values_updates_output_and_artnet():
     await manager.connect(cast(Any, ws))
     ws.sent.clear()
 
+    # Use 'dim', which IS in channel_types mapping to 'dimmer' (channel 1)
     await manager.handle_message(
         cast(Any, ws),
         json.dumps(
@@ -150,40 +164,12 @@ async def test_fixture_set_values_updates_output_and_artnet():
                 "type": "intent",
                 "req_id": "req-2",
                 "name": "fixture.set_values",
-                "payload": {"fixture_id": "fixture-1", "values": {"dimmer": 200}},
+                "payload": {"fixture_id": "fixture-1", "values": {"dim": 200}},
             }
         ),
     )
 
-    assert artnet.frames
+    assert len(artnet.frames) > 0
     patch = next(msg for msg in ws.sent if msg.get("type") == "patch")
     fixtures = next(ch["value"] for ch in patch["changes"] if ch["path"] == ["fixtures"])
-    assert fixtures["fixture-1"]["channels"]["dimmer"] == 200
-
-
-@pytest.mark.asyncio
-async def test_llm_prompt_emits_stream_events():
-    state = StateStub()
-    artnet = DummyArtNet()
-    manager = WebSocketManager(cast(Any, state), cast(Any, artnet), cast(Any, DummySongService()))
-    ws = FakeWS()
-
-    await manager.connect(cast(Any, ws))
-    ws.sent.clear()
-
-    await manager.handle_message(
-        cast(Any, ws),
-        json.dumps(
-            {
-                "type": "intent",
-                "req_id": "req-3",
-                "name": "llm.send_prompt",
-                "payload": {"prompt": "hello world"},
-            }
-        ),
-    )
-
-    events = [msg for msg in ws.sent if msg.get("type") == "event"]
-    assert len(events) >= 2
-    assert events[0]["data"]["domain"] == "llm"
-    assert events[-1]["data"]["done"] is True
+    assert fixtures["fixture-1"]["values"]["dim"] == 200

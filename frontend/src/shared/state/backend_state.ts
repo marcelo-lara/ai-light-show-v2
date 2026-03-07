@@ -34,6 +34,7 @@ export function initBackendState(initial?: BackendState, opts?: { stale?: boolea
 }
 
 export function applySnapshot(msg: SnapshotMsg) {
+  console.log("Applying Snapshot:", msg.seq, msg.state);
   store = {
     stale: false,
     seq: msg.seq,
@@ -43,7 +44,11 @@ export function applySnapshot(msg: SnapshotMsg) {
 }
 
 export function applyPatch(msg: PatchMsg) {
-  if (msg.seq <= store.seq) return;
+  console.log("Applying Patch:", msg.seq, msg.changes);
+  if (msg.seq <= store.seq) {
+    console.warn("Skipping Patch - older seq:", msg.seq, "<=", store.seq);
+    return;
+  }
 
   const next = structuredClone(store.state) as BackendState;
 

@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import os
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from store.state import StateManager
@@ -10,6 +11,13 @@ from services.artnet import ArtNetService
 from services.song_service import SongService
 from services.startup_animation import run_startup_blue_wipe
 from api.websocket import WebSocketManager, websocket_endpoint
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG if os.getenv("DEBUG", "0") in ("1", "true", "yes", "on") else logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
