@@ -4,8 +4,9 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, Ar
 
 ## System architecture
 
-AI Light Show is split into five primary modules:
+AI Light Show is split into six primary modules:
 
+- **frontend/**: UIX-based client acting as a "dumb console" mapping user actions to backend intents.
 - **backend/**: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
 - **analyzer/**: Offline metadata generation (`analyzer/meta/<song>/...`).
 - **mcp/song_metadata/**: MCP server exposing read-only metadata query tools over SSE.
@@ -32,6 +33,7 @@ AI Light Show is split into five primary modules:
 
 ## Module documentation (LLM-first)
 
+- [frontend/README.md](frontend/README.md)
 - [analyzer/README.md](analyzer/README.md)
 - [backend/README.md](backend/README.md)
 - [llm-server/README.md](llm-server/README.md)

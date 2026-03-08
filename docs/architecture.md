@@ -11,8 +11,9 @@ Use these module guides first, then drill into architecture detail docs.
 - MCP services: [../mcp/README.md](../mcp/README.md)
 - Tests module: [../tests/README.md](../tests/README.md)
 
-AI Light Show v2 is split into five primary modules:
+AI Light Show v2 is split into six primary modules:
 
+- Frontend: strictly a "dumb client" mapping user intents to websocket payloads.
 - Backend: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
 - Analyzer: offline metadata generation in `analyzer/meta/<song>/...`.
 - MCP song metadata service: read-only metadata query tools over SSE.
@@ -24,7 +25,7 @@ AI Light Show v2 is split into five primary modules:
 ### Canonical runtime flow
 
 1. Frontend sends `hello` and receives backend-authoritative `snapshot` + `patch` updates over `/ws`.
-2. Frontend emits only `intent` payloads; backend applies all domain logic and broadcasts state changes.
+2. Frontend emits only `intent` payloads; backend applies all domain logic and broadcasts state changes. The UI (frontend) is STRICTLY a client—absolutely no DMX logic is performed on the frontend.
 3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
 4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata and backend reads it from `/app/meta` in Docker.
@@ -32,8 +33,8 @@ AI Light Show v2 is split into five primary modules:
 
 ### Real-time playback loop
 
-1. Browser-owned player controls real audio playback and local timecode progression.
-2. Client sends transport `intent` actions (`transport.play|pause|stop|jump_to_time`) and syncs current timecode to backend every 10 seconds while playing.
+1. Browser-owned player controls real audio playback and local timecode progression. This timecode synchronization is the ONLY exception where the client leads the backend.
+2. Client sends transport `intent` actions (`transport.play|pause|stop|jump_to_time`) and syncs current timecode to backend every 10 seconds while playing. The backend time follows the song position provided by the client's audio timeline.
 3. Client also sends immediate `transport.jump_to_time` syncs on play, pause, seek, and stop.
 4. Backend maps time → frame index and selects the nearest precomputed DMX canvas frame.
 5. Backend’s Art-Net service continuously emits `output_universe` at ~60 FPS.
@@ -64,6 +65,7 @@ AI Light Show v2 is split into five primary modules:
 
 ## Module docs
 
+- Frontend module guide: [../frontend/README.md](../frontend/README.md)
 - Backend module guide: [../backend/README.md](../backend/README.md)
 - Analyzer module guide: [../analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [../llm-server/README.md](../llm-server/README.md)

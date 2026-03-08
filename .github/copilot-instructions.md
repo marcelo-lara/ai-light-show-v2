@@ -7,6 +7,7 @@
 ## Documentation map (use these first)
 - Project overview: [README.md](../README.md)
 - Canonical architecture index: [docs/architecture.md](../docs/architecture.md)
+- Frontend module guide: [frontend/README.md](../frontend/README.md)
 - Backend module guide: [backend/README.md](../backend/README.md)
 - Analyzer module guide: [analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [llm-server/README.md](../llm-server/README.md)
@@ -18,30 +19,21 @@
 ## Big-picture architecture
 - Backend is FastAPI + asyncio in [backend/main.py](../backend/main.py); it wires `StateManager`, `ArtNetService`, `SongService`, and `WebSocketManager` at startup and exposes only a WebSocket at `/ws`.
 - Real-time DMX flow: client sends WebSocket messages → `WebSocketManager.handle_message()` → `StateManager` updates → `ArtNetService` sends ArtDMX UDP packets (see [backend/api/websocket.py](../backend/api/websocket.py), [backend/store/state.py](../backend/store/state.py), and [backend/services/artnet.py](../backend/services/artnet.py)).
-- There is currently no in-repo frontend implementation; backend protocol is client-agnostic and intended for future UI/client implementations.
+- The UI (frontend) is STRICTLY a client of the backend. Absolutely no DMX logic is performed on the frontend.
 - Analyzer: manual scripts producing song metadata files under `analyzer/meta/<song>/info.json`; backend loads from `/app/meta` (mounted from `analyzer/meta` in Docker).
 - LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service (see [llm-server/README.md](../llm-server/README.md), [llm-server/agent-gateway/README.md](../llm-server/agent-gateway/README.md), [mcp/song_metadata/README.md](../mcp/song_metadata/README.md).
 
 ## Playback model (DMX canvas)
 - Cue sheets are **action-based** (not snapshot-only): each entry has `time`, `fixture_id`, `action`, `duration`, `data` (see [backend/models/cue.py](../backend/models/cue.py)).
 - On song load the backend renders a **precomputed 60 FPS DMX canvas** for the full song length (max 6 minutes) and stores it in memory (see [backend/store/dmx_canvas.py](../backend/store/dmx_canvas.py) and [backend/store/state.py](../backend/store/state.py)).
-- The client audio timeline is authoritative; the backend selects the nearest canvas frame for a given timecode or seek.
+- The UI (frontend) is strictly a client. The ONLY exception where the client leads the backend is timecode synchronization: when a show is playing, the backend time follows the song position provided by the client's audio timeline. The backend selects the nearest canvas frame for a given timecode or seek.
 - Fixture types own effect math via `Fixture.render_effect(...)` implemented in subclasses (see [backend/models/fixtures](../backend/models/fixtures)).
 
 ## Message protocol (WebSocket)
-- `initial`: sent on connect with `fixtures`, `cues`, `song`, `playback`, and `status` (see `send_initial_state` in [backend/api/websocket.py](../backend/api/websocket.py)).
-- `delta`: `{type:"delta", channel, value}` updates the editor DMX state and is broadcast.
-  - While playing, backend rejects deltas (`delta_rejected`) and does not apply authoring edits.
-- `timecode`: `{type:"timecode", time}` selects the nearest DMX canvas frame and updates Art-Net output.
-- `seek`: `{type:"seek", time}` explicit jump; backend selects the correct frame immediately (frame skipping allowed).
-- `playback`: `{type:"playback", playing}` toggles backend playback state (used to ignore live edits during playback).
-- `status`: backend broadcast with global state `{isPlaying, previewActive, preview}`.
-- `preview_effect`: `{type:"preview_effect", fixture_id, effect, duration, data}` triggers temporary preview render when paused.
-- `preview_status`: backend broadcast with preview lifecycle (`active`, `request_id`, optional reason/details).
-- `add_cue`: `{type:"add_cue", time, name}` records actions into the cue sheet (currently `set_channels` per fixture).
-- `cues_updated`: broadcast after cue changes with the full cue sheet.
-- `load_song`: `{type:"load_song", filename}` loads song metadata + cue sheet, rebuilds the canvas, and re-sends initial state.
-- `chat`: mock echo response only.
+- **Client → Backend:** `hello` (handshake), `intent` (structured payload for actions like `transport.play`, `fixture.set_values`, `llm.send_prompt`).
+- **Backend → Client:** `snapshot` (full state), `patch` (incremental updates), `event` (notifications/errors).
+- While playing, authoring edits are typically rejected or ignored to prevent disrupting playback.
+- Backend handles all preview effects internally (non-persistent).
 
 ## Domain data + storage
 - Fixtures are defined in JSON at [backend/fixtures/fixtures.json](../backend/fixtures/fixtures.json) and loaded on backend startup.

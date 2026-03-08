@@ -57,9 +57,10 @@ Routing policy:
 
 ### Playback (browser-authoritative time)
 
+- The frontend is STRICTLY a client and performs absolutely no DMX logic. The ONLY exception is timecode synchronization, where the client leads the backend.
 - Frontend uses `intent` transport actions (`transport.play|pause|stop|jump_to_time`).
 - Browser player owns local audio playback and local timecode progression.
-- While playing, frontend syncs backend timecode every 10 seconds via `transport.jump_to_time`.
+- While playing, frontend syncs backend timecode every 10 seconds via `transport.jump_to_time` so the backend time follows the song position.
 - Frontend also sends immediate `transport.jump_to_time` on play/pause/seek/stop actions.
 - Backend maps synced timecode to nearest precomputed DMX canvas frame for Art-Net output.
 
