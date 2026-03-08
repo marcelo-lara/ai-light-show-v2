@@ -38,38 +38,47 @@ export function PoiLocationController({ fixtureId }: PoiLocationControllerOption
       options,
       onChange: (val) => {
         currentSelectedPoiId = val;
-        // Optional: auto-move on change or wait for 'set' button?
-        // Mockup shows a 'set' button, so we'll just update the local state.
+        
+        const newPoi = pois.find(p => p.id === val) as any;
+        const newFixData = newPoi?.fixtures?.[fixtureId];
+        
+        if (!newFixData) {
+          // 1. Move to 0/0 if no data
+          setFixtureValues(fixtureId, { pan: 0, tilt: 0 });
+        } else {
+          // 1. Move to the pan/tilt position
+          setFixtureValues(fixtureId, { preset: val });
+        }
       }
     });
     dropdownWrap.appendChild(dropdown);
     container.appendChild(dropdownWrap);
 
-    const setBtn = document.createElement("button");
-    setBtn.className = "poi-set-btn";
-    setBtn.textContent = "set";
-    setBtn.style.marginRight = "8px";
-    setBtn.onclick = () => {
-      if (currentSelectedPoiId) {
-        setFixtureValues(fixtureId, { preset: currentSelectedPoiId });
-      }
-    };
-    container.appendChild(setBtn);
+    // Evaluate visibility of "set" button
+    const poi = pois.find(p => p.id === currentSelectedPoiId) as any;
+    const fixtureDataInPoi = poi?.fixtures?.[fixtureId];
+    const fixtureState = store.state.fixtures?.[fixtureId];
+    const currentPan = Number(fixtureState?.values?.["pan"] ?? 0);
+    const currentTilt = Number(fixtureState?.values?.["tilt"] ?? 0);
 
-    const updateBtn = document.createElement("button");
-    updateBtn.className = "poi-update-btn";
-    updateBtn.textContent = "update";
-    updateBtn.onclick = () => {
-      if (currentSelectedPoiId) {
-        const fixtureState = store.state.fixtures?.[fixtureId];
-        if (fixtureState && fixtureState.values) {
-          const resultPan = Number(fixtureState.values["pan"] ?? 0);
-          const resultTilt = Number(fixtureState.values["tilt"] ?? 0);
-          updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, resultPan, resultTilt);
-        }
+    let showSetBtn = false;
+    if (!fixtureDataInPoi) {
+      showSetBtn = true;
+    } else {
+      if (fixtureDataInPoi.pan !== currentPan || fixtureDataInPoi.tilt !== currentTilt) {
+        showSetBtn = true;
       }
-    };
-    container.appendChild(updateBtn);
+    }
+
+    if (showSetBtn && currentSelectedPoiId) {
+      const setBtn = document.createElement("button");
+      setBtn.className = "poi-set-btn";
+      setBtn.textContent = "set";
+      setBtn.onclick = () => {
+        updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, currentPan, currentTilt);
+      };
+      container.appendChild(setBtn);
+    }
   };
 
   // Subscribe to store changes to re-render when POIs arrive
