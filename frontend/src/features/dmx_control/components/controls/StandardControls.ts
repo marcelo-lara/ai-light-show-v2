@@ -24,9 +24,9 @@ export function StandardControls(fixture: FixtureVM) {
     
     if (mc.kind === "enum" && mc.mapping) {
       const mapping = mappings[mc.mapping] || {};
-      const options = Object.keys(mapping).map(label => ({
-        label,
-        value: label // The backend expects labels for enum intents
+      const options = Object.entries(mapping).map(([val, label]) => ({
+        label: String(label), // The descriptive name (e.g. "Red")
+        value: String(label)  // The backend expects the label for set_values intent
       }));
 
       const dropdown = Dropdown({

@@ -36,7 +36,10 @@ async def set_values(manager, payload: Dict[str, Any]) -> bool:
         elif mc.kind == "enum" and mc.channel and mc.mapping:
             # Resolve label to DMX value from fixture mappings
             mapping = fixture.mappings.get(mc.mapping, {})
-            dmx_val = mapping.get(str(value))
+            # Flip the mapping to find the DMX value by label
+            reverse_mapping = {v: k for k, v in mapping.items()}
+            dmx_val = reverse_mapping.get(str(value))
+            
             if dmx_val is not None:
                 try:
                     await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channel], int(dmx_val))
