@@ -94,3 +94,30 @@
 
 .pan-tilt-label.pan { bottom: 0; left: 2px; }
 .pan-tilt-label.tilt { top: 50%; right: 0; transform: rotate(90deg) translateY(-100%); transform-origin: top right; }
+
+
+/* POI Location Controller */
+.poi-controller-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 0 4px;
+}
+.poi-dropdown-wrap {
+  flex: 1;
+}
+.poi-set-btn {
+  background: var(--surface-low, #1e1e1e);
+  border: 0;
+  color: var(--text-color, #fff);
+  height: 38px; /* Match dropdown height roughly */
+  cursor: pointer;
+}
+.poi-set-btn:hover {
+  background: var(--surface-mid, #2a2a2a);
+  border-color: var(--accent-color, #007acc);
+}
+.poi-set-btn:active {
+  transform: translateY(1px);
+}

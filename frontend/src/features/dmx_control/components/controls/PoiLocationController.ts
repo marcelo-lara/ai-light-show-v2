@@ -10,40 +10,6 @@ export function PoiLocationController({ fixtureId }: PoiLocationControllerOption
   const container = document.createElement("div");
   container.className = "poi-controller-row";
 
-  // Basic styling for the row
-  const style = document.createElement("style");
-  style.textContent = `
-    .poi-controller-row {
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
-      margin-top: 10px;
-      padding: 0 4px;
-    }
-    .poi-dropdown-wrap {
-      flex: 1;
-    }
-    .poi-set-btn {
-      background: var(--surface-low, #1e1e1e);
-      border: 1px solid var(--border-color, #333);
-      color: var(--text-color, #fff);
-      padding: 8px 16px;
-      height: 38px; /* Match dropdown height roughly */
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .poi-set-btn:hover {
-      background: var(--surface-mid, #2a2a2a);
-      border-color: var(--accent-color, #007acc);
-    }
-    .poi-set-btn:active {
-      transform: translateY(1px);
-    }
-  `;
-  container.appendChild(style);
-
   let currentSelectedPoiId = "";
 
   const render = () => {
@@ -68,7 +34,6 @@ export function PoiLocationController({ fixtureId }: PoiLocationControllerOption
     }
 
     const dropdown = Dropdown({
-      label: "Go to POI",
       value: currentSelectedPoiId,
       options,
       onChange: (val) => {
