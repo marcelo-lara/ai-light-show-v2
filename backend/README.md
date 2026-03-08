@@ -1,75 +1,76 @@
 # Backend Module (LLM Guide)
 
-FastAPI + asyncio runtime responsible for real-time DMX state management and Art-Net output.
+FastAPI + asyncio runtime responsible for authoritative show state and Art-Net output.
 
 ## Purpose
 
-- Serve the single WebSocket control plane at `/ws`.
-- Maintain fixture state, cue sheets, playback status, and precomputed DMX canvas.
-- Stream DMX output continuously via Art-Net.
+- Expose the websocket control plane at `/ws`.
+- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`).
+- Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
 
-- `main.py`: app startup, service wiring, lifecycle.
-- `api/websocket.py`: message handling and broadcast logic.
-- `store/state.py`: source of truth for fixtures, song, cues, preview/playback state.
-- `store/pois.py`: backend POI database handling CRUD and file synchronization.
-- `store/dmx_canvas.py`: flat byte-buffer DMX frame storage.
-- `services/artnet.py`: UDP Art-Net frame transmission.
-- `services/song_service.py`: song/meta listing utilities.
+- `main.py`: lifecycle wiring, startup loading, route setup.
+- `api/websocket_manager/*`: websocket endpoint, message parsing, broadcasts, sequencing.
+- `api/intents/*`: intent handlers and registry.
+- `api/state/*`: snapshot/patch payload builders.
+- `store/state.py`: `StateManager` (fixtures, cues, playback, preview, canvas).
+- `store/pois.py`: POI CRUD + persistence.
+- `store/dmx_canvas.py`: packed DMX frame buffer.
+- `services/artnet.py`: UDP Art-Net sender.
 
 ## Runtime model
 
-1. On startup, backend loads fixtures/POIs/cues, arms fixtures, starts Art-Net, and loads default song if available.
-2. Song load builds a precomputed 60 FPS DMX canvas for the full song window.
-3. A control client sends timeline and authoring messages via WebSocket.
-4. Backend updates output universe and Art-Net stream based on playback state.
+1. Startup loads POIs and fixtures, applies arm defaults, starts Art-Net loop, then loads a default song.
+2. Song load pre-renders a full `60 FPS` DMX canvas.
+3. Clients send websocket `intent` messages.
+4. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
 
 ## WebSocket protocol essentials
 
 ### Client → Backend
 
-- `hello`: handshake, requesting a fresh snapshot.
-- `intent`: backend-routed intent envelope with `{req_id, name, payload}`.
-	- Supported names include transport (`transport.play|pause|stop|jump_to_time`),
-		fixture (`fixture.set_arm|set_values|preview_effect`),
-		POI operations (`poi.create|update|delete|update_fixture_target`), and
-		LLM (`llm.send_prompt|cancel`).
+- `hello`
+- `intent`: `{ type:"intent", req_id, name, payload }`
+
+Supported intent names:
+- Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
+- Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
+- POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
+- LLM: `llm.send_prompt`, `llm.cancel`.
 
 ### Backend → Client
 
-- `snapshot`: full authoritative state + `seq`.
-- `patch`: event-driven state changes + `seq` and list of `{path, value}` updates.
-- `event`: info/warning/error notifications (including LLM stream chunks).
-- `state.song` payload includes current song metadata for shared player UIs:
-	- `filename`, `audio_url`, `length_s`, `bpm`
-	- `sections[]` with `{name,start_s,end_s}`
-	- `beats[]` and `downbeats[]`
+- `snapshot`: `{ type:"snapshot", seq, state }`
+- `patch`: `{ type:"patch", seq, changes }`
+- `event`: `{ type:"event", level, message, data? }`
 
-### Browser-owned playback/timecode sync
+Patch behavior:
+- Diffs are currently top-level replacements only.
+- `changes[].path` is one key deep (for example `[`system`]`, `[`fixtures`]`).
 
-- Browser player is authoritative for local audio playback and local timeline progression.
-- While browser playback is active, frontend sends `transport.jump_to_time` every 10 seconds.
-- Frontend sends immediate `transport.jump_to_time` on play/pause/seek/stop transitions.
-- Backend uses synced timecode to select nearest DMX canvas frame and drive Art-Net output.
+## Playback and editing behavior
+
+- Browser audio timeline is authoritative for timecode sync.
+- Clients should send `transport.jump_to_time` periodically during playback and on immediate transport changes.
+- `fixture.preview_effect` is rejected while playback is active.
+- `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings.
 
 ## Data and file contracts
 
-- Fixtures: `backend/fixtures/fixtures.json` stores fixture instances only.
+- Fixtures: `backend/fixtures/fixtures.json`
 - Fixture templates: `backend/fixtures/fixture.<type>.<model>.json`
 - POIs: `backend/fixtures/pois.json`
 - Cues: `backend/cues/{song}.cue.json`
 - Songs: `backend/songs/*.mp3`
-- Metadata root in Docker: `/app/meta` (mounted from `analyzer/meta`)
+- Metadata root in Docker: `/app/meta` (fallback local: `backend/meta`)
 
-Fixture instances provide `id`, `name`, `fixture`, `base_channel`, and `location`. Template files are the source of truth for reusable channel offsets and model metadata. Real DMX channels are derived as `base_channel + template_offset`.
+## Reference docs
 
-## Invariants and constraints
-
-- DMX channels are 1-based externally; internal storage is 0-based 512-byte universe.
-- While playing, `delta` edits are rejected.
-- Preview effects are non-persistent and must not mutate cue files.
-- Keep initialization and teardown safe (blackout on shutdown).
+- [Backend implementation reference](../docs/architecture/backend_llm_reference.md)
+- [Backend architecture narrative](../docs/architecture/backend.md)
+- [Backend fixture schema](../docs/architecture/backend_fixtures_schema.md)
+- [Backend POI schema](../docs/architecture/backend_pois_schema.md)
 
 ## Development
 
@@ -83,7 +84,7 @@ Default local URL: `http://localhost:5001`.
 
 ## LLM contributor checklist
 
-1. Preserve message compatibility unless intentionally changing protocol.
-2. Update client state handling when protocol fields change.
-3. Keep cue/effect behavior deterministic at 60 FPS.
-4. If fixture effect contracts change, update protocol documentation and active client implementation in the same PR.
+1. Keep protocol docs aligned with current handler behavior.
+2. Keep intent names synchronized with `INTENT_HANDLERS`.
+3. When effect contracts change, update docs and client integrations in the same change.
+4. Preserve deterministic render behavior at `60 FPS`.

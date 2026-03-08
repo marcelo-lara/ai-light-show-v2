@@ -23,7 +23,7 @@ This document describes the `analyzer` module: the song analysis scripts, how th
 - Backend reads metadata from `/app/meta` (mounted from `analyzer/meta` in Docker).
 - If `/app/meta` is unavailable, backend falls back to local `backend/meta`.
 - Backend accepts `info.json` as canonical, with fallback to legacy filenames like `<song>.json` or per-song directory formats.
-- Metadata is loaded by `SongService` and exposed via WebSocket `initial` and `load_song` messages.
+- Metadata is loaded during song load in `StateManager` and exposed through websocket `snapshot` / `patch` state payloads.
 
 ## Storage & outputs
 
@@ -48,5 +48,4 @@ This document describes the `analyzer` module: the song analysis scripts, how th
   - Analyzer heavy models: long-running steps may need GPUs; use the analyzer image/runtime configured for `nvidia` if available.
 
 ---
-Reference: `analyzer/analyze_song.py`, `backend/store/state.py`, `backend/api/websocket.py`.
-
+Reference: `analyzer/analyze_song.py`, `backend/store/state.py`, `backend/api/websocket_manager/messaging.py`.

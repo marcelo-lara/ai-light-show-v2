@@ -27,7 +27,7 @@ AI Light Show is split into six primary modules:
 - Client playback timeline is authoritative.
 - Browser player owns real audio playback and local timecode.
 - Frontend syncs timecode to backend every 10 seconds while playing, plus immediate sync on play/pause/seek/stop.
-- While playing, backend rejects manual channel edits and preview requests.
+- While playing, backend enforces `system.edit_lock` and rejects preview requests.
 - Cue sheets are action-based and rendered into a full 60 FPS DMX canvas on song load.
 - Default startup song target is `Yonaka - Seize the Power` (fallback: first available).
 
@@ -81,6 +81,8 @@ Use the `ai-light` Python environment:
 ```bash
 PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q
 ```
+
+All automated Python tests live under `tests/`.
 
 After test runs, rebuild/restart containers before manual validation:
 

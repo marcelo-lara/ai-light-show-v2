@@ -1,82 +1,76 @@
 # Backend Fixture Schema
 
-Fixture data is split into JSON document types under `backend/fixtures/`.
+Fixture data is split across instance records and template records under `backend/fixtures/`.
 
 ## 1. Fixture instances
 
-`backend/fixtures/fixtures.json` is the registry of actual fixtures in the show.
+`backend/fixtures/fixtures.json` stores real fixtures in the show.
 
-Each entry contains only instance-specific data:
-
-- `id`: Unique runtime fixture id.
-- `name`: Display name.
-- `fixture`: Template reference key (e.g., `mini_beam_prism`).
-- `base_channel`: First DMX channel used by the fixture instance (1-based internally, offset 0 in templates).
-- `location`: Physical placement `{x, y, z}`.
+Each instance row contains:
+- `id`: runtime fixture id.
+- `name`: display name.
+- `fixture`: template key (current data uses keys like `fixture.moving_head.mini_beam_prism`).
+- `base_channel`: 1-based starting channel.
+- `location`: physical coordinates `{x, y, z}`.
 
 Example:
 
 ```json
 {
-	"id": "mini_beam_prism_l",
-	"name": "Mini Beam Prism (L)",
-	"fixture": "mini_beam_prism",
-	"base_channel": 42,
-	"location": {
-		"x": 0.15,
-		"y": 0.2,
-		"z": 0.0
-	}
+  "id": "mini_beam_prism_l",
+  "name": "Mini Beam Prism (L)",
+  "fixture": "fixture.moving_head.mini_beam_prism",
+  "base_channel": 42,
+  "location": {"x": 0.15, "y": 0.2, "z": 0.0}
 }
 ```
 
 ## 2. Fixture templates
 
-Each reusable fixture model lives in its own file named `backend/fixtures/fixture.<type>.<model>.json`.
+Each reusable fixture model is a file named `backend/fixtures/fixture.<type>.<model>.json`.
 
-Template files define:
+Template fields:
+- `id`: model id (for example `mini_beam_prism`).
+- `type`: fixture category (for example `moving_head`, `parcan`).
+- `channels`: channel-name to zero-based offset mapping.
+- `effects`: effect ids that this model declares.
+- `meta_channels`: high-level controls used by frontend/API.
+- `mappings`: enum/label mappings.
 
-- `id`: Internal model identifier.
-- `type`: Category (e.g., `moving_head`, `parcan`).
-- `channels`: Map of logical channel names to 0-based offsets.
-- `effects`: List of supported effect keys.
-- `meta_channels`: Dictionary of high-level controls mapping directly to DMX logic.
-  - `label`: UI display label.
-  - `kind`: Data type (`u8`, `u16`, `rgb`, `enum`).
-  - `channel`: Single 0-based offset name from `channels`.
-  - `channels`: Array of 0-based offset names for multi-channel types (e.g., `u16` MSB/LSB, `rgb`).
-  - `mapping`: (Optional) Key in `mappings` for labeled or discrete values (e.g., `Gobo Wheel`).
-  - `step`: (Optional) Boolean. If `true` for `kind: "enum"`, indicates the values represent discrete physical steps/indices (like a Color Wheel) rather than just functional labels (like Reset).
-  - `arm`: (Optional) Default DMX value (0-255).
-  - `hidden`: (Optional) Boolean to hide from UI.
-- `mappings`: Dictionary for `enum` or labeled `u8` values.
+`meta_channels` fields:
+- `label`
+- `kind`: `u8` | `u16` | `rgb` | `enum`
+- `channel` (single channel name)
+- `channels` (multi-channel names, e.g. pan/tilt MSB/LSB)
+- `mapping` (mapping key in `mappings`)
+- `step` (optional enum step semantics)
+- `arm` (optional startup/default value)
+- `hidden` (optional UI hint)
 
-### Example Template Excerpt (Flattened Schema)
+## Loader behavior
 
-```json
-"meta_channels": {
-    "pan": {
-        "label": "Pan",
-        "kind": "u16",
-        "channels": ["pan_msb", "pan_lsb"]
-    },
-    "strobe": {
-        "label": "Strobe",
-        "kind": "u8",
-        "mapping": "strobe",
-        "channel": "strobe"
-    }
-}
-```
+`StateManager.load_fixtures` loads templates and registers each template under:
+- `template.id`
+- template filename stem (`fixture.<type>.<model>`)
+
+Instance `fixture` keys are matched against this template map.
 
 ## Channel addressing rule
 
-Template channel numbers are offsets relative to an instance's `base_channel`.
+Template channel numbers are offsets from instance `base_channel`:
 
 ```text
-real_dmx_channel = base_channel + template_channel_offset
+absolute_channel = base_channel + offset
 ```
 
-## Follow-up implementation
+Example:
+- `base_channel = 42`
+- template offset for `dim` = `5`
+- absolute DMX channel = `47`
 
-The backend loader must resolve the `fixture` reference, load the template, and materialize absolute runtime channels from `base_channel + offset` before instantiating runtime fixture models.
+## Runtime materialization
+
+At load time, backend instantiates concrete fixture classes (`MovingHead` or `Parcan`) and computes:
+- `channels` (relative offsets)
+- `absolute_channels` (resolved 1-based addresses)
+- `meta_channels` and `mappings` from template

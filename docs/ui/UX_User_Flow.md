@@ -1,5 +1,8 @@
 # AI Light Show App
 
+Important: this file captures product workflow intent, not current backend protocol/runtime guarantees.
+For implemented backend contracts, see `docs/architecture/backend_llm_reference.md`.
+
 ## Workflow
 
 ### Preparation (outside the UI)
