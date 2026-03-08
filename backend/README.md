@@ -53,11 +53,14 @@ FastAPI + asyncio runtime responsible for real-time DMX state management and Art
 
 ## Data and file contracts
 
-- Fixtures: `backend/fixtures/fixtures.json`
+- Fixtures: `backend/fixtures/fixtures.json` stores fixture instances only.
+- Fixture templates: `backend/fixtures/fixture.<type>.<model>.json`
 - POIs: `backend/fixtures/pois.json`
 - Cues: `backend/cues/{song}.cue.json`
 - Songs: `backend/songs/*.mp3`
 - Metadata root in Docker: `/app/meta` (mounted from `analyzer/meta`)
+
+Fixture instances provide `id`, `name`, `fixture`, `base_channel`, and `location`. Template files are the source of truth for reusable channel offsets and model metadata. Real DMX channels are derived as `base_channel + template_offset`.
 
 ## Invariants and constraints
 

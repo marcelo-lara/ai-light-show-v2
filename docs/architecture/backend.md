@@ -42,11 +42,18 @@ Routing policy:
 
 ### Startup
 
-1. Load fixtures from `backend/fixtures/fixtures.json`.
+1. Load fixture instances from `backend/fixtures/fixtures.json` and resolve model data from `backend/fixtures/fixture.<type>.<model>.json` templates.
 2. Apply fixture `arm` defaults.
 3. Start the Art-Net sender loop (~60 FPS).
 4. Load a default song (first available or a preferred name).
 5. Build DMX canvas and sync frame 0 to output.
+
+### Fixture registry and templates
+
+- `backend/fixtures/fixtures.json` stores fixture instances only.
+- Reusable fixture definitions live in per-model template files under `backend/fixtures/`.
+- Each instance provides a `base_channel`; each template channel is a zero-based offset from that base.
+- Example: if `base_channel = 42` and the template `speed` channel offset is `4`, the real DMX channel is `46`.
 
 ### Playback (browser-authoritative time)
 

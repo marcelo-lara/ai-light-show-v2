@@ -1,0 +1,95 @@
+{
+	"id": "head_el150",
+	"type": "moving_head",
+	"channels": {
+		"pan_msb": 0,
+		"pan_lsb": 1,
+		"tilt_msb": 2,
+		"tilt_lsb": 3,
+		"speed": 4,
+		"dim": 5,
+		"shutter": 6,
+		"color": 7,
+		"gobo": 8
+	},
+	"effects": [
+		"full",
+		"strobe",
+		"flash",
+		"fade_in",
+		"seek",
+		"move_to",
+		"move_to_poi",
+		"sweep"
+	],
+	"meta_channels": {
+		"pan": {
+			"label": "Pan",
+			"kind": "u16",
+			"channels": [
+				"pan_msb",
+				"pan_lsb"
+			]
+		},
+		"tilt": {
+			"label": "Tilt",
+			"kind": "u16",
+			"channels": [
+				"tilt_msb",
+				"tilt_lsb"
+			]
+		},
+		"speed": {
+			"label": "Speed",
+			"kind": "u8",
+			"channel": "speed"
+		},
+		"dim": {
+			"label": "Dimmer",
+			"kind": "u8",
+			"channel": "dim"
+		},
+		"shutter": {
+			"label": "Shutter",
+			"kind": "u8",
+			"channel": "shutter",
+			"arm": 255
+		},
+		"color": {
+			"label": "Color Wheel",
+			"kind": "enum",
+			"step": true,
+			"mapping": "color",
+			"channel": "color"
+		},
+		"gobo": {
+			"label": "Gobo Wheel",
+			"kind": "enum",
+			"step": true,
+			"mapping": "gobo",
+			"channel": "gobo"
+		}
+	},
+	"mappings": {
+		"color": {
+			"0": "White",
+			"25": "Orange",
+			"50": "Cyan",
+			"75": "Purple",
+			"100": "Yellow",
+			"125": "Green",
+			"150": "Blue",
+			"175": "Red"
+		},
+		"gobo": {
+			"0": "Open",
+			"25": "Tunnel",
+			"50": "BigOval",
+			"75": "SmallOval",
+			"100": "Squares",
+			"125": "Shapes",
+			"150": "Tribal",
+			"175": "Slashes"
+		}
+	}
+}
