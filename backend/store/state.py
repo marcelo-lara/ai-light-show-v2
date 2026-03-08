@@ -11,6 +11,7 @@ from models.fixture_template import FixtureTemplate
 from models.cue import CueSheet, CueEntry
 from models.song import Song, SongMetadata
 from store.dmx_canvas import DMXCanvas, DMX_CHANNELS
+from store.pois import PoiDatabase
 
 FPS = 60
 MAX_SONG_SECONDS = 6 * 60
@@ -27,7 +28,7 @@ class StateManager:
         # "output" universe is what we actually send to Art-Net.
         self.output_universe: bytearray = bytearray(DMX_CHANNELS)
         self.fixtures: List[Fixture] = []
-        self.pois: List[Dict[str, Any]] = []
+        self.poi_db: PoiDatabase = PoiDatabase(backend_path / "fixtures" / "pois.json")
         self.fixtures_path: Optional[Path] = None
         self.current_song: Optional[Song] = None
         self.cue_sheet: Optional[CueSheet] = None
@@ -199,19 +200,16 @@ class StateManager:
             self._apply_arm(self.editor_universe)
             self._apply_arm(self.output_universe)
 
-    async def load_pois(self, pois_path: Path):
-        async with self.lock:
-            with open(pois_path, 'r') as f:
-                data = json.load(f)
+    @property
+    def pois(self) -> List[Dict[str, Any]]:
+        return self.poi_db.pois
 
-            if isinstance(data, list):
-                self.pois = [item for item in data if isinstance(item, dict)]
-            else:
-                self.pois = []
+    async def load_pois(self, pois_path: Path):
+        self.poi_db.filepath = pois_path
+        await self.poi_db.reload()
 
     async def get_pois(self) -> List[Dict[str, Any]]:
-        async with self.lock:
-            return [dict(poi) for poi in self.pois]
+        return await self.poi_db.get_all()
 
     async def save_fixtures(self) -> None:
         if not self.fixtures_path:
@@ -223,46 +221,38 @@ class StateManager:
             json.dump(fixtures_payload, f, indent=2)
 
     async def update_fixture_poi_target(self, fixture_id: str, poi_id: str, pan: int, tilt: int) -> Dict[str, Any]:
-        async with self.lock:
-            fixture = self._get_fixture(str(fixture_id or "").strip())
-            if not fixture:
-                return {"ok": False, "reason": "fixture_not_found"}
+        """Update a specific fixture's pan and tilt for a given POI."""
+        normalized_poi_id = str(poi_id or "").strip()
+        if not normalized_poi_id:
+            return {"ok": False, "reason": "invalid_poi_id"}
 
-            if (fixture.type or "").lower() not in {"moving_head", "moving-head"}:
-                return {"ok": False, "reason": "fixture_not_moving_head"}
+        target_poi = await self.poi_db.get(normalized_poi_id)
+        if not target_poi:
+            return {"ok": False, "reason": "poi_not_found"}
 
-            normalized_poi_id = str(poi_id or "").strip()
-            if not normalized_poi_id:
-                return {"ok": False, "reason": "invalid_poi_id"}
+        pan_u16 = max(0, min(65535, int(pan)))
+        tilt_u16 = max(0, min(65535, int(tilt)))
+        
+        if "fixtures" not in target_poi:
+            target_poi["fixtures"] = {}
+            
+        target_poi["fixtures"][str(fixture_id)] = {
+            "pan": pan_u16,
+            "tilt": tilt_u16,
+        }
+        
+        await self.poi_db.update(normalized_poi_id, target_poi)
+        self.canvas_dirty = True
 
-            poi_exists = any(
-                str((poi or {}).get("id") or "").strip() == normalized_poi_id
-                for poi in self.pois
-            )
-            if not poi_exists:
-                return {"ok": False, "reason": "poi_not_found"}
-
-            pan_u16 = max(0, min(65535, int(pan)))
-            tilt_u16 = max(0, min(65535, int(tilt)))
-
-            poi_targets = fixture.poi_targets if isinstance(fixture.poi_targets, dict) else {}
-            poi_targets[normalized_poi_id] = {
+        return {
+            "ok": True,
+            "fixture_id": fixture_id,
+            "poi_id": normalized_poi_id,
+            "values": {
                 "pan": pan_u16,
                 "tilt": tilt_u16,
-            }
-            fixture.poi_targets = poi_targets
-
-            await self.save_fixtures()
-
-            return {
-                "ok": True,
-                "fixture_id": fixture.id,
-                "poi_id": normalized_poi_id,
-                "values": {
-                    "pan": pan_u16,
-                    "tilt": tilt_u16,
-                },
-            }
+            },
+        }
 
     async def get_is_playing(self) -> bool:
         async with self.lock:

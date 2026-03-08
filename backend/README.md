@@ -13,6 +13,7 @@ FastAPI + asyncio runtime responsible for real-time DMX state management and Art
 - `main.py`: app startup, service wiring, lifecycle.
 - `api/websocket.py`: message handling and broadcast logic.
 - `store/state.py`: source of truth for fixtures, song, cues, preview/playback state.
+- `store/pois.py`: backend POI database handling CRUD and file synchronization.
 - `store/dmx_canvas.py`: flat byte-buffer DMX frame storage.
 - `services/artnet.py`: UDP Art-Net frame transmission.
 - `services/song_service.py`: song/meta listing utilities.
@@ -31,7 +32,8 @@ FastAPI + asyncio runtime responsible for real-time DMX state management and Art
 - `hello`: handshake, requesting a fresh snapshot.
 - `intent`: backend-routed intent envelope with `{req_id, name, payload}`.
 	- Supported names include transport (`transport.play|pause|stop|jump_to_time`),
-		fixture (`fixture.set_arm|set_values|preview_effect`), and
+		fixture (`fixture.set_arm|set_values|preview_effect`),
+		POI operations (`poi.create|update|delete|update_fixture_target`), and
 		LLM (`llm.send_prompt|cancel`).
 
 ### Backend → Client

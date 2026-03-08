@@ -59,7 +59,11 @@ export type IntentName =
   | "fixture.preview_effect"
   | "fixture.stop_preview"
   | "llm.send_prompt"
-  | "llm.cancel";
+  | "llm.cancel"
+  | "poi.create"
+  | "poi.update"
+  | "poi.delete"
+  | "poi.update_fixture_target";
 
 export type BackendState = {
   // Backend authoritative, do not infer in frontend.

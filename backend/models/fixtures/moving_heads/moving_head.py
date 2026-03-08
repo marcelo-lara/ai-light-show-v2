@@ -97,13 +97,11 @@ class MovingHead(Fixture):
         if not needle:
             return None
 
-        poi_targets = self.poi_targets if isinstance(self.poi_targets, dict) else {}
-        for key, values in poi_targets.items():
-            try:
-                if str(key).strip().lower() == needle and isinstance(values, dict):
-                    return values
-            except Exception:
-                continue
+        from store.pois import PoiDatabase
+        poi_db = PoiDatabase.get_instance()
+        if poi_db:
+            return poi_db.get_fixture_target_sync(needle, self.id)
+
         return None
 
     def _resolve_poi_pan_tilt_u16(self, poi_key: Any) -> Tuple[Optional[int], Optional[int]]:

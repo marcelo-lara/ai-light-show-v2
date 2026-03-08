@@ -1,5 +1,5 @@
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
-import { setFixtureValues } from "../../fixture_intents.ts";
+import { setFixtureValues, updatePoiFixtureTarget } from "../../fixture_intents.ts";
 import { Dropdown } from "../../../../shared/components/controls/Dropdown.ts";
 
 export interface PoiLocationControllerOptions {
@@ -48,12 +48,28 @@ export function PoiLocationController({ fixtureId }: PoiLocationControllerOption
     const setBtn = document.createElement("button");
     setBtn.className = "poi-set-btn";
     setBtn.textContent = "set";
+    setBtn.style.marginRight = "8px";
     setBtn.onclick = () => {
       if (currentSelectedPoiId) {
         setFixtureValues(fixtureId, { preset: currentSelectedPoiId });
       }
     };
     container.appendChild(setBtn);
+
+    const updateBtn = document.createElement("button");
+    updateBtn.className = "poi-update-btn";
+    updateBtn.textContent = "update";
+    updateBtn.onclick = () => {
+      if (currentSelectedPoiId) {
+        const fixtureState = store.state.fixtures?.[fixtureId];
+        if (fixtureState && fixtureState.values) {
+          const resultPan = Number(fixtureState.values["pan"] ?? 0);
+          const resultTilt = Number(fixtureState.values["tilt"] ?? 0);
+          updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, resultPan, resultTilt);
+        }
+      }
+    };
+    container.appendChild(updateBtn);
   };
 
   // Subscribe to store changes to re-render when POIs arrive

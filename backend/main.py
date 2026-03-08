@@ -6,6 +6,7 @@ import os
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
+from store.pois import PoiDatabase
 from store.state import StateManager
 from services.artnet import ArtNetService
 from services.song_service import SongService

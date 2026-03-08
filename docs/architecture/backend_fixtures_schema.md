@@ -1,6 +1,6 @@
 # Backend Fixture Schema
 
-Fixture data is split into two JSON document types under `backend/fixtures/`.
+Fixture data is split into JSON document types under `backend/fixtures/`.
 
 ## 1. Fixture instances
 

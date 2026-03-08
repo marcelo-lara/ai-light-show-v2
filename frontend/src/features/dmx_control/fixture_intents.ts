@@ -42,3 +42,17 @@ export function previewEffect(
     payload: { fixture_id: fixtureId, effect_id: effectId, duration_ms: durationMs, params },
   });
 }
+
+export function updatePoiFixtureTarget(poiId: string, fixtureId: string, pan: number, tilt: number) {
+  wsSend({
+    type: "intent",
+    req_id: reqId(),
+    name: "poi.update_fixture_target",
+    payload: {
+      poi_id: poiId,
+      fixture_id: fixtureId,
+      pan,
+      tilt,
+    },
+  });
+}
