@@ -25,4 +25,4 @@ def handle(self, universe: bytearray, frame_index: int, start_frame: int, end_fr
     elapsed = frame_index - start_frame
     on = ((elapsed // period_frames) % 2) == 0
     value = 255 if on else 0
-    self._write_channel(universe, self.channels[channel_name], value)
+    self._write_channel(universe, channel_name, value)

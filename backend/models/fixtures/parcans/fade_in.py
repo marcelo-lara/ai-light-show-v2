@@ -53,7 +53,7 @@ def handle(
             return
         for channel_name, target in rgb_targets.items():
             if channel_name in self.channels:
-                self._write_channel(universe, self.channels[channel_name], self._clamp_byte(target))
+                self._write_channel(universe, channel_name, self._clamp_byte(target))
         return
 
     duration_frames = max(1, end_frame - start_frame)
@@ -64,7 +64,7 @@ def handle(
         start_rgb: Dict[str, int] = {}
         for channel_name in allowed_keys:
             if channel_name in self.channels:
-                start_rgb[channel_name] = int(universe[self.channels[channel_name] - 1])
+                start_rgb[channel_name] = int(universe[self.absolute_channels[channel_name] - 1])
         render_state["start_rgb"] = start_rgb
 
     start_rgb = render_state.get("start_rgb", {}) or {}
@@ -72,7 +72,7 @@ def handle(
     for channel_name, target in rgb_targets.items():
         if channel_name not in self.channels:
             continue
-        start_val = int(start_rgb.get(channel_name, int(universe[self.channels[channel_name] - 1])))
+        start_val = int(start_rgb.get(channel_name, int(universe[self.absolute_channels[channel_name] - 1])))
         target_val = self._clamp_byte(target)
         cur_val = int(round(start_val + (target_val - start_val) * progress))
-        self._write_channel(universe, self.channels[channel_name], cur_val)
+        self._write_channel(universe, channel_name, cur_val)

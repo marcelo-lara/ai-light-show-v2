@@ -9,7 +9,7 @@ def handle(self, universe: bytearray, frame_index: int, start_frame: int, end_fr
     # Prefer common dimmer names in order of likelihood.
     for dim_key in ("dim", "dimmer", "intensity"):
         if dim_key in self.channels:
-            self._write_channel(universe, self.channels[dim_key], 255)
+            self._write_channel(universe, dim_key, 255)
             break
     if "shutter" in self.channels:
-        self._write_channel(universe, self.channels["shutter"], 255)
+        self._write_channel(universe, "shutter", 255)

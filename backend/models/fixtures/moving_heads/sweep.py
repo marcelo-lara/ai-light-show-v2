@@ -228,8 +228,8 @@ def handle(
 
     intensity_key = _find_intensity_channel_key(fixture)
     if intensity_key:
-        fixture._write_channel(universe, fixture.channels[intensity_key], intensity)
+        fixture._write_channel(universe, intensity_key, intensity)
 
     # Ensure shutter is open during the sweep; dim drives visible intensity.
     if "shutter" in (fixture.channels or {}):
-        fixture._write_channel(universe, fixture.channels["shutter"], 255)
+        fixture._write_channel(universe, "shutter", 255)

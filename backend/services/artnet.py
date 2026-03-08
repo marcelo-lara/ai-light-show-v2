@@ -117,11 +117,16 @@ class ArtNetService:
             self.dmx_universe[channel - 1] = value
 
     async def arm_fixture(self, fixture):
-        # Send arm values
-        for channel_name, value in fixture.arm.items():
-            if channel_name in fixture.channels:
-                channel_num = fixture.channels[channel_name]
-                await self.set_channel(channel_num, value)
+        # Use meta_channels to apply arm values
+        for mc_id, mc in fixture.meta_channels.items():
+            if mc.arm is not None:
+                if mc.kind == "u16" and mc.channels:
+                    msb = (mc.arm >> 8) & 0xFF
+                    lsb = mc.arm & 0xFF
+                    await self.set_channel(fixture.absolute_channels[mc.channels[0]], msb)
+                    await self.set_channel(fixture.absolute_channels[mc.channels[1]], lsb)
+                elif mc.channel:
+                    await self.set_channel(fixture.absolute_channels[mc.channel], mc.arm)
 
     async def blackout(self, send_once: bool = True) -> None:
         """Immediately set the entire DMX universe to zero and optionally send one Art-Net packet.

@@ -36,5 +36,16 @@
 			"channel": "strobe"
 		}
 	},
-	"mappings": {}
+	"mappings": {
+		"color": {
+			"off": "000000",
+			"blue": "0000FF",
+			"cyan": "00FFFF",
+			"green": "00FF00",
+			"magenta": "FF00FF",
+			"red": "FF0000",
+			"white": "FFFFFF",
+			"yellow": "FFFF00"
+		}
+	}
 }

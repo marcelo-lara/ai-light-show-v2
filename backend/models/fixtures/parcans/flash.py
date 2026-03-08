@@ -18,4 +18,4 @@ def handle(self, universe, frame_index, start_frame, end_frame, fps, data, rende
 
     for channel_name in channel_names:
         if channel_name in self.channels:
-            self._write_channel(universe, self.channels[channel_name], level)
+            self._write_channel(universe, channel_name, level)

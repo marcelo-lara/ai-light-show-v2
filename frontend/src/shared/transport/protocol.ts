@@ -111,7 +111,20 @@ export type FixtureState = {
   name?: string;
   group?: string;
   armed?: boolean;
-  values?: Record<string, number>; // semantic values if backend provides them
-  channels?: Record<string, number>; // raw channel values if backend provides them
-  capabilities?: Record<string, unknown>; // optional: backend-declared capabilities
+  values?: Record<string, number | string>; // semantic values from backend
+  capabilities?: Record<string, boolean>; // e.g. { pan_tilt: true, rgb: true }
+  meta_channels?: Record<string, MetaChannel>;
+  mappings?: Record<string, Record<string, number | string>>;
 };
+
+export type MetaChannel = {
+  kind: "u8" | "u16" | "rgb" | "enum";
+  label: string;
+  channel?: string; // name of raw channel
+  channels?: string[]; // names for u16/rgb
+  mapping?: string; // mapping id for enum
+  min?: number;
+  max?: number;
+  arm?: number;
+};
+

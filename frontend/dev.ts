@@ -12,8 +12,10 @@ let bundleBuiltAt = 0;
 function getWsUrl(req: Request): string {
   const url = new URL(req.url);
   const protocol = url.protocol === "https:" ? "wss" : "ws";
-  const host = Deno.env.get("BACKEND_WS_HOST") ?? "backend:5001";
-  return `${protocol}://${host}/ws`;
+  // The backend is exposed at port 5001 on the host machine.
+  // We use the request host (s2.local:5173) and swap the port to 5001.
+  const host = url.hostname;
+  return `${protocol}://${host}:5001/ws`;
 }
 
 async function bundleClient(): Promise<string> {

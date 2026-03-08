@@ -69,16 +69,16 @@ def handle(
     # Cache the "on" RGB values once per entry.
     if "on_rgb" not in render_state:
         render_state["on_rgb"] = {
-            "red": int(universe[self.channels["red"] - 1]),
-            "green": int(universe[self.channels["green"] - 1]),
-            "blue": int(universe[self.channels["blue"] - 1]),
+            "red": int(universe[self.absolute_channels["red"] - 1]),
+            "green": int(universe[self.absolute_channels["green"] - 1]),
+            "blue": int(universe[self.absolute_channels["blue"] - 1]),
         }
     on_rgb = render_state.get("on_rgb") or {}
 
     # End the strobe on the original color so it persists naturally.
     if frame_index >= end_frame:
         for c in ("red", "green", "blue"):
-            self._write_channel(universe, self.channels[c], int(on_rgb.get(c, 0)))
+            self._write_channel(universe, c, int(on_rgb.get(c, 0)))
         return
 
     # Toggle every half period.
@@ -88,7 +88,7 @@ def handle(
 
     if is_on:
         for c in ("red", "green", "blue"):
-            self._write_channel(universe, self.channels[c], int(on_rgb.get(c, 0)))
+            self._write_channel(universe, c, int(on_rgb.get(c, 0)))
     else:
         for c in ("red", "green", "blue"):
-            self._write_channel(universe, self.channels[c], 0)
+            self._write_channel(universe, c, 0)

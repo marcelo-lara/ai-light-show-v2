@@ -2,38 +2,52 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from api.intents.fixture.actions._set_values_helpers import apply_16bit, apply_8bit, apply_preset
-
 
 async def set_values(manager, payload: Dict[str, Any]) -> bool:
     fixture_id = str(payload.get("fixture_id") or "")
     values = payload.get("values") or {}
     if not fixture_id or not isinstance(values, dict):
-        await manager.broadcast_event("error", "invalid_fixture_values_payload")
         return False
 
     fixture = next((f for f in manager.state_manager.fixtures if f.id == fixture_id), None)
     if not fixture:
-        await manager.broadcast_event("error", "fixture_not_found", {"fixture_id": fixture_id})
         return False
 
     changed = False
-    channel_types = fixture.meta.get("channel_types", {})
-    for channel_name, value in values.items():
-        ctype = channel_types.get(channel_name)
-        if channel_name == "preset":
-            changed = (await apply_preset(manager, fixture, str(value))) or changed
+    for mc_id, value in values.items():
+        if mc_id not in fixture.meta_channels:
             continue
-        if ctype == "position_16bit":
-            changed = (await apply_16bit(manager, fixture, channel_name, value)) or changed
-            continue
-        if channel_name in fixture.channels:
-            changed = (await apply_8bit(manager, fixture, channel_name, value)) or changed
-            continue
-        if ctype and ctype in fixture.channels:
-            changed = (await apply_8bit(manager, fixture, ctype, value)) or changed
+            
+        mc = fixture.meta_channels[mc_id]
+        # Update current_values for snapshot persistence
+        fixture.current_values[mc_id] = value
+        
+        # Apply to live Art-Net
+        if mc.kind == "u16" and mc.channels and len(mc.channels) == 2:
+            try:
+                val = int(value)
+                msb = (val >> 8) & 0xFF
+                lsb = val & 0xFF
+                await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channels[0]], msb)
+                await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channels[1]], lsb)
+                changed = True
+            except (ValueError, TypeError):
+                pass
+        elif mc.kind == "enum" and mc.channel and mc.mapping:
+            # Resolve label to DMX value from fixture mappings
+            mapping = fixture.mappings.get(mc.mapping, {})
+            dmx_val = mapping.get(str(value))
+            if dmx_val is not None:
+                try:
+                    await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channel], int(dmx_val))
+                    changed = True
+                except (ValueError, TypeError):
+                    pass
+        elif mc.channel:
+            try:
+                await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channel], int(value))
+                changed = True
+            except (ValueError, TypeError):
+                pass
 
-    if changed:
-        universe = await manager.state_manager.get_output_universe()
-        await manager.artnet_service.update_universe(universe)
-    return True
+    return changed

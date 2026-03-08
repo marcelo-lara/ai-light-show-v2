@@ -7,6 +7,7 @@ import json
 from urllib.parse import quote
 from uuid import uuid4
 from models.fixture import Fixture, Parcan, MovingHead
+from models.fixture_template import FixtureTemplate
 from models.cue import CueSheet, CueEntry
 from models.song import Song, SongMetadata
 from store.dmx_canvas import DMXCanvas, DMX_CHANNELS
@@ -121,41 +122,78 @@ class StateManager:
 
     def _apply_arm(self, universe: bytearray) -> None:
         for fixture in self.fixtures:
-            for channel_name, value in (fixture.arm or {}).items():
-                if channel_name in fixture.channels:
-                    self._set_channel(universe, fixture.channels[channel_name], value)
+            for mc_id, mc in fixture.meta_channels.items():
+                if mc.arm is not None:
+                    if mc.kind == "u16" and mc.channels:
+                        msb = (mc.arm >> 8) & 0xFF
+                        lsb = mc.arm & 0xFF
+                        self._set_channel(universe, fixture.absolute_channels[mc.channels[0]], msb)
+                        self._set_channel(universe, fixture.absolute_channels[mc.channels[1]], lsb)
+                    elif mc.channel:
+                        self._set_channel(universe, fixture.absolute_channels[mc.channel], mc.arm)
 
     async def load_fixtures(self, fixtures_path: Path):
         async with self.lock:
             self.fixtures_path = Path(fixtures_path)
+            fixtures_dir = self.fixtures_path.parent
+            
+            # 1. Load all templates from fixture.<type>.<model>.json
+            templates: Dict[str, FixtureTemplate] = {}
+            for template_file in fixtures_dir.glob("fixture.*.json"):
+                try:
+                    with open(template_file, "r") as f:
+                        template_data = json.load(f)
+                        template = FixtureTemplate(**template_data)
+                        templates[template.id] = template
+                        # Also register by filename-based ID (fixture.<type>.<model>)
+                        filename_id = template_file.stem
+                        templates[filename_id] = template
+                except Exception as e:
+                    print(f"Error loading template {template_file}: {e}")
+
+            # 2. Load fixture instances from fixtures.json
             with open(fixtures_path, 'r') as f:
                 data = json.load(f)
                 fixtures: List[Fixture] = []
-                for fixture in data:
-                    ftype = fixture.get('type', '').lower()
+                for entry in data:
+                    template_key = entry.get('fixture')
+                    if template_key not in templates:
+                        print(f"Template {template_key} not found for fixture {entry.get('id')}")
+                        continue
+                    
+                    template = templates[template_key]
+                    fixture_id = entry.get('id')
+                    fixture_name = entry.get('name')
+                    base_channel = entry.get('base_channel', 1)
+                    location = entry.get('location', {})
+                    
+                    ftype = template.type.lower()
                     try:
+                        kwargs = {
+                            "id": fixture_id,
+                            "name": fixture_name,
+                            "base_channel": base_channel,
+                            "template": template,
+                            "location": location
+                        }
                         if ftype == 'moving_head' or ftype == 'moving-head':
-                            obj = MovingHead(**fixture)
+                            obj = MovingHead(**kwargs)
                         else:
-                            # default to parcan for unknown/empty types
-                            obj = Parcan(**fixture)
-                    except Exception:
-                        # Fallback: try base Fixture (non-abstract) if parsing differs
-                        obj = Parcan(**fixture)
-                    fixtures.append(obj)
-                self.fixtures = fixtures
+                            obj = Parcan(**kwargs)
+                        fixtures.append(obj)
+                    except Exception as e:
+                        print(f"Error instantiating fixture {fixture_id}: {e}")
+                
+            self.fixtures = fixtures
 
             # Compute highest referenced 1-based channel for smaller client snapshots.
             max_ch = 0
             for fixture in self.fixtures:
-                for ch in (fixture.channels or {}).values():
-                    try:
-                        max_ch = max(max_ch, int(ch))
-                    except Exception:
-                        pass
+                for offset in fixture.channels.values():
+                    max_ch = max(max_ch, fixture.base_channel + offset)
             self.max_used_channel = max(0, min(DMX_CHANNELS, int(max_ch)))
 
-            # Apply arm defaults to both editor and output universes.
+            # 3. Apply arm values to universes
             self.editor_universe = bytearray(DMX_CHANNELS)
             self.output_universe = bytearray(DMX_CHANNELS)
             self._apply_arm(self.editor_universe)
@@ -753,6 +791,8 @@ class StateManager:
                     self._render_entry_into_universe(universe, frame_index, start_frame, end_frame, entry, entry_render_state)
 
             canvas.set_frame(frame_index, universe)
+
+        return canvas
 
         return canvas
 
