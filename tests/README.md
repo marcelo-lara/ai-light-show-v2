@@ -8,6 +8,7 @@ Project-level Python tests for backend state/render behavior and related integra
 - `tests/test_dmx_canvas_render_new.py`: cue rendering to DMX canvas.
 - `tests/test_poi_database.py`: POI CRUD persistence.
 - `tests/test_payload.py`: fixture payload shape smoke check.
+- `tests/test_ws_poi_e2e.py`: websocket frontend-mimic integration test for POI persistence on real `backend/fixtures/pois.json` with auto-restore.
 
 ## Test file location policy
 
@@ -28,6 +29,12 @@ Collect-only check:
 PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest --collect-only -q
 ```
 
+Opt-in real-file e2e test:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q -m e2e_real_file tests/test_ws_poi_e2e.py
+```
+
 ## Expected workflow
 
 1. Run targeted tests for touched modules.
@@ -44,3 +51,4 @@ docker compose down && docker compose up --build -d
 2. Avoid unrelated rewrites.
 3. If protocol/data contracts change, update tests in the same change.
 4. Keep fixtures deterministic and avoid flaky timing assumptions.
+5. `e2e_real_file` tests are non-parallel-safe by design; run them in isolation.
