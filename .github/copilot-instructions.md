@@ -82,6 +82,11 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - `ArtNetService` sends at `60 FPS` to configured `ARTNET_IP`/`ARTNET_PORT`.
 - Startup arm behavior applies configured fixture arm values.
 - Whenever fixture effect contracts change, update backend docs and active client integration in the same change.
+- For frontend UI implementation:
+  - Prefer flexbox over grid for small/local components.
+  - LoFi mockups are layout references only; do not reinterpret their intended layout.
+  - Do not implement explicit mockup dimensions or colors directly; use responsive sizing and existing theme tokens/variables.
+  - Use the reusable prompt in [frontend/README.md](../frontend/README.md) section `LLM UI Task Template` for layout tasks.
 
 ## Documentation update rule
 - If you change architecture, protocol, ports, module responsibilities, workflows, data shapes, or intent/event behavior, update relevant docs in the same change.

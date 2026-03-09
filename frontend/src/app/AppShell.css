@@ -1,13 +1,15 @@
 .app-shell {
   display: grid;
   grid-template-columns: 50px 1fr 360px;
-  min-height: 100dvh;
+  height: 100dvh;
   gap: 0;
   padding: 0;
 }
 
 .main-content {
-  overflow: auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--panel);
   padding: 0 12px;
 }

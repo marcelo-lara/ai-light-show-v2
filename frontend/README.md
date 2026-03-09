@@ -31,3 +31,31 @@ A persistent UI layout contains:
 - **Framework:** UIX (via Deno).
 - **Intent Throttling:** Direct device controls (e.g. RGB and Pan/Tilt sliders) actively throttle intent emissions during drag events and guarantee a final dispatch on pointer-up.
 - **System Field Accuracy:** The UI strictly reflects explicit backend strings for core variables (like `show_state` running/idle), never assuming or mapping implicit logic.
+
+## Frontend UI Implementation Rules
+
+- **Prefer Flexbox for small components:** Use flexbox for small/local component layout (control rows, cards, button groups, compact panels). Use grid only when the layout is genuinely two-dimensional.
+- **LoFi mockups are layout references only:** Treat LoFi mockups as structure/flow guides. Do not reinterpret their layout intent.
+- **Avoid hard-coded visual values from mockups:** Do not copy explicit mockup dimensions or colors directly into implementation; use responsive sizing and project theme tokens/variables.
+
+## LLM UI Task Template
+
+Use this prompt template when assigning frontend layout work to an LLM:
+
+```text
+Build/update <screen/component> to match the LoFi layout reference.
+
+Layout constraints (authoritative):
+- Keep placement/order exactly as in LoFi (columns, panel order, key section positions).
+- Treat LoFi as layout-only reference; do not reinterpret structure.
+
+Implementation constraints:
+- Prefer flexbox for small/local component layout; use grid only for true two-dimensional layouts.
+- Do not copy explicit mockup dimensions or colors.
+- Use responsive sizing and project theme tokens/variables.
+
+Acceptance checks:
+- Column/panel placement matches LoFi.
+- Mobile and desktop both preserve intended structure.
+- No hard-coded mockup colors/dimensions were introduced.
+```
