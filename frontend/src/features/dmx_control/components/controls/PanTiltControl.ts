@@ -10,6 +10,9 @@ export interface PanTiltControlOptions {
   initialTilt?: number;
   maxPan?: number;
   maxTilt?: number;
+  poiPan?: number | null;
+  poiTilt?: number | null;
+  onChange?: (pan: number, tilt: number) => void;
   onCommit?: (pan: number, tilt: number) => void;
 }
 
@@ -19,6 +22,9 @@ export function PanTiltControl({
   initialTilt = 128,
   maxPan = 255,
   maxTilt = 255,
+  poiPan = null,
+  poiTilt = null,
+  onChange,
   onCommit,
 }: PanTiltControlOptions): PanTiltControlHandle {
   const limits = { maxPan, maxTilt };
@@ -28,6 +34,10 @@ export function PanTiltControl({
   const handle = document.createElement("div");
   handle.className = "pan-tilt-handle";
   container.appendChild(handle);
+
+  const poiHandle = document.createElement("div");
+  poiHandle.className = "pan-tilt-handle poi";
+  container.appendChild(poiHandle);
 
   const panLabel = document.createElement("div");
   panLabel.className = "pan-tilt-label pan";
@@ -41,8 +51,21 @@ export function PanTiltControl({
 
   let currentPan = initialPan;
   let currentTilt = initialTilt;
+  let currentPoiPan: number | null = poiPan;
+  let currentPoiTilt: number | null = poiTilt;
   let isDragging = false;
   let detachDragListeners: (() => void) | null = null;
+
+  const updatePoiHandle = () => {
+    if (currentPoiPan === null || currentPoiTilt === null) {
+      poiHandle.style.display = "none";
+      return;
+    }
+    const position = handlePercent({ pan: currentPoiPan, tilt: currentPoiTilt }, limits);
+    poiHandle.style.left = position.left;
+    poiHandle.style.top = position.top;
+    poiHandle.style.display = "block";
+  };
 
   const updateHandle = () => {
     const position = handlePercent({ pan: currentPan, tilt: currentTilt }, limits);
@@ -57,6 +80,7 @@ export function PanTiltControl({
     currentPan = point.pan;
     currentTilt = point.tilt;
     updateHandle();
+    onChange?.(currentPan, currentTilt);
     sendUpdates(currentPan, currentTilt);
   };
 
@@ -111,6 +135,7 @@ export function PanTiltControl({
       currentPan = pan;
       currentTilt = tilt;
       updateHandle();
+      onChange?.(currentPan, currentTilt);
     }
   };
 
@@ -125,10 +150,16 @@ export function PanTiltControl({
   };
 
   updateHandle();
+  updatePoiHandle();
 
   return {
     root: container,
     updatePanTilt,
+    updatePoiTarget: (pan, tilt) => {
+      currentPoiPan = pan;
+      currentPoiTilt = tilt;
+      updatePoiHandle();
+    },
     dispose,
   };
 }

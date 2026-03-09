@@ -13,8 +13,12 @@
                 "tilt": 9175
             },
             "mini_beam_prism_r": {
-                "pan": 789,
-                "tilt": 1011
+                "pan": 42490,
+                "tilt": 20316
+            },
+            "head_el150": {
+                "pan": 43693,
+                "tilt": 5898
             }
         }
     },
@@ -28,8 +32,12 @@
         },
         "fixtures": {
             "mini_beam_prism_l": {
-                "pan": 0,
-                "tilt": 0
+                "pan": 39976,
+                "tilt": 12452
+            },
+            "mini_beam_prism_r": {
+                "pan": 47405,
+                "tilt": 14745
             }
         }
     },

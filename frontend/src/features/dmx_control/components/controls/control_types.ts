@@ -9,6 +9,7 @@ export type FixtureControlHandle = {
 export type PanTiltControlHandle = {
   root: HTMLElement;
   updatePanTilt: (pan: number, tilt: number) => void;
+  updatePoiTarget: (pan: number | null, tilt: number | null) => void;
   dispose: () => void;
 };
 

@@ -9,7 +9,7 @@ from models.fixture import Fixture
 from models.cue import CueSheet, CueEntry
 from models.song import Song, SongMetadata
 from store.dmx_canvas import DMXCanvas, DMX_CHANNELS
-from store.pois import PoiDatabase
+from store.pois import PoiStore
 from store.services.canvas_rendering import (
     dump_canvas_debug,
     render_cue_sheet_to_canvas,
@@ -34,7 +34,7 @@ class StateManager:
         # "output" universe is what we actually send to Art-Net.
         self.output_universe: bytearray = bytearray(DMX_CHANNELS)
         self.fixtures: List[Fixture] = []
-        self.poi_db: PoiDatabase = PoiDatabase(backend_path / "fixtures" / "pois.json")
+        self.poi_db: PoiStore = PoiStore(backend_path / "fixtures" / "pois.json")
         self.fixtures_path: Optional[Path] = None
         self.current_song: Optional[Song] = None
         self.cue_sheet: Optional[CueSheet] = None
@@ -179,16 +179,15 @@ class StateManager:
 
         pan_u16 = max(0, min(65535, int(pan)))
         tilt_u16 = max(0, min(65535, int(tilt)))
-        
-        if "fixtures" not in target_poi:
-            target_poi["fixtures"] = {}
-            
-        target_poi["fixtures"][str(fixture_id)] = {
-            "pan": pan_u16,
-            "tilt": tilt_u16,
-        }
-        
-        await self.poi_db.update(normalized_poi_id, target_poi)
+
+        saved = await self.poi_db.set_fixture_target(
+            normalized_poi_id,
+            str(fixture_id),
+            {"pan": pan_u16, "tilt": tilt_u16},
+        )
+        if not saved:
+            return {"ok": False, "reason": "persist_failed"}
+
         self.canvas_dirty = True
 
         return {

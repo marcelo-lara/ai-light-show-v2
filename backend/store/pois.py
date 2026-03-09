@@ -91,6 +91,23 @@ class PoiDatabase:
                         return f_data
         return None
 
+    async def set_fixture_target(self, poi_id: str, fixture_id: str, channels: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        async with self.lock:
+            for poi in self.pois:
+                if str(poi.get("id")).strip().lower() == str(poi_id).strip().lower():
+                    fixtures = poi.get("fixtures", {})
+                    if not isinstance(fixtures, dict) or "fixtures" not in poi:
+                        fixtures = {}
+                        poi["fixtures"] = fixtures
+                    fixtures[fixture_id] = channels
+                    self._save_unlocked()
+                    return channels
+        return None
+
     @classmethod
     def get_instance(cls) -> Optional['PoiDatabase']:
         return cls._instance
+
+
+# Compatibility alias while callers migrate.
+PoiStore = PoiDatabase

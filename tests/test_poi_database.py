@@ -82,13 +82,8 @@ async def test_poi_update_fixture_node_add_and_update(temp_pois_file):
     })
 
     # Add missing fixtures node and target fixture entry.
-    updated = await db.update("poi_1", {
-        "fixtures": {
-            "fixture_a": {"pan": 111, "tilt": 222},
-        },
-    })
-    assert updated is not None
-    assert updated["fixtures"]["fixture_a"] == {"pan": 111, "tilt": 222}
+    saved = await db.set_fixture_target("poi_1", "fixture_a", {"pan": 111, "tilt": 222})
+    assert saved == {"pan": 111, "tilt": 222}
 
     with open(temp_pois_file, "r") as f:
         data = json.load(f)
@@ -96,13 +91,8 @@ async def test_poi_update_fixture_node_add_and_update(temp_pois_file):
     assert data[0]["fixtures"]["fixture_a"]["tilt"] == 222
 
     # Update existing fixture entry for same POI.
-    updated = await db.update("poi_1", {
-        "fixtures": {
-            "fixture_a": {"pan": 333, "tilt": 444},
-        },
-    })
-    assert updated is not None
-    assert updated["fixtures"]["fixture_a"] == {"pan": 333, "tilt": 444}
+    saved = await db.set_fixture_target("poi_1", "fixture_a", {"pan": 333, "tilt": 444})
+    assert saved == {"pan": 333, "tilt": 444}
 
     with open(temp_pois_file, "r") as f:
         data = json.load(f)

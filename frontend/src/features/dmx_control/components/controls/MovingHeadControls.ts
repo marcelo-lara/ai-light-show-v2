@@ -20,6 +20,7 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
     pan: Number(fixture.values.pan ?? (maxPan / 2)),
     tilt: Number(fixture.values.tilt ?? (maxTilt / 2)),
   };
+  let refreshPoiController = () => {};
 
   const wrap = document.createElement("div");
   wrap.className = "moving-head-layout";
@@ -31,6 +32,7 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
   channelsCol.className = "moving-head-channels";
 
   let ptControl: ReturnType<typeof PanTiltControl> | null = null;
+  let selectedPoiTarget: { pan: number; tilt: number } | null = null;
   if (hasPanTilt) {
     // Add 2D Pan/Tilt Control
     ptControl = PanTiltControl({
@@ -39,6 +41,13 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
       initialTilt: Number(state.tilt),
       maxPan,
       maxTilt,
+      poiPan: null,
+      poiTilt: null,
+      onChange: (pan, tilt) => {
+        state.pan = pan;
+        state.tilt = tilt;
+        refreshPoiController();
+      },
       onCommit: (pan, tilt) => {
         state.pan = pan;
         state.tilt = tilt;
@@ -49,7 +58,25 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
   }
 
   // Add POI Button Grid
-  const poiController = PoiLocationController({ fixtureId });
+  const poiController = PoiLocationController({
+    fixtureId,
+    getLivePanTilt: () => ({
+      pan: Number(state.pan ?? 0),
+      tilt: Number(state.tilt ?? 0),
+    }),
+    setRefreshHandler: (refresh) => {
+      refreshPoiController = refresh;
+    },
+    onSelectedPoiTargetChange: (target) => {
+      selectedPoiTarget = target;
+      if (ptControl) {
+        ptControl.updatePoiTarget(
+          selectedPoiTarget ? Number(selectedPoiTarget.pan) : null,
+          selectedPoiTarget ? Number(selectedPoiTarget.tilt) : null,
+        );
+      }
+    },
+  });
   spatialCol.appendChild(poiController.root);
 
   // Use StandardControls for all other meta-channels (dimmer, strobe, color, gobo, etc.)
@@ -59,7 +86,11 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
 
   const updateValues = (newValues: FixtureValues) => {
     if (ptControl && newValues.pan !== undefined && newValues.tilt !== undefined) {
-      ptControl.updatePanTilt(Number(newValues.pan), Number(newValues.tilt));
+      const pan = Number(newValues.pan);
+      const tilt = Number(newValues.tilt);
+      state.pan = pan;
+      state.tilt = tilt;
+      ptControl.updatePanTilt(pan, tilt);
     }
     standard.updateValues(newValues);
   };

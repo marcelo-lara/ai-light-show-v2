@@ -162,6 +162,10 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
   - `step=true` => swatch/slot grid (sends mapped numeric key)
   - `step!=true` => slider (`step=1`, mapping used as cue only)
 - Effect footer uses the LoFi structure: effect selector, duration input, params row, preview action.
+- POI selection behavior in moving-head spatial:
+  - selected POI with fixture target => move to target and hide `set`
+  - selected POI without fixture target => move to `0,0` and show `set`
+  - pan/tilt divergence from selected target => show `set`
 - Pink annotation text in the mockup is guidance only and is not rendered in UI.
 
 ## Current implementation status

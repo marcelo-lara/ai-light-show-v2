@@ -97,8 +97,8 @@ class MovingHead(Fixture):
         if not needle:
             return None
 
-        from store.pois import PoiDatabase
-        poi_db = PoiDatabase.get_instance()
+        from store.pois import PoiStore
+        poi_db = PoiStore.get_instance()
         if poi_db:
             return poi_db.get_fixture_target_sync(needle, self.id)
 
