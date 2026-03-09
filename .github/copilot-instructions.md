@@ -5,6 +5,18 @@
 - **NEVER prioritize backward compatibility over correctness.** Breaking changes are acceptable when they improve clarity and behavior.
 - **ALWAYS use the `ai-light` Python environment** for local Python development.
 
+## LLM code size and quality rules
+- Prefer small files: target `<= 100` lines per file.
+- If a file would exceed `100` lines, split by responsibility into focused modules.
+- Keep functions small and single-purpose.
+- Favor pure functions for business logic; isolate side effects at boundaries.
+- Use clear names, explicit types, and consistent return shapes.
+- Avoid duplicated logic; extract reusable helpers.
+- Add minimal comments only when intent is not obvious from code.
+- Include basic validation and error handling at I/O and integration boundaries.
+- Do not keep deprecated code or compatibility shims.
+- If a rule conflicts with correctness, prioritize correctness and document the tradeoff in the PR/commit message.
+
 Activate environment before Python work:
 
 ```bash
@@ -21,7 +33,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Project overview: [README.md](../README.md)
 - Canonical architecture index: [docs/architecture.md](../docs/architecture.md)
 - Backend runtime/protocol source of truth: [docs/architecture/backend_llm_reference.md](../docs/architecture/backend_llm_reference.md)
-- Frontend module guide: [frontend/README.md](../frontend/README.md)
+- Frontend module guide (entrypoints/routes/intents/component map): [frontend/README.md](../frontend/README.md)
 - Backend module guide: [backend/README.md](../backend/README.md)
 - Analyzer module guide: [analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [llm-server/README.md](../llm-server/README.md)
@@ -35,6 +47,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Control plane is websocket `/ws`; state is emitted via `snapshot` and `patch` messages.
 - Real-time DMX flow: client websocket messages -> intent handlers/state builders -> `StateManager` updates -> `ArtNetService` sends ArtDMX UDP packets.
 - The UI frontend is strictly a backend client. DMX logic is backend-owned.
+- Active frontend routes are `show_control`, `song_analysis`, `show_builder`, and `dmx_control` (see [frontend/src/app/routes.ts](../frontend/src/app/routes.ts)).
 - Analyzer scripts produce metadata under `analyzer/meta/<song>/...`; backend reads from `/app/meta` in Docker.
 - LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service.
 

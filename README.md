@@ -6,7 +6,7 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, Ar
 
 AI Light Show is split into six primary modules:
 
-- **frontend/**: UIX-based client acting as a "dumb console" mapping user actions to backend intents.
+- **frontend/**: Deno-served TypeScript client acting as a "dumb console" that maps user actions to backend intents.
 - **backend/**: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
 - **analyzer/**: Offline metadata generation (`analyzer/meta/<song>/...`).
 - **mcp/song_metadata/**: MCP server exposing read-only metadata query tools over SSE.

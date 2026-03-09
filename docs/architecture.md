@@ -5,6 +5,7 @@
 Use these module guides first, then drill into architecture detail docs.
 
 - Project overview: [../README.md](../README.md)
+- Frontend module: [../frontend/README.md](../frontend/README.md)
 - Backend module: [../backend/README.md](../backend/README.md)
 - Backend implementation contract: [architecture/backend_llm_reference.md](architecture/backend_llm_reference.md)
 - Analyzer module: [../analyzer/README.md](../analyzer/README.md)
