@@ -55,6 +55,12 @@
             "x": 0.5,
             "y": 0.5,
             "z": 0
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 0,
+                "tilt": 0
+            }
         }
     },
     {

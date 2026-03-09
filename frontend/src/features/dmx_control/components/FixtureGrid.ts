@@ -54,7 +54,7 @@ export function FixtureGrid(initialFixtures: FixtureVM[]): FixtureGridHandle {
 			const card = FixtureCard({
 				fixture,
 				body: () => control.root,
-				footer: () => EffectTray(fixture.id),
+				footer: () => EffectTray(fixture),
 			});
 
 			controls.set(fixture.id, control);

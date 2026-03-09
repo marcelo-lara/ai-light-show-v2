@@ -22,3 +22,4 @@ Use this file first for UI tasks. Keep prompts short and reference exact assets 
 - Cite only the specific screen file(s) needed for the task.
 - Treat LoFi files as layout references only.
 - Use frontend token/style rules from [frontend/README.md](../../frontend/README.md).
+- For DMX layout tasks, use `4 DMX Control.png` plus `common_player.md` and request structure parity (not color/dimension parity).

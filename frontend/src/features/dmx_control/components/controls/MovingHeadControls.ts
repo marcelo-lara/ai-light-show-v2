@@ -22,7 +22,13 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
   };
 
   const wrap = document.createElement("div");
-  wrap.className = "control-stack";
+  wrap.className = "moving-head-layout";
+
+  const spatialCol = document.createElement("div");
+  spatialCol.className = "moving-head-spatial";
+
+  const channelsCol = document.createElement("div");
+  channelsCol.className = "moving-head-channels";
 
   let ptControl: ReturnType<typeof PanTiltControl> | null = null;
   if (hasPanTilt) {
@@ -39,16 +45,17 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
         setFixtureValues(fixtureId, { pan, tilt });
       },
     });
-    wrap.appendChild(ptControl.root);
+    spatialCol.appendChild(ptControl.root);
   }
 
   // Add POI Button Grid
   const poiController = PoiLocationController({ fixtureId });
-  wrap.appendChild(poiController.root);
+  spatialCol.appendChild(poiController.root);
 
   // Use StandardControls for all other meta-channels (dimmer, strobe, color, gobo, etc.)
   const standard = StandardControls(fixture);
-  wrap.appendChild(standard.root);
+  channelsCol.appendChild(standard.root);
+  wrap.append(spatialCol, channelsCol);
 
   const updateValues = (newValues: FixtureValues) => {
     if (ptControl && newValues.pan !== undefined && newValues.tilt !== undefined) {

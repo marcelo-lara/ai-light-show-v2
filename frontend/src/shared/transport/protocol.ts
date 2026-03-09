@@ -127,8 +127,9 @@ export type MetaChannel = {
   channel?: string; // name of raw channel
   channels?: string[]; // names for u16/rgb
   mapping?: string; // mapping id for enum
+  step?: boolean; // UI hint: discrete stepped selector
+  hidden?: boolean; // UI hint: do not render control in default views
   min?: number;
   max?: number;
   arm?: number;
 };
-

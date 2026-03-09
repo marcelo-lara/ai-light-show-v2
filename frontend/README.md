@@ -111,8 +111,9 @@ Global bridge fields used across modules:
 - `src/features/dmx_control/fixture_intents.ts`: DMX + preview + POI intent senders.
 - `src/features/dmx_control/components/FixtureGrid.ts`: card grid and incremental control updates.
 - `src/features/dmx_control/components/FixtureCard.ts`: fixture container with ARM action.
-- `src/features/dmx_control/components/EffectTray.ts`: quick preview effect buttons.
+- `src/features/dmx_control/components/EffectTray.ts`: LoFi-style effect preview footer (`effect`, `duration`, dynamic params, `preview`).
 - `src/features/dmx_control/components/controls/StandardControls.ts`: meta-channel-driven sliders/dropdowns.
+- `src/features/dmx_control/components/controls/EnumGrid.ts`: slot-style enum control grid used for mapped wheels (color/gobo).
 - `src/features/dmx_control/components/controls/RgbControls.ts`: color control + standard controls composition.
 - `src/features/dmx_control/components/controls/RgbPreview.ts`: typed RGB preview display.
 - `src/features/dmx_control/components/controls/MovingHeadControls.ts`: pan/tilt surface + POI controller + standard controls.
@@ -145,6 +146,23 @@ Global bridge fields used across modules:
 - `src/features/llm_chat/LlmChat.css`: chat layout and message styles.
 
 Use CSS variables from `themes.css` for visual values. Do not hardcode mockup colors/dimensions.
+
+## DMX LoFi layout contract
+
+Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
+
+- Moving-head card body uses a two-column split:
+  - left: pan/tilt surface + POI selector/set action
+  - right: mapped wheels + range sliders
+- Right-column control order is deterministic:
+  - wheels first (`enum`, and `u8` channels with `mapping` + `step=true`)
+  - sliders second (`u8/u16`, including `u8+mapping` where `step` is not true)
+- Mapped enum controls render as slot-style square grids, not native selects.
+- `u8 + mapping` rendering matrix:
+  - `step=true` => swatch/slot grid (sends mapped numeric key)
+  - `step!=true` => slider (`step=1`, mapping used as cue only)
+- Effect footer uses the LoFi structure: effect selector, duration input, params row, preview action.
+- Pink annotation text in the mockup is guidance only and is not rendered in UI.
 
 ## Current implementation status
 
