@@ -131,12 +131,10 @@ export function PanTiltControl({
   container.addEventListener("touchstart", handleTouchStart, { passive: false });
 
   const updatePanTilt = (pan: number, tilt: number) => {
-    if (!isDragging) {
-      currentPan = pan;
-      currentTilt = tilt;
-      updateHandle();
-      onChange?.(currentPan, currentTilt);
-    }
+    currentPan = pan;
+    currentTilt = tilt;
+    updateHandle();
+    onChange?.(currentPan, currentTilt);
   };
 
   const dispose = () => {

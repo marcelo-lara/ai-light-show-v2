@@ -3,6 +3,11 @@ from __future__ import annotations
 from typing import Any, Dict
 
 
+async def _sync_state_channel(manager, absolute_channel: int, value: int) -> None:
+    # Keep backend snapshot values aligned with live set_values changes.
+    await manager.state_manager.update_dmx_channel(int(absolute_channel), int(value))
+
+
 async def set_values(manager, payload: Dict[str, Any]) -> bool:
     fixture_id = str(payload.get("fixture_id") or "")
     values = payload.get("values") or {}
@@ -28,8 +33,12 @@ async def set_values(manager, payload: Dict[str, Any]) -> bool:
                 val = int(value)
                 msb = (val >> 8) & 0xFF
                 lsb = val & 0xFF
-                await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channels[0]], msb)
-                await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channels[1]], lsb)
+                msb_channel = fixture.absolute_channels[mc.channels[0]]
+                lsb_channel = fixture.absolute_channels[mc.channels[1]]
+                await manager.artnet_service.set_channel(msb_channel, msb)
+                await manager.artnet_service.set_channel(lsb_channel, lsb)
+                await _sync_state_channel(manager, msb_channel, msb)
+                await _sync_state_channel(manager, lsb_channel, lsb)
                 changed = True
             except (ValueError, TypeError):
                 pass
@@ -42,13 +51,19 @@ async def set_values(manager, payload: Dict[str, Any]) -> bool:
             
             if dmx_val is not None:
                 try:
-                    await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channel], int(dmx_val))
+                    dmx_channel = fixture.absolute_channels[mc.channel]
+                    dmx_value = int(dmx_val)
+                    await manager.artnet_service.set_channel(dmx_channel, dmx_value)
+                    await _sync_state_channel(manager, dmx_channel, dmx_value)
                     changed = True
                 except (ValueError, TypeError):
                     pass
         elif mc.channel:
             try:
-                await manager.artnet_service.set_channel(fixture.absolute_channels[mc.channel], int(value))
+                dmx_channel = fixture.absolute_channels[mc.channel]
+                dmx_value = int(value)
+                await manager.artnet_service.set_channel(dmx_channel, dmx_value)
+                await _sync_state_channel(manager, dmx_channel, dmx_value)
                 changed = True
             except (ValueError, TypeError):
                 pass

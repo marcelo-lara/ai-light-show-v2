@@ -38,6 +38,8 @@ async def test_set_values_u8_u16_and_enum_paths():
     })
     assert changed is True
     assert (fixture.absolute_channels["dim"], 123) in artnet.calls
+    output = await sm.get_output_universe()
+    assert output[fixture.absolute_channels["dim"] - 1] == 123
 
     # u16 path
     artnet.calls.clear()
@@ -48,6 +50,9 @@ async def test_set_values_u8_u16_and_enum_paths():
     assert changed is True
     assert (fixture.absolute_channels["pan_msb"], 0x12) in artnet.calls
     assert (fixture.absolute_channels["pan_lsb"], 0x34) in artnet.calls
+    output = await sm.get_output_universe()
+    assert output[fixture.absolute_channels["pan_msb"] - 1] == 0x12
+    assert output[fixture.absolute_channels["pan_lsb"] - 1] == 0x34
 
     # enum path: backend expects label and resolves to DMX value
     artnet.calls.clear()
@@ -57,3 +62,5 @@ async def test_set_values_u8_u16_and_enum_paths():
     })
     assert changed is True
     assert (fixture.absolute_channels["color"], 15) in artnet.calls
+    output = await sm.get_output_universe()
+    assert output[fixture.absolute_channels["color"] - 1] == 15

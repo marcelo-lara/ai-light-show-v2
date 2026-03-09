@@ -85,12 +85,14 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
   wrap.append(spatialCol, channelsCol);
 
   const updateValues = (newValues: FixtureValues) => {
-    if (ptControl && newValues.pan !== undefined && newValues.tilt !== undefined) {
-      const pan = Number(newValues.pan);
-      const tilt = Number(newValues.tilt);
-      state.pan = pan;
-      state.tilt = tilt;
-      ptControl.updatePanTilt(pan, tilt);
+    if (ptControl) {
+      const nextPan = newValues.pan !== undefined ? Number(newValues.pan) : Number(state.pan ?? 0);
+      const nextTilt = newValues.tilt !== undefined ? Number(newValues.tilt) : Number(state.tilt ?? 0);
+      if (newValues.pan !== undefined || newValues.tilt !== undefined) {
+        state.pan = nextPan;
+        state.tilt = nextTilt;
+        ptControl.updatePanTilt(nextPan, nextTilt);
+      }
     }
     standard.updateValues(newValues);
   };
