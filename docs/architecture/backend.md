@@ -9,7 +9,8 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
 - `backend/api/intents/*`: intent registry + action handlers.
-- `backend/store/state.py`: `StateManager` (fixtures, song/cues, playback/preview, DMX canvas).
+- `backend/store/state.py`: `StateManager` (authoritative runtime state + orchestration).
+- `backend/store/services/*`: collaborator services for fixture/template loading, metadata resolution, section persistence, and canvas rendering/debug output.
 - `backend/store/dmx_canvas.py`: memory-efficient DMX frame buffer.
 - `backend/store/pois.py`: POI persistence and runtime lookup.
 - `backend/services/artnet.py`: Art-Net sender loop.
@@ -28,7 +29,7 @@ Compatibility exports:
 
 ### Dual universe model
 
-`StateManager` keeps two universes:
+`StateManager` keeps two universes and delegates parsing/render/persistence boundaries to `store/services/*`:
 - `editor_universe`: authoring/edit baseline.
 - `output_universe`: universe currently sent by Art-Net.
 

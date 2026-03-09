@@ -23,6 +23,22 @@
   gap: 8px;
 }
 
+.rgb-preview {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.rgb-preview-swatch {
+  width: 44px;
+  height: 20px;
+  border: 1px solid var(--border-strong);
+}
+
+.rgb-preview-label {
+  font-size: 0.75rem;
+}
+
 .dmx-arm {
   width: 48px;
   height: 24px;

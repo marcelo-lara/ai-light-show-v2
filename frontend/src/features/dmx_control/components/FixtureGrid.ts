@@ -4,49 +4,90 @@ import { RgbControls } from "./controls/RgbControls.ts";
 import { MovingHeadControls } from "./controls/MovingHeadControls.ts";
 import { UnknownControls } from "./controls/UnknownControls.ts";
 import { EffectTray } from "./EffectTray.ts";
+import type { FixtureControlHandle } from "./controls/control_types.ts";
 
-export function FixtureGrid(fixtures: FixtureVM[]): HTMLElement {
-	const grid = document.createElement("div");
-	grid.className = "fixture-grid";
-	(grid as any)._cards = new Map<string, HTMLElement>();
+export type FixtureGridHandle = {
+	root: HTMLElement;
+	updateFixtures: (fixtures: FixtureVM[]) => void;
+	dispose: () => void;
+};
 
-	if (fixtures.length === 0) {
-		const empty = document.createElement("p");
-		empty.className = "muted";
-		empty.textContent = "No fixtures in backend snapshot.";
-		grid.appendChild(empty);
-		return grid;
-	}
-
-	for (const fixture of fixtures) {
-		console.log("Rendering Card for Fixture:", fixture.id, fixture.hasRgb, fixture.hasPanTilt);
-		const bodyElement = (() => {
-			if (fixture.hasPanTilt) return MovingHeadControls(fixture);
-			if (fixture.hasRgb) return RgbControls(fixture);
-			return UnknownControls(fixture.id);
-		})();
-
-		const card = FixtureCard({ 
-			fixture, 
-			body: () => bodyElement, 
-			footer: () => EffectTray(fixture.id) 
-		});
-		
-		(grid as any)._cards.set(fixture.id, bodyElement);
-		grid.appendChild(card);
-	}
-
-	return grid;
+function fixtureIds(fixtures: FixtureVM[]): string {
+	return fixtures.map((fixture) => fixture.id).sort().join("|");
 }
 
-export function updateFixtureGrid(grid: HTMLElement, fixtures: FixtureVM[]) {
-	const cards = (grid as any)._cards as Map<string, HTMLElement>;
-	if (!cards) return;
+export function FixtureGrid(initialFixtures: FixtureVM[]): FixtureGridHandle {
+	const root = document.createElement("div");
+	root.className = "fixture-grid";
 
-	for (const fixture of fixtures) {
-		const body = cards.get(fixture.id);
-		if (body && (body as any).updateValues) {
-			(body as any).updateValues(fixture.values);
+	let controls = new Map<string, FixtureControlHandle>();
+	let currentIds = "";
+
+	const disposeControls = () => {
+		for (const control of controls.values()) {
+			control.dispose();
 		}
-	}
+		controls.clear();
+	};
+
+	const render = (fixtures: FixtureVM[]) => {
+		disposeControls();
+		root.replaceChildren();
+
+		if (fixtures.length === 0) {
+			const empty = document.createElement("p");
+			empty.className = "muted";
+			empty.textContent = "No fixtures in backend snapshot.";
+			root.appendChild(empty);
+			currentIds = "";
+			return;
+		}
+
+		for (const fixture of fixtures) {
+			console.log("Rendering Card for Fixture:", fixture.id, fixture.hasRgb, fixture.hasPanTilt);
+			const control = (() => {
+				if (fixture.hasPanTilt) return MovingHeadControls(fixture);
+				if (fixture.hasRgb) return RgbControls(fixture);
+				return UnknownControls(fixture.id);
+			})();
+
+			const card = FixtureCard({
+				fixture,
+				body: () => control.root,
+				footer: () => EffectTray(fixture.id),
+			});
+
+			controls.set(fixture.id, control);
+			root.appendChild(card);
+		}
+		currentIds = fixtureIds(fixtures);
+	};
+
+	const updateFixtures = (fixtures: FixtureVM[]) => {
+		const nextIds = fixtureIds(fixtures);
+		if (nextIds !== currentIds) {
+			render(fixtures);
+			return;
+		}
+
+		for (const fixture of fixtures) {
+			const control = controls.get(fixture.id);
+			if (control) {
+				control.updateValues(fixture.values);
+			}
+		}
+	};
+
+	const dispose = () => {
+		disposeControls();
+		root.replaceChildren();
+	};
+
+	render(initialFixtures);
+
+	return {
+		root,
+		updateFixtures,
+		dispose,
+	};
 }

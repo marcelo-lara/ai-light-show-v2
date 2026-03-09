@@ -1,5 +1,5 @@
-import type { SongState } from "../../transport/protocol.ts";
-import type { Section } from "./types.ts";
+import type { SongState } from "../../../transport/protocol.ts";
+import type { Section } from "../types/types.ts";
 
 export function cleanSortedNumeric(values: unknown): number[] {
   if (!Array.isArray(values)) return [];

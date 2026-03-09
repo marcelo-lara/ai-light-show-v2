@@ -71,7 +71,7 @@ class MovingHead(Fixture):
             try:
                 if str(poi_id).strip().lower() == needle and isinstance(values, dict):
                     return values
-            except Exception:
+            except (TypeError, ValueError):
                 continue
 
         for p in self.presets or []:
@@ -85,7 +85,7 @@ class MovingHead(Fixture):
                         linked_values = poi_targets.get(str(poi_id))
                         if isinstance(linked_values, dict):
                             return linked_values
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 continue
         return None
 
@@ -128,7 +128,7 @@ class MovingHead(Fixture):
             raw = payload.get(axis, 0)
             try:
                 iv = int(raw)
-            except Exception:
+            except (TypeError, ValueError):
                 return None
 
             # If a fine component exists, treat axis as MSB byte.

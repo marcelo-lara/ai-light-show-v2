@@ -11,6 +11,7 @@ Use these module guides first, then drill into architecture detail docs.
 - Analyzer module: [../analyzer/README.md](../analyzer/README.md)
 - LLM server + gateway: [../llm-server/README.md](../llm-server/README.md)
 - MCP services: [../mcp/README.md](../mcp/README.md)
+- UI docs + LoFi index: [ui/README.md](ui/README.md)
 - Tests module: [../tests/README.md](../tests/README.md)
 
 AI Light Show v2 is split into six primary modules:

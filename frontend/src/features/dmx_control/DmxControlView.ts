@@ -1,7 +1,14 @@
 import { selectFixtureVms } from "./fixture_selectors.ts";
-import { FixtureGrid, updateFixtureGrid } from "./components/FixtureGrid.ts";
+import { FixtureGrid } from "./components/FixtureGrid.ts";
+import type { FixtureVM } from "./adapters/fixture_vm.ts";
 
-export function DmxControlView(): HTMLElement {
+export type DmxControlViewHandle = {
+	root: HTMLElement;
+	updateFixtures: (fixtureVms: FixtureVM[]) => void;
+	dispose: () => void;
+};
+
+export function DmxControlView(): DmxControlViewHandle {
 	console.log("DmxControlView rendering...");
 	const wrap = document.createElement("section");
 	wrap.className = "view";
@@ -10,12 +17,11 @@ export function DmxControlView(): HTMLElement {
 	console.log("Fixtures in View:", fixtures.length);
 	const grid = FixtureGrid(fixtures);
 
-	wrap.append(grid);
+	wrap.append(grid.root);
 
-	// Expose update method
-	(wrap as any).updateFixtures = (fixtureVms: any[]) => {
-		updateFixtureGrid(grid, fixtureVms);
+	return {
+		root: wrap,
+		updateFixtures: (fixtureVms: FixtureVM[]) => grid.updateFixtures(fixtureVms),
+		dispose: () => grid.dispose(),
 	};
-
-	return wrap;
 }

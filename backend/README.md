@@ -15,6 +15,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - `api/intents/*`: intent handlers and registry.
 - `api/state/*`: snapshot/patch payload builders.
 - `store/state.py`: `StateManager` (fixtures, cues, playback, preview, canvas).
+- `store/services/*`: `StateManager` collaborators for fixture loading, metadata loading, section persistence, and canvas rendering/debug output.
 - `store/pois.py`: POI CRUD + persistence.
 - `store/dmx_canvas.py`: packed DMX frame buffer.
 - `services/artnet.py`: UDP Art-Net sender.

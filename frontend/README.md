@@ -2,6 +2,8 @@
 
 This frontend is a Deno-served TypeScript browser client. It renders backend-authoritative state from WebSocket `snapshot`/`patch` messages and emits user `intent` messages.
 
+UI layout references live in [../docs/ui/README.md](../docs/ui/README.md).
+
 ## Source of truth
 
 - Code is authoritative over docs.
@@ -92,9 +94,13 @@ Global bridge fields used across modules:
 ### Song player (shared across routes)
 - `src/shared/components/song_player/SongPlayer.ts`: singleton facade (`SongPlayer`, `refreshSongPlayer`).
 - `src/shared/components/song_player/SongPlayerController.ts`: orchestration class for playback, navigation, looping, region rebuild, backend sync.
+- `src/shared/components/song_player/ui/buildSongPlayerUi.ts`: UI composition extracted from controller lifecycle logic.
 - `src/shared/components/song_player/logic/WaveSurferManager.ts`: WaveSurfer lifecycle, regions plugin, media controls.
 - `src/shared/components/song_player/logic/PlaybackSync.ts`: backend sync cadence (10s periodic + debounced seeks + immediate sync).
 - `src/shared/components/song_player/logic/song_logic.ts`: section/beat utilities and song fingerprinting.
+- `src/shared/components/song_player/logic/navigation_loop.ts`: pure section/beat navigation and loop-wrap target helpers.
+- `src/shared/components/song_player/logic/song_player_state.ts`: song identity/data derivation, paused playback time normalization, audio URL resolution.
+- `src/shared/components/song_player/logic/wave_callbacks.ts`: WaveSurfer callback orchestration bindings for controller state updates.
 - `src/shared/components/song_player/logic/regions.ts`: section/downbeat overlay generation.
 - `src/shared/components/song_player/ui/*`: waveform, transport buttons, readout, options, layout primitives.
 
@@ -108,10 +114,12 @@ Global bridge fields used across modules:
 - `src/features/dmx_control/components/EffectTray.ts`: quick preview effect buttons.
 - `src/features/dmx_control/components/controls/StandardControls.ts`: meta-channel-driven sliders/dropdowns.
 - `src/features/dmx_control/components/controls/RgbControls.ts`: color control + standard controls composition.
+- `src/features/dmx_control/components/controls/RgbPreview.ts`: typed RGB preview display.
 - `src/features/dmx_control/components/controls/MovingHeadControls.ts`: pan/tilt surface + POI controller + standard controls.
 - `src/features/dmx_control/components/controls/PanTiltControl.ts`: XY pad with throttled updates and commit callback.
 - `src/features/dmx_control/components/controls/PoiLocationController.ts`: POI selector and `set` target action.
 - `src/features/dmx_control/components/controls/UnknownControls.ts`: fallback channel sliders.
+- `src/features/dmx_control/components/controls/*_helpers.ts`: shared helpers for pan/tilt math/drag and POI state logic.
 
 ### LLM chat
 - `src/features/llm_chat/LlmChatView.ts`: chat card composition.
@@ -158,6 +166,10 @@ deno task serve
 ```
 
 ```bash
+deno task check
+```
+
+```bash
 npm run sync-icons
 ```
 
@@ -167,6 +179,7 @@ npm run sync-icons
 - Treat LoFi mockups as layout references only.
 - Use existing token variables from `themes.css`.
 - Keep backend integration capability-driven and backend-agnostic. Avoid frontend assumptions tied to one backend implementation.
+- Prefer referencing explicit files from [../docs/ui/README.md](../docs/ui/README.md) instead of generic "mockup" wording in prompts.
 
 ## LLM UI task template
 

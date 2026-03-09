@@ -9,8 +9,8 @@ import { setArm } from "../fixture_intents.ts";
  */
 export type FixtureCardProps = {
   fixture: FixtureVM;
-  body: () => unknown; // UIX template/JSX node
-  footer?: () => unknown;
+  body: () => HTMLElement;
+  footer?: () => HTMLElement;
 };
 
 export function FixtureCard(_props: FixtureCardProps) {
@@ -41,14 +41,14 @@ export function FixtureCard(_props: FixtureCardProps) {
 
   const body = document.createElement("div");
   body.className = "fixture-card-body";
-  body.appendChild(props.body() as HTMLElement);
+  body.appendChild(props.body());
 
   root.append(header, body);
 
   if (props.footer) {
     const footer = document.createElement("footer");
     footer.className = "fixture-card-footer";
-    footer.appendChild(props.footer() as HTMLElement);
+    footer.appendChild(props.footer());
     root.appendChild(footer);
   }
 

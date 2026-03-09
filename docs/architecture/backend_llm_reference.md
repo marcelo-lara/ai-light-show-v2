@@ -24,6 +24,7 @@ Code is the source of truth.
 
 4. State authority: `backend/store/state.py`
 - Holds fixtures, POIs, song/cue state, playback flags, preview lifecycle.
+- Delegates fixture/template loading, song metadata resolution, section persistence, and canvas rendering helpers to `backend/store/services/*`.
 - Pre-renders full song DMX canvas at `60 FPS`.
 - Computes output frame from synchronized timecode.
 
@@ -45,6 +46,12 @@ Code is the source of truth.
 | `backend/api/state/fixtures.py` | `build_fixtures_payload` | Fixture state serialization |
 | `backend/api/state/song_payload.py` | `build_song_payload` | Song metadata payload normalization |
 | `backend/store/state.py` | `StateManager` | Core show state + render + preview + persistence |
+| `backend/store/services/fixture_loader.py` | `load_fixtures_from_path` | Fixture/template loading and instantiation |
+| `backend/store/services/song_metadata_loader.py` | `SongMetadataLoader` | Metadata candidate resolution + beats/downbeats hydration |
+| `backend/store/services/section_persistence.py` | `normalize_sections_input`, `persist_parts_to_meta` | Section validation and metadata persistence |
+| `backend/store/services/canvas_rendering.py` | `render_cue_sheet_to_canvas`, `render_preview_canvas`, `dump_canvas_debug` | DMX canvas rendering + debug log dump |
+| `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
+| `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canvas debug file writer |
 | `backend/store/pois.py` | `PoiDatabase` | POI CRUD + disk sync + runtime target lookup |
 | `backend/store/dmx_canvas.py` | `DMXCanvas` | Packed DMX frame buffer |
 | `backend/services/artnet.py` | `ArtNetService` | UDP Art-Net output |

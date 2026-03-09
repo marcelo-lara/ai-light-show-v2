@@ -46,6 +46,7 @@ export function ZoomControl(opts: {
 }): {
   container: HTMLElement;
   zoomSlider: HTMLInputElement;
+  dispose: () => void;
 } {
   const container = document.createElement("div");
   container.className = "song-player-zoom-container";
@@ -60,10 +61,11 @@ export function ZoomControl(opts: {
     className: "song-player-zoom",
   });
 
-  container.appendChild(zoom);
+  container.appendChild(zoom.root);
 
   return {
     container,
-    zoomSlider: (zoom as any).input,
+    zoomSlider: zoom.input,
+    dispose: zoom.dispose,
   };
 }

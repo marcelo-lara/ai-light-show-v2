@@ -1,5 +1,8 @@
 import { throttle } from "../../../../shared/utils/throttle.ts";
 import { setFixtureValues } from "../../fixture_intents.ts";
+import type { PanTiltControlHandle } from "./control_types.ts";
+import { handlePercent, pointFromPointer } from "./pan_tilt_math.ts";
+import { startMouseDrag, startTouchDrag } from "./pan_tilt_drag.ts";
 
 export interface PanTiltControlOptions {
   fixtureId: string;
@@ -17,7 +20,8 @@ export function PanTiltControl({
   maxPan = 255,
   maxTilt = 255,
   onCommit,
-}: PanTiltControlOptions): HTMLElement {
+}: PanTiltControlOptions): PanTiltControlHandle {
+  const limits = { maxPan, maxTilt };
   const container = document.createElement("div");
   container.className = "pan-tilt-surface";
 
@@ -38,20 +42,18 @@ export function PanTiltControl({
   let currentPan = initialPan;
   let currentTilt = initialTilt;
   let isDragging = false;
+  let detachDragListeners: (() => void) | null = null;
 
   const updateHandle = () => {
-    handle.style.left = `${(currentPan / maxPan) * 100}%`;
-    handle.style.top = `${(currentTilt / maxTilt) * 100}%`;
+    const position = handlePercent({ pan: currentPan, tilt: currentTilt }, limits);
+    handle.style.left = position.left;
+    handle.style.top = position.top;
   };
 
   const updateValues = (clientX: number, clientY: number) => {
-    const rect = container.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
-    const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
-    
-    currentPan = Math.round((x / rect.width) * maxPan);
-    currentTilt = Math.round((y / rect.height) * maxTilt);
-    
+    const point = pointFromPointer(container.getBoundingClientRect(), clientX, clientY, limits);
+    currentPan = point.pan;
+    currentTilt = point.tilt;
     updateHandle();
     sendUpdates(currentPan, currentTilt);
   };
@@ -60,47 +62,49 @@ export function PanTiltControl({
     setFixtureValues(fixtureId, { pan, tilt });
   }, 32);
 
-  const handleMouseDown = (e: MouseEvent) => {
+  const beginDrag = (register: () => (() => void), firstX: number, firstY: number) => {
     isDragging = true;
-    const onMouseMove = (moveEv: MouseEvent) => {
-      updateValues(moveEv.clientX, moveEv.clientY);
-    };
-    const onMouseUp = () => {
-      isDragging = false;
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-      if (onCommit) onCommit(currentPan, currentTilt);
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    updateValues(e.clientX, e.clientY);
+    detachDragListeners = register();
+    updateValues(firstX, firstY);
   };
 
-  const handleTouchStart = (e: TouchEvent) => {
-    isDragging = true;
-    const onTouchMove = (moveEv: TouchEvent) => {
-      if (moveEv.touches.length > 0) {
-        updateValues(moveEv.touches[0].clientX, moveEv.touches[0].clientY);
-      }
-    };
-    const onTouchEnd = () => {
-      isDragging = false;
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onTouchEnd);
-      if (onCommit) onCommit(currentPan, currentTilt);
-    };
-    window.addEventListener("touchmove", onTouchMove);
-    window.addEventListener("touchend", onTouchEnd);
-    if (e.touches.length > 0) {
-      updateValues(e.touches[0].clientX, e.touches[0].clientY);
-    }
+  const handleMouseDown = (event: MouseEvent) => {
+    beginDrag(
+      () =>
+        startMouseDrag({
+          onMove: (clientX, clientY) => updateValues(clientX, clientY),
+          onEnd: () => {
+            isDragging = false;
+            detachDragListeners = null;
+            if (onCommit) onCommit(currentPan, currentTilt);
+          },
+        }),
+      event.clientX,
+      event.clientY,
+    );
+  };
+
+  const handleTouchStart = (event: TouchEvent) => {
+    if (event.touches.length === 0) return;
+    beginDrag(
+      () =>
+        startTouchDrag({
+          onMove: (clientX, clientY) => updateValues(clientX, clientY),
+          onEnd: () => {
+            isDragging = false;
+            detachDragListeners = null;
+            if (onCommit) onCommit(currentPan, currentTilt);
+          },
+        }),
+      event.touches[0].clientX,
+      event.touches[0].clientY,
+    );
   };
 
   container.addEventListener("mousedown", handleMouseDown);
   container.addEventListener("touchstart", handleTouchStart, { passive: false });
 
-  // Expose methods for external updates
-  (container as any).updatePanTilt = (pan: number, tilt: number) => {
+  const updatePanTilt = (pan: number, tilt: number) => {
     if (!isDragging) {
       currentPan = pan;
       currentTilt = tilt;
@@ -108,7 +112,21 @@ export function PanTiltControl({
     }
   };
 
+  const dispose = () => {
+    container.removeEventListener("mousedown", handleMouseDown);
+    container.removeEventListener("touchstart", handleTouchStart);
+    if (detachDragListeners) {
+      detachDragListeners();
+      detachDragListeners = null;
+    }
+    isDragging = false;
+  };
+
   updateHandle();
 
-  return container;
+  return {
+    root: container,
+    updatePanTilt,
+    dispose,
+  };
 }

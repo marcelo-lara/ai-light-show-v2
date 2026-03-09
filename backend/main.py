@@ -59,8 +59,8 @@ async def lifespan(app: FastAPI):
     # Sync initial output universe (frame 0) to Art-Net.
     try:
         await artnet_service.update_universe(await state_manager.get_output_universe())
-    except Exception as e:
-        print(f"Error syncing initial universe: {e}")
+    except Exception:
+        logger.exception("Failed to sync initial output universe")
 
     await run_startup_blue_wipe(state_manager, artnet_service)
 
@@ -75,8 +75,8 @@ async def lifespan(app: FastAPI):
     # Shutdown: perform blackout so fixtures go dark, then stop the Art-Net service
     try:
         await artnet_service.blackout()
-    except Exception as e:
-        print(f"Error during blackout: {e}")
+    except Exception:
+        logger.exception("Failed during blackout on shutdown")
     await artnet_service.stop()
 
 app = FastAPI(lifespan=lifespan, title="AI Light Show v2 Backend")

@@ -20,7 +20,7 @@ export function setArm(fixtureId: string, armed: boolean) {
   });
 }
 
-export function setFixtureValues(fixtureId: string, values: Record<string, number>) {
+export function setFixtureValues(fixtureId: string, values: Record<string, number | string>) {
   wsSend({
     type: "intent",
     req_id: reqId(),

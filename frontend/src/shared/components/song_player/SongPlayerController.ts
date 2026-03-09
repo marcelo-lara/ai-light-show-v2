@@ -7,24 +7,26 @@ import {
 } from "../../transport/transport_intents.ts";
 import { formatMs } from "./logic/time.ts";
 import type { Section } from "./types/types.ts";
+import { computeBarBeatLabel } from "./logic/song_logic.ts";
 import {
-  cleanSortedNumeric,
-  computeBarBeatLabel,
-  getImplicitLoopSectionIndex,
-  getNextBeatTimeMs,
-  getNextSectionTargetIndex,
-  getPrevBeatTimeMs,
-  getPrevSectionTargetIndex,
-  normalizeSections,
-  songFingerprint,
-} from "./logic/song_logic.ts";
-import { Waveform } from "./ui/Waveform.ts";
-import { TransportControls } from "./ui/TransportControls.ts";
-import { PlaybackReadout } from "./ui/PlaybackReadout.ts";
-import { PlayerOptions, ZoomControl } from "./ui/PlayerOptions.ts";
-import { Layout } from "./ui/Layout.ts";
+  implicitLoopIndex,
+  loopWrapTargetMs,
+  nextBeatTargetMs,
+  nextSectionJump,
+  previousBeatTargetMs,
+  previousSectionJump,
+} from "./logic/navigation_loop.ts";
 import { WaveSurferManager } from "./logic/WaveSurferManager.ts";
 import { PlaybackSync } from "./logic/PlaybackSync.ts";
+import {
+  deriveSongData,
+  pausedPlaybackTimeMs,
+  resolveSongAudioUrl,
+  shouldAdjustWaveTime,
+  songIdentity,
+} from "./logic/song_player_state.ts";
+import { buildWaveCallbacks } from "./logic/wave_callbacks.ts";
+import { buildSongPlayerUi } from "./ui/buildSongPlayerUi.ts";
 
 export class SongPlayerController {
   root: HTMLElement;
@@ -60,38 +62,16 @@ export class SongPlayerController {
 
   private suppressSeekSync = false;
   private appliedZoomValue: number | null = null;
+  private zoomDispose: (() => void) | null = null;
 
   constructor() {
-    const { container: waveformContainer, wave: waveform, title: songLabel } = Waveform();
-    const {
-      container: transportContainer,
-      prevSectionBtn,
-      prevBeatBtn,
-      stopBtn,
-      playPauseBtn,
-      nextBeatBtn,
-      nextSectionBtn,
-      updatePlayPauseIcon,
-    } = TransportControls({
+    const ui = buildSongPlayerUi({
       onPrevSection: () => this.jumpPrevSection(),
       onPrevBeat: () => this.jumpPrevBeat(),
       onStop: () => this.handleStop(),
       onPlayPause: () => this.togglePlayPause(),
       onNextBeat: () => this.jumpNextBeat(),
       onNextSection: () => this.jumpNextSection(),
-    });
-
-    this.playPauseBtn = playPauseBtn;
-    this.updatePlayPauseIcon = updatePlayPauseIcon;
-
-    const { barBeatEl, positionEl } = PlaybackReadout();
-
-    const {
-      container: optionsContainer,
-      loopToggle,
-      showSectionsToggle,
-      showDownbeatsToggle,
-    } = PlayerOptions({
       onLoopToggle: (checked) => {
         this.implicitLoopSectionIndex = null;
         if (checked) {
@@ -100,89 +80,68 @@ export class SongPlayerController {
       },
       onShowSectionsToggle: () => this.rebuildRegions(),
       onShowDownbeatsToggle: () => this.rebuildRegions(),
-    });
-
-    const { container: zoomContainer, zoomSlider } = ZoomControl({
-      initialZoom: 40,
       onZoom: () => this.applyZoom(),
     });
 
-    this.root = Layout({
-      waveform: waveformContainer,
-      barBeat: barBeatEl,
-      transport: transportContainer,
-      options: optionsContainer,
-      zoom: zoomContainer,
-      position: positionEl,
-    });
-
-    this.barBeatEl = barBeatEl;
-    this.positionEl = positionEl;
-    this.playPauseBtn = playPauseBtn;
-    this.zoomInput = zoomSlider;
-    this.showRegionsInput = showSectionsToggle;
-    this.showDownbeatsInput = showDownbeatsToggle;
-    this.songLabelEl = songLabel;
-
-    this.prevSectionBtn = prevSectionBtn;
-    this.prevBeatBtn = prevBeatBtn;
-    this.nextBeatBtn = nextBeatBtn;
-    this.nextSectionBtn = nextSectionBtn;
-    this.loopToggle = loopToggle;
-
-    this.waveSurferManager = new WaveSurferManager({
-      container: waveform,
-      onReady: (durationMs) => {
-        this.durationMs = durationMs;
-        this.appliedZoomValue = null;
-        this.renderReadout();
-        this.rebuildRegions();
-      },
-      onTimeUpdate: (seconds) => {
-        this.localTimeMs = Math.max(0, Math.round(seconds * 1000));
-        this.renderReadout();
-        this.enforceLoopRules();
-      },
-      onSeeking: (seconds) => {
-        this.localTimeMs = Math.max(0, Math.round(seconds * 1000));
-        this.renderReadout();
-        if (!this.suppressSeekSync) {
-          this.playbackSync.debounceSeekSync(this.localTimeMs);
-        }
-      },
-      onFinish: () => {
-        this.isPlaying = false;
-        this.updatePlayPauseIcon(false);
-        this.playbackSync.stop();
-        this.playbackSync.syncNow(this.localTimeMs);
-      },
-      onPlay: () => {
-        this.isPlaying = true;
-        this.updatePlayPauseIcon(true);
-        if (this.loopToggle.checked && this.selectedSectionIndex === null) {
-          this.primeImplicitLoopFromCurrentTime();
-        }
-        this.playbackSync.start(() => this.waveSurferManager.getCurrentTime() * 1000);
-      },
-      onPause: () => {
-        if (!this.isPlaying) return;
-        this.isPlaying = false;
-        this.updatePlayPauseIcon(false);
-        this.playbackSync.stop();
-        this.playbackSync.syncNow(this.localTimeMs);
-      },
-      onSelectSection: (index) => {
-        this.selectedSectionIndex = index;
-        this.implicitLoopSectionIndex = null;
-        this.rebuildRegions();
-      },
-    });
+    this.root = ui.root;
+    this.barBeatEl = ui.barBeatEl;
+    this.positionEl = ui.positionEl;
+    this.playPauseBtn = ui.playPauseBtn;
+    this.updatePlayPauseIcon = ui.updatePlayPauseIcon;
+    this.zoomInput = ui.zoomInput;
+    this.showRegionsInput = ui.showRegionsInput;
+    this.showDownbeatsInput = ui.showDownbeatsInput;
+    this.songLabelEl = ui.songLabelEl;
+    this.prevSectionBtn = ui.prevSectionBtn;
+    this.prevBeatBtn = ui.prevBeatBtn;
+    this.nextBeatBtn = ui.nextBeatBtn;
+    this.nextSectionBtn = ui.nextSectionBtn;
+    this.loopToggle = ui.loopToggle;
+    this.zoomDispose = ui.zoomDispose;
 
     this.playbackSync = new PlaybackSync({
       onSync: (timeMs) => {
         this.localTimeMs = timeMs;
         this.renderReadout();
       },
+    });
+
+    this.waveSurferManager = new WaveSurferManager({
+      container: ui.waveform,
+      ...buildWaveCallbacks({
+        setDurationMs: (durationMs) => {
+          this.durationMs = durationMs;
+        },
+        resetAppliedZoom: () => {
+          this.appliedZoomValue = null;
+        },
+        renderReadout: () => this.renderReadout(),
+        rebuildRegions: () => this.rebuildRegions(),
+        setLocalTimeMsFromSeconds: (seconds) => {
+          this.localTimeMs = Math.max(0, Math.round(seconds * 1000));
+        },
+        enforceLoopRules: () => this.enforceLoopRules(),
+        isSeekSyncSuppressed: () => this.suppressSeekSync,
+        debounceSeekSync: (timeMs) => this.playbackSync.debounceSeekSync(timeMs),
+        isPlaying: () => this.isPlaying,
+        setIsPlaying: (playing) => {
+          this.isPlaying = playing;
+        },
+        updatePlayPauseIcon: (playing) => this.updatePlayPauseIcon(playing),
+        stopSync: () => this.playbackSync.stop(),
+        syncNow: (timeMs) => this.playbackSync.syncNow(timeMs),
+        getLocalTimeMs: () => this.localTimeMs,
+        shouldPrimeLoopOnPlay: () => this.loopToggle.checked && this.selectedSectionIndex === null,
+        primeImplicitLoopFromCurrentTime: () => this.primeImplicitLoopFromCurrentTime(),
+        startSync: (getTimeMs) => this.playbackSync.start(getTimeMs),
+        getWaveTimeMs: () => this.waveSurferManager.getCurrentTime() * 1000,
+        setSelectedSectionIndex: (index) => {
+          this.selectedSectionIndex = index;
+        },
+        clearImplicitLoopSectionIndex: () => {
+          this.implicitLoopSectionIndex = null;
+        },
+      }),
     });
 
     this.updateControlAvailability();
@@ -194,8 +153,7 @@ export class SongPlayerController {
     const playback = state.playback ?? {};
 
     if (song) {
-      const nextKey = `${song.filename ?? ""}|${song.audio_url ?? ""}`;
-      const nextFingerprint = songFingerprint(song);
+      const { key: nextKey, fingerprint: nextFingerprint } = songIdentity(song);
       if (this.currentSongKey !== nextKey) {
         this.currentSongKey = nextKey;
         this.songMetaFingerprint = nextFingerprint;
@@ -213,13 +171,11 @@ export class SongPlayerController {
     }
 
     if (!this.isPlaying) {
-      const backendTime = Number(playback.time_ms ?? 0);
-      this.localTimeMs = Number.isFinite(backendTime) ? Math.max(0, backendTime) : 0;
+      this.localTimeMs = pausedPlaybackTimeMs(playback.time_ms);
       if (this.waveSurferManager.isReady()) {
-        const seconds = this.localTimeMs / 1000;
-        if (Math.abs(this.waveSurferManager.getCurrentTime() - seconds) > 0.02) {
+        if (shouldAdjustWaveTime(this.waveSurferManager.getCurrentTime(), this.localTimeMs)) {
           this.suppressSeekSync = true;
-          this.waveSurferManager.setTime(seconds);
+          this.waveSurferManager.setTime(this.localTimeMs / 1000);
           this.suppressSeekSync = false;
         }
       }
@@ -274,36 +230,28 @@ export class SongPlayerController {
   }
 
   private jumpPrevBeat() {
-    this.seekToTimeMs(getPrevBeatTimeMs(this.beats, this.localTimeMs));
+    this.seekToTimeMs(previousBeatTargetMs(this.beats, this.localTimeMs));
   }
 
   private jumpNextBeat() {
-    this.seekToTimeMs(getNextBeatTimeMs(this.beats, this.localTimeMs));
+    this.seekToTimeMs(nextBeatTargetMs(this.beats, this.localTimeMs));
   }
 
   private jumpPrevSection() {
-    if (this.sections.length === 0) return;
-    const targetIndex = getPrevSectionTargetIndex(this.sections, this.localTimeMs);
-
-    if (targetIndex < 0) {
-      this.selectedSectionIndex = null;
-      this.seekToTimeMs(0);
-      return;
-    }
-
-    this.selectedSectionIndex = targetIndex;
+    const jump = previousSectionJump(this.sections, this.localTimeMs);
+    if (!jump) return;
+    this.selectedSectionIndex = jump.selectedSectionIndex;
     this.implicitLoopSectionIndex = null;
-    this.seekToTimeMs(Math.round(this.sections[targetIndex].start_s * 1000));
+    this.seekToTimeMs(jump.targetMs);
     this.rebuildRegions();
   }
 
   private jumpNextSection() {
-    if (this.sections.length === 0) return;
-    const targetIndex = getNextSectionTargetIndex(this.sections, this.localTimeMs);
-
-    this.selectedSectionIndex = targetIndex;
+    const jump = nextSectionJump(this.sections, this.localTimeMs);
+    if (!jump) return;
+    this.selectedSectionIndex = jump.selectedSectionIndex;
     this.implicitLoopSectionIndex = null;
-    this.seekToTimeMs(Math.round(this.sections[targetIndex].start_s * 1000));
+    this.seekToTimeMs(jump.targetMs);
     this.rebuildRegions();
   }
 
@@ -318,37 +266,31 @@ export class SongPlayerController {
   }
 
   private primeImplicitLoopFromCurrentTime() {
-    if (!this.loopToggle.checked || this.selectedSectionIndex !== null) return;
-    this.implicitLoopSectionIndex = getImplicitLoopSectionIndex(this.sections, this.localTimeMs);
+    this.implicitLoopSectionIndex = implicitLoopIndex(
+      this.sections,
+      this.loopToggle.checked,
+      this.selectedSectionIndex,
+      this.localTimeMs,
+    );
   }
 
   private enforceLoopRules() {
-    if (!this.loopToggle.checked || this.sections.length === 0) return;
-
-    let targetIndex = this.selectedSectionIndex;
-
-    if (targetIndex === null) {
-      if (this.implicitLoopSectionIndex === null) {
-        this.primeImplicitLoopFromCurrentTime();
-      }
-      targetIndex = this.implicitLoopSectionIndex;
-      if (targetIndex === null) return;
-
-      const target = this.sections[targetIndex];
-      if (this.localTimeMs / 1000 < target.start_s) return;
+    if (this.loopToggle.checked && this.selectedSectionIndex === null && this.implicitLoopSectionIndex === null) {
+      this.primeImplicitLoopFromCurrentTime();
     }
-
-    const section = this.sections[targetIndex];
-    const t = this.localTimeMs / 1000;
-    const endGuard = section.end_s - 0.012;
-    if (t >= endGuard) {
-      this.seekToTimeMs(Math.round(section.start_s * 1000));
-    }
+    const wrapTargetMs = loopWrapTargetMs({
+      sections: this.sections,
+      loopEnabled: this.loopToggle.checked,
+      selectedSectionIndex: this.selectedSectionIndex,
+      implicitLoopSectionIndex: this.implicitLoopSectionIndex,
+      localTimeMs: this.localTimeMs,
+    });
+    if (wrapTargetMs !== null) this.seekToTimeMs(wrapTargetMs);
   }
 
   private loadSong(song: SongState) {
     this.applySongData(song);
-    const audioUrl = this.resolveAudioUrl(song.audio_url ?? null);
+    const audioUrl = resolveSongAudioUrl(song.audio_url ?? null);
     if (!audioUrl) {
       this.songLabelEl.textContent = `${song.filename ?? "No song"} (missing audio URL)`;
       return;
@@ -357,20 +299,21 @@ export class SongPlayerController {
   }
 
   private applySongData(song: SongState) {
-    this.songLabelEl.textContent = song.filename ? `Song: ${song.filename}` : "Song loaded";
-    this.sections = normalizeSections(song.sections);
-    if (this.selectedSectionIndex !== null && this.selectedSectionIndex >= this.sections.length) {
-      this.selectedSectionIndex = null;
-    }
-    if (this.implicitLoopSectionIndex !== null && this.implicitLoopSectionIndex >= this.sections.length) {
-      this.implicitLoopSectionIndex = null;
-    }
-    this.beats = cleanSortedNumeric(song.beats);
-    this.downbeats = cleanSortedNumeric(song.downbeats);
-    const lengthMs = Number(song.length_s ?? 0) * 1000;
-    if (Number.isFinite(lengthMs) && lengthMs > 0) {
-      this.durationMs = Math.max(this.durationMs, Math.round(lengthMs));
-    }
+    const derived = deriveSongData(
+      song,
+      this.durationMs,
+      this.selectedSectionIndex,
+      this.implicitLoopSectionIndex,
+    );
+
+    this.songLabelEl.textContent = derived.label;
+    this.sections = derived.sections;
+    this.beats = derived.beats;
+    this.downbeats = derived.downbeats;
+    this.durationMs = derived.durationMs;
+    this.selectedSectionIndex = derived.selectedSectionIndex;
+    this.implicitLoopSectionIndex = derived.implicitLoopSectionIndex;
+
     this.rebuildRegions();
     this.renderReadout();
     this.updateControlAvailability();
@@ -398,11 +341,9 @@ export class SongPlayerController {
     this.barBeatEl.textContent = computeBarBeatLabel(this.downbeats, this.beats, this.localTimeMs);
   }
 
-  private resolveAudioUrl(rawUrl: string | null): string | null {
-    if (!rawUrl) return null;
-    if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) return rawUrl;
-    const origin = String((globalThis as any).__BACKEND_HTTP_ORIGIN__ ?? "").trim();
-    if (rawUrl.startsWith("/") && origin) return `${origin}${rawUrl}`;
-    return rawUrl;
+  dispose() {
+    this.zoomDispose?.();
+    this.waveSurferManager.destroy();
+    this.playbackSync.destroy();
   }
 }

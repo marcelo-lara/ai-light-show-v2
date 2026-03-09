@@ -1,12 +1,11 @@
-import { throttle } from "../../../../shared/utils/throttle.ts";
 import { setFixtureValues } from "../../fixture_intents.ts";
-import { Slider } from "../../../../shared/components/controls/Slider.ts";
 import { PanTiltControl } from "./PanTiltControl.ts";
 import { PoiLocationController } from "./PoiLocationController.ts";
 import { StandardControls } from "./StandardControls.ts";
 import type { FixtureVM } from "../../adapters/fixture_vm.ts";
+import type { FixtureControlHandle, FixtureValues } from "./control_types.ts";
 
-export function MovingHeadControls(fixture: FixtureVM) {
+export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
   const fixtureId = fixture.id;
 
   // Semantic mapping from backend refactor
@@ -25,7 +24,7 @@ export function MovingHeadControls(fixture: FixtureVM) {
   const wrap = document.createElement("div");
   wrap.className = "control-stack";
 
-  let ptControl: any;
+  let ptControl: ReturnType<typeof PanTiltControl> | null = null;
   if (hasPanTilt) {
     // Add 2D Pan/Tilt Control
     ptControl = PanTiltControl({
@@ -38,27 +37,35 @@ export function MovingHeadControls(fixture: FixtureVM) {
         state.pan = pan;
         state.tilt = tilt;
         setFixtureValues(fixtureId, { pan, tilt });
-      }
+      },
     });
-    wrap.appendChild(ptControl);
+    wrap.appendChild(ptControl.root);
   }
 
   // Add POI Button Grid
-  wrap.appendChild(PoiLocationController({ fixtureId }));
+  const poiController = PoiLocationController({ fixtureId });
+  wrap.appendChild(poiController.root);
 
   // Use StandardControls for all other meta-channels (dimmer, strobe, color, gobo, etc.)
   const standard = StandardControls(fixture);
-  wrap.appendChild(standard);
+  wrap.appendChild(standard.root);
 
-  // Handle external updates
-  (wrap as any).updateValues = (newValues: Record<string, number | string>) => {
+  const updateValues = (newValues: FixtureValues) => {
     if (ptControl && newValues.pan !== undefined && newValues.tilt !== undefined) {
       ptControl.updatePanTilt(Number(newValues.pan), Number(newValues.tilt));
     }
-    if ((standard as any).updateValues) {
-      (standard as any).updateValues(newValues);
-    }
+    standard.updateValues(newValues);
   };
 
-  return wrap;
+  const dispose = () => {
+    ptControl?.dispose();
+    poiController.dispose();
+    standard.dispose();
+  };
+
+  return {
+    root: wrap,
+    updateValues,
+    dispose,
+  };
 }

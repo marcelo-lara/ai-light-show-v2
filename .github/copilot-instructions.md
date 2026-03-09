@@ -34,6 +34,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Canonical architecture index: [docs/architecture.md](../docs/architecture.md)
 - Backend runtime/protocol source of truth: [docs/architecture/backend_llm_reference.md](../docs/architecture/backend_llm_reference.md)
 - Frontend module guide (entrypoints/routes/intents/component map): [frontend/README.md](../frontend/README.md)
+- UI docs + LoFi asset index: [docs/ui/README.md](../docs/ui/README.md)
 - Backend module guide: [backend/README.md](../backend/README.md)
 - Analyzer module guide: [analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [llm-server/README.md](../llm-server/README.md)

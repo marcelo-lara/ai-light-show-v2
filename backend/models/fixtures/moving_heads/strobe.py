@@ -17,7 +17,7 @@ def handle(self, universe: bytearray, frame_index: int, start_frame: int, end_fr
 
     try:
         rate = float((data or {}).get("rate", 10.0) or 10.0)
-    except Exception:
+    except (TypeError, ValueError):
         rate = 10.0
     if rate <= 0.0:
         rate = 10.0

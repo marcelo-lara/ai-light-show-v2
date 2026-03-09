@@ -16,6 +16,7 @@ export function TransportControls(callbacks: {
   playPauseBtn: HTMLButtonElement;
   nextBeatBtn: HTMLButtonElement;
   nextSectionBtn: HTMLButtonElement;
+  updatePlayPauseIcon: (playing: boolean) => void;
 } {
   const container = document.createElement("div");
   container.className = "song-player-transport";

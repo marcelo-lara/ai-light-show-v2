@@ -9,7 +9,14 @@ export type SliderProps = {
   className?: string;
 };
 
-export function Slider(props: SliderProps): HTMLElement {
+export type SliderControl = {
+  root: HTMLLabelElement;
+  input: HTMLInputElement;
+  setValue: (value: number) => void;
+  dispose: () => void;
+};
+
+export function Slider(props: SliderProps): SliderControl {
   const container = document.createElement("label");
   container.className = `slider-row ${props.className ?? ""}`;
   let isDragging = false;
@@ -37,9 +44,13 @@ export function Slider(props: SliderProps): HTMLElement {
     valueDisplay.textContent = input.value;
   };
 
-  input.addEventListener("mousedown", () => { isDragging = true; });
-  input.addEventListener("touchstart", () => { isDragging = true; }, { passive: true });
-  
+  const onMouseDown = () => {
+    isDragging = true;
+  };
+  const onTouchStart = () => {
+    isDragging = true;
+  };
+
   const endDrag = () => {
     if (isDragging) {
       isDragging = false;
@@ -47,21 +58,16 @@ export function Slider(props: SliderProps): HTMLElement {
     }
   };
 
-  window.addEventListener("mouseup", endDrag);
-  window.addEventListener("touchend", endDrag);
-
-  input.addEventListener("input", () => {
+  const onInput = () => {
     updateFill();
     props.onInput(Number(input.value));
-  });
-
-  // Method to update value from outside only if not dragging
-  (container as any).setValue = (val: number) => {
-    if (!isDragging) {
-      input.value = String(val);
-      updateFill();
-    }
   };
+
+  input.addEventListener("mousedown", onMouseDown);
+  input.addEventListener("touchstart", onTouchStart, { passive: true });
+  window.addEventListener("mouseup", endDrag);
+  window.addEventListener("touchend", endDrag);
+  input.addEventListener("input", onInput);
 
   // Initial fill state
   updateFill();
@@ -69,7 +75,20 @@ export function Slider(props: SliderProps): HTMLElement {
   container.appendChild(input);
   container.appendChild(valueDisplay);
 
-  return container;
+  const setValue = (val: number) => {
+    if (!isDragging) {
+      input.value = String(val);
+      updateFill();
+    }
+  };
+
+  const dispose = () => {
+    input.removeEventListener("mousedown", onMouseDown);
+    input.removeEventListener("touchstart", onTouchStart);
+    input.removeEventListener("input", onInput);
+    window.removeEventListener("mouseup", endDrag);
+    window.removeEventListener("touchend", endDrag);
+  };
+
+  return { root: container, input, setValue, dispose };
 }
-
-

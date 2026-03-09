@@ -3,8 +3,11 @@ import { setFixtureValues } from "../../fixture_intents.ts";
 import { Slider } from "../../../../shared/components/controls/Slider.ts";
 import { Dropdown } from "../../../../shared/components/controls/Dropdown.ts";
 import type { FixtureVM } from "../../adapters/fixture_vm.ts";
+import type { FixtureControlHandle, FixtureValues } from "./control_types.ts";
 
-export function StandardControls(fixture: FixtureVM) {
+type ControlUpdater = (value: number | string) => void;
+
+export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
   const fixtureId = fixture.id;
   const values = fixture.values;
   const metaChannels = fixture.metaChannels;
@@ -17,16 +20,17 @@ export function StandardControls(fixture: FixtureVM) {
   const wrap = document.createElement("div");
   wrap.className = "control-stack";
 
-  const controls: Record<string, any> = {};
+  const updaters: Record<string, ControlUpdater> = {};
+  const disposers: Array<() => void> = [];
 
   for (const [mcId, mc] of Object.entries(metaChannels)) {
     const currentValue = values[mcId] ?? (mc.kind === "u16" ? 0 : 0);
-    
+
     if (mc.kind === "enum" && mc.mapping) {
       const mapping = mappings[mc.mapping] || {};
-      const options = Object.entries(mapping).map(([val, label]) => ({
+      const options = Object.entries(mapping).map(([_val, label]) => ({
         label: String(label), // The descriptive name (e.g. "Red")
-        value: String(label)  // The backend expects the label for set_values intent
+        value: String(label), // The backend expects the label for set_values intent
       }));
 
       const dropdown = Dropdown({
@@ -35,12 +39,12 @@ export function StandardControls(fixture: FixtureVM) {
         options,
         onChange: (val) => {
           send({ [mcId]: val });
-        }
+        },
       });
-      controls[mcId] = {
-        update: (v: any) => {
-           const select = dropdown.querySelector("select");
-           if (select) select.value = String(v);
+      const select = dropdown.querySelector("select");
+      updaters[mcId] = (value) => {
+        if (select instanceof HTMLSelectElement) {
+          select.value = String(value);
         }
       };
       wrap.appendChild(dropdown);
@@ -52,29 +56,38 @@ export function StandardControls(fixture: FixtureVM) {
         label: mc.label,
         min: mc.min ?? 0,
         max: mc.max ?? (mc.kind === "u16" ? 65535 : 255),
+        step: 1,
         value: Number(currentValue),
         onInput: (v) => send({ [mcId]: v }),
-        onCommit: (v) => setFixtureValues(fixtureId, { [mcId]: v })
+        onCommit: (v) => setFixtureValues(fixtureId, { [mcId]: v }),
       });
-      controls[mcId] = slider;
-      wrap.appendChild(slider);
+      updaters[mcId] = (value) => slider.setValue(Number(value));
+      disposers.push(slider.dispose);
+      wrap.appendChild(slider.root);
     } else if (mc.kind === "rgb") {
       // Skip RGB in StandardControls; handled by specialized RgbControls
       continue;
     }
   }
 
-  (wrap as any).updateValues = (newValues: Record<string, number | string>) => {
+  const updateValues = (newValues: FixtureValues) => {
     for (const [k, v] of Object.entries(newValues)) {
-      if (controls[k]) {
-        if (controls[k].setValue) {
-           controls[k].setValue(Number(v));
-        } else if (controls[k].update) {
-           controls[k].update(v);
-        }
+      const updater = updaters[k];
+      if (updater) {
+        updater(v);
       }
     }
   };
 
-  return wrap;
+  const dispose = () => {
+    for (const cleanup of disposers) {
+      cleanup();
+    }
+  };
+
+  return {
+    root: wrap,
+    updateValues,
+    dispose,
+  };
 }

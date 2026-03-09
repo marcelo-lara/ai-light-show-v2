@@ -1,17 +1,23 @@
 import asyncio
 import contextlib
-import math
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from pathlib import Path
 import json
 from urllib.parse import quote
 from uuid import uuid4
-from models.fixture import Fixture, Parcan, MovingHead
-from models.fixture_template import FixtureTemplate
+from models.fixture import Fixture
 from models.cue import CueSheet, CueEntry
 from models.song import Song, SongMetadata
 from store.dmx_canvas import DMXCanvas, DMX_CHANNELS
 from store.pois import PoiDatabase
+from store.services.canvas_rendering import (
+    dump_canvas_debug,
+    render_cue_sheet_to_canvas,
+    render_preview_canvas,
+)
+from store.services.fixture_loader import load_fixtures_from_path
+from store.services.section_persistence import normalize_sections_input, persist_parts_to_meta
+from store.services.song_metadata_loader import SongMetadataLoader
 
 FPS = 60
 MAX_SONG_SECONDS = 6 * 60
@@ -48,6 +54,7 @@ class StateManager:
         # Highest 1-based DMX channel referenced by any fixture channel map.
         # Used to limit payload sizes when sending full-frame snapshots to clients.
         self.max_used_channel: int = 0
+        self.song_metadata_loader = SongMetadataLoader(self.meta_path)
 
     def _get_fixture(self, fixture_id: str) -> Optional[Fixture]:
         return next((fixture for fixture in self.fixtures if fixture.id == fixture_id), None)
@@ -92,26 +99,20 @@ class StateManager:
 
         # Fall back to derived max timestamp from parts/hints/drums.
         max_t = 0.0
-        try:
+        with contextlib.suppress(TypeError, ValueError):
             for _name, rng in (metadata.parts or {}).items():
                 if isinstance(rng, list) and len(rng) >= 2:
                     max_t = max(max_t, float(rng[1]))
-        except Exception:
-            pass
 
-        try:
+        with contextlib.suppress(TypeError, ValueError):
             for _name, times in (metadata.hints or {}).items():
                 for t in times or []:
                     max_t = max(max_t, float(t))
-        except Exception:
-            pass
 
-        try:
+        with contextlib.suppress(TypeError, ValueError):
             for _name, times in (metadata.drums or {}).items():
                 for t in times or []:
                     max_t = max(max_t, float(t))
-        except Exception:
-            pass
 
         if max_t <= 0:
             max_t = float(MAX_SONG_SECONDS)
@@ -136,63 +137,9 @@ class StateManager:
     async def load_fixtures(self, fixtures_path: Path):
         async with self.lock:
             self.fixtures_path = Path(fixtures_path)
-            fixtures_dir = self.fixtures_path.parent
-            
-            # 1. Load all templates from fixture.<type>.<model>.json
-            templates: Dict[str, FixtureTemplate] = {}
-            for template_file in fixtures_dir.glob("fixture.*.json"):
-                try:
-                    with open(template_file, "r") as f:
-                        template_data = json.load(f)
-                        template = FixtureTemplate(**template_data)
-                        templates[template.id] = template
-                        # Also register by filename-based ID (fixture.<type>.<model>)
-                        filename_id = template_file.stem
-                        templates[filename_id] = template
-                except Exception as e:
-                    print(f"Error loading template {template_file}: {e}")
-
-            # 2. Load fixture instances from fixtures.json
-            with open(fixtures_path, 'r') as f:
-                data = json.load(f)
-                fixtures: List[Fixture] = []
-                for entry in data:
-                    template_key = entry.get('fixture')
-                    if template_key not in templates:
-                        print(f"Template {template_key} not found for fixture {entry.get('id')}")
-                        continue
-                    
-                    template = templates[template_key]
-                    fixture_id = entry.get('id')
-                    fixture_name = entry.get('name')
-                    base_channel = entry.get('base_channel', 1)
-                    location = entry.get('location', {})
-                    
-                    ftype = template.type.lower()
-                    try:
-                        kwargs = {
-                            "id": fixture_id,
-                            "name": fixture_name,
-                            "base_channel": base_channel,
-                            "template": template,
-                            "location": location
-                        }
-                        if ftype == 'moving_head' or ftype == 'moving-head':
-                            obj = MovingHead(**kwargs)
-                        else:
-                            obj = Parcan(**kwargs)
-                        fixtures.append(obj)
-                    except Exception as e:
-                        print(f"Error instantiating fixture {fixture_id}: {e}")
-                
+            fixtures, max_used_channel = load_fixtures_from_path(self.fixtures_path)
             self.fixtures = fixtures
-
-            # Compute highest referenced 1-based channel for smaller client snapshots.
-            max_ch = 0
-            for fixture in self.fixtures:
-                for offset in fixture.channels.values():
-                    max_ch = max(max_ch, fixture.base_channel + offset)
-            self.max_used_channel = max(0, min(DMX_CHANNELS, int(max_ch)))
+            self.max_used_channel = max_used_channel
 
             # 3. Apply arm values to universes
             self.editor_universe = bytearray(DMX_CHANNELS)
@@ -267,112 +214,13 @@ class StateManager:
             return int(self.max_used_channel)
 
     def _meta_candidates(self, song_filename: str) -> List[Path]:
-        return [
-            self.meta_path / f"{song_filename}.json",
-            self.meta_path / song_filename / f"{song_filename}.json",
-            self.meta_path / song_filename / "meta.json",
-        ]
+        return self.song_metadata_loader.meta_candidates(song_filename)
 
     def _resolve_analyzer_artifact_path(self, raw_path: Any, meta_file: Path) -> Optional[Path]:
-        if not raw_path:
-            return None
-
-        text = str(raw_path).strip()
-        if not text:
-            return None
-
-        candidate = Path(text)
-        if candidate.exists():
-            return candidate
-
-        if candidate.is_absolute():
-            with contextlib.suppress(Exception):
-                parts = candidate.parts
-                if "meta" in parts:
-                    meta_idx = parts.index("meta")
-                    relative = Path(*parts[meta_idx + 1:])
-                    mapped = self.meta_path / relative
-                    if mapped.exists():
-                        return mapped
-
-        relative_candidate = meta_file.parent / text
-        if relative_candidate.exists():
-            return relative_candidate
-
-        return None
+        return self.song_metadata_loader.resolve_artifact_path(raw_path, meta_file)
 
     def _load_song_metadata(self, song_filename: str) -> SongMetadata:
-        meta_file: Optional[Path] = None
-        for candidate in self._meta_candidates(song_filename):
-            if candidate.exists():
-                meta_file = candidate
-                break
-
-        if not meta_file:
-            return SongMetadata(filename=song_filename, parts={}, hints={}, drums={})
-
-        with open(meta_file, 'r') as f:
-            meta_data = json.load(f)
-
-        if not isinstance(meta_data, dict):
-            return SongMetadata(filename=song_filename, parts={}, hints={}, drums={})
-
-        if "filename" not in meta_data:
-            meta_data["filename"] = song_filename
-
-        metadata = SongMetadata(**meta_data)
-
-        beat_tracking = meta_data.get("beat_tracking") or {}
-        tempo_bpm = beat_tracking.get("tempo_bpm")
-
-        beats: List[float] = []
-        downbeats: List[float] = []
-
-        artifacts = meta_data.get("artifacts") or {}
-        beats_path = self._resolve_analyzer_artifact_path(artifacts.get("beats_file"), meta_file)
-        if not beats_path:
-            fallback = meta_file.parent / "beats.json"
-            beats_path = fallback if fallback.exists() else None
-
-        if beats_path:
-            with contextlib.suppress(Exception):
-                with open(beats_path, 'r') as f:
-                    beats_data = json.load(f)
-                beats = [float(value) for value in (beats_data.get("beats") or [])]
-                downbeats = [float(value) for value in (beats_data.get("downbeats") or [])]
-
-        if not downbeats and beats:
-            downbeats = [beats[idx] for idx in range(0, len(beats), 4)]
-
-        hints = dict(metadata.hints or {})
-        drums = dict(metadata.drums or {})
-
-        existing_hint_beats = hints.get("beats")
-        existing_hint_downbeats = hints.get("downbeats")
-        existing_drum_beats = drums.get("beats")
-        existing_drum_downbeats = drums.get("downbeats")
-
-        if beats and not (isinstance(existing_hint_beats, list) and len(existing_hint_beats) > 0):
-            hints["beats"] = beats
-        if downbeats and not (isinstance(existing_hint_downbeats, list) and len(existing_hint_downbeats) > 0):
-            hints["downbeats"] = downbeats
-        if beats and not (isinstance(existing_drum_beats, list) and len(existing_drum_beats) > 0):
-            drums["beats"] = beats
-        if downbeats and not (isinstance(existing_drum_downbeats, list) and len(existing_drum_downbeats) > 0):
-            drums["downbeats"] = downbeats
-
-        if metadata.bpm is None and isinstance(tempo_bpm, (int, float)):
-            metadata.bpm = float(tempo_bpm)
-
-        if metadata.length is None:
-            if beats:
-                metadata.length = float(max(beats))
-            elif downbeats:
-                metadata.length = float(max(downbeats))
-
-        metadata.hints = hints
-        metadata.drums = drums
-        return metadata
+        return self.song_metadata_loader.load(song_filename)
 
     async def load_song(self, song_filename: str):
         async with self.lock:
@@ -413,16 +261,12 @@ class StateManager:
             self.preview_duration = 0.0
             self.canvas_dirty = False
             self.canvas = self._render_cue_sheet_to_canvas()
-            # Debug: indicate canvas render completion for visibility in Docker logs
-            try:
-                print(f"[DMX CANVAS] render complete for '{song_filename}' — frames={self.canvas.total_frames} fps={self.canvas.fps}", flush=True)
-            except Exception:
-                print("[DMX CANVAS] render complete", flush=True)
-            # Dump debug file with per-frame timecodes and used DMX channels
-            try:
-                self._dump_canvas_debug(song_filename)
-            except Exception:
-                pass
+            print(
+                f"[DMX CANVAS] render complete for '{song_filename}' — "
+                f"frames={self.canvas.total_frames} fps={self.canvas.fps}",
+                flush=True,
+            )
+            self._dump_canvas_debug(song_filename)
 
     async def update_dmx_channel(self, channel: int, value: int) -> bool:
         """Update the editor universe with a live edit.
@@ -584,17 +428,13 @@ class StateManager:
             else:
                 self.canvas_dirty = False
                 self.canvas = self._render_cue_sheet_to_canvas()
-                # Debug: indicate canvas render completion when cues are added while paused
-                try:
-                    song_name = self.cue_sheet.song_filename if self.cue_sheet else song_filename
-                    print(f"[DMX CANVAS] re-render complete for '{song_name}' — frames={self.canvas.total_frames} fps={self.canvas.fps}", flush=True)
-                except Exception:
-                    print("[DMX CANVAS] re-render complete", flush=True)
-                # Dump debug file after re-render
-                try:
-                    self._dump_canvas_debug(song_name)
-                except Exception:
-                    pass
+                song_name = self.cue_sheet.song_filename
+                print(
+                    f"[DMX CANVAS] re-render complete for '{song_name}' — "
+                    f"frames={self.canvas.total_frames} fps={self.canvas.fps}",
+                    flush=True,
+                )
+                self._dump_canvas_debug(song_name)
 
             return new_entries
 
@@ -611,66 +451,22 @@ class StateManager:
             if not self.current_song:
                 return {"ok": False, "reason": "no_song_loaded"}
 
-            normalized: List[Dict[str, Any]] = []
-            for row in sections or []:
-                name = str((row or {}).get("name") or "").strip()
-                if not name:
-                    return {"ok": False, "reason": "invalid_name"}
+            ok, normalized = normalize_sections_input(sections)
+            if not ok:
+                return normalized
 
-                try:
-                    start = float((row or {}).get("start"))
-                    end = float((row or {}).get("end"))
-                except Exception:
-                    return {"ok": False, "reason": "invalid_time"}
-
-                if not math.isfinite(start) or not math.isfinite(end) or end <= start:
-                    return {"ok": False, "reason": "invalid_range"}
-
-                normalized.append({"name": name, "start": start, "end": end})
-
-            normalized.sort(key=lambda item: item["start"])
-
-            for index in range(1, len(normalized)):
-                if normalized[index]["start"] < normalized[index - 1]["end"]:
-                    return {"ok": False, "reason": "overlap"}
-
-            unique_name_counts: Dict[str, int] = {}
-            parts: Dict[str, List[float]] = {}
-            for row in normalized:
-                base_name = row["name"]
-                count = unique_name_counts.get(base_name, 0) + 1
-                unique_name_counts[base_name] = count
-                key = base_name if count == 1 else f"{base_name} ({count})"
-                parts[key] = [float(row["start"]), float(row["end"])]
+            parts = normalized["parts"]
 
             self.current_song.metadata.parts = parts
             self.song_length_seconds = self._infer_song_length_seconds(self.current_song.metadata)
 
             song_filename = self.current_song.filename
-            target_file: Optional[Path] = None
-            for candidate in self._meta_candidates(song_filename):
-                if candidate.exists():
-                    target_file = candidate
-                    break
-            if not target_file:
-                target_file = self.meta_path / song_filename / f"{song_filename}.json"
-
-            target_file.parent.mkdir(parents=True, exist_ok=True)
-
-            payload: Dict[str, Any] = {}
-            if target_file.exists():
-                with contextlib.suppress(Exception):
-                    with open(target_file, 'r') as handle:
-                        loaded = json.load(handle)
-                    if isinstance(loaded, dict):
-                        payload = loaded
-
-            if "filename" not in payload:
-                payload["filename"] = song_filename
-            payload["parts"] = parts
-
-            with open(target_file, 'w') as handle:
-                json.dump(payload, handle, indent=2)
+            persist_parts_to_meta(
+                song_filename=song_filename,
+                parts=parts,
+                meta_candidates=self._meta_candidates(song_filename),
+                meta_path=self.meta_path,
+            )
 
             return {
                 "ok": True,
@@ -732,59 +528,14 @@ class StateManager:
             return
         self.output_universe[:] = self.canvas.frame_view(frame_index)
 
-    def _iter_cues_for_render(self) -> List[Tuple[int, int, CueEntry]]:
-        """Prepare cues sorted with computed frame ranges."""
-        if not self.cue_sheet:
-            return []
-        cues: List[Tuple[int, int, CueEntry]] = []
-        for entry in self.cue_sheet.entries:
-            start = int(round(float(entry.time) * FPS))
-            dur = max(0.0, float(entry.duration or 0.0))
-            end = int(round((float(entry.time) + dur) * FPS))
-            cues.append((start, end, entry))
-        cues.sort(key=lambda x: (x[0], x[2].fixture_id, x[2].effect))
-        return cues
-
     def _render_cue_sheet_to_canvas(self) -> DMXCanvas:
-        total_frames = max(1, int(math.ceil(self.song_length_seconds * FPS)) + 1)
-        canvas = DMXCanvas.allocate(fps=FPS, total_frames=total_frames)
-
-        base_universe = bytearray(DMX_CHANNELS)
-        self._apply_arm(base_universe)
-
-        # Group cues by start frame for efficient incremental activation.
-        cues = self._iter_cues_for_render()
-        cues_by_start: Dict[int, List[Tuple[int, int, CueEntry]]] = {}
-        for start, end, entry in cues:
-            cues_by_start.setdefault(start, []).append((start, end, entry))
-
-        active: List[Tuple[int, int, CueEntry]] = []
-        universe = bytearray(base_universe)
-
-        # Per-entry render state cache (e.g. move_to start positions).
-        entry_render_state: Dict[int, Dict[str, Any]] = {}
-
-        for frame_index in range(total_frames):
-            # Activate any cues starting at this frame.
-            if frame_index in cues_by_start:
-                active.extend(cues_by_start[frame_index])
-
-            # Drop finished cues.
-            if active:
-                active = [(start, end, entry) for (start, end, entry) in active if end >= frame_index]
-
-            # Apply active cue effects for this frame.
-            if active:
-                # Stable order for deterministic overlaps.
-                active_sorted = sorted(active, key=lambda x: (x[2].time, x[2].fixture_id, x[2].effect))
-                for start_frame, end_frame, entry in active_sorted:
-                    self._render_entry_into_universe(universe, frame_index, start_frame, end_frame, entry, entry_render_state)
-
-            canvas.set_frame(frame_index, universe)
-
-        return canvas
-
-        return canvas
+        return render_cue_sheet_to_canvas(
+            fixtures=self.fixtures,
+            cue_sheet=self.cue_sheet,
+            song_length_seconds=self.song_length_seconds,
+            fps=FPS,
+            apply_arm=self._apply_arm,
+        )
 
     def _render_preview_canvas(
         self,
@@ -795,26 +546,14 @@ class StateManager:
         data: Dict[str, Any],
         base_universe: bytearray,
     ) -> DMXCanvas:
-        total_frames = max(1, int(math.ceil(float(duration) * FPS)) + 1)
-        canvas = DMXCanvas.allocate(fps=FPS, total_frames=total_frames)
-        universe = bytearray(base_universe)
-        render_state: Dict[str, Any] = {}
-
-        end_frame = total_frames - 1
-        for frame_index in range(total_frames):
-            fixture.render_effect(
-                universe,
-                effect=effect,
-                frame_index=frame_index,
-                start_frame=0,
-                end_frame=end_frame,
-                fps=FPS,
-                data=data,
-                render_state=render_state,
-            )
-            canvas.set_frame(frame_index, universe)
-
-        return canvas
+        return render_preview_canvas(
+            fixture=fixture,
+            effect=effect,
+            duration=duration,
+            data=data,
+            base_universe=base_universe,
+            fps=FPS,
+        )
 
     async def _run_preview(self, request_id: str) -> None:
         try:
@@ -863,62 +602,9 @@ class StateManager:
                         self.output_universe[:] = self.editor_universe
 
     def _dump_canvas_debug(self, song_filename: str) -> None:
-        """Write a LOG debug file of non-empty frames to backend/cues.
-
-        Each line is formatted like the backend logs:
-        [<time_seconds>] AA.BB.CC.00.00... (hex pairs, uppercase, dot-separated)
-
-        To keep files compact we only write frames that have any non-zero channel
-        value within the highest referenced channel (self.max_used_channel).
-        """
-        try:
-            if not self.canvas:
-                return
-            cues_path = self.backend_path / "cues"
-            cues_path.mkdir(parents=True, exist_ok=True)
-            debug_file = cues_path / f"{song_filename}.canvas.debug.log"
-            frames_written = 0
-            # Limit written channels to the highest referenced channel to keep lines smaller.
-            max_ch = self.max_used_channel or DMX_CHANNELS
-            max_ch = max(1, min(DMX_CHANNELS, int(max_ch)))
-            with open(debug_file, 'w') as f:
-                for frame_index in range(self.canvas.total_frames):
-                    view = self.canvas.frame_view(frame_index)
-                    # Check for any non-zero within the used channel range.
-                    if not any(b != 0 for b in view[:max_ch]):
-                        continue
-                    # Format time with millisecond precision like logs.
-                    time_sec = frame_index / float(self.canvas.fps)
-                    hex_pairs = ".".join(f"{int(b):02X}" for b in view[:max_ch])
-                    f.write(f"[{time_sec:.3f}] {hex_pairs}\n")
-                    frames_written += 1
-            print(f"[DMX CANVAS] dumped debug file '{debug_file}' — frames={frames_written}", flush=True)
-        except Exception as exc:
-            print(f"[DMX CANVAS] failed to write debug file: {exc}", flush=True)
-
-    def _render_entry_into_universe(
-        self,
-        universe: bytearray,
-        frame_index: int,
-        start_frame: int,
-        end_frame: int,
-        entry: CueEntry,
-        entry_render_state: Dict[int, Dict[str, Any]],
-    ) -> None:
-        fixture = next((f for f in self.fixtures if f.id == entry.fixture_id), None)
-        if not fixture:
-            return
-
-        # Delegate effect rendering to the fixture type.
-        state_key = id(entry)
-        render_state = entry_render_state.setdefault(state_key, {})
-        fixture.render_effect(
-            universe,
-            effect=entry.effect,
-            frame_index=frame_index,
-            start_frame=start_frame,
-            end_frame=end_frame,
-            fps=FPS,
-            data=entry.data or {},
-            render_state=render_state,
+        dump_canvas_debug(
+            backend_path=self.backend_path,
+            song_filename=song_filename,
+            canvas=self.canvas,
+            max_used_channel=self.max_used_channel,
         )
