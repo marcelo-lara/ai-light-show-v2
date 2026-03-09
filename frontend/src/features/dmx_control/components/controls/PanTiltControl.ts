@@ -48,6 +48,8 @@ export function PanTiltControl({
     const position = handlePercent({ pan: currentPan, tilt: currentTilt }, limits);
     handle.style.left = position.left;
     handle.style.top = position.top;
+    panLabel.textContent = `Pan ${Math.round(currentPan)}`;
+    tiltLabel.textContent = `Tilt ${Math.round(currentTilt)}`;
   };
 
   const updateValues = (clientX: number, clientY: number) => {

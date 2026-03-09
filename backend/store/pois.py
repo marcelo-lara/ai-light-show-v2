@@ -25,12 +25,15 @@ class PoiDatabase:
     async def reload(self):
         async with self.lock:
             self._load_sync()
-            
+
+    def _save_unlocked(self) -> None:
+        self.filepath.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.filepath, 'w') as f:
+            json.dump(self.pois, f, indent=4)
+
     async def save(self):
         async with self.lock:
-            self.filepath.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.filepath, 'w') as f:
-                json.dump(self.pois, f, indent=4)
+            self._save_unlocked()
 
     async def get_all(self) -> List[Dict[str, Any]]:
         async with self.lock:
@@ -52,7 +55,7 @@ class PoiDatabase:
                 if poi.get("id") == poi_id:
                     raise ValueError(f"POI with id {poi_id} already exists")
             self.pois.append(poi_data)
-        await self.save()
+            self._save_unlocked()
         return poi_data
 
     async def update(self, poi_id: str, poi_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -61,10 +64,10 @@ class PoiDatabase:
                 if poi.get("id") == poi_id:
                     self.pois[i] = {**poi, **poi_data, "id": poi_id}
                     updated = self.pois[i]
+                    self._save_unlocked()
                     break
             else:
                 return None
-        await self.save()
         return updated
 
     async def delete(self, poi_id: str) -> bool:
@@ -73,7 +76,7 @@ class PoiDatabase:
             self.pois = [p for p in self.pois if p.get("id") != poi_id]
             if len(self.pois) == initial_len:
                 return False
-        await self.save()
+            self._save_unlocked()
         return True
 
     def get_fixture_target_sync(self, poi_id: str, fixture_id: str) -> Optional[Dict[str, Any]]:

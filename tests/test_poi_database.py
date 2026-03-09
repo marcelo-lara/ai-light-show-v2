@@ -70,3 +70,41 @@ async def test_poi_crud_persistence(temp_pois_file):
         data = json.load(f)
         assert len(data) == 0
 
+
+@pytest.mark.asyncio
+async def test_poi_update_fixture_node_add_and_update(temp_pois_file):
+    db = PoiDatabase(temp_pois_file)
+
+    await db.create({
+        "id": "poi_1",
+        "name": "POI 1",
+        "location": {"x": 0.1, "y": 0.2, "z": 0.3},
+    })
+
+    # Add missing fixtures node and target fixture entry.
+    updated = await db.update("poi_1", {
+        "fixtures": {
+            "fixture_a": {"pan": 111, "tilt": 222},
+        },
+    })
+    assert updated is not None
+    assert updated["fixtures"]["fixture_a"] == {"pan": 111, "tilt": 222}
+
+    with open(temp_pois_file, "r") as f:
+        data = json.load(f)
+    assert data[0]["fixtures"]["fixture_a"]["pan"] == 111
+    assert data[0]["fixtures"]["fixture_a"]["tilt"] == 222
+
+    # Update existing fixture entry for same POI.
+    updated = await db.update("poi_1", {
+        "fixtures": {
+            "fixture_a": {"pan": 333, "tilt": 444},
+        },
+    })
+    assert updated is not None
+    assert updated["fixtures"]["fixture_a"] == {"pan": 333, "tilt": 444}
+
+    with open(temp_pois_file, "r") as f:
+        data = json.load(f)
+    assert data[0]["fixtures"]["fixture_a"]["pan"] == 333
+    assert data[0]["fixtures"]["fixture_a"]["tilt"] == 444

@@ -53,6 +53,42 @@
   text-transform: lowercase;
 }
 
+/* Chrome-first input controls for DMX panel */
+.effect-select,
+.effect-duration,
+.effect-param,
+.poi-dropdown-wrap select,
+.poi-set-btn,
+.enum-grid-option {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+}
+
+.effect-select,
+.effect-duration,
+.effect-param,
+.poi-dropdown-wrap select {
+  background: var(--card-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  height: 32px;
+  padding: 4px 8px;
+}
+
+.effect-duration::-webkit-outer-spin-button,
+.effect-duration::-webkit-inner-spin-button,
+.effect-param::-webkit-outer-spin-button,
+.effect-param::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.effect-duration,
+.effect-param {
+  font-variant-numeric: tabular-nums;
+}
+
 .rgb-preview {
   display: grid;
   gap: 6px;
@@ -156,10 +192,14 @@
   font-size: 10px;
   color: rgba(255, 255, 255, 0.4);
   padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.2);
+  line-height: 1.1;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
-.pan-tilt-label.pan { bottom: 0; left: 2px; }
-.pan-tilt-label.tilt { top: 50%; right: 0; transform: rotate(90deg) translateY(-100%); transform-origin: top right; }
+.pan-tilt-label.pan { bottom: 2px; left: 2px; }
+.pan-tilt-label.tilt { top: 2px; right: 0; transform: rotate(270deg) translateY(-100%); transform-origin: top right; }
 
 
 /* POI Location Controller */
