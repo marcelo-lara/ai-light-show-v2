@@ -18,13 +18,10 @@ export function ChatHistory(messages: ChatMessageModel[], streamingText: string)
 	if (streamingText) {
 		const streaming = document.createElement("article");
 		streaming.className = "chat-msg assistant streaming";
-		const role = document.createElement("span");
-		role.className = "chat-msg-role";
-		role.textContent = "assistant";
 		const text = document.createElement("p");
 		text.className = "chat-msg-text";
 		text.textContent = streamingText;
-		streaming.append(role, text);
+		streaming.append(text);
 		box.appendChild(streaming);
 	}
 
