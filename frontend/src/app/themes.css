@@ -199,14 +199,24 @@ body {
 
 .status-grid {
   display: grid;
-  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
 }
 
 .status-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11px;
+}
+
+.status-row > span {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .badge {
@@ -214,6 +224,26 @@ body {
   border-radius: 999px;
   font-size: 12px;
   padding: 3px 10px;
+}
+
+.status-card .badge {
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.15;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+.status-row-theme {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+}
+
+.status-row-theme .theme-select {
+  max-width: 124px;
+  margin-left: auto;
+  font-size: 11px;
+  padding: 2px 4px;
 }
 
 .badge.ok {

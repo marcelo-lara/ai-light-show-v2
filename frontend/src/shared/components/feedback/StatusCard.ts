@@ -41,16 +41,16 @@ export function StatusCard(): HTMLElement {
   const content = document.createElement("div");
   content.className = "status-grid";
 
-  content.appendChild(row("WS", Badge(model.ws, wsTone(model.ws))));
   content.appendChild(row("Show", Badge(cap(model.show), showTone(model.show))));
+  content.appendChild(row("WS", Badge(model.ws, wsTone(model.ws))));
   content.appendChild(row("Playback", Badge(`${cap(model.playback.state)} @ ${model.playback.time}`, playbackTone(model.playback.state))));
-  content.appendChild(row("Edits", Badge(cap(model.edits), model.edits === "locked" ? "warn" : "ok")));
-  content.appendChild(row("ARM", Badge(model.arm, "default")));
-  content.appendChild(row("LLM", Badge(cap(model.llm), llmTone(model.llm))));
   content.appendChild(row("Sync", Badge(model.stale ? "Stale" : "Connected", model.stale ? "warn" : "ok")));
+  content.appendChild(row("Edits", Badge(cap(model.edits), model.edits === "locked" ? "warn" : "ok")));
+  content.appendChild(row("LLM", Badge(cap(model.llm), llmTone(model.llm))));
+  content.appendChild(row("ARM", Badge(model.arm, "default")));
 
   const themeRow = document.createElement("label");
-  themeRow.className = "status-row";
+  themeRow.className = "status-row status-row-theme";
   const themeText = document.createElement("span");
   themeText.textContent = "Theme";
   const themeSelect = document.createElement("select");
@@ -67,7 +67,7 @@ export function StatusCard(): HTMLElement {
   themeRow.append(themeText, themeSelect);
   content.appendChild(themeRow);
 
-  return Card(content, { title: "Status" });
+  return Card(content, { className: "status-card" });
 }
 
 function row(label: string, value: HTMLElement): HTMLElement {

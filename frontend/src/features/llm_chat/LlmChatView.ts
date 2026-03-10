@@ -10,5 +10,5 @@ export function LlmChatView(): HTMLElement {
 	const state = getLlmState();
 	content.append(ChatHistory(state.messages, state.streamingText), PromptInput());
 
-	return Card(content, { title: "LLM Chat" });
+	return Card(content, { className: "llm-card" });
 }

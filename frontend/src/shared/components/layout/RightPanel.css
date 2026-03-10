@@ -1,9 +1,22 @@
 .right-panel {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
-  align-content: start;
+  min-height: 0;
+  align-content: stretch;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 12px;
+  overflow: hidden;
+}
+
+.right-panel .status-card {
+  align-self: start;
+}
+
+.right-panel .llm-card {
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
 }

@@ -18,16 +18,19 @@ export function ChatHistory(messages: ChatMessageModel[], streamingText: string)
 	if (streamingText) {
 		const streaming = document.createElement("article");
 		streaming.className = "chat-msg assistant streaming";
-		streaming.innerHTML = `<strong>assistant</strong><p>${escapeHtml(streamingText)}</p>`;
+		const role = document.createElement("span");
+		role.className = "chat-msg-role";
+		role.textContent = "assistant";
+		const text = document.createElement("p");
+		text.className = "chat-msg-text";
+		text.textContent = streamingText;
+		streaming.append(role, text);
 		box.appendChild(streaming);
 	}
 
-	return box;
-}
+	queueMicrotask(() => {
+		box.scrollTop = box.scrollHeight;
+	});
 
-function escapeHtml(value: string): string {
-	return value
-		.replaceAll("&", "&amp;")
-		.replaceAll("<", "&lt;")
-		.replaceAll(">", "&gt;");
+	return box;
 }
