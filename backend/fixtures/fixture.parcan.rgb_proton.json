@@ -19,6 +19,7 @@
 		"rgb": {
 			"label": "Color",
 			"kind": "rgb",
+			"mapping": "color",
 			"channels": [
 				"red",
 				"green",

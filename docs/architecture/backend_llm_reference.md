@@ -107,7 +107,7 @@ Code is the source of truth.
 | `fixture.stop_preview` | none | not implemented | event `stop_preview_not_implemented`, returns `False` |
 
 Notes on `fixture.set_values`:
-- `values` keys are meta-channel IDs from fixture template `meta_channels`.
+- `values` keys can be meta-channel IDs from fixture template `meta_channels` or direct fixture channel names.
 - `u16` channels split into MSB/LSB writes.
 - `enum` expects label and resolves via reverse mapping.
 - Current implementation does not hard-reject while playing.

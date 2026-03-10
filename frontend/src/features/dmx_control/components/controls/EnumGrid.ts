@@ -1,6 +1,7 @@
 type EnumOption = {
   label: string;
   value: string;
+  swatch?: string;
 };
 
 export type EnumGridHandle = {
@@ -43,6 +44,13 @@ export function EnumGrid(options: {
     button.dataset.value = option.value;
     button.title = option.label;
     button.setAttribute("aria-label", option.label);
+    if (!option.swatch) {
+      button.textContent = option.label;
+    }
+    if (option.swatch) {
+      button.style.background = option.swatch;
+      button.classList.add("enum-grid-option-swatch");
+    }
     button.addEventListener("click", () => {
       currentValue = option.value;
       sync();

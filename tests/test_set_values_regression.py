@@ -64,3 +64,35 @@ async def test_set_values_u8_u16_and_enum_paths():
     assert (fixture.absolute_channels["color"], 15) in artnet.calls
     output = await sm.get_output_universe()
     assert output[fixture.absolute_channels["color"] - 1] == 15
+
+
+@pytest.mark.asyncio
+async def test_set_values_accepts_direct_channel_keys_for_parcan_rgb():
+    workspace_root = Path(__file__).resolve().parents[1]
+    backend_path = workspace_root / "backend"
+
+    songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
+    cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
+    meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
+
+    sm = StateManager(backend_path, songs_path, cues_path, meta_path)
+    await sm.load_fixtures(backend_path / "fixtures" / "fixtures.json")
+
+    fixture = next(fx for fx in sm.fixtures if fx.id == "parcan_l")
+    artnet = ArtNetStub()
+    manager = SimpleNamespace(state_manager=sm, artnet_service=artnet)
+
+    changed = await set_values(manager, {
+        "fixture_id": fixture.id,
+        "values": {"red": 255, "green": 64, "blue": 10},
+    })
+
+    assert changed is True
+    assert (fixture.absolute_channels["red"], 255) in artnet.calls
+    assert (fixture.absolute_channels["green"], 64) in artnet.calls
+    assert (fixture.absolute_channels["blue"], 10) in artnet.calls
+
+    output = await sm.get_output_universe()
+    assert output[fixture.absolute_channels["red"] - 1] == 255
+    assert output[fixture.absolute_channels["green"] - 1] == 64
+    assert output[fixture.absolute_channels["blue"] - 1] == 10

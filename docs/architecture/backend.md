@@ -58,7 +58,7 @@ Behavior:
 
 ### Editing
 
-- `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`.
+- `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`; payload keys can be meta-channel IDs or direct fixture channel names.
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
 
 ### Preview
