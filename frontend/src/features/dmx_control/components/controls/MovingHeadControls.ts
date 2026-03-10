@@ -23,13 +23,14 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
   let refreshPoiController = () => {};
 
   const wrap = document.createElement("div");
-  wrap.className = "moving-head-layout";
+  wrap.className = "fixture-two-col";
+  wrap.style.setProperty("--fixture-left-column-width", "var(--fixture-left-column-width-moving-head, 210px)");
 
   const spatialCol = document.createElement("div");
-  spatialCol.className = "moving-head-spatial";
+  spatialCol.className = "fixture-two-col-left moving-head-spatial";
 
   const channelsCol = document.createElement("div");
-  channelsCol.className = "moving-head-channels";
+  channelsCol.className = "fixture-two-col-right moving-head-channels";
 
   let ptControl: ReturnType<typeof PanTiltControl> | null = null;
   let selectedPoiTarget: { pan: number; tilt: number } | null = null;

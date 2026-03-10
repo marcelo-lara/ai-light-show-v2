@@ -11,21 +11,33 @@ export type RgbPreviewHandle = {
   dispose: () => void;
 };
 
+type RgbPreviewOptions = {
+  onColorChange?: (hex: string) => void;
+};
+
 function toByte(value: number): number {
   return Math.max(0, Math.min(255, Math.round(value)));
 }
 
-export function RgbPreview(initial: RgbPreviewState): RgbPreviewHandle {
+export function RgbPreview(initial: RgbPreviewState, options: RgbPreviewOptions = {}): RgbPreviewHandle {
   const root = document.createElement("div");
   root.className = "rgb-preview";
 
-  const swatch = document.createElement("div");
-  swatch.className = "rgb-preview-swatch";
-  root.appendChild(swatch);
+  const colorInput = document.createElement("input");
+  colorInput.className = "rgb-preview-input";
+  colorInput.type = "color";
+  root.appendChild(colorInput);
 
   const label = document.createElement("div");
   label.className = "rgb-preview-label muted mono";
   root.appendChild(label);
+
+  const toHex = (red: number, green: number, blue: number): string => {
+    const r = toByte(red).toString(16).padStart(2, "0");
+    const g = toByte(green).toString(16).padStart(2, "0");
+    const b = toByte(blue).toString(16).padStart(2, "0");
+    return `#${r}${g}${b}`;
+  };
 
   const setRgb = (state: RgbPreviewState) => {
     const red = toByte(state.red);
@@ -33,20 +45,26 @@ export function RgbPreview(initial: RgbPreviewState): RgbPreviewHandle {
     const blue = toByte(state.blue);
     const white = toByte(state.white);
 
-    const whiteMix = white / 255;
-    const mixedRed = toByte(red + ((255 - red) * whiteMix));
-    const mixedGreen = toByte(green + ((255 - green) * whiteMix));
-    const mixedBlue = toByte(blue + ((255 - blue) * whiteMix));
-
-    swatch.style.background = `rgb(${mixedRed}, ${mixedGreen}, ${mixedBlue})`;
-    label.textContent = `R:${red} G:${green} B:${blue} W:${white}`;
+    const hex = toHex(red, green, blue);
+    colorInput.value = hex;
+    label.textContent = hex;
   };
+
+  const emitColor = () => {
+    options.onColorChange?.(colorInput.value.toUpperCase());
+  };
+
+  colorInput.addEventListener("input", emitColor);
+  colorInput.addEventListener("change", emitColor);
 
   setRgb(initial);
 
   return {
     root,
     setRgb,
-    dispose: () => {},
+    dispose: () => {
+      colorInput.removeEventListener("input", emitColor);
+      colorInput.removeEventListener("change", emitColor);
+    },
   };
 }

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from models.fixtures.rgb_utils import resolve_rgb_value
+
 
 async def _sync_state_channel(manager, absolute_channel: int, value: int) -> None:
     # Keep backend snapshot values aligned with live set_values changes.
@@ -18,15 +20,24 @@ async def set_values(manager, payload: Dict[str, Any]) -> bool:
     if not fixture:
         return False
 
+    rgb_channel_names = set()
+    for mc in fixture.meta_channels.values():
+        if mc.kind == "rgb" and mc.channels:
+            for channel_name in mc.channels:
+                rgb_channel_names.add(str(channel_name))
+
     changed = False
     for key, value in values.items():
+        if key in rgb_channel_names:
+            # rgb fixtures accept semantic values via their rgb meta-channel only.
+            continue
+
         if key in fixture.meta_channels:
             mc = fixture.meta_channels[key]
-            # Update current_values for snapshot persistence.
-            fixture.current_values[key] = value
 
             # Apply to live Art-Net.
             if mc.kind == "u16" and mc.channels and len(mc.channels) == 2:
+                fixture.current_values[key] = value
                 try:
                     val = int(value)
                     msb = (val >> 8) & 0xFF
@@ -41,6 +52,7 @@ async def set_values(manager, payload: Dict[str, Any]) -> bool:
                 except (ValueError, TypeError):
                     pass
             elif mc.kind == "enum" and mc.channel and mc.mapping:
+                fixture.current_values[key] = value
                 # Resolve label to DMX value from fixture mappings.
                 mapping = fixture.mappings.get(mc.mapping, {})
                 reverse_mapping = {v: k for k, v in mapping.items()}
@@ -55,7 +67,27 @@ async def set_values(manager, payload: Dict[str, Any]) -> bool:
                         changed = True
                     except (ValueError, TypeError):
                         pass
+            elif mc.kind == "rgb" and mc.channels and len(mc.channels) >= 3:
+                mapping = fixture.mappings.get(mc.mapping, {}) if mc.mapping else {}
+                resolved = resolve_rgb_value(value, mapping)
+                if resolved is None:
+                    continue
+
+                red, green, blue, canonical_hex = resolved
+                values_by_channel = [red, green, blue]
+
+                try:
+                    for idx, channel_name in enumerate(mc.channels[:3]):
+                        dmx_channel = fixture.absolute_channels[channel_name]
+                        dmx_value = int(values_by_channel[idx])
+                        await manager.artnet_service.set_channel(dmx_channel, dmx_value)
+                        await _sync_state_channel(manager, dmx_channel, dmx_value)
+                    fixture.current_values[key] = canonical_hex
+                    changed = True
+                except (ValueError, TypeError, KeyError):
+                    pass
             elif mc.channel:
+                fixture.current_values[key] = value
                 try:
                     dmx_channel = fixture.absolute_channels[mc.channel]
                     dmx_value = int(value)

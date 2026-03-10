@@ -168,6 +168,31 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
   - pan/tilt divergence from selected target => show `set`
 - Pink annotation text in the mockup is guidance only and is not rendered in UI.
 
+### DMX control handoff notes (for LLMs)
+
+- Use the shared two-column layout class for fixture control bodies:
+  - `fixture-two-col`
+  - `fixture-two-col-left`
+  - `fixture-two-col-right`
+- Do not introduce new per-fixture two-column wrappers unless behavior requires a different layout model.
+- Shared width contract:
+  - Base layout reads `--fixture-left-column-width`.
+  - Fixture-specific defaults are exposed on `.fixture-card`:
+    - `--fixture-left-column-width-rgb`
+    - `--fixture-left-column-width-moving-head`
+  - Controls set `--fixture-left-column-width` from one of those defaults.
+- Responsive contract:
+  - At mobile breakpoint (`max-width: 1100px`), `.fixture-two-col` collapses to one column.
+- RGB control contract:
+  - `RgbPreview` uses native `<input type="color">` (`rgb-preview-input`).
+  - Emit color updates on both `input` (continuous) and `change` events.
+  - Preview label shows lowercase `#rrggbb`.
+  - `RgbControls` sends semantic RGB updates via `fixture.set_values` payload key `values.rgb`.
+  - Color grid and color input both send semantic HEX (not direct `red/green/blue` channel payloads).
+- Backend/state expectation used by frontend:
+  - RGB fixtures are read from `values.rgb` as canonical `#RRGGBB`.
+  - Color-name mapping is frontend-local display logic; backend does not need to emit color names for RGB meta-channel values.
+
 ## Current implementation status
 
 - `SongAnalysis` panels (`AnalysisPlot`, `BeatTable`, `ChordsPanel`) are placeholders.

@@ -22,6 +22,10 @@ function normalizeHex(value: string): string {
   return value.trim().replace(/^#/, "").toUpperCase();
 }
 
+function canonicalHex(value: string): string {
+  return `#${normalizeHex(value)}`;
+}
+
 function normalizeToken(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -86,18 +90,20 @@ export function RgbControls(fixture: FixtureVM): FixtureControlHandle {
   const isParcan = fixture.type === "parcan";
 
   const wrap = document.createElement("div");
-  wrap.className = isParcan ? "parcan-layout" : "control-stack";
+  wrap.className = "fixture-two-col";
+  wrap.style.setProperty("--fixture-left-column-width", "var(--fixture-left-column-width-rgb, 108px)");
 
   const leftCol = document.createElement("div");
-  leftCol.className = "parcan-col-left";
+  leftCol.className = "fixture-two-col-left";
 
   const rightCol = document.createElement("div");
-  rightCol.className = "parcan-col-right";
+  rightCol.className = "fixture-two-col-right";
 
+  const initialFromRgb = typeof values.rgb === "string" ? parseHexRgb(values.rgb) : null;
   const state = {
-    red: Number(values.red ?? 0),
-    green: Number(values.green ?? 0),
-    blue: Number(values.blue ?? 0),
+    red: Number(initialFromRgb?.red ?? values.red ?? 0),
+    green: Number(initialFromRgb?.green ?? values.green ?? 0),
+    blue: Number(initialFromRgb?.blue ?? values.blue ?? 0),
     white: Number(values.white ?? 0),
   };
 
@@ -107,12 +113,12 @@ export function RgbControls(fixture: FixtureVM): FixtureControlHandle {
     green: state.green,
     blue: state.blue,
     white: state.white,
+  }, {
+    onColorChange: (hex) => {
+      setFixtureValues(fixture.id, { rgb: hex.toUpperCase() });
+    },
   });
-  if (isParcan) {
-    leftCol.appendChild(preview.root);
-  } else {
-    wrap.appendChild(preview.root);
-  }
+  leftCol.appendChild(preview.root);
 
   let colorGridDispose = () => {};
   let colorGridSetValue: ((value: string) => void) | null = null;
@@ -143,9 +149,7 @@ export function RgbControls(fixture: FixtureVM): FixtureControlHandle {
           const mapped = colorById[id];
           if (!mapped) return;
           setFixtureValues(fixture.id, {
-            red: mapped.rgb.red,
-            green: mapped.rgb.green,
-            blue: mapped.rgb.blue,
+            rgb: canonicalHex(mapped.swatch),
           });
         },
       });
@@ -157,14 +161,17 @@ export function RgbControls(fixture: FixtureVM): FixtureControlHandle {
 
   // Use StandardControls for sliders/dropdowns
   const standard = StandardControls(fixture);
-  if (isParcan) {
-    rightCol.appendChild(standard.root);
-    wrap.append(leftCol, rightCol);
-  } else {
-    wrap.appendChild(standard.root);
-  }
+  rightCol.appendChild(standard.root);
+  wrap.append(leftCol, rightCol);
 
   const updateValues = (newValues: FixtureValues) => {
+    const parsedRgb = typeof newValues.rgb === "string" ? parseHexRgb(newValues.rgb) : null;
+    if (parsedRgb) {
+      state.red = parsedRgb.red;
+      state.green = parsedRgb.green;
+      state.blue = parsedRgb.blue;
+    }
+
     const colorFromToken = colorIdFromToken(colorOptions, newValues.rgb);
     if (colorFromToken) {
       const mapped = colorById[colorFromToken];

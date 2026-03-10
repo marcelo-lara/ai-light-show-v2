@@ -30,3 +30,7 @@ async def test_fixture_payload_shape():
     assert "id" in fixture
     assert "values" in fixture
     assert "meta_channels" in fixture
+
+    parcan = payload.get("parcan_l")
+    assert parcan is not None
+    assert parcan["values"].get("rgb") == "#000000"

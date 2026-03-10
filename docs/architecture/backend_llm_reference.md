@@ -107,9 +107,11 @@ Code is the source of truth.
 | `fixture.stop_preview` | none | not implemented | event `stop_preview_not_implemented`, returns `False` |
 
 Notes on `fixture.set_values`:
-- `values` keys can be meta-channel IDs from fixture template `meta_channels` or direct fixture channel names.
+- `values` keys target meta-channel IDs from fixture template `meta_channels`.
 - `u16` channels split into MSB/LSB writes.
 - `enum` expects label and resolves via reverse mapping.
+- `rgb` accepts either `#RRGGBB` or mapped color names and writes the RGB component channels declared in `meta_channels.<id>.channels`.
+- Direct component channel payloads (`red`/`green`/`blue`) are ignored for fixtures that declare an `rgb` meta-channel.
 - Current implementation does not hard-reject while playing.
 
 ### POI intents
@@ -190,6 +192,7 @@ Field notes:
 - `system.edit_lock` is `True` when playback is active.
 - `playback.state` derives from `isPlaying` plus `timecode` (`stopped` only at ~0).
 - `song` is `null` when no song is loaded.
+- For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
 
 ## Effect data contracts
 

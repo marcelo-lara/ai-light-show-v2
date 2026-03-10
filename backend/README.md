@@ -55,7 +55,7 @@ Patch behavior:
 - Browser audio timeline is authoritative for timecode sync.
 - Clients should send `transport.jump_to_time` periodically during playback and on immediate transport changes.
 - `fixture.preview_effect` is rejected while playback is active.
-- `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings and direct fixture channel names.
+- `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings. For `kind="rgb"` meta-channels, send `values.rgb` as `#RRGGBB` (or mapped color name); backend converts it to channel bytes.
 
 ## Data and file contracts
 
