@@ -32,9 +32,6 @@
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
-/* Theme: Default Dark */
-:root[data-theme="dark"] {}
-
 /* Theme: Tokyo Dark-ish */
 :root[data-theme="tokyo-dark"] {
   --bg: #0a0c12;
@@ -275,38 +272,12 @@ input[type="range"] {
   border: 0;
 }
 
-.prompt-row,
-.control-stack,
-.fixture-grid,
-.llm-chat {
-  display: grid;
-  gap: 10px;
-}
-
-.prompt-actions,
-.effect-tray {
-  display: flex;
-  gap: 8px;
-}
-
-.chat-msg {
-  background: var(--card-2);
-}
-
 .mono {
   font-family: var(--mono);
 }
 
 .muted {
   color: var(--muted);
-}
-
-.subpanel {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  background: var(--card);
-  margin-bottom: 10px;
 }
 
 .columns {

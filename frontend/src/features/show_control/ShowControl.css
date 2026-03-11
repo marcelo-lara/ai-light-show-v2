@@ -1,0 +1,77 @@
+.show-control-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.show-control-panel {
+  min-height: 420px;
+}
+
+.show-control-body {
+  display: grid;
+  gap: 8px;
+}
+
+.show-control-list,
+.fixture-effects-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  max-height: 390px;
+  overflow: auto;
+}
+
+.show-control-row,
+.fixture-effects-row,
+.cue-sheet-row {
+  border: 1px solid var(--border);
+  background: var(--card-2);
+  padding: 8px;
+}
+
+.show-control-row.is-active,
+.fixture-effects-row.is-active,
+.cue-sheet-row.is-active {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+}
+
+.show-control-row {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 8px;
+}
+
+.show-control-time {
+  color: var(--muted);
+}
+
+.show-control-row.is-active .show-control-time {
+  color: var(--accent);
+}
+
+.show-control-label,
+.fixture-effects-row {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cue-sheet-title,
+.cue-sheet-meta {
+  margin: 0;
+}
+
+@media (max-width: 1200px) {
+  .show-control-main {
+    grid-template-columns: 1fr;
+  }
+
+  .show-control-panel {
+    min-height: auto;
+  }
+}
