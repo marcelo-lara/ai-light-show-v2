@@ -182,7 +182,11 @@ Top-level state object:
     "bpm": 120,
     "sections": [{"name": "intro", "start_s": 0.0, "end_s": 12.5}],
     "beats": [0.5, 1.0],
-    "downbeats": [0.5, 2.5]
+    "downbeats": [0.5, 2.5],
+    "analysis": {
+      "plots": [{"id": "rhythm", "title": "Rhythm", "svg_url": "/meta/Song/essentia/rhythm.svg"}],
+      "chords": [{"time_s": 12.0, "label": "Fm", "bar": 8, "beat": 1}]
+    }
   },
   "pois": []
 }
@@ -192,6 +196,7 @@ Field notes:
 - `system.edit_lock` is `True` when playback is active.
 - `playback.state` derives from `isPlaying` plus `timecode` (`stopped` only at ~0).
 - `song` is `null` when no song is loaded.
+- `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song.
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
 
 ## Effect data contracts

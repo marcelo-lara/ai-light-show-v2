@@ -1,11 +1,13 @@
 export type CardOptions = {
 	title?: string;
 	className?: string;
+	variant?: "plain" | "outlined";
 };
 
 export function Card(content: HTMLElement, options: CardOptions = {}): HTMLElement {
 	const card = document.createElement("section");
-	card.className = `card ${options.className ?? ""}`.trim();
+	const variantClass = options.variant === "outlined" ? "card--outlined" : "";
+	card.className = `card ${variantClass} ${options.className ?? ""}`.trim();
 
 	if (options.title) {
 		const header = document.createElement("header");

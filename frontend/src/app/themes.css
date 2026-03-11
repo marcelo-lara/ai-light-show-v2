@@ -194,6 +194,11 @@ body {
   background: var(--card);
 }
 
+.card--outlined {
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+}
+
 .card-header {
   font-weight: 600;
   margin-bottom: 10px;
@@ -302,4 +307,26 @@ input[type="range"] {
   padding: 10px;
   background: var(--card);
   margin-bottom: 10px;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: var(--left-col, 280px) 1fr;
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cards {
+  display: grid;
+  gap: 12px;
+  align-items: stretch;
+  align-content: start;
+  min-width: 0;
 }

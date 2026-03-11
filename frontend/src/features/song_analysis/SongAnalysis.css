@@ -1,0 +1,31 @@
+.analysis-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.analysis-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.analysis-plot-select {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  background: var(--panel, rgba(255, 255, 255, 0.04));
+  color: var(--text, #fff);
+}
+
+.analysis-plot-img {
+  width: 100%;
+  border-radius: 10px;
+  background: var(--panel, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+}

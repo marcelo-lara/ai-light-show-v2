@@ -77,6 +77,14 @@ Message types:
 - Client → backend: `hello`, `intent`.
 - Backend → client: `snapshot`, `patch`, `event`.
 
+Song snapshot payload includes optional analysis artifacts under `song.analysis`:
+- `plots[]`: backend-served SVG plot descriptors.
+- `chords[]`: chord-change timeline entries when metadata exists.
+
+Static file serving for frontend assets consumed from snapshots:
+- `/songs/*`: song audio files.
+- `/meta/*`: analyzer metadata artifacts (SVG/JSON).
+
 Patch behavior:
 - Current diff granularity is top-level key replacement only.
 

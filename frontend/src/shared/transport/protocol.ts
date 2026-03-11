@@ -101,6 +101,25 @@ export type SongState = {
   sections?: SongSection[];
   beats?: number[];
   downbeats?: number[];
+  analysis?: SongAnalysisState | null;
+};
+
+export type SongAnalysisState = {
+  plots?: SongAnalysisPlot[];
+  chords?: SongChord[];
+};
+
+export type SongAnalysisPlot = {
+  id: string;
+  title: string;
+  svg_url: string;
+};
+
+export type SongChord = {
+  time_s: number;
+  label: string;
+  bar?: number;
+  beat?: number;
 };
 
 export type SongSection = {

@@ -85,6 +85,10 @@ app = FastAPI(lifespan=lifespan, title="AI Light Show v2 Backend")
 songs_directory = Path("/app/songs") if Path("/app/songs").exists() else Path(__file__).parent / "songs"
 app.mount("/songs", StaticFiles(directory=songs_directory), name="songs")
 
+# Serve analyzer metadata artifacts (plots/chords/json)
+meta_directory = Path("/app/meta") if Path("/app/meta").exists() else Path(__file__).parent / "meta"
+app.mount("/meta", StaticFiles(directory=meta_directory), name="meta")
+
 # CORS for browser-based control clients
 app.add_middleware(
     CORSMiddleware,

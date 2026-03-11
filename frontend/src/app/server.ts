@@ -17,6 +17,7 @@ export function renderDocument(opts: RenderOptions): string {
     <link rel="stylesheet" href="/src/shared/components/layout/RightPanel.css" />
     <link rel="stylesheet" href="/src/shared/components/controls/Slider.css" />
     <link rel="stylesheet" href="/src/shared/components/song_player/ui/SongPlayer.css" />
+    <link rel="stylesheet" href="/src/features/song_analysis/SongAnalysis.css" />
     <link rel="stylesheet" href="/src/features/dmx_control/DmxControl.css" />
     <link rel="stylesheet" href="/src/features/llm_chat/LlmChat.css" />
   </head>
