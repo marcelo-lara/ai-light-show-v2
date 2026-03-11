@@ -1,6 +1,7 @@
 .llm-chat {
   display: flex;
   flex-direction: column;
+  align-content: stretch;
   gap: 8px;
   min-height: 0;
   height: 100%;
@@ -16,6 +17,10 @@
   min-height: 0;
   flex: 1;
   height: 100%;
+}
+
+.chat-history p.muted{
+  padding: 0 0.5em;
 }
 
 .chat-history {
@@ -71,10 +76,10 @@
 
 .prompt-row {
   display: flex;
-  gap: 8px;
   align-items: flex-end;
   border-radius: 12px;
   background: var(--card-2);
+  height: 2em;
 }
 
 .prompt-actions {

@@ -8,7 +8,7 @@ export function ChatHistory(messages: ChatMessageModel[], streamingText: string)
 	if (messages.length === 0 && !streamingText) {
 		const empty = document.createElement("p");
 		empty.className = "muted";
-		empty.textContent = "No chat yet.";
+		empty.textContent = "";
 		box.appendChild(empty);
 		return box;
 	}

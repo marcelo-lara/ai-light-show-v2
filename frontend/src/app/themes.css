@@ -282,19 +282,8 @@ input[type="range"] {
   gap: 8px;
 }
 
-.chat-history {
-  max-height: 300px;
-  overflow: auto;
-  display: grid;
-  gap: 8px;
-}
-
 .chat-msg {
   background: var(--card-2);
-}
-
-.chat-msg p {
-  white-space: pre-wrap;
 }
 
 .mono {
