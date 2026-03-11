@@ -8,15 +8,15 @@ import { getSongAnalysisData } from "./song_analysis_state.ts";
 
 export function SongAnalysisView(): HTMLElement {
 	const wrap = document.createElement("section");
-	wrap.className = "view";
+	wrap.className = "view song-analysis-view";
 	const data = getSongAnalysisData();
 
 	const left = Cards([
 		BeatTable({ beats: data.beats, downbeats: data.downbeats }),
 		ChordsPanel({ chords: data.chords }),
-	]);
+	], { className: "song-analysis-left" });
 	const right = AnalysisPlot({ plots: data.plots });
 
-	wrap.append(SongPlayer(), Columns(left, right));
+	wrap.append(SongPlayer(), Columns(left, right, { leftColPx: 300, className: "song-analysis-columns" }));
 	return wrap;
 }

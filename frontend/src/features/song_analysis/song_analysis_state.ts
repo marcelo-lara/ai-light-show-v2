@@ -12,6 +12,15 @@ export type SongAnalysisData = {
   plots: Array<{ id: string; title: string; svgUrl: string }>;
 };
 
+const MOCK_BEATS = [
+  1.376, 1.824, 2.272, 2.709, 3.168, 3.605, 4.064, 4.501,
+  4.96, 5.397, 5.856, 6.293, 6.731, 7.179, 7.637, 8.064,
+  8.48, 8.971, 9.44, 9.888, 10.357, 10.795, 11.253, 11.712,
+  12.139, 12.597, 13.024, 13.461, 13.909, 14.357, 14.795, 15.2,
+];
+
+const MOCK_DOWNBEATS = [1.824, 3.605, 5.397, 7.179, 8.971, 10.795, 12.597, 14.357];
+
 function resolveBackendUrl(rawUrl: string): string {
   if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) return rawUrl;
   const origin = String((globalThis as BackendOriginGlobal).__BACKEND_HTTP_ORIGIN__ ?? "").trim();
@@ -56,6 +65,11 @@ export function getSongAnalysisData(): SongAnalysisData {
   const song = getBackendStore().state.song;
   if (!song) return { beats: [], downbeats: [], chords: [], plots: [] };
 
+  const beats = cleanSortedNumeric(song.beats);
+  const downbeats = cleanSortedNumeric(song.downbeats);
+  const fallbackBeats = beats.length ? beats : MOCK_BEATS;
+  const fallbackDownbeats = downbeats.length ? downbeats : MOCK_DOWNBEATS;
+
   const plots = (song.analysis?.plots ?? [])
     .filter((plot) => Boolean(plot?.id) && Boolean(plot?.title) && Boolean(plot?.svg_url))
     .map((plot) => ({
@@ -65,8 +79,8 @@ export function getSongAnalysisData(): SongAnalysisData {
     }));
 
   return {
-    beats: cleanSortedNumeric(song.beats),
-    downbeats: cleanSortedNumeric(song.downbeats),
+    beats: fallbackBeats,
+    downbeats: fallbackDownbeats,
     chords: cleanChords(song),
     plots,
   };
