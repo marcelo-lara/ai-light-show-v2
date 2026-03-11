@@ -2,8 +2,10 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from models.fixture import Fixture, MovingHead, Parcan
-from models.fixture_template import FixtureTemplate
+from models.fixtures.fixture import Fixture
+from models.fixtures.fixture_template import FixtureTemplate
+from models.fixtures.moving_heads.moving_head import MovingHead
+from models.fixtures.parcans.parcan import Parcan
 from store.dmx_canvas import DMX_CHANNELS
 
 

@@ -2,7 +2,7 @@
 
 from typing import Any, Dict
 
-from models.fixture import Fixture
+from models.fixtures.fixture import Fixture
 from store.dmx_canvas import DMXCanvas
 from store.services.canvas_rendering import (
     dump_canvas_debug,

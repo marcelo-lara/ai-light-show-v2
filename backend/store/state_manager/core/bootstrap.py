@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from models.fixture import Fixture
+from models.fixtures.fixture import Fixture
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.pois import PoiStore
 from store.services.song_metadata_loader import SongMetadataLoader

@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from models.fixture import Fixture
+from models.fixtures.fixture import Fixture
 from store.dmx_canvas import DMX_CHANNELS
 
 
