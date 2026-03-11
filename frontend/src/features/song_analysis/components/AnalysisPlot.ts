@@ -14,10 +14,6 @@ export function AnalysisPlot(props: AnalysisPlotProps): HTMLElement {
 	const content = document.createElement("div");
 	content.className = "analysis-card analysis-plots";
 
-	const title = document.createElement("h3");
-	title.textContent = "Plot Analysis";
-	content.appendChild(title);
-
 	if (!props.plots.length) {
 		const empty = document.createElement("p");
 		empty.className = "muted";

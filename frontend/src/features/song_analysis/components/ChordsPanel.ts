@@ -24,10 +24,6 @@ export function ChordsPanel(props: ChordsPanelProps): HTMLElement {
 	const content = document.createElement("div");
 	content.className = "analysis-card analysis-chords";
 
-	const title = document.createElement("h3");
-	title.textContent = "Chords";
-	content.appendChild(title);
-
 	if (!props.chords.length) {
 		const empty = document.createElement("p");
 		empty.className = "muted";
