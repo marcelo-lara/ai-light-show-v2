@@ -1,0 +1,137 @@
+.song-player-v2 {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 0.5em;
+}
+
+.song-player-row-1 {
+  width: 100%;
+  min-width: 0;
+}
+
+.song-player-row-2 {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  border-top: 1px dashed var(--border-strong);
+  padding-top: 12px;
+}
+
+.song-player-waveform {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.song-player-col-options {
+  flex: 1;
+}
+
+.song-player-col-zoom {
+  border-left: 1px dashed var(--border-strong);
+  padding-left: 24px;
+}
+
+.song-player-title {
+  font-size: 13px;
+}
+
+.song-player-wave {
+  background: var(--card-2);
+}
+
+.song-player-barbeat {
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1;
+  min-width: 80px;
+}
+
+.song-player-transport {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.song-player-transport .btn {
+  border: 0;
+  background: var(--card-2);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  place-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.song-player-transport .btn:hover {
+  background: var(--border-strong);
+}
+
+.song-player-transport .play-pause-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--accent);
+  color: white;
+  border-radius: 12px;
+}
+
+.song-player-transport .play-pause-btn:hover {
+  background: color-mix(in oklab, var(--accent) 80%, white);
+}
+
+.transport-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.play-pause-btn .transport-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.song-player-options {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.song-player-inline-toggle {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.song-player-inline-toggle input[type="checkbox"] {
+  margin: 0;
+}
+
+.song-player-zoom {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.song-player-zoom input[type="range"] {
+  width: 120px;
+}
+
+.song-player-col-position {
+  text-align: right;
+}
+
+.song-player-position {
+  font-size: 14px;
+}

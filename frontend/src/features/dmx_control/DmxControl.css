@@ -1,0 +1,295 @@
+.fixture-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  align-items: start;
+}
+
+.fixture-card {
+  --fixture-left-column-width-rgb: 108px;
+  --fixture-left-column-width-moving-head: 210px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--card);
+  padding: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.fixture-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.effect-tray {
+  display: grid;
+  gap: 6px;
+}
+
+.effect-tray-top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.effect-select {
+  flex: 1;
+}
+
+.effect-duration {
+  width: 80px;
+}
+
+.effect-params {
+  display: flex;
+  gap: 8px;
+}
+
+.effect-param {
+  width: 80px;
+}
+
+.effect-preview {
+  width: 92px;
+  text-transform: lowercase;
+}
+
+/* Chrome-first input controls for DMX panel */
+.effect-select,
+.effect-duration,
+.effect-param,
+.poi-dropdown-wrap select,
+.poi-set-btn,
+.enum-grid-option {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+}
+
+.effect-select,
+.effect-duration,
+.effect-param,
+.poi-dropdown-wrap select {
+  background: var(--card-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  height: 32px;
+  padding: 4px 8px;
+}
+
+.effect-duration::-webkit-outer-spin-button,
+.effect-duration::-webkit-inner-spin-button,
+.effect-param::-webkit-outer-spin-button,
+.effect-param::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.effect-duration,
+.effect-param {
+  font-variant-numeric: tabular-nums;
+}
+
+.rgb-preview {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.rgb-preview-input {
+  width: 44px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+}
+
+.rgb-preview-label {
+  font-size: 0.75rem;
+}
+
+.dmx-arm {
+  width: 48px;
+  height: 24px;
+  padding: 0;
+  font-size: 0.6rem;
+}
+
+.fixture-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.control-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.fixture-two-col {
+  display: grid;
+  --fixture-left-column-width: 210px;
+  grid-template-columns: var(--fixture-left-column-width) 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.fixture-two-col-left,
+.fixture-two-col-right {
+  display: grid;
+  gap: 8px;
+}
+
+.moving-head-spatial,
+.moving-head-channels {
+  display: grid;
+  gap: 8px;
+}
+
+.pan-tilt-surface {
+  width: 200px;
+  height: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  position: relative;
+  cursor: crosshair;
+  border-radius: 0;
+  margin: 0;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.pan-tilt-surface::before,
+.pan-tilt-surface::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Horizontal center line */
+.pan-tilt-surface::before {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+/* Vertical center line */
+.pan-tilt-surface::after {
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  border-left: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.pan-tilt-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: transparent;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: none;
+  z-index: 2;
+}
+
+.pan-tilt-handle.poi {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #5a5a5a;
+  background: rgba(90, 90, 90, 0.2);
+  box-shadow: none;
+  z-index: 1;
+}
+
+.pan-tilt-label {
+  position: absolute;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.2);
+  line-height: 1.1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.pan-tilt-label.pan { bottom: 2px; left: 2px; }
+.pan-tilt-label.tilt { top: 2px; right: 0; transform: rotate(270deg) translateY(-100%); transform-origin: top right; }
+
+
+/* POI Location Controller */
+.poi-controller-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.poi-dropdown-wrap {
+  flex: 1;
+}
+.poi-set-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  height: 34px;
+  cursor: pointer;
+  min-width: 52px;
+}
+.poi-set-btn:hover {
+  border-color: var(--border-strong);
+}
+.poi-set-btn:active {
+  transform: translateY(1px);
+}
+
+.enum-grid {
+  display: grid;
+  gap: 4px;
+}
+
+.enum-grid-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.enum-grid-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
+  gap: 4px;
+}
+
+.enum-grid-option {
+  width: 100%;
+  min-height: 26px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.72rem;
+  text-transform: lowercase;
+  overflow: hidden;
+}
+
+.enum-grid-option.selected {
+  border: 2px solid var(--text);
+}
+
+.enum-grid-option-swatch {
+  color: transparent;
+  font-size: 0;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 1100px) {
+  .fixture-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fixture-two-col {
+    grid-template-columns: 1fr;
+  }
+}

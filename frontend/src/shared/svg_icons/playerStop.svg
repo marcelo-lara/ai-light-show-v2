@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="playerStop" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24">
+  <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: none;
+        stroke: #868686;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2px;
+      }
+    </style>
+  </defs>
+  <path id="vector" class="st0" d="M20.87,1.5H3.12c-.89,0-1.62.73-1.62,1.62v17.76c0,.89.73,1.62,1.62,1.62h17.76c.89,0,1.62-.73,1.62-1.62V3.12c0-.89-.73-1.62-1.62-1.62h0Z"/>
+</svg>

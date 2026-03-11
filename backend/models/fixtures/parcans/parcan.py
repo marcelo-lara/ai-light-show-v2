@@ -8,13 +8,11 @@ from .full import handle as handle_full
 
 
 class Parcan(Fixture):
-    type: str = "parcan"
-
     def to_dmx(self) -> Dict[int, int]:
         dmx: Dict[int, int] = {}
-        for name, ch in self.channels.items():
+        for name, offset in self.template.channels.items():
             val = int(self.current_values.get(name, 0) or 0)
-            dmx[ch] = max(0, min(255, val))
+            dmx[self.base_channel + offset] = max(0, min(255, val))
         return dmx
 
     def apply_preset(self, preset: Dict[str, Any]) -> None:
@@ -34,6 +32,7 @@ class Parcan(Fixture):
         data: Dict[str, Any],
         render_state: Dict[str, Any],
     ) -> None:
+        print(f"DEBUG: Rendering {effect} for {self.id} at frame {frame_index}")
         effect = (effect or "").lower().strip()
         effect_handlers = {
             "set_channels": handle_set_channels,

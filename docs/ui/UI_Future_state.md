@@ -2,6 +2,9 @@
 
 This document defines the target UI vision aligned to `docs/ui/UX_User_Flow.md` (source of truth).
 
+Important: this is a future-state UX target document, not a backend protocol/runtime source of truth.
+For current backend behavior/contracts, see `docs/architecture/backend_llm_reference.md`.
+
 ## Product intent
 
 The UI must support a production workflow from preparation to show execution with precise timecode control:

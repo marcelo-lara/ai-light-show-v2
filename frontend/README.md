@@ -1,0 +1,249 @@
+# AI Light Show v2 — Frontend
+
+This frontend is a Deno-served TypeScript browser client. It renders backend-authoritative state from WebSocket `snapshot`/`patch` messages and emits user `intent` messages.
+
+UI layout references live in [../docs/ui/README.md](../docs/ui/README.md).
+
+## Source of truth
+
+- Code is authoritative over docs.
+- Primary entrypoints:
+  - `frontend/dev.ts` (dev server + bundle + HTML shell rendering)
+  - `frontend/src/app/main.ts` (boot + mount)
+  - `frontend/src/app/boot.ts` (state hydration + WS lifecycle)
+  - `frontend/src/app/AppShell.ts` (layout + route rendering)
+  - `frontend/src/shared/transport/protocol.ts` (message/types contract)
+
+## Runtime and behavior model
+
+1. `main.ts` resolves WebSocket URL and calls `boot({ wsUrl })`, then mounts `AppShell`.
+2. `boot.ts` initializes theme, hydrates state from `window.__BOOTSTRAP_STATE__` or `localStorage.last_snapshot`, connects `WsClient`, and sends `hello`.
+3. Inbound WS messages:
+   - `snapshot`: replace store via `applySnapshot`.
+   - `patch`: apply sequence-ordered path/value changes via `applyPatch`.
+   - `event`: route LLM streaming chunks/messages to `llm_state`; backend errors become chat system messages.
+4. `AppShell.ts` renders `Sidebar + Main + RightPanel`, rerenders on UI/Backend/LLM store updates, and refreshes the singleton song player.
+5. Timecode sync exception: browser playback time is authoritative during playback and syncs via `transport.jump_to_time`.
+
+## Active route map (actual code)
+
+Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`.
+
+| Route id | Sidebar label | View function | Current behavior |
+| --- | --- | --- | --- |
+| `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` + placeholder text |
+| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` + placeholder analysis panels |
+| `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` + placeholder builder panels |
+| `dmx_control` | DMX Control | `DmxControlView()` | Renders fixture grid with dynamic controls |
+
+`features/home/HomeView.ts` exists but is not wired into current route state or sidebar.
+
+## Protocol and intent surface
+
+Protocol types and intent names are defined in `src/shared/transport/protocol.ts`.
+
+Client -> backend message types:
+- `hello`
+- `intent`
+
+Backend -> client message types:
+- `snapshot`
+- `patch`
+- `event`
+
+Intent names currently emitted by frontend:
+- Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`
+- Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`
+- LLM: `llm.send_prompt`, `llm.cancel`
+- POI: `poi.update_fixture_target`
+
+Protocol includes additional names (`transport.jump_to_section`, `fixture.stop_preview`, `poi.create`, `poi.update`, `poi.delete`) for compatibility with backend contracts.
+
+## State stores and global bridges
+
+Store modules:
+- `src/shared/state/backend_state.ts`: authoritative backend snapshot/patch store (`stale`, `seq`, `state`).
+- `src/shared/state/ui_state.ts`: local route + selected fixture id.
+- `src/shared/state/theme_state.ts`: persisted theme (`dark`, `tokyo-dark`, `light`).
+- `src/features/llm_chat/llm_state.ts`: local chat transcript + streaming buffer.
+
+Global bridge fields used across modules:
+- `__WS_CLIENT__`: connected `WsClient` instance
+- `__WS_STATE__`: current connection state
+- `__LLM_STATE__`: mirror of local LLM status for `StatusCard`
+- `__BACKEND_HTTP_ORIGIN__`: derived from WS URL for resolving relative audio URLs
+
+## Frontend code map (exports and responsibilities)
+
+### App shell and boot
+- `src/app/main.ts`: app bootstrap entry.
+- `src/app/boot.ts`: `boot(ctx)` + hydration + WS event dispatch.
+- `src/app/AppShell.ts`: `mountAppShell(root)` + route/main/right panel rerender policy.
+- `src/app/routes.ts`: `ROUTES` metadata for sidebar buttons.
+- `src/app/server.ts`: `renderDocument()` HTML shell with CSS includes + bootstrap injection.
+
+### Shared transport/state
+- `src/shared/transport/ws_client.ts`: `WsClient` reconnecting WebSocket client.
+- `src/shared/transport/protocol.ts`: all backend/frontend protocol types.
+- `src/shared/transport/transport_intents.ts`: transport intent senders.
+- `src/shared/state/backend_state.ts`: snapshot/patch reducer and subscribers.
+- `src/shared/state/selectors.ts`: UI-safe selectors (`show_state`, lock, playback, fixtures, arm count).
+- `src/shared/state/ui_state.ts`: route selection/persistence.
+- `src/shared/state/theme_state.ts`: theme init/apply/persistence.
+
+### Song player (shared across routes)
+- `src/shared/components/song_player/SongPlayer.ts`: singleton facade (`SongPlayer`, `refreshSongPlayer`).
+- `src/shared/components/song_player/SongPlayerController.ts`: orchestration class for playback, navigation, looping, region rebuild, backend sync.
+- `src/shared/components/song_player/ui/buildSongPlayerUi.ts`: UI composition extracted from controller lifecycle logic.
+- `src/shared/components/song_player/logic/WaveSurferManager.ts`: WaveSurfer lifecycle, regions plugin, media controls.
+- `src/shared/components/song_player/logic/PlaybackSync.ts`: backend sync cadence (10s periodic + debounced seeks + immediate sync).
+- `src/shared/components/song_player/logic/song_logic.ts`: section/beat utilities and song fingerprinting.
+- `src/shared/components/song_player/logic/navigation_loop.ts`: pure section/beat navigation and loop-wrap target helpers.
+- `src/shared/components/song_player/logic/song_player_state.ts`: song identity/data derivation, paused playback time normalization, audio URL resolution.
+- `src/shared/components/song_player/logic/wave_callbacks.ts`: WaveSurfer callback orchestration bindings for controller state updates.
+- `src/shared/components/song_player/logic/regions.ts`: section/downbeat overlay generation.
+- `src/shared/components/song_player/ui/*`: waveform, transport buttons, readout, options, layout primitives.
+
+### DMX control
+- `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.
+- `src/features/dmx_control/adapters/fixture_vm.ts`: backend `FixtureState` -> frontend `FixtureVM`.
+- `src/features/dmx_control/fixture_selectors.ts`: fixture selection entrypoint.
+- `src/features/dmx_control/fixture_intents.ts`: DMX + preview + POI intent senders.
+- `src/features/dmx_control/components/FixtureGrid.ts`: card grid and incremental control updates.
+- `src/features/dmx_control/components/FixtureCard.ts`: fixture container with ARM action.
+- `src/features/dmx_control/components/EffectTray.ts`: LoFi-style effect preview footer (`effect`, `duration`, dynamic params, `preview`).
+- `src/features/dmx_control/components/controls/StandardControls.ts`: meta-channel-driven sliders/dropdowns.
+- `src/features/dmx_control/components/controls/EnumGrid.ts`: slot-style enum control grid used for mapped wheels (color/gobo).
+- `src/features/dmx_control/components/controls/RgbControls.ts`: color control + standard controls composition.
+- `src/features/dmx_control/components/controls/RgbPreview.ts`: typed RGB preview display.
+- `src/features/dmx_control/components/controls/MovingHeadControls.ts`: pan/tilt surface + POI controller + standard controls.
+- `src/features/dmx_control/components/controls/PanTiltControl.ts`: XY pad with throttled updates and commit callback.
+- `src/features/dmx_control/components/controls/PoiLocationController.ts`: POI selector and `set` target action.
+- `src/features/dmx_control/components/controls/UnknownControls.ts`: fallback channel sliders.
+- `src/features/dmx_control/components/controls/*_helpers.ts`: shared helpers for pan/tilt math/drag and POI state logic.
+
+### LLM chat
+- `src/features/llm_chat/LlmChatView.ts`: chat card composition.
+- `src/features/llm_chat/llm_state.ts`: status/messages/streaming reducer.
+- `src/features/llm_chat/llm_intents.ts`: prompt/cancel intents and optimistic user message append.
+- `src/features/llm_chat/components/*`: chat message, history, input controls.
+
+### Layout/feedback/control primitives
+- `src/shared/components/layout/*`: `Sidebar`, `RightPanel`, `Card`.
+- `src/shared/components/feedback/*`: `StatusCard`, `Badge`, theme model.
+- `src/shared/components/controls/*`: generic slider/toggle/dropdown/color swatch.
+- `src/shared/utils/*`: id generation, throttling, time formatting, SVG icon creation.
+- `src/shared/svg_icons/index.ts`: generated icon registry used by sidebar and transport controls.
+
+## Styling and token contract
+
+- `src/app/themes.css`: global design tokens and theme variants (`dark`, `tokyo-dark`, `light`).
+- `src/app/AppShell.css`: shell columns (`sidebar | main | right-panel`) and main viewport behavior.
+- `src/shared/components/layout/Sidebar.css`, `RightPanel.css`: persistent shell side areas.
+- `src/shared/components/controls/Slider.css`: range slider skin.
+- `src/shared/components/song_player/ui/SongPlayer.css`: player layout and transport styling.
+- `src/features/dmx_control/DmxControl.css`: fixture cards, pan/tilt surface, POI controls.
+- `src/features/llm_chat/LlmChat.css`: chat layout and message styles.
+
+Use CSS variables from `themes.css` for visual values. Do not hardcode mockup colors/dimensions.
+
+## DMX LoFi layout contract
+
+Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
+
+- Moving-head card body uses a two-column split:
+  - left: pan/tilt surface + POI selector/set action
+  - right: mapped wheels + range sliders
+- Right-column control order is deterministic:
+  - wheels first (`enum`, and `u8` channels with `mapping` + `step=true`)
+  - sliders second (`u8/u16`, including `u8+mapping` where `step` is not true)
+- Mapped enum controls render as slot-style square grids, not native selects.
+- `u8 + mapping` rendering matrix:
+  - `step=true` => swatch/slot grid (sends mapped numeric key)
+  - `step!=true` => slider (`step=1`, mapping used as cue only)
+- Effect footer uses the LoFi structure: effect selector, duration input, params row, preview action.
+- POI selection behavior in moving-head spatial:
+  - selected POI with fixture target => move to target and hide `set`
+  - selected POI without fixture target => move to `0,0` and show `set`
+  - pan/tilt divergence from selected target => show `set`
+- Pink annotation text in the mockup is guidance only and is not rendered in UI.
+
+### DMX control handoff notes (for LLMs)
+
+- Use the shared two-column layout class for fixture control bodies:
+  - `fixture-two-col`
+  - `fixture-two-col-left`
+  - `fixture-two-col-right`
+- Do not introduce new per-fixture two-column wrappers unless behavior requires a different layout model.
+- Shared width contract:
+  - Base layout reads `--fixture-left-column-width`.
+  - Fixture-specific defaults are exposed on `.fixture-card`:
+    - `--fixture-left-column-width-rgb`
+    - `--fixture-left-column-width-moving-head`
+  - Controls set `--fixture-left-column-width` from one of those defaults.
+- Responsive contract:
+  - At mobile breakpoint (`max-width: 1100px`), `.fixture-two-col` collapses to one column.
+- RGB control contract:
+  - `RgbPreview` uses native `<input type="color">` (`rgb-preview-input`).
+  - Emit color updates on both `input` (continuous) and `change` events.
+  - Preview label shows lowercase `#rrggbb`.
+  - `RgbControls` sends semantic RGB updates via `fixture.set_values` payload key `values.rgb`.
+  - Color grid and color input both send semantic HEX (not direct `red/green/blue` channel payloads).
+- Backend/state expectation used by frontend:
+  - RGB fixtures are read from `values.rgb` as canonical `#RRGGBB`.
+  - Color-name mapping is frontend-local display logic; backend does not need to emit color names for RGB meta-channel values.
+
+## Current implementation status
+
+- `SongAnalysis` panels (`AnalysisPlot`, `BeatTable`, `ChordsPanel`) are placeholders.
+- `ShowBuilder` panels (`SongProgression`, `EffectPlaylist`, `EffectPicker`) are placeholders.
+- `ShowControl` route is present and renders song player plus placeholder text.
+- `HomeView` exists in source but is not part of current route rendering.
+
+## Development commands
+
+From `frontend/`:
+
+```bash
+deno task dev
+```
+
+```bash
+deno task serve
+```
+
+```bash
+deno task check
+```
+
+```bash
+npm run sync-icons
+```
+
+## Frontend UI implementation rules
+
+- Prefer flexbox for small/local component layout.
+- Treat LoFi mockups as layout references only.
+- Use existing token variables from `themes.css`.
+- Keep backend integration capability-driven and backend-agnostic. Avoid frontend assumptions tied to one backend implementation.
+- Prefer referencing explicit files from [../docs/ui/README.md](../docs/ui/README.md) instead of generic "mockup" wording in prompts.
+
+## LLM UI task template
+
+```text
+Build/update <screen/component> to match the LoFi layout reference.
+
+Layout constraints (authoritative):
+- Keep placement/order exactly as in LoFi (columns, panel order, key section positions).
+- Treat LoFi as layout-only reference; do not reinterpret structure.
+
+Implementation constraints:
+- Prefer flexbox for small/local component layout; use grid only for true two-dimensional layouts.
+- Do not copy explicit mockup dimensions or colors.
+- Use responsive sizing and project theme tokens/variables.
+
+Acceptance checks:
+- Column/panel placement matches LoFi.
+- Mobile and desktop both preserve intended structure.
+- No hard-coded mockup colors/dimensions were introduced.
+```

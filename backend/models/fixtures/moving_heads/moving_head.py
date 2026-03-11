@@ -11,14 +11,12 @@ from .sweep import handle as handle_sweep
 
 
 class MovingHead(Fixture):
-    type: str = "moving_head"
-
     def _clamp_u16(self, value: Any) -> int:
         try:
-            iv = int(value)
-        except Exception:
+            val = int(value)
+        except (ValueError, TypeError):
             return 0
-        return max(0, min(65535, iv))
+        return max(0, min(65535, val))
 
     def _split_u16(self, value_u16: Any) -> Tuple[int, int]:
         v = self._clamp_u16(value_u16)
@@ -28,13 +26,15 @@ class MovingHead(Fixture):
         return self._clamp_u16((self._clamp_byte(msb) << 8) | self._clamp_byte(lsb))
 
     def _has_axis_16bit(self, axis: str) -> bool:
-        return f"{axis}_msb" in self.channels and f"{axis}_lsb" in self.channels
+        mc = self.meta_channels.get(axis)
+        return mc is not None and mc.kind == "u16" and mc.channels and len(mc.channels) == 2
 
     def _read_axis_u16_from_universe(self, universe: bytearray, axis: str) -> Optional[int]:
         if not self._has_axis_16bit(axis):
             return None
-        msb_ch = self.channels[f"{axis}_msb"]
-        lsb_ch = self.channels[f"{axis}_lsb"]
+        mc = self.meta_channels[axis]
+        msb_ch = self.absolute_channels[mc.channels[0]]
+        lsb_ch = self.absolute_channels[mc.channels[1]]
         msb = int(universe[msb_ch - 1])
         lsb = int(universe[lsb_ch - 1])
         return (msb << 8) | lsb
@@ -42,9 +42,22 @@ class MovingHead(Fixture):
     def _write_axis_u16_to_universe(self, universe: bytearray, axis: str, value_u16: Any) -> None:
         if not self._has_axis_16bit(axis):
             return
+        mc = self.meta_channels[axis]
         msb, lsb = self._split_u16(value_u16)
-        self._write_channel(universe, self.channels[f"{axis}_msb"], msb)
-        self._write_channel(universe, self.channels[f"{axis}_lsb"], lsb)
+        self._write_channel(universe, mc.channels[0], msb)
+        self._write_channel(universe, mc.channels[1], lsb)
+
+    def to_dmx(self) -> Dict[int, int]:
+        dmx: Dict[int, int] = {}
+        for name, offset in self.template.channels.items():
+            val = int(self.current_values.get(name, 0) or 0)
+            dmx[self.base_channel + offset] = max(0, min(255, val))
+        return dmx
+
+    def apply_preset(self, preset: Dict[str, Any]) -> None:
+        for k, v in preset.items():
+            if k in self.channels:
+                self.set_channel_value(k, v)
 
     def _find_preset_values(self, preset_name: Any) -> Optional[Dict[str, Any]]:
         if not preset_name:
@@ -58,7 +71,7 @@ class MovingHead(Fixture):
             try:
                 if str(poi_id).strip().lower() == needle and isinstance(values, dict):
                     return values
-            except Exception:
+            except (TypeError, ValueError):
                 continue
 
         for p in self.presets or []:
@@ -72,7 +85,7 @@ class MovingHead(Fixture):
                         linked_values = poi_targets.get(str(poi_id))
                         if isinstance(linked_values, dict):
                             return linked_values
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 continue
         return None
 
@@ -84,13 +97,11 @@ class MovingHead(Fixture):
         if not needle:
             return None
 
-        poi_targets = self.poi_targets if isinstance(self.poi_targets, dict) else {}
-        for key, values in poi_targets.items():
-            try:
-                if str(key).strip().lower() == needle and isinstance(values, dict):
-                    return values
-            except Exception:
-                continue
+        from store.pois import PoiStore
+        poi_db = PoiStore.get_instance()
+        if poi_db:
+            return poi_db.get_fixture_target_sync(needle, self.id)
+
         return None
 
     def _resolve_poi_pan_tilt_u16(self, poi_key: Any) -> Tuple[Optional[int], Optional[int]]:
@@ -117,7 +128,7 @@ class MovingHead(Fixture):
             raw = payload.get(axis, 0)
             try:
                 iv = int(raw)
-            except Exception:
+            except (TypeError, ValueError):
                 return None
 
             # If a fine component exists, treat axis as MSB byte.

@@ -4,8 +4,9 @@ Real-time DMX show control with audio-synced playback, fixture-first editing, Ar
 
 ## System architecture
 
-AI Light Show is split into five primary modules:
+AI Light Show is split into six primary modules:
 
+- **frontend/**: Deno-served TypeScript client acting as a "dumb console" that maps user actions to backend intents.
 - **backend/**: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
 - **analyzer/**: Offline metadata generation (`analyzer/meta/<song>/...`).
 - **mcp/song_metadata/**: MCP server exposing read-only metadata query tools over SSE.
@@ -14,22 +15,25 @@ AI Light Show is split into five primary modules:
 
 ### Canonical runtime flow
 
-1. A control client sends `timecode` / `seek` / `playback` over `/ws`.
-2. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
-3. While paused, client edits (`delta`) update editor/output universes directly.
-4. Preview requests (`preview_effect`) render temporary in-memory output only (no persistence).
+1. Frontend connects to `/ws`, sends `hello`, and receives backend-authoritative `snapshot` + `patch` updates.
+2. UI emits only `intent` messages; backend applies domain logic and rebroadcasts state deltas.
+3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
+4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata; backend consumes it from `/app/meta` in Docker.
 6. MCP server exposes metadata tools; agent-gateway forwards LLM tool calls to MCP.
 
 ### Important behavior constraints
 
 - Client playback timeline is authoritative.
-- While playing, backend rejects manual channel edits and preview requests.
+- Browser player owns real audio playback and local timecode.
+- Frontend syncs timecode to backend every 10 seconds while playing, plus immediate sync on play/pause/seek/stop.
+- While playing, backend enforces `system.edit_lock` and rejects preview requests.
 - Cue sheets are action-based and rendered into a full 60 FPS DMX canvas on song load.
 - Default startup song target is `Yonaka - Seize the Power` (fallback: first available).
 
 ## Module documentation (LLM-first)
 
+- [frontend/README.md](frontend/README.md)
 - [analyzer/README.md](analyzer/README.md)
 - [backend/README.md](backend/README.md)
 - [llm-server/README.md](llm-server/README.md)
@@ -64,6 +68,7 @@ docker compose up --build
 ```
 
 - Backend: http://localhost:5001
+- Frontend: http://localhost:5173
 - LLM server: http://localhost:8080
 - Agent gateway: http://localhost:8090
 - Song metadata MCP: http://localhost:8089
@@ -76,6 +81,8 @@ Use the `ai-light` Python environment:
 ```bash
 PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q
 ```
+
+All automated Python tests live under `tests/`.
 
 After test runs, rebuild/restart containers before manual validation:
 

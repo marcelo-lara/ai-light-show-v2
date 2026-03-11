@@ -33,5 +33,5 @@ COPY src ./src
 RUN mkdir -p ./temp_files
 
 # Keep the container alive for interactive/debug workflows
-# until it is explicitly stopped.
-CMD ["tail", "-f", "/dev/null"]
+# until it is explicitly stopped. Trap TERM/INT so docker stop exits cleanly.
+CMD ["bash", "-lc", "trap 'exit 0' TERM INT; while :; do sleep 1; done"]

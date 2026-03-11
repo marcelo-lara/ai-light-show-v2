@@ -1,0 +1,160 @@
+{
+	"id": "mini_beam_prism",
+	"type": "moving_head",
+	"channels": {
+		"pan_msb": 0,
+		"pan_lsb": 1,
+		"tilt_msb": 2,
+		"tilt_lsb": 3,
+		"speed": 4,
+		"dim": 5,
+		"strobe": 6,
+		"color": 7,
+		"gobo": 8,
+		"prism": 9,
+		"autoplay": 10,
+		"reset": 11
+	},
+	"effects": [
+		"full",
+		"strobe",
+		"flash",
+		"fade_in",
+		"seek",
+		"move_to",
+		"move_to_poi",
+		"sweep"
+	],
+	"meta_channels": {
+		"pan": {
+			"label": "Pan",
+			"kind": "u16",
+			"channels": [
+				"pan_msb",
+				"pan_lsb"
+			]
+		},
+		"tilt": {
+			"label": "Tilt",
+			"kind": "u16",
+			"channels": [
+				"tilt_msb",
+				"tilt_lsb"
+			]
+		},
+		"speed": {
+			"label": "Speed",
+			"kind": "u8",
+			"channel": "speed"
+		},
+		"dim": {
+			"label": "Dimmer",
+			"kind": "u8",
+			"channel": "dim"
+		},
+		"strobe": {
+			"label": "Strobe",
+			"kind": "u8",
+			"mapping": "strobe",
+			"channel": "strobe"
+		},
+		"color": {
+			"label": "Color Wheel",
+			"kind": "enum",
+			"step": true,
+			"mapping": "color",
+			"channel": "color"
+		},
+		"gobo": {
+			"label": "Gobo Wheel",
+			"kind": "enum",
+			"step": true,
+			"mapping": "gobo",
+			"channel": "gobo"
+		},
+		"prism": {
+			"label": "Prism",
+			"kind": "enum",
+			"step": true,
+			"mapping": "prism",
+			"channel": "prism"
+		},
+		"autoplay": {
+			"label": "Autoplay",
+			"kind": "enum",
+			"mapping": "autoplay",
+			"channel": "autoplay",
+			"hidden": true
+		},
+		"reset": {
+			"label": "Reset",
+			"kind": "enum",
+			"mapping": "reset",
+			"channel": "reset",
+			"hidden": true
+		}
+	},
+	"mappings": {
+		"strobe": {
+			"0": "Off",
+			"11": "Slow (1Hz)",
+			"122": "Medium",
+			"255": "Fast (25Hz)"
+		},
+		"color": {
+			"0": "Open/White",
+			"15": "Red",
+			"25": "Orange",
+			"35": "Yellow",
+			"45": "Green",
+			"55": "Blue",
+			"65": "Indigo",
+			"75": "Cyan",
+			"85": "Cool White",
+			"95": "Magenta",
+			"110": "Warm",
+			"160": "Forward rotation",
+			"220": "Reverse rotation"
+		},
+		"gobo": {
+			"0": "Open",
+			"8": "Gobo 1",
+			"13": "Gobo 2",
+			"18": "Gobo 3",
+			"23": "Gobo 4",
+			"28": "Gobo 5",
+			"33": "Gobo 6",
+			"38": "Gobo 7",
+			"43": "Gobo 8",
+			"48": "Gobo 9",
+			"53": "Gobo 10",
+			"58": "Gobo 11",
+			"63": "Gobo 12",
+			"68": "Gobo 13",
+			"73": "Gobo 14",
+			"115": "Shake",
+			"175": "Forward rotation",
+			"230": "Reverse rotation"
+		},
+		"prism": {
+			"0": "Off",
+			"130": "On",
+			"200": "Rotate"
+		},
+		"autoplay": {
+			"0": "None",
+			"40": "Auto 1",
+			"70": "Auto 2",
+			"100": "Auto 3",
+			"130": "Auto 4",
+			"160": "Sound 1",
+			"195": "Sound 2",
+			"225": "Sound 3",
+			"250": "Sound 4"
+		},
+		"reset": {
+			"0": "None",
+			"255": "Reset"
+		}
+	}
+}

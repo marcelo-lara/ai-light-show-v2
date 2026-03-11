@@ -13,4 +13,4 @@ def handle(self, universe: bytearray, frame_index: int, start_frame: int, end_fr
     duration_frames = max(1, end_frame - start_frame)
     progress = max(0.0, min(1.0, (frame_index - start_frame) / float(duration_frames)))
     level = int(round(255 * (1.0 - progress)))
-    self._write_channel(universe, self.channels[dim_key], level)
+    self._write_channel(universe, dim_key, level)

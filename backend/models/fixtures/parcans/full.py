@@ -57,4 +57,4 @@ def handle(
         targets = {"red": 255, "green": 255, "blue": 255}
 
     for channel_name, value in targets.items():
-        self._write_channel(universe, self.channels[channel_name], value)
+        self._write_channel(universe, channel_name, value)

@@ -1,4 +1,16 @@
 services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - BACKEND_WS_HOST=localhost:5001
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   song-metadata-mcp:
     build: ./mcp/song_metadata
     volumes:

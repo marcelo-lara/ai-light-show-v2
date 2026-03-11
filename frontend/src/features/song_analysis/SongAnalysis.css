@@ -1,0 +1,201 @@
+.song-analysis-view {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.song-analysis-columns {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.song-analysis-left {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+
+.song-analysis-left > .card {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.analysis-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.analysis-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.analysis-beats,
+.analysis-chords {
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.25rem;
+}
+
+.beats-groups {
+  display: flex;
+  flex-direction: column;
+}
+
+.beat-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.beat-group-row {
+  display: flex;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-top: -1px;
+}
+
+.beat-group-row .beats-cell {
+  flex: 1 1 0;
+}
+
+.beats-cell {
+  background: var(--card);
+  padding: 0.35rem 0.45rem;
+  font-size: 0.73rem;
+}
+
+.beats-cell.is-downbeat {
+  background: color-mix(in oklab, var(--accent) 10%, var(--card));
+  color: var(--text);
+}
+
+.analysis-chords {
+  gap: 1rem;
+}
+
+.chords-sections {
+  display: grid;
+  gap: 1rem;
+}
+
+.chords-section {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.chords-section-title {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.chords-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.chords-cell {
+  min-height: 2.25rem;
+  background: var(--card);
+  padding: 0.6rem 0.45rem;
+  font-size: 0.8rem;
+}
+
+.analysis-plots {
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.25rem;
+}
+
+.analysis-plots-card {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.analysis-plot-row {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.analysis-plot-label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.analysis-plot-img {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--panel) 88%, black);
+}
+
+@media (max-width: 960px) {
+  .song-analysis-view {
+    grid-template-rows: auto auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .song-analysis-columns {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .song-analysis-left {
+    height: auto;
+    grid-template-rows: auto;
+  }
+
+  .song-analysis-left > .card {
+    height: auto;
+    max-height: none;
+  }
+
+  .analysis-beats,
+  .analysis-chords {
+    height: auto;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .analysis-plots-card {
+    height: auto;
+    max-height: none;
+  }
+
+  .analysis-plots {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .analysis-plot-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}

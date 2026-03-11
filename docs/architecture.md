@@ -5,14 +5,18 @@
 Use these module guides first, then drill into architecture detail docs.
 
 - Project overview: [../README.md](../README.md)
+- Frontend module: [../frontend/README.md](../frontend/README.md)
 - Backend module: [../backend/README.md](../backend/README.md)
+- Backend implementation contract: [architecture/backend_llm_reference.md](architecture/backend_llm_reference.md)
 - Analyzer module: [../analyzer/README.md](../analyzer/README.md)
 - LLM server + gateway: [../llm-server/README.md](../llm-server/README.md)
 - MCP services: [../mcp/README.md](../mcp/README.md)
+- UI docs + LoFi index: [ui/README.md](ui/README.md)
 - Tests module: [../tests/README.md](../tests/README.md)
 
-AI Light Show v2 is split into five primary modules:
+AI Light Show v2 is split into six primary modules:
 
+- Frontend: strictly a "dumb client" mapping user intents to websocket payloads.
 - Backend: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
 - Analyzer: offline metadata generation in `analyzer/meta/<song>/...`.
 - MCP song metadata service: read-only metadata query tools over SSE.
@@ -23,46 +27,48 @@ AI Light Show v2 is split into five primary modules:
 
 ### Canonical runtime flow
 
-1. A control client drives playback timeline and sends `timecode` / `seek` / `playback` over `/ws`.
-2. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
-3. While paused, client edits (`delta`) update editor/output universes directly.
-4. Preview requests (`preview_effect`) render temporary in-memory output only (no persistence).
+1. Frontend sends `hello` and receives backend-authoritative `snapshot` + `patch` updates over `/ws`.
+2. Frontend emits only `intent` payloads; backend applies all domain logic and broadcasts state changes.
+3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
+4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata and backend reads it from `/app/meta` in Docker.
 6. MCP exposes metadata tools and the agent gateway forwards LLM tool calls.
 
 ### Real-time playback loop
 
-1. Client plays audio and sends `{type:"timecode", time:<seconds>}` while playing.
-2. Backend maps time → frame index and selects the nearest precomputed DMX canvas frame.
-3. Backend’s Art-Net service continuously emits `output_universe` at ~60 FPS.
+1. Browser-owned player controls real audio playback and local timecode progression.
+2. Client sends transport `intent` actions (`transport.play|pause|stop|jump_to_time`) and syncs current timecode to backend while playing.
+3. Backend maps time → frame index and selects the nearest precomputed DMX canvas frame.
+4. Backend Art-Net service emits `output_universe` continuously.
 
 ### Authoring loop (paused)
 
-1. Client sends live `{type:"delta", channel, value}` while editing.
-2. Backend updates the editor universe (and output universe when paused).
-3. Backend broadcasts `delta` to keep UIs in sync.
+1. Client sends `{type:"intent", name:"fixture.set_values", payload:{...}}`.
+2. Backend updates fixture/editor-output state according to current playback/preview status.
+3. Backend broadcasts `patch` updates.
 
 ### Preview loop (paused only)
 
-1. Client sends `{type:"preview_effect", fixture_id, effect, duration, data}`.
+1. Client sends `{type:"intent", name:"fixture.preview_effect", payload:{...}}`.
 2. Backend rejects if playback is active.
 3. If accepted, backend renders a temporary in-memory preview canvas and drives Art-Net from it.
-4. Backend broadcasts `preview_status` and global `status` updates; preview is never persisted to cues/files.
+4. Backend emits `event` + `patch` updates; preview is never persisted to cues/files.
 
 ### Analysis loop (manual)
 
-1. User runs analyzer scripts manually to produce metadata files under `analyzer/meta/<song>/info.json`.
-2. Backend loads metadata on song load from `/app/meta` and rebroadcasts initial state.
+1. User runs analyzer scripts to produce metadata under `analyzer/meta/<song>/...`.
+2. Backend loads metadata on song load.
 
 ### Meta source (Docker)
 
-- In Docker, backend reads song meta from `/app/meta` (mounted from `analyzer/meta`).
+- In Docker, backend reads song metadata from `/app/meta` (mounted from `analyzer/meta`).
 - If `/app/meta` is unavailable, backend falls back to local `backend/meta`.
-- Backend accepts analyzer-style per-song JSON directories and song-level JSON files in the meta root.
 
 ## Module docs
 
+- Frontend module guide: [../frontend/README.md](../frontend/README.md)
 - Backend module guide: [../backend/README.md](../backend/README.md)
+- Backend implementation contract: [architecture/backend_llm_reference.md](architecture/backend_llm_reference.md)
 - Analyzer module guide: [../analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [../llm-server/README.md](../llm-server/README.md)
 - MCP module guide: [../mcp/README.md](../mcp/README.md)
@@ -73,41 +79,22 @@ AI Light Show v2 is split into five primary modules:
 
 Backend → Client:
 
-- `initial`: `{ fixtures, cues, song, playback:{ fps, songLengthSeconds, isPlaying }, status }`
-- `delta`: `{ channel, value }`
-- `delta_rejected`: `{ reason }` (when playback is active)
-- `dmx_frame`: `{ time, values }` (paused seek-preview)
-- `cues_updated`: `{ cues }`
-- `status`: `{ status:{ isPlaying, previewActive, preview? } }`
-- `preview_status`: `{ active, request_id, fixture_id?, effect?, duration?, reason? }`
+- `snapshot`: `{ type:"snapshot", seq, state }`
+- `patch`: `{ type:"patch", seq, changes:[{path, value}] }`
+- `event`: `{ type:"event", level, message, data? }`
 
 Client → Backend:
 
-- `delta`
-- `timecode`
-- `seek`
-- `playback`
-- `preview_effect`
-- `add_cue`
-- `load_song`
-- `chat`
-- `save_sections`
-- `save_poi_target`
+- `hello`
+- `intent`: `{ type:"intent", req_id, name, payload }`
 
-## Appendix: background on rendered sequence artifacts and ecosystem terms
+## Appendix: rendered sequence artifacts
 
-In the xLights ecosystem, there are several file extensions you will encounter. Each serves a specific purpose in the workflow—from design and sequencing to the final "rendered" output you are interested in.
-
-.fseq (Falcon Sequence): This is the primary rendered file. 
-When you "Save" or "Render All" in xLights, it generates this binary file. 
-It maps every channel to a byte value (0–255) for every frame (20, 40 or 55 FPS). 
-It is designed to be played by FPP (Falcon Pi Player) or uploaded directly to controllers.
-
-Summary Table for Quick Reference
+In xLights ecosystems, common file types:
 
 | Extension | Type | Content |
 | --- | --- | --- |
-| .fseq | Binary (Rendered) | Raw byte arrays for Art-Net/DMX output.
-| .xsq | XML (Source) | The sequence timeline and effect settings.
-| .xml | XML (Config) | The hardware controller and prop layout settings.
-| .eseq | Binary (Effect) | Byte arrays for a single model/prop only.
+| `.fseq` | Binary (rendered) | Raw byte arrays for Art-Net/DMX output |
+| `.xsq` | XML (source) | Sequence timeline and effect settings |
+| `.xml` | XML (config) | Controller and prop layout settings |
+| `.eseq` | Binary (effect) | Byte arrays for a single model/prop |

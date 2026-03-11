@@ -1,0 +1,52 @@
+{
+	"id": "rgb_gen",
+	"type": "parcan",
+	"channels": {
+		"dim": 0,
+		"red": 1,
+		"green": 2,
+		"blue": 3,
+		"strobe": 4
+	},
+	"effects": [
+		"strobe",
+		"flash",
+		"fade_in",
+		"full"
+	],
+	"meta_channels": {
+		"rgb": {
+			"label": "Color",
+			"kind": "rgb",
+			"mapping": "color",
+			"channels": [
+				"red",
+				"green",
+				"blue"
+			]
+		},
+		"dim": {
+			"label": "Dimmer",
+			"kind": "u8",
+			"channel": "dim",
+			"arm": 255
+		},
+		"strobe": {
+			"label": "Strobe",
+			"kind": "u8",
+			"channel": "strobe"
+		}
+	},
+	"mappings": {
+		"color": {
+			"off": "000000",
+			"blue": "0000FF",
+			"cyan": "00FFFF",
+			"green": "00FF00",
+			"magenta": "FF00FF",
+			"red": "FF0000",
+			"white": "FFFFFF",
+			"yellow": "FFFF00"
+		}
+	}
+}
