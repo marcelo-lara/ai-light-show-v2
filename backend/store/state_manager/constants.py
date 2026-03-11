@@ -1,0 +1,2 @@
+FPS = 60
+MAX_SONG_SECONDS = 6 * 60

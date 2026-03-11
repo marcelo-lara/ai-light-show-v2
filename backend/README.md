@@ -14,7 +14,10 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - `api/websocket_manager/*`: websocket endpoint, message parsing, broadcasts, sequencing.
 - `api/intents/*`: intent handlers and registry.
 - `api/state/*`: snapshot/patch payload builders.
-- `store/state.py`: `StateManager` (fixtures, cues, playback, preview, canvas).
+- `store/state.py`: compatibility export for `StateManager`, `FPS`, and `MAX_SONG_SECONDS`.
+- `store/state_manager/core/*`: bootstrap state fields, fixture/POI store operations, metadata helpers, canvas render wrappers.
+- `store/state_manager/song/*`: song load + cue and section persistence operations.
+- `store/state_manager/playback/*`: transport, preview lifecycle, channel edits, and frame application.
 - `store/services/*`: `StateManager` collaborators for fixture loading, metadata loading, section persistence, and canvas rendering/debug output.
 - `store/pois.py`: POI CRUD + persistence.
 - `store/dmx_canvas.py`: packed DMX frame buffer.
@@ -81,12 +84,52 @@ Song payload fields under `state.song`:
 ## Development
 
 ```bash
+pyenv activate ai-light
 cd backend
 pip install -r requirements.txt
 python main.py
 ```
 
 Default local URL: `http://localhost:5001`.
+
+## LLM Fast Map
+
+Use this map before editing backend runtime state:
+- `store/state.py`: import-safe entrypoint for callers.
+- `store/state_manager/manager.py`: mixin composition order for `StateManager`.
+- `store/state_manager/core/*`: initialization + fixture/POI + metadata + render helpers.
+- `store/state_manager/song/*`: song/cue/sections behavior.
+- `store/state_manager/playback/*`: playback transport + preview behavior.
+
+Validation after editing `StateManager` paths:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
+	tests/test_set_values_regression.py \
+	tests/test_preview_lifecycle_regression.py \
+	tests/test_metadata_sections_regression.py \
+	tests/test_dmx_canvas_render_new.py \
+	tests/test_fixture_loading_new.py \
+	tests/test_payload.py
+```
+
+## LLM Change Matrix
+
+Use this matrix to pick edit targets and minimum tests quickly:
+
+| If you change... | Edit here first | Then run... |
+| --- | --- | --- |
+| State bootstrap fields or shared state flags | `store/state_manager/core/bootstrap.py` | state-manager regression command above |
+| Fixture load/save, arm defaults, POI fixture target persistence | `store/state_manager/core/fixture_store.py`, `store/state_manager/core/fixture_effects.py` | state-manager regression command above |
+| Song metadata length inference or metadata path resolution | `store/state_manager/core/metadata.py`, `store/services/song_metadata_loader.py` | state-manager regression command above + `tests/test_metadata_sections_regression.py` |
+| Cue-sheet-to-canvas render wiring or preview render wiring | `store/state_manager/core/render.py`, `store/services/canvas_rendering.py` | state-manager regression command above |
+| Song load, cue persistence, section persistence | `store/state_manager/song/loading.py`, `store/state_manager/song/cues.py`, `store/state_manager/song/sections.py` | state-manager regression command above |
+| Playback transport or timecode/frame application | `store/state_manager/playback/transport.py` | state-manager regression command above |
+| Preview start/stop/runner behavior | `store/state_manager/playback/preview_start.py`, `store/state_manager/playback/preview_control.py`, `store/state_manager/playback/preview_runner.py` | state-manager regression command above + `tests/test_preview_lifecycle_regression.py` |
+| Fixture live value write behavior | `api/intents/fixture/actions/set_values.py`, `store/state_manager/playback/channels.py` | state-manager regression command above + `tests/test_set_values_regression.py` |
+| Snapshot or patch payload schema | `api/state/*`, `api/websocket_manager/broadcasting.py` | `tests/test_payload.py` |
+| Websocket intent/message behavior | `api/websocket_manager/*`, `api/intents/*` | `PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py` |
+| Import path or module composition for state manager | `store/state.py`, `store/state_manager/manager.py` | state-manager regression command above |
 
 ## LLM contributor checklist
 

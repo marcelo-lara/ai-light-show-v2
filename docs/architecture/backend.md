@@ -9,7 +9,11 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
 - `backend/api/intents/*`: intent registry + action handlers.
-- `backend/store/state.py`: `StateManager` (authoritative runtime state + orchestration).
+- `backend/store/state.py`: compatibility export for `StateManager`, `FPS`, and `MAX_SONG_SECONDS`.
+- `backend/store/state_manager/manager.py`: `StateManager` mixin composition root.
+- `backend/store/state_manager/core/*`: bootstrap, fixture/POI store operations, metadata helpers, render wrappers.
+- `backend/store/state_manager/song/*`: song load + cue/section persistence operations.
+- `backend/store/state_manager/playback/*`: transport, preview lifecycle, channel edits, frame application.
 - `backend/store/services/*`: collaborator services for fixture/template loading, metadata resolution, section persistence, and canvas rendering/debug output.
 - `backend/store/dmx_canvas.py`: memory-efficient DMX frame buffer.
 - `backend/store/pois.py`: POI persistence and runtime lookup.
@@ -18,6 +22,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 Compatibility exports:
 - `backend/api/websocket.py` re-exports websocket manager entrypoints.
 - `backend/api/ws_handlers.py` and `backend/api/ws_state_builder.py` re-export helpers.
+- `backend/store/state.py` re-exports state-manager public symbols.
 
 ## Data model
 
@@ -95,3 +100,33 @@ See `backend/services/artnet.py`.
 - Sends ArtDMX packets to configured target.
 - Loop runs continuously.
 - If `continuous_send` is disabled, identical frames are suppressed.
+
+## Validation Commands
+
+Use the `ai-light` environment for backend validation:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
+  tests/test_set_values_regression.py \
+  tests/test_preview_lifecycle_regression.py \
+  tests/test_metadata_sections_regression.py \
+  tests/test_dmx_canvas_render_new.py \
+  tests/test_fixture_loading_new.py \
+  tests/test_payload.py
+```
+
+## LLM Change Matrix
+
+| If you change... | Edit here first | Then run... |
+| --- | --- | --- |
+| State bootstrap fields or shared state flags | `backend/store/state_manager/core/bootstrap.py` | validation command above |
+| Fixture load/save, arm defaults, POI fixture target persistence | `backend/store/state_manager/core/fixture_store.py`, `backend/store/state_manager/core/fixture_effects.py` | validation command above |
+| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | validation command above + `tests/test_metadata_sections_regression.py` |
+| Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | validation command above |
+| Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | validation command above |
+| Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | validation command above |
+| Preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_start.py`, `backend/store/state_manager/playback/preview_control.py`, `backend/store/state_manager/playback/preview_runner.py` | validation command above + `tests/test_preview_lifecycle_regression.py` |
+| Fixture live value write behavior | `backend/api/intents/fixture/actions/set_values.py`, `backend/store/state_manager/playback/channels.py` | validation command above + `tests/test_set_values_regression.py` |
+| Snapshot or patch payload schema | `backend/api/state/*`, `backend/api/websocket_manager/broadcasting.py` | `tests/test_payload.py` |
+| Websocket intent/message behavior | `backend/api/websocket_manager/*`, `backend/api/intents/*` | `PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py` |
+| Import path or module composition for state manager | `backend/store/state.py`, `backend/store/state_manager/manager.py` | validation command above |

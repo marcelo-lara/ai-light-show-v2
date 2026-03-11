@@ -24,6 +24,11 @@ Code is the source of truth.
 
 4. State authority: `backend/store/state.py`
 - Holds fixtures, POIs, song/cue state, playback flags, preview lifecycle.
+- Exposes `StateManager` via compatibility import from `backend/store/state_manager/*`.
+- Uses subfolder modules:
+  - `backend/store/state_manager/core/*`
+  - `backend/store/state_manager/song/*`
+  - `backend/store/state_manager/playback/*`
 - Delegates fixture/template loading, song metadata resolution, section persistence, and canvas rendering helpers to `backend/store/services/*`.
 - Pre-renders full song DMX canvas at `60 FPS`.
 - Computes output frame from synchronized timecode.
@@ -45,7 +50,11 @@ Code is the source of truth.
 | `backend/api/state/build_frontend_state.py` | `build_frontend_state` | Canonical snapshot/patch state payload |
 | `backend/api/state/fixtures.py` | `build_fixtures_payload` | Fixture state serialization |
 | `backend/api/state/song_payload.py` | `build_song_payload` | Song metadata payload normalization |
-| `backend/store/state.py` | `StateManager` | Core show state + render + preview + persistence |
+| `backend/store/state.py` | `StateManager` (re-export) | Stable state manager import path for callers |
+| `backend/store/state_manager/manager.py` | `StateManager` | Core show state composition root |
+| `backend/store/state_manager/core/*` | core mixins | Bootstrap + fixture/POI + metadata + render helpers |
+| `backend/store/state_manager/song/*` | song mixins | Song load and cue/section persistence |
+| `backend/store/state_manager/playback/*` | playback mixins | Transport, preview lifecycle, and frame application |
 | `backend/store/services/fixture_loader.py` | `load_fixtures_from_path` | Fixture/template loading and instantiation |
 | `backend/store/services/song_metadata_loader.py` | `SongMetadataLoader` | Metadata candidate resolution + beats/downbeats hydration |
 | `backend/store/services/section_persistence.py` | `normalize_sections_input`, `persist_parts_to_meta` | Section validation and metadata persistence |
@@ -229,3 +238,39 @@ Field notes:
 - `backend/api/websocket.py` re-exports websocket manager entrypoints.
 - `backend/api/ws_handlers.py` and `backend/api/ws_state_builder.py` are compatibility exports.
 - Domain `router.py` files exist but main dispatch uses `INTENT_HANDLERS` via `apply_intent`.
+
+## LLM Validation Commands
+
+Use this exact command after state-manager edits:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
+  tests/test_set_values_regression.py \
+  tests/test_preview_lifecycle_regression.py \
+  tests/test_metadata_sections_regression.py \
+  tests/test_dmx_canvas_render_new.py \
+  tests/test_fixture_loading_new.py \
+  tests/test_payload.py
+```
+
+If you changed websocket behavior, additionally run:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py
+```
+
+## LLM Change Matrix
+
+| If you change... | Edit here first | Then run... |
+| --- | --- | --- |
+| State bootstrap fields or shared state flags | `backend/store/state_manager/core/bootstrap.py` | state-manager validation command above |
+| Fixture load/save, arm defaults, POI fixture target persistence | `backend/store/state_manager/core/fixture_store.py`, `backend/store/state_manager/core/fixture_effects.py` | state-manager validation command above |
+| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | state-manager validation command above + `tests/test_metadata_sections_regression.py` |
+| Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | state-manager validation command above |
+| Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | state-manager validation command above |
+| Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | state-manager validation command above |
+| Preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_start.py`, `backend/store/state_manager/playback/preview_control.py`, `backend/store/state_manager/playback/preview_runner.py` | state-manager validation command above + `tests/test_preview_lifecycle_regression.py` |
+| Fixture live value write behavior | `backend/api/intents/fixture/actions/set_values.py`, `backend/store/state_manager/playback/channels.py` | state-manager validation command above + `tests/test_set_values_regression.py` |
+| Snapshot or patch payload schema | `backend/api/state/*`, `backend/api/websocket_manager/broadcasting.py` | `tests/test_payload.py` |
+| Websocket intent/message behavior | `backend/api/websocket_manager/*`, `backend/api/intents/*` | `PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py` |
+| Import path or module composition for state manager | `backend/store/state.py`, `backend/store/state_manager/manager.py` | state-manager validation command above |
