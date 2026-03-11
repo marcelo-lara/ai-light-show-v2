@@ -6,7 +6,7 @@ import { ShowBuilderView } from "../features/show_builder/ShowBuilderView.ts";
 import { DmxControlView } from "../features/dmx_control/DmxControlView.ts";
 import { ShowControlView } from "../features/show_control/ShowControlView.ts";
 import { subscribeBackendStore } from "../shared/state/backend_state.ts";
-import { subscribeLlmState } from "../features/llm_chat/llm_state.ts";
+import { getLlmState, subscribeLlmState } from "../features/llm_chat/llm_state.ts";
 import { refreshSongPlayer } from "../shared/components/song_player/SongPlayer.ts";
 import { selectFixtureVms } from "../features/dmx_control/fixture_selectors.ts";
 
@@ -91,7 +91,31 @@ export function mountAppShell(root: HTMLElement) {
 		renderRight();
 	});
 
+	let previousLlmStatus = getLlmState().status;
+	const focusPromptInput = () => {
+		requestAnimationFrame(() => {
+			const input = right.querySelector<HTMLTextAreaElement>(".prompt-input");
+			if (!input) return;
+			input.focus({ preventScroll: true });
+			const caret = input.value.length;
+			input.setSelectionRange(caret, caret);
+		});
+	};
+
 	subscribeLlmState(() => {
+		const hadPromptFocus =
+			document.activeElement instanceof HTMLElement &&
+			document.activeElement.classList.contains("prompt-input");
+		const nextLlmStatus = getLlmState().status;
+		const interactionFinished =
+			previousLlmStatus === "streaming" && (nextLlmStatus === "idle" || nextLlmStatus === "error");
+
 		renderRight();
+
+		if (hadPromptFocus || interactionFinished) {
+			focusPromptInput();
+		}
+
+		previousLlmStatus = nextLlmStatus;
 	});
 }
