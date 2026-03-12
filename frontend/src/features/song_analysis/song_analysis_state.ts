@@ -1,5 +1,5 @@
 import { getBackendStore } from "../../shared/state/backend_state.ts";
-import type { SongChord, SongState } from "../../shared/transport/protocol.ts";
+import type { SongChord, SongSection, SongState } from "../../shared/transport/protocol.ts";
 
 type BackendOriginGlobal = typeof globalThis & {
   __BACKEND_HTTP_ORIGIN__?: string;
@@ -9,6 +9,7 @@ export type SongAnalysisData = {
   beats: number[];
   downbeats: number[];
   chords: SongChord[];
+  sections: SongSection[];
   plots: Array<{ id: string; title: string; svgUrl: string }>;
 };
 
@@ -61,9 +62,27 @@ function cleanChords(song: SongState): SongChord[] {
   return picked;
 }
 
+function cleanSections(song: SongState): SongSection[] {
+  const rows = song.sections;
+  if (!Array.isArray(rows)) return [];
+
+  const picked: SongSection[] = [];
+  for (const row of rows) {
+    if (!row || typeof row !== "object") continue;
+    const start = Number((row as SongSection).start_s);
+    const end = Number((row as SongSection).end_s);
+    const name = String((row as SongSection).name ?? "").trim();
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start || !name) continue;
+    picked.push({ name, start_s: start, end_s: end });
+  }
+
+  picked.sort((a, b) => a.start_s - b.start_s);
+  return picked;
+}
+
 export function getSongAnalysisData(): SongAnalysisData {
   const song = getBackendStore().state.song;
-  if (!song) return { beats: [], downbeats: [], chords: [], plots: [] };
+  if (!song) return { beats: [], downbeats: [], chords: [], sections: [], plots: [] };
 
   const beats = cleanSortedNumeric(song.beats);
   const downbeats = cleanSortedNumeric(song.downbeats);
@@ -82,6 +101,7 @@ export function getSongAnalysisData(): SongAnalysisData {
     beats: fallbackBeats,
     downbeats: fallbackDownbeats,
     chords: cleanChords(song),
+    sections: cleanSections(song),
     plots,
   };
 }

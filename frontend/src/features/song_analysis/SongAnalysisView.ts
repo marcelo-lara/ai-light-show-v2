@@ -1,6 +1,6 @@
 import { AnalysisPlot } from "./components/AnalysisPlot.ts";
 import { BeatTable } from "./components/BeatTable.ts";
-import { ChordsPanel } from "./components/ChordsPanel.ts";
+import { ChordsPanel } from "./components/chords_panel/ChordsPanel.ts";
 import { SongPlayer } from "../../shared/components/song_player/SongPlayer.ts";
 import { Columns } from "../../shared/components/layout/Columns.ts";
 import { Cards } from "../../shared/components/layout/Cards.ts";
@@ -13,7 +13,7 @@ export function SongAnalysisView(): HTMLElement {
 
 	const left = Cards([
 		BeatTable({ beats: data.beats, downbeats: data.downbeats }),
-		ChordsPanel({ chords: data.chords }),
+		ChordsPanel({ chords: data.chords, sections: data.sections }),
 	], { className: "song-analysis-left" });
 	const right = AnalysisPlot({ plots: data.plots });
 
