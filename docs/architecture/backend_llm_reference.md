@@ -49,6 +49,7 @@ Code is the source of truth.
 | `backend/api/intents/apply_intent.py` | `apply_intent` | Intent dispatch and unknown-intent warning events |
 | `backend/api/state/build_frontend_state.py` | `build_frontend_state` | Canonical snapshot/patch state payload |
 | `backend/api/state/fixtures.py` | `build_fixtures_payload` | Fixture state serialization |
+| `backend/models/song/*` | `Song`, `Meta`, `Beats`, `Sections` | Management models for Song metadata lazy loading and section handling |
 | `backend/api/state/song_payload.py` | `build_song_payload` | Song metadata payload normalization |
 | `backend/store/state.py` | `StateManager` (re-export) | Stable state manager import path for callers |
 | `backend/store/state_manager/manager.py` | `StateManager` | Core show state composition root |

@@ -5,8 +5,6 @@ from typing import Any, Dict, List, Optional
 from models.fixtures.fixture import Fixture
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.pois import PoiStore
-from store.services.song_metadata_loader import SongMetadataLoader
-
 
 class StateCoreBootstrapMixin:
     def __init__(
@@ -42,7 +40,6 @@ class StateCoreBootstrapMixin:
         self.preview_effect: Optional[str] = None
         self.preview_duration: float = 0.0
         self.max_used_channel: int = 0
-        self.song_metadata_loader = SongMetadataLoader(self.meta_path)
 
     async def get_status(self) -> Dict[str, Any]:
         async with self.lock:

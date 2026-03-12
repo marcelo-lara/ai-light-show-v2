@@ -16,9 +16,13 @@ class StateSongLoadingMixin:
             if audio_file.exists():
                 audio_url = f"/songs/{quote(audio_file.name)}"
 
-            metadata = self._load_song_metadata(song_filename)
-            self.current_song = Song(filename=song_filename, metadata=metadata, audioUrl=audio_url)
-            self.song_length_seconds = self._infer_song_length_seconds(metadata)
+            # Let the Song class handle lazy loading internally!
+            self.current_song = Song(
+                song_id=song_filename, 
+                base_dir=str(self.meta_path),
+                audio_url=audio_url
+            )
+            self.song_length_seconds = self._infer_song_length_seconds(self.current_song)
 
             cue_file = self.cues_path / f"{song_filename}.cue.json"
             if cue_file.exists():

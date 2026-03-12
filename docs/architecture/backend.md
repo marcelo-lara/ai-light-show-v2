@@ -121,6 +121,7 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 | --- | --- | --- |
 | State bootstrap fields or shared state flags | `backend/store/state_manager/core/bootstrap.py` | validation command above |
 | Fixture load/save, arm defaults, POI fixture target persistence | `backend/store/state_manager/core/fixture_store.py`, `backend/store/state_manager/core/fixture_effects.py` | validation command above |
+| Song metadata structure and loading paths | `backend/models/song/*` | validation command above + `tests/test_metadata_sections_regression.py` |
 | Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | validation command above + `tests/test_metadata_sections_regression.py` |
 | Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | validation command above |
 | Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | validation command above |

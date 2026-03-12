@@ -2,8 +2,7 @@
 
 from typing import Any, Dict, List
 
-from store.services.section_persistence import normalize_sections_input, persist_parts_to_meta
-
+from store.services.section_persistence import normalize_sections_input
 
 class StateSongSectionsMixin:
     async def save_song_sections(self, sections: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -15,15 +14,19 @@ class StateSongSectionsMixin:
             if not ok:
                 return normalized
 
-            parts = normalized["parts"]
-            self.current_song.metadata.parts = parts
-            self.song_length_seconds = self._infer_song_length_seconds(self.current_song.metadata)
+            # Migrate legacy structures returned by `normalize_sections_input` 
+            # to the new format to persist with `.update_sections()`
+            parts = normalized.get("parts", {})
+            new_sections = []
+            for name, rng in parts.items():
+                if isinstance(rng, list) and len(rng) >= 2:
+                    new_sections.append({
+                        "name": str(name),
+                        "start_s": float(rng[0]),
+                        "end_s": float(rng[1])
+                    })
 
-            song_filename = self.current_song.filename
-            persist_parts_to_meta(
-                song_filename=song_filename,
-                parts=parts,
-                meta_candidates=self._meta_candidates(song_filename),
-                meta_path=self.meta_path,
-            )
+            self.current_song.update_sections(new_sections)
+            self.song_length_seconds = self._infer_song_length_seconds(self.current_song)
+            
             return {"ok": True, "parts": parts}

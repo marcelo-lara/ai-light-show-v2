@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import quote
 
-
 def pick_numeric_list(*candidates: Any) -> List[float]:
     for candidate in candidates:
         if not isinstance(candidate, list):
@@ -19,50 +18,6 @@ def pick_numeric_list(*candidates: Any) -> List[float]:
         if picked:
             return picked
     return []
-
-
-def to_meta_url(path: Path, meta_root: Path) -> Optional[str]:
-    with_meta = None
-    with_suppress = False
-    try:
-        with_meta = path.resolve().relative_to(meta_root.resolve())
-    except Exception:
-        with_suppress = True
-
-    if with_suppress or with_meta is None:
-        return None
-
-    encoded = "/".join(quote(part) for part in with_meta.parts)
-    return f"/meta/{encoded}"
-
-
-def resolve_artifact_meta_url(manager, raw_path: Any, meta_root: Path, meta_file: Path) -> Optional[str]:
-    text = str(raw_path or "").strip()
-    if not text:
-        return None
-
-    if text.startswith("http://") or text.startswith("https://"):
-        return text
-
-    if text.startswith("/app/meta/"):
-        encoded = "/".join(quote(part) for part in Path(text[len("/app/meta/"):]).parts)
-        return f"/meta/{encoded}"
-
-    if text.startswith("/meta/"):
-        return text
-
-    resolved = manager.state_manager._resolve_analyzer_artifact_path(text, meta_file)
-    if resolved:
-        url = to_meta_url(resolved, meta_root)
-        if url:
-            return url
-
-    fallback = meta_file.parent / text
-    if fallback.exists():
-        return to_meta_url(fallback, meta_root)
-
-    return None
-
 
 def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
     try:
@@ -103,7 +58,6 @@ def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
 
     return picked[:512]
 
-
 def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[str, Any]]:
     meta_root = Path(getattr(manager.state_manager, "meta_path", "") or "")
     if not meta_root:
@@ -129,9 +83,17 @@ def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[st
         for key, value in essentia.items():
             if not isinstance(value, dict):
                 continue
-            svg_url = resolve_artifact_meta_url(manager, value.get("svg"), meta_root, info_file)
+            
+            # Simple conversion rule - standard absolute URL pattern mapping
+            svg_url = value.get("svg")
             if not svg_url:
                 continue
+            
+            # Handle standard app mount mapping /app/meta/x -> /meta/x
+            if str(svg_url).startswith("/app/meta/"):
+                mapped_path_parts = Path(svg_url[len("/app/meta/"):]).parts
+                svg_url = f"/meta/{'/'.join(quote(part) for part in mapped_path_parts)}"
+
             plots.append({"id": str(key), "title": str(key).replace("_", " ").title(), "svg_url": svg_url})
 
     chords_path = meta_root / song_filename / "moises" / "chords.json"
@@ -142,36 +104,33 @@ def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[st
 
     return {"plots": plots, "chords": chords}
 
-
 def build_song_payload(manager) -> Optional[Dict[str, Any]]:
     song = manager.state_manager.current_song
     if not song:
         return None
 
-    metadata = getattr(song, "metadata", None)
-    hints = getattr(metadata, "hints", {}) or {}
-    drums = getattr(metadata, "drums", {}) or {}
-    parts = getattr(metadata, "parts", {}) or {}
-
-    sections: List[Dict[str, Any]] = []
-    for name, rng in parts.items():
-        if not isinstance(rng, list) or len(rng) < 2:
-            continue
-        try:
-            start = float(rng[0])
-            end = float(rng[1])
-        except Exception:
-            continue
-        sections.append({"name": str(name), "start_s": start, "end_s": end})
-    sections.sort(key=lambda item: float(item.get("start_s", 0.0)))
+    meta = song.meta
+    beats = song.beats
+    sections = song.sections
+    
+    sections_list = []
+    if sections and sections.sections:
+        for s in sections.sections:
+            sections_list.append({
+                "name": str(s.get("name", "")), 
+                "start_s": float(s.get("start_s", 0.0)), 
+                "end_s": float(s.get("end_s", 0.0))
+            })
+        
+    sections_list.sort(key=lambda item: item.get("start_s", 0.0))
 
     return {
-        "filename": str(getattr(song, "filename", "") or ""),
-        "audio_url": getattr(song, "audioUrl", None),
-        "length_s": getattr(metadata, "length", None),
-        "bpm": getattr(metadata, "bpm", None),
-        "sections": sections,
-        "beats": pick_numeric_list(hints.get("beats"), drums.get("beats")),
-        "downbeats": pick_numeric_list(hints.get("downbeats"), drums.get("downbeats")),
-        "analysis": build_song_analysis_payload(manager, str(getattr(song, "filename", "") or "")),
+        "filename": song.song_id,
+        "audio_url": song.audio_url,
+        "length_s": meta.duration if meta else None,
+        "bpm": meta.bpm if meta else None,
+        "sections": sections_list,
+        "beats": beats.beats if beats else [],
+        "downbeats": beats.downbeats if beats else [],
+        "analysis": build_song_analysis_payload(manager, song.song_id),
     }
