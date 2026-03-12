@@ -32,7 +32,7 @@ Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`
 | Route id | Sidebar label | View function | Current behavior |
 | --- | --- | --- | --- |
 | `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` with `SongSectionsPanel`, cue sheet panel, and fixture effects panel |
-| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` + placeholder analysis panels |
+| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with live beat/chord analysis panels sourced from backend song metadata |
 | `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` + placeholder builder panels |
 | `dmx_control` | DMX Control | `DmxControlView()` | Renders fixture grid with dynamic controls |
 
@@ -108,6 +108,15 @@ Global bridge fields used across modules:
 - `src/features/show_control/ShowControlView.ts`: composes song player + show-control panels.
 - `src/features/show_control/components/SongSectionsPanel.ts`: renders backend `song.sections` and sends `transport.jump_to_section` on row activation.
 - `SongSectionsPanel` highlight rule uses section bounds with a small start-time tolerance (`start_s - 0.01`): active when `timeS > (start_s - 0.01) && timeS < end_s`.
+
+### Song Analysis
+- `src/features/song_analysis/SongAnalysisView.ts`: composes player with beat/chord/plot analysis cards.
+- `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats, downbeats, chords, and sections from backend state.
+- `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel (downbeat/bar fallback behavior).
+- `src/features/song_analysis/components/chords_panel/ChordsPanel.ts`: section-based chord grouping panel.
+- `src/features/song_analysis/components/chords_panel/grouping.ts`: groups chord changes by song section boundaries (`start_s/end_s`).
+- `src/features/song_analysis/components/chords_panel/render.ts`: section block rendering helper.
+- `src/features/song_analysis/components/chords_panel/types.ts`: panel/group type contracts.
 
 ### DMX control
 - `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.
@@ -200,7 +209,7 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
 
 ## Current implementation status
 
-- `SongAnalysis` panels (`AnalysisPlot`, `BeatTable`, `ChordsPanel`) are placeholders.
+- `SongAnalysis` panels render live backend-derived beats/chords/sections and analyzer plots when available.
 - `ShowBuilder` panels (`SongProgression`, `EffectPlaylist`, `EffectPicker`) are placeholders.
 - `ShowControl` route renders a live sections panel backed by websocket song metadata.
 - `HomeView` exists in source but is not part of current route rendering.

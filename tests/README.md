@@ -8,6 +8,9 @@ Project-level Python tests for backend state/render behavior and related integra
 - `tests/test_dmx_canvas_render_new.py`: cue rendering to DMX canvas.
 - `tests/test_poi_database.py`: POI CRUD persistence.
 - `tests/test_payload.py`: fixture payload shape smoke check.
+- `tests/test_song_sections_payload_schema.py`: song section payload normalization (`start/end/label` -> `{name,start_s,end_s}`).
+- `tests/test_jump_to_section_regression.py`: backend `transport.jump_to_section` index validation and seek behavior.
+- `tests/test_ws_transport_jump_to_section_e2e.py`: websocket intent flow for section jumps and playback time updates.
 - `tests/test_ws_poi_e2e.py`: websocket frontend-mimic integration test for POI persistence on real `backend/fixtures/pois.json` with auto-restore.
 
 ## Test file location policy
