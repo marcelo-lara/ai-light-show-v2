@@ -116,10 +116,22 @@ def build_song_payload(manager) -> Optional[Dict[str, Any]]:
     sections_list = []
     if sections and sections.sections:
         for s in sections.sections:
+            start_raw = s.get("start_s")
+            if start_raw is None:
+                start_raw = s.get("start")
+
+            end_raw = s.get("end_s")
+            if end_raw is None:
+                end_raw = s.get("end")
+
+            name_raw = s.get("name")
+            if not name_raw:
+                name_raw = s.get("label")
+
             sections_list.append({
-                "name": str(s.get("name", "")), 
-                "start_s": float(s.get("start_s", 0.0)), 
-                "end_s": float(s.get("end_s", 0.0))
+                "name": str(name_raw or ""),
+                "start_s": float(start_raw or 0.0),
+                "end_s": float(end_raw or 0.0),
             })
         
     sections_list.sort(key=lambda item: item.get("start_s", 0.0))

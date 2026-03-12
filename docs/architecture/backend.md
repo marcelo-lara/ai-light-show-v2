@@ -59,7 +59,13 @@ Behavior:
 - Browser timeline is authoritative.
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
 - `jump_to_time` seeks and applies nearest precomputed frame.
-- `jump_to_section` currently emits warning event and is not implemented.
+- `jump_to_section` resolves `payload.section_index` against sections sorted by normalized start time (`start_s|start`), seeks to the section start time, and applies the nearest precomputed frame.
+
+### Section metadata normalization
+
+- Backend accepts section records with either analyzer keys (`start`, `end`, `label`) or normalized keys (`start_s`, `end_s`, `name`).
+- Song payload serialization always emits `{name, start_s, end_s}` for frontend state.
+- Playback section name resolution and song length inference use normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
 
 ### Editing
 

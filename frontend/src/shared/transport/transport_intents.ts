@@ -46,3 +46,12 @@ export function transportJumpToTime(timeMs: number) {
     payload: { time_ms: Math.max(0, Math.round(timeMs)) },
   });
 }
+
+export function transportJumpToSection(sectionIndex: number) {
+  wsSend({
+    type: "intent",
+    req_id: reqId(),
+    name: "transport.jump_to_section",
+    payload: { section_index: Math.max(0, Math.floor(sectionIndex)) },
+  });
+}

@@ -31,7 +31,7 @@ Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`
 
 | Route id | Sidebar label | View function | Current behavior |
 | --- | --- | --- | --- |
-| `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` + placeholder text |
+| `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` with `SongSectionsPanel`, cue sheet panel, and fixture effects panel |
 | `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` + placeholder analysis panels |
 | `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` + placeholder builder panels |
 | `dmx_control` | DMX Control | `DmxControlView()` | Renders fixture grid with dynamic controls |
@@ -52,7 +52,7 @@ Backend -> client message types:
 - `event`
 
 Intent names currently emitted by frontend:
-- Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`
+- Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`
 - LLM: `llm.send_prompt`, `llm.cancel`
 - POI: `poi.update_fixture_target`
@@ -103,6 +103,11 @@ Global bridge fields used across modules:
 - `src/shared/components/song_player/logic/wave_callbacks.ts`: WaveSurfer callback orchestration bindings for controller state updates.
 - `src/shared/components/song_player/logic/regions.ts`: section/downbeat overlay generation.
 - `src/shared/components/song_player/ui/*`: waveform, transport buttons, readout, options, layout primitives.
+
+### Show Control
+- `src/features/show_control/ShowControlView.ts`: composes song player + show-control panels.
+- `src/features/show_control/components/SongSectionsPanel.ts`: renders backend `song.sections` and sends `transport.jump_to_section` on row activation.
+- `SongSectionsPanel` highlight rule uses section bounds with a small start-time tolerance (`start_s - 0.01`): active when `timeS > (start_s - 0.01) && timeS < end_s`.
 
 ### DMX control
 - `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.
@@ -197,7 +202,7 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
 
 - `SongAnalysis` panels (`AnalysisPlot`, `BeatTable`, `ChordsPanel`) are placeholders.
 - `ShowBuilder` panels (`SongProgression`, `EffectPlaylist`, `EffectPicker`) are placeholders.
-- `ShowControl` route is present and renders song player plus placeholder text.
+- `ShowControl` route renders a live sections panel backed by websocket song metadata.
 - `HomeView` exists in source but is not part of current route rendering.
 
 ## Development commands

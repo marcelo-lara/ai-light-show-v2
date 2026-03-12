@@ -13,6 +13,8 @@ class StateCoreMetadataMixin:
         if song.sections:
             for s in song.sections.sections:
                 end_s = s.get("end_s")
+                if end_s is None:
+                    end_s = s.get("end")
                 if end_s:
                     max_t = max(max_t, float(end_s))
                     

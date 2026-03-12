@@ -105,7 +105,7 @@ Code is the source of truth.
 | `transport.pause` | none | `set_playback_state(False)`, disable continuous send | `True` |
 | `transport.stop` | none | pause + seek `0` + push current output universe + disable continuous send | `True` |
 | `transport.jump_to_time` | `time_ms` | seek to `max(0, time_ms/1000)` and push output universe | `True` on valid time, else event `invalid_time_ms` and `False` |
-| `transport.jump_to_section` | none | not implemented | event `jump_to_section_not_implemented`, returns `False` |
+| `transport.jump_to_section` | `section_index` | sort sections by normalized start (`start_s|start`), seek to selected section start, then push output universe | `True` on valid index; else event `invalid_section_index`/`section_index_out_of_range`/`no_sections_available`/`song_not_loaded` and `False` |
 
 ### Fixture intents
 
@@ -148,7 +148,10 @@ Notes on `fixture.set_values`:
 | `warning` | `unsupported_message_type` | `{type: <received type>}` |
 | `warning` | `unknown_intent` | `{name}` |
 | `error` | `invalid_time_ms` | none |
-| `warning` | `jump_to_section_not_implemented` | none |
+| `error` | `song_not_loaded` | none |
+| `error` | `no_sections_available` | none |
+| `error` | `invalid_section_index` | none |
+| `error` | `section_index_out_of_range` | `{section_index, section_count}` |
 | `error` | `fixture_id_required` | none |
 | `warning` | `preview_rejected` | rejection object from `start_preview_effect` |
 | `info` | `preview_started` | preview result object (`requestId`, `fixtureId`, `effect`, `duration`) |
@@ -208,6 +211,7 @@ Field notes:
 - `song` is `null` when no song is loaded.
 - `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song.
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
+- Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
 
 ## Effect data contracts
 
