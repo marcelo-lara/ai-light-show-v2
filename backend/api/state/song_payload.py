@@ -142,7 +142,6 @@ def build_song_payload(manager) -> Optional[Dict[str, Any]]:
         "length_s": meta.duration if meta else None,
         "bpm": meta.bpm if meta else None,
         "sections": sections_list,
-        "beats": beats.beats if beats else [],
-        "downbeats": beats.downbeats if beats else [],
+        "beats": [beat.model_dump() for beat in beats.beats] if beats else [],
         "analysis": build_song_analysis_payload(manager, song.song_id),
     }

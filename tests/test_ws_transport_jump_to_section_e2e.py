@@ -7,13 +7,19 @@ from services.artnet import ArtNetService
 from services.song_service import SongService
 from store.state import StateManager
 
+from backend.models.song.beats import Beats, Beat
+
 
 def _fake_song(song_name: str):
     return SimpleNamespace(
         song_id=song_name,
         audio_url=f"/songs/{song_name}.mp3",
         meta=SimpleNamespace(duration=90.0, bpm=128.0),
-        beats=SimpleNamespace(beats=[0.0, 0.5, 1.0], downbeats=[0.0]),
+        beats=Beats(beats=[
+            Beat(time=0.0, beat=1, bar=0),
+            Beat(time=0.5, beat=2, bar=0),
+            Beat(time=1.0, beat=3, bar=0)
+        ]),
         sections=SimpleNamespace(
             sections=[
                 {"name": "Intro", "start_s": 0.0, "end_s": 12.0},

@@ -179,28 +179,68 @@ class MetadataIndexStore:
             return default
 
     def _load_analyzer_beats(self, song_dir: Path, features: Dict[str, FeatureSeries]) -> None:
-        data = self._load_json(song_dir / "beats.json", default={})
-        if not isinstance(data, dict):
+        data = self._load_json(song_dir / "beats.json", default=[])
+        if not isinstance(data, list):
             return
 
-        for key in ("beats", "downbeats"):
-            arr = data.get(key)
-            if not isinstance(arr, list):
+        times = []
+        bars = []
+        beats = []
+        basses = []
+        chords = []
+
+        for item in data:
+            if not isinstance(item, dict):
                 continue
-            times = self._to_float_list(arr)
-            if not times:
-                continue
-            values = [1.0] * len(times)
-            features[f"analyzer.{key}"] = FeatureSeries(
-                name=f"analyzer.{key}",
+            time_val = self._to_float(item.get("time"))
+            bar_val = self._to_float(item.get("bar"))
+            beat_val = self._to_float(item.get("beat"))
+            bass_val = item.get("bass")
+            chord_val = item.get("chord")
+
+            if time_val is not None:
+                times.append(time_val)
+            if bar_val is not None:
+                bars.append(bar_val)
+            if beat_val is not None:
+                beats.append(beat_val)
+            basses.append(bass_val if isinstance(bass_val, str) else None)
+            chords.append(chord_val if isinstance(chord_val, str) else None)
+
+        if times:
+            features["analyzer.beats"] = FeatureSeries(
+                name="analyzer.beats",
                 source="analyzer",
                 path=song_dir / "beats.json",
                 part=None,
                 duration=max(times),
                 sample_rate=None,
                 times=times,
-                values=values,
-                metadata={"kind": key},
+                values=[1.0] * len(times),
+            )
+
+        if bars:
+            features["analyzer.beats.bar"] = FeatureSeries(
+                name="analyzer.beats.bar",
+                source="analyzer",
+                path=song_dir / "beats.json",
+                part=None,
+                duration=max(times) if times else None,
+                sample_rate=None,
+                times=times,
+                values=bars,
+            )
+
+        if beats:
+            features["analyzer.beats.beat"] = FeatureSeries(
+                name="analyzer.beats.beat",
+                source="analyzer",
+                path=song_dir / "beats.json",
+                part=None,
+                duration=max(times) if times else None,
+                sample_rate=None,
+                times=times,
+                values=beats,
             )
 
     def _load_essentia(self, song_dir: Path, features: Dict[str, FeatureSeries]) -> None:

@@ -1,26 +1,35 @@
 import { getBackendStore } from "../../shared/state/backend_state.ts";
-import type { SongChord, SongSection, SongState } from "../../shared/transport/protocol.ts";
+import type { SongChord, SongSection, SongState, BeatObject } from "../../shared/transport/protocol.ts";
 
 type BackendOriginGlobal = typeof globalThis & {
   __BACKEND_HTTP_ORIGIN__?: string;
 };
 
 export type SongAnalysisData = {
-  beats: number[];
-  downbeats: number[];
+  beats: BeatObject[];
   chords: SongChord[];
   sections: SongSection[];
   plots: Array<{ id: string; title: string; svgUrl: string }>;
 };
 
-const MOCK_BEATS = [
-  1.376, 1.824, 2.272, 2.709, 3.168, 3.605, 4.064, 4.501,
-  4.96, 5.397, 5.856, 6.293, 6.731, 7.179, 7.637, 8.064,
-  8.48, 8.971, 9.44, 9.888, 10.357, 10.795, 11.253, 11.712,
-  12.139, 12.597, 13.024, 13.461, 13.909, 14.357, 14.795, 15.2,
+const MOCK_BEATS: BeatObject[] = [
+  { time: 1.376, bar: 0, beat: 1 },
+  { time: 1.824, bar: 0, beat: 2 },
+  { time: 2.272, bar: 0, beat: 3 },
+  { time: 2.709, bar: 0, beat: 4 },
+  { time: 3.168, bar: 1, beat: 1 },
+  { time: 3.605, bar: 1, beat: 2 },
+  { time: 4.064, bar: 1, beat: 3 },
+  { time: 4.501, bar: 1, beat: 4 },
+  { time: 4.96, bar: 2, beat: 1 },
+  { time: 5.397, bar: 2, beat: 2 },
+  { time: 5.856, bar: 2, beat: 3 },
+  { time: 6.293, bar: 2, beat: 4 },
+  { time: 6.731, bar: 3, beat: 1 },
+  { time: 7.179, bar: 3, beat: 2 },
+  { time: 7.637, bar: 3, beat: 3 },
+  { time: 8.064, bar: 3, beat: 4 },
 ];
-
-const MOCK_DOWNBEATS = [1.824, 3.605, 5.397, 7.179, 8.971, 10.795, 12.597, 14.357];
 
 function resolveBackendUrl(rawUrl: string): string {
   if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) return rawUrl;
@@ -29,14 +38,25 @@ function resolveBackendUrl(rawUrl: string): string {
   return rawUrl;
 }
 
-function cleanSortedNumeric(values: unknown): number[] {
+function cleanBeatObjects(values: unknown): BeatObject[] {
   if (!Array.isArray(values)) return [];
-  const picked: number[] = [];
+  const picked: BeatObject[] = [];
   for (const value of values) {
-    const num = Number(value);
-    if (Number.isFinite(num)) picked.push(num);
+    if (!value || typeof value !== "object") continue;
+    const obj = value as Partial<BeatObject>;
+    const time = Number(obj.time);
+    const bar = Number(obj.bar);
+    const beat = Number(obj.beat);
+    if (!Number.isFinite(time) || !Number.isFinite(bar) || !Number.isFinite(beat)) continue;
+    picked.push({
+      time,
+      bar,
+      beat,
+      bass: obj.bass ? String(obj.bass) : undefined,
+      chord: obj.chord ? String(obj.chord) : undefined,
+    });
   }
-  picked.sort((a, b) => a - b);
+  picked.sort((a, b) => a.time - b.time);
   return picked;
 }
 
@@ -82,12 +102,10 @@ function cleanSections(song: SongState): SongSection[] {
 
 export function getSongAnalysisData(): SongAnalysisData {
   const song = getBackendStore().state.song;
-  if (!song) return { beats: [], downbeats: [], chords: [], sections: [], plots: [] };
+  if (!song) return { beats: [], chords: [], sections: [], plots: [] };
 
-  const beats = cleanSortedNumeric(song.beats);
-  const downbeats = cleanSortedNumeric(song.downbeats);
+  const beats = cleanBeatObjects(song.beats);
   const fallbackBeats = beats.length ? beats : MOCK_BEATS;
-  const fallbackDownbeats = downbeats.length ? downbeats : MOCK_DOWNBEATS;
 
   const plots = (song.analysis?.plots ?? [])
     .filter((plot) => Boolean(plot?.id) && Boolean(plot?.title) && Boolean(plot?.svg_url))
@@ -99,7 +117,6 @@ export function getSongAnalysisData(): SongAnalysisData {
 
   return {
     beats: fallbackBeats,
-    downbeats: fallbackDownbeats,
     chords: cleanChords(song),
     sections: cleanSections(song),
     plots,

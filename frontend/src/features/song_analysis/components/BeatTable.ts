@@ -1,38 +1,37 @@
 import { Card } from "../../../shared/components/layout/Card.ts";
+import type { BeatObject } from "../../../shared/transport/protocol.ts";
 
 type BeatTableProps = {
-  beats: number[];
-  downbeats: number[];
+  beats: BeatObject[];
 };
 
 type BeatGroup = {
   label: string;
-  beats: number[];
+  beats: BeatObject[];
 };
 
 const BEAT_GROUP_PAGE_SIZE = 4;
 
-function groupBeats(beats: number[], downbeats: number[]): BeatGroup[] {
+function groupBeats(beats: BeatObject[]): BeatGroup[] {
   if (!beats.length) return [];
-  if (!downbeats.length) {
-    const groups: BeatGroup[] = [];
-    for (let index = 0; index < beats.length; index += 4) {
-      groups.push({ label: `Bar ${groups.length + 1}`, beats: beats.slice(index, index + 4) });
-    }
-    return groups;
-  }
 
   const groups: BeatGroup[] = [];
-  const firstDownbeat = downbeats[0];
-  const pickup = beats.filter((beat) => beat < firstDownbeat);
-  if (pickup.length) groups.push({ label: "Pickup", beats: pickup });
+  let currentBar = beats[0].bar;
+  let currentGroup: BeatObject[] = [];
 
-  for (let index = 0; index < downbeats.length; index++) {
-    const start = downbeats[index];
-    const end = downbeats[index + 1] ?? Number.POSITIVE_INFINITY;
-    const barBeats = beats.filter((beat) => beat >= start && beat < end);
-    if (!barBeats.length) continue;
-    groups.push({ label: `Bar ${index + 1}`, beats: barBeats });
+  for (const beat of beats) {
+    if (beat.bar !== currentBar) {
+      if (currentGroup.length) {
+        groups.push({ label: `Bar ${currentBar}`, beats: currentGroup });
+      }
+      currentBar = beat.bar;
+      currentGroup = [];
+    }
+    currentGroup.push(beat);
+  }
+
+  if (currentGroup.length) {
+    groups.push({ label: `Bar ${currentBar}`, beats: currentGroup });
   }
 
   return groups;
@@ -58,25 +57,54 @@ export function BeatTable(props: BeatTableProps): HTMLElement {
   status.className = "muted";
   content.appendChild(status);
 
-  const groups = groupBeats(props.beats, props.downbeats);
+  const groups = groupBeats(props.beats);
   let rendered = 0;
 
   const appendGroup = (group: BeatGroup) => {
     const section = document.createElement("section");
     section.className = "beat-group";
 
-    const row = document.createElement("div");
-    row.className = "beat-group-row";
-    row.style.setProperty("--beat-count", String(Math.max(group.beats.length, 1)));
+    const header = document.createElement("h4");
+    header.textContent = group.label;
+    section.appendChild(header);
 
-    for (const [index, beat] of group.beats.entries()) {
-      const cell = document.createElement("span");
-      cell.className = `beats-cell${index === 0 && group.label !== "Pickup" ? " is-downbeat" : ""}`;
-      cell.textContent = beat.toFixed(3);
-      row.appendChild(cell);
+    const table = document.createElement("table");
+    table.className = "beat-table";
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    ["Time", "Beat", "Bass", "Chord"].forEach(col => {
+      const th = document.createElement("th");
+      th.textContent = col;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    for (const beat of group.beats) {
+      const row = document.createElement("tr");
+      const timeCell = document.createElement("td");
+      timeCell.textContent = beat.time.toFixed(3);
+      row.appendChild(timeCell);
+
+      const beatCell = document.createElement("td");
+      beatCell.textContent = String(beat.beat);
+      row.appendChild(beatCell);
+
+      const bassCell = document.createElement("td");
+      bassCell.textContent = beat.bass || "-";
+      row.appendChild(bassCell);
+
+      const chordCell = document.createElement("td");
+      chordCell.textContent = beat.chord || "-";
+      row.appendChild(chordCell);
+
+      tbody.appendChild(row);
     }
+    table.appendChild(tbody);
 
-    section.appendChild(row);
+    section.appendChild(table);
     groupsRoot.appendChild(section);
   };
 

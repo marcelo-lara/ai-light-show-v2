@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 from .meta import Meta
-from .beats import Beats
+from .beats import Beats, Beat
 from .sections import Sections
 
 def load_meta_data(song_dir: Path, song_id: str) -> Meta:
@@ -26,19 +26,19 @@ def load_meta_data(song_dir: Path, song_id: str) -> Meta:
 
 def load_beats_data(beats_file: str) -> Beats:
     beats_path = Path(beats_file)
-    beats, downbeats = [], []
+    beat_list = []
     
     if beats_path.exists():
         with open(beats_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            beats = data.get("beats", [])
-            downbeats = data.get("downbeats", [])
-            
-    beats_array = [{"time": b, "type": "beat"} for b in beats]
-    beats_array.extend([{"time": d, "type": "downbeat"} for d in downbeats])
-    beats_array.sort(key=lambda x: x["time"])
+            if isinstance(data, list):
+                for item in data:
+                    beat_list.append(Beat(**item))
+            else:
+                # Fallback for old schema, but we are hard-breaking
+                raise ValueError(f"Invalid beats.json format at {beats_path}: expected list of beat objects")
     
-    return Beats(beats=beats, downbeats=downbeats, beats_array=beats_array)
+    return Beats(beats=beat_list)
 
 def load_sections_data(song_dir: Path) -> Sections:
     sections_path = song_dir / "sections.json"

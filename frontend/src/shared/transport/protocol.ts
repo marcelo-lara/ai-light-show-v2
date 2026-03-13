@@ -93,14 +93,21 @@ export type Poi = {
   };
 };
 
+export type BeatObject = {
+  time: number;
+  bar: number;
+  beat: number;
+  bass?: string;
+  chord?: string;
+};
+
 export type SongState = {
   filename?: string;
   audio_url?: string | null;
   length_s?: number | null;
   bpm?: number | null;
   sections?: SongSection[];
-  beats?: number[];
-  downbeats?: number[];
+  beats?: BeatObject[];
   analysis?: SongAnalysisState | null;
 };
 

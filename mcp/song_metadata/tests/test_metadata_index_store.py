@@ -32,7 +32,12 @@ def meta_root(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     (song_dir / "beats.json").write_text(
-        json.dumps({"beats": [1.0, 2.0, 3.0, 4.0], "downbeats": [1.0, 3.0]}),
+        json.dumps([
+            {"time": 1.0, "bar": 0, "beat": 1},
+            {"time": 2.0, "bar": 0, "beat": 2},
+            {"time": 3.0, "bar": 1, "beat": 1},
+            {"time": 4.0, "bar": 1, "beat": 2}
+        ]),
         encoding="utf-8",
     )
     (essentia / "spectral_centroid.json").write_text(
@@ -71,7 +76,8 @@ def test_feature_discovery_and_normalization(meta_root: Path) -> None:
     assert result["ok"] is True
     features = result["data"]["features"]
     assert "analyzer.beats" in features
-    assert "analyzer.downbeats" in features
+    assert "analyzer.beats.bar" in features
+    assert "analyzer.beats.beat" in features
     assert "essentia.spectral_centroid.centroid" in features
     assert "moises.beats.beat_num" in features
 
@@ -116,7 +122,7 @@ def test_summary_mode_omits_raw_by_default(meta_root: Path) -> None:
     store = build_store(meta_root)
     result = store.query_feature(
         song="Test Song",
-        feature="analyzer.downbeats",
+        feature="analyzer.beats.beat",
         start_time=1.0,
         end_time=3.0,
         include_raw=False,
@@ -127,7 +133,7 @@ def test_summary_mode_omits_raw_by_default(meta_root: Path) -> None:
 
     assert result["ok"] is True
     assert "raw" not in result["data"]
-    assert result["data"]["summary"]["points"] == 2
+    assert result["data"]["summary"]["points"] == 3
 
 
 def test_large_exact_payload_is_rejected(meta_root: Path) -> None:

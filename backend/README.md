@@ -73,7 +73,7 @@ Patch behavior:
 - Static routes: `/songs/*` for audio and `/meta/*` for analyzer artifacts (SVG/JSON).
 
 Song payload fields under `state.song`:
-- Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`, `downbeats`.
+- Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`.
 - Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`) and `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`).
 
 Section payload normalization:

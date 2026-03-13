@@ -57,7 +57,7 @@ Code is the source of truth.
 | `backend/store/state_manager/song/*` | song mixins | Song load and cue/section persistence |
 | `backend/store/state_manager/playback/*` | playback mixins | Transport, preview lifecycle, and frame application |
 | `backend/store/services/fixture_loader.py` | `load_fixtures_from_path` | Fixture/template loading and instantiation |
-| `backend/store/services/song_metadata_loader.py` | `SongMetadataLoader` | Metadata candidate resolution + beats/downbeats hydration |
+| `backend/store/services/song_metadata_loader.py` | `SongMetadataLoader` | Metadata candidate resolution + beats hydration |
 | `backend/store/services/section_persistence.py` | `normalize_sections_input`, `persist_parts_to_meta` | Section validation and metadata persistence |
 | `backend/store/services/canvas_rendering.py` | `render_cue_sheet_to_canvas`, `render_preview_canvas`, `dump_canvas_debug` | DMX canvas rendering + debug log dump |
 | `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
@@ -194,8 +194,7 @@ Top-level state object:
     "length_s": 180,
     "bpm": 120,
     "sections": [{"name": "intro", "start_s": 0.0, "end_s": 12.5}],
-    "beats": [0.5, 1.0],
-    "downbeats": [0.5, 2.5],
+    "beats": [{"time": 0.5, "bar": 0, "beat": 2}, {"time": 1.0, "bar": 0, "beat": 3}],
     "analysis": {
       "plots": [{"id": "rhythm", "title": "Rhythm", "svg_url": "/meta/Song/essentia/rhythm.svg"}],
       "chords": [{"time_s": 12.0, "label": "Fm", "bar": 8, "beat": 1}]

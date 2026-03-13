@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from backend.api.state.song_payload import build_song_payload
+from backend.models.song.beats import Beats, Beat
 
 
 def _build_manager_with_sections(sections):
@@ -8,7 +9,7 @@ def _build_manager_with_sections(sections):
         song_id="fake-song",
         audio_url="/songs/fake-song.mp3",
         meta=SimpleNamespace(duration=158.06, bpm=120.0),
-        beats=SimpleNamespace(beats=[0.0, 0.5], downbeats=[0.0]),
+        beats=Beats(beats=[Beat(time=0.0, beat=1, bar=0), Beat(time=0.5, beat=2, bar=0)]),
         sections=SimpleNamespace(sections=sections),
     )
     state_manager = SimpleNamespace(current_song=song)
