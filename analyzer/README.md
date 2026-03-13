@@ -80,3 +80,13 @@ docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.m
 ```
 
 Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable JSON.
+
+## Appendix
+
+### Beats.json file
+
+- "time": 0.0,  // time s.ms of the song
+- "bar": 0,     // bar number (increases on every downbeat)
+- "beat": 1,    // beat relative of the bar (count resets after a new downbeat, ussualy numbers from 1 to 4)
+- "bass": "G#", // infered chord from the bassline (from the bass stem)
+- "chord": "C#" // infered chord from the mix (the actual mp3 file)
