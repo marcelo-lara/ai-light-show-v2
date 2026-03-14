@@ -1,4 +1,4 @@
-import { EffectPlaylist } from "./components/EffectPlaylist.ts";
+import { EffectPlaylist } from "./components/effect_playlist/EffectPlaylist.ts";
 import { EffectPicker } from "./components/effect_picker/EffectPicker.ts";
 import { SongPlayer } from "../../shared/components/song_player/SongPlayer.ts";
 import { ChordsPanel } from "../../shared/components/chords_panel/ChordsPanel.ts";

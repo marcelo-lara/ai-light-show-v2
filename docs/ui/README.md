@@ -20,6 +20,8 @@ Use this file first for UI tasks. Keep prompts short and reference exact assets 
 
 - Do not inline binary image data in prompts.
 - Cite only the specific screen file(s) needed for the task.
-- Treat LoFi files as layout references only.
+- Treat LoFi files as layout references.
+  - Read pink text is for refernce/intentions, DO NOT use in final UI.
 - Use frontend token/style rules from [frontend/README.md](../../frontend/README.md).
+- Never use mono fonts, unless strictly specified.
 - For DMX layout tasks, use `4 DMX Control.png` plus `common_player.md` and request structure parity (not color/dimension parity).
