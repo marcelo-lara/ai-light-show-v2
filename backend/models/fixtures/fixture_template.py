@@ -1,9 +1,11 @@
 from typing import Dict, List, Optional, Union, Literal
 from pydantic import BaseModel, Field
 
+
 class Mapping(BaseModel):
     """Dictionary for enum or labeled u8 values."""
-    pass # Mappings are dynamic Dict[str, Union[int, str]] in the template
+    pass  # Mappings are dynamic Dict[str, Union[int, str]] in the template
+
 
 class MetaChannel(BaseModel):
     label: str
@@ -14,6 +16,7 @@ class MetaChannel(BaseModel):
     step: Optional[bool] = False
     arm: Optional[int] = None
     hidden: Optional[bool] = False
+
 
 class FixtureTemplate(BaseModel):
     id: str

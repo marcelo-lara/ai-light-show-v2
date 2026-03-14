@@ -144,6 +144,12 @@ body {
   cursor: pointer;
 }
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .nav-btn {
   width: 48px;
   height: 48px;
@@ -162,9 +168,86 @@ body {
 }
 
 .nav-btn.active,
-.btn.primary {
+.btn.primary,
+.btn.active {
   border-color: var(--accent);
   background: color-mix(in oklab, var(--accent) 20%, var(--card-2));
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-content--end {
+  flex-direction: row-reverse;
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.input-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.input-control__label {
+  font-size: 0.85rem;
+}
+
+.input-shell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid var(--border-strong);
+  background: var(--card-2);
+  color: var(--text);
+  padding: 8px 10px;
+}
+
+.input-shell--active {
+  border-color: var(--accent);
+}
+
+.input-shell--end {
+  flex-direction: row-reverse;
+}
+
+.input-shell__icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.input-field {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.input-field::placeholder {
+  color: var(--muted);
+}
+
+.input-field:disabled {
+  cursor: not-allowed;
 }
 
 .main-content {

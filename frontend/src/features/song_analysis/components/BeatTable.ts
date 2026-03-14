@@ -1,115 +1,143 @@
 import { Card } from "../../../shared/components/layout/Card.ts";
+import type { BeatObject } from "../../../shared/transport/protocol.ts";
 
 type BeatTableProps = {
-  beats: number[];
-  downbeats: number[];
+  beats: BeatObject[];
 };
 
 type BeatGroup = {
-	label: string;
-	beats: number[];
+  label: string;
+  beats: BeatObject[];
 };
 
 const BEAT_GROUP_PAGE_SIZE = 4;
 
-function groupBeats(beats: number[], downbeats: number[]): BeatGroup[] {
-	if (!beats.length) return [];
-	if (!downbeats.length) {
-		const groups: BeatGroup[] = [];
-		for (let index = 0; index < beats.length; index += 4) {
-			groups.push({ label: `Bar ${groups.length + 1}`, beats: beats.slice(index, index + 4) });
-		}
-		return groups;
-	}
+function groupBeats(beats: BeatObject[]): BeatGroup[] {
+  if (!beats.length) return [];
 
-	const groups: BeatGroup[] = [];
-	const firstDownbeat = downbeats[0];
-	const pickup = beats.filter((beat) => beat < firstDownbeat);
-	if (pickup.length) groups.push({ label: "Pickup", beats: pickup });
+  const groups: BeatGroup[] = [];
+  let currentBar = beats[0].bar;
+  let currentGroup: BeatObject[] = [];
 
-	for (let index = 0; index < downbeats.length; index++) {
-		const start = downbeats[index];
-		const end = downbeats[index + 1] ?? Number.POSITIVE_INFINITY;
-		const barBeats = beats.filter((beat) => beat >= start && beat < end);
-		if (!barBeats.length) continue;
-		groups.push({ label: `Bar ${index + 1}`, beats: barBeats });
-	}
+  for (const beat of beats) {
+    if (beat.bar !== currentBar) {
+      if (currentGroup.length) {
+        groups.push({ label: `Bar ${currentBar}`, beats: currentGroup });
+      }
+      currentBar = beat.bar;
+      currentGroup = [];
+    }
+    currentGroup.push(beat);
+  }
 
-	return groups;
+  if (currentGroup.length) {
+    groups.push({ label: `Bar ${currentBar}`, beats: currentGroup });
+  }
+
+  return groups;
 }
 
 export function BeatTable(props: BeatTableProps): HTMLElement {
-	const content = document.createElement("div");
-	content.className = "analysis-card analysis-beats";
+  const content = document.createElement("div");
+  content.className = "analysis-card analysis-beats";
 
-	if (!props.beats.length) {
-		const empty = document.createElement("p");
-		empty.className = "muted";
-		empty.textContent = "No beat data for current song.";
-		content.appendChild(empty);
-		return Card(content, { variant: "outlined" });
-	}
+  if (!props.beats.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No beat data for current song.";
+    content.appendChild(empty);
+    return Card(content, { variant: "outlined" });
+  }
 
-	const groupsRoot = document.createElement("div");
-	groupsRoot.className = "beats-groups";
-	content.appendChild(groupsRoot);
+  const groupsRoot = document.createElement("div");
+  groupsRoot.className = "beats-groups";
+  content.appendChild(groupsRoot);
 
-	const status = document.createElement("p");
-	status.className = "muted";
-	content.appendChild(status);
+  const status = document.createElement("p");
+  status.className = "muted";
+  content.appendChild(status);
 
-	const groups = groupBeats(props.beats, props.downbeats);
-	let rendered = 0;
+  const groups = groupBeats(props.beats);
+  let rendered = 0;
 
-	const appendGroup = (group: BeatGroup) => {
-		const section = document.createElement("section");
-		section.className = "beat-group";
+  const appendGroup = (group: BeatGroup) => {
+    const section = document.createElement("section");
+    section.className = "beat-group";
 
-		const row = document.createElement("div");
-		row.className = "beat-group-row";
-		row.style.setProperty("--beat-count", String(Math.max(group.beats.length, 1)));
+    const header = document.createElement("h4");
+    header.textContent = group.label;
+    section.appendChild(header);
 
-		for (const [index, beat] of group.beats.entries()) {
-			const cell = document.createElement("span");
-			cell.className = `beats-cell${index === 0 && group.label !== "Pickup" ? " is-downbeat" : ""}`;
-			cell.textContent = beat.toFixed(3);
-			row.appendChild(cell);
-		}
+    const table = document.createElement("table");
+    table.className = "beat-table";
 
-		section.appendChild(row);
-		groupsRoot.appendChild(section);
-	};
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    ["Time", "Beat", "Bass", "Chord"].forEach(col => {
+      const th = document.createElement("th");
+      th.textContent = col;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
 
-	const renderNextPage = () => {
-		const next = groups.slice(rendered, rendered + BEAT_GROUP_PAGE_SIZE);
-		for (const group of next) appendGroup(group);
-		rendered += next.length;
-		status.textContent = rendered < groups.length
-			? `Showing ${rendered} of ${groups.length} beat groups.`
-			: `Showing all ${groups.length} beat groups.`;
-	};
+    const tbody = document.createElement("tbody");
+    for (const beat of group.beats) {
+      const row = document.createElement("tr");
+      const timeCell = document.createElement("td");
+      timeCell.textContent = beat.time.toFixed(3);
+      row.appendChild(timeCell);
 
-	const fillUntilScrollable = () => {
-		while (rendered < groups.length && content.scrollHeight <= content.clientHeight) {
-			renderNextPage();
-		}
-	};
+      const beatCell = document.createElement("td");
+      beatCell.textContent = String(beat.beat);
+      row.appendChild(beatCell);
 
-	content.addEventListener("scroll", () => {
-		if (rendered >= groups.length) return;
-		const threshold = content.scrollHeight - content.clientHeight - 24;
-		if (content.scrollTop >= threshold) {
-			renderNextPage();
-			fillUntilScrollable();
-		}
-	});
+      const bassCell = document.createElement("td");
+      bassCell.textContent = beat.bass || "-";
+      row.appendChild(bassCell);
 
-	renderNextPage();
-	queueMicrotask(fillUntilScrollable);
+      const chordCell = document.createElement("td");
+      chordCell.textContent = beat.chord || "-";
+      row.appendChild(chordCell);
 
-	if (groups.length <= BEAT_GROUP_PAGE_SIZE) {
-		status.textContent = `Showing all ${groups.length} beat groups.`;
-	}
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
 
-	return Card(content, { variant: "outlined" });
+    section.appendChild(table);
+    groupsRoot.appendChild(section);
+  };
+
+  const renderNextPage = () => {
+    const next = groups.slice(rendered, rendered + BEAT_GROUP_PAGE_SIZE);
+    for (const group of next) appendGroup(group);
+    rendered += next.length;
+    status.textContent = rendered < groups.length
+      ? `Showing ${rendered} of ${groups.length} beat groups.`
+      : `Showing all ${groups.length} beat groups.`;
+  };
+
+  const fillUntilScrollable = () => {
+    while (rendered < groups.length && content.scrollHeight <= content.clientHeight) {
+      renderNextPage();
+    }
+  };
+
+  content.addEventListener("scroll", () => {
+    if (rendered >= groups.length) return;
+    const threshold = content.scrollHeight - content.clientHeight - 24;
+    if (content.scrollTop >= threshold) {
+      renderNextPage();
+      fillUntilScrollable();
+    }
+  });
+
+  renderNextPage();
+  queueMicrotask(fillUntilScrollable);
+
+  if (groups.length <= BEAT_GROUP_PAGE_SIZE) {
+    status.textContent = `Showing all ${groups.length} beat groups.`;
+  }
+
+  return Card(content, { variant: "outlined" });
 }

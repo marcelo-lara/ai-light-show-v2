@@ -20,10 +20,15 @@ Code is the source of truth.
 
 3. Intent routing: `backend/api/intents/*`
 - `apply_intent.py` dispatches by domain via `INTENT_HANDLERS`.
-- Domains: `transport`, `fixture`, `poi`, `llm`.
+- Domains: `transport`, `fixture`, `cue`, `poi`, `llm`.
 
 4. State authority: `backend/store/state.py`
 - Holds fixtures, POIs, song/cue state, playback flags, preview lifecycle.
+- Exposes `StateManager` via compatibility import from `backend/store/state_manager/*`.
+- Uses subfolder modules:
+  - `backend/store/state_manager/core/*`
+  - `backend/store/state_manager/song/*`
+  - `backend/store/state_manager/playback/*`
 - Delegates fixture/template loading, song metadata resolution, section persistence, and canvas rendering helpers to `backend/store/services/*`.
 - Pre-renders full song DMX canvas at `60 FPS`.
 - Computes output frame from synchronized timecode.
@@ -44,10 +49,15 @@ Code is the source of truth.
 | `backend/api/intents/apply_intent.py` | `apply_intent` | Intent dispatch and unknown-intent warning events |
 | `backend/api/state/build_frontend_state.py` | `build_frontend_state` | Canonical snapshot/patch state payload |
 | `backend/api/state/fixtures.py` | `build_fixtures_payload` | Fixture state serialization |
+| `backend/models/song/*` | `Song`, `Meta`, `Beats`, `Sections` | Management models for Song metadata lazy loading and section handling |
 | `backend/api/state/song_payload.py` | `build_song_payload` | Song metadata payload normalization |
-| `backend/store/state.py` | `StateManager` | Core show state + render + preview + persistence |
+| `backend/store/state.py` | `StateManager` (re-export) | Stable state manager import path for callers |
+| `backend/store/state_manager/manager.py` | `StateManager` | Core show state composition root |
+| `backend/store/state_manager/core/*` | core mixins | Bootstrap + fixture/POI + metadata + render helpers |
+| `backend/store/state_manager/song/*` | song mixins | Song load and cue/section persistence |
+| `backend/store/state_manager/playback/*` | playback mixins | Transport, preview lifecycle, and frame application |
 | `backend/store/services/fixture_loader.py` | `load_fixtures_from_path` | Fixture/template loading and instantiation |
-| `backend/store/services/song_metadata_loader.py` | `SongMetadataLoader` | Metadata candidate resolution + beats/downbeats hydration |
+| `backend/store/services/song_metadata_loader.py` | `SongMetadataLoader` | Metadata candidate resolution + beats hydration |
 | `backend/store/services/section_persistence.py` | `normalize_sections_input`, `persist_parts_to_meta` | Section validation and metadata persistence |
 | `backend/store/services/canvas_rendering.py` | `render_cue_sheet_to_canvas`, `render_preview_canvas`, `dump_canvas_debug` | DMX canvas rendering + debug log dump |
 | `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
@@ -80,7 +90,7 @@ Code is the source of truth.
 
 2. `patch`
 - Shape: `{"type":"patch","seq":number,"changes":[{"path":[key],"value":...}]}`
-- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `pois`).
+- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`).
 
 3. `event`
 - Shape: `{"type":"event","level":"info|warning|error","message":string,"data"?:object}`
@@ -95,7 +105,7 @@ Code is the source of truth.
 | `transport.pause` | none | `set_playback_state(False)`, disable continuous send | `True` |
 | `transport.stop` | none | pause + seek `0` + push current output universe + disable continuous send | `True` |
 | `transport.jump_to_time` | `time_ms` | seek to `max(0, time_ms/1000)` and push output universe | `True` on valid time, else event `invalid_time_ms` and `False` |
-| `transport.jump_to_section` | none | not implemented | event `jump_to_section_not_implemented`, returns `False` |
+| `transport.jump_to_section` | `section_index` | sort sections by normalized start (`start_s|start`), seek to selected section start, then push output universe | `True` on valid index; else event `invalid_section_index`/`section_index_out_of_range`/`no_sections_available`/`song_not_loaded` and `False` |
 
 ### Fixture intents
 
@@ -103,7 +113,7 @@ Code is the source of truth.
 | --- | --- | --- | --- |
 | `fixture.set_arm` | `fixture_id`, `armed` | updates `manager.fixture_armed` only | `True` if `fixture_id` present, else event `fixture_id_required` and `False` |
 | `fixture.set_values` | `fixture_id`, `values` | updates fixture `current_values` and applies mapped DMX channel writes to `ArtNetService` | `True` if any channel write applied |
-| `fixture.preview_effect` | `fixture_id`, `effect_id`, `duration_ms`, `params` | validates and starts preview canvas playback | `True` on success; else event `preview_rejected` and `False` |
+| `fixture.preview_effect` | `fixture_id`, `effect_id`, `duration_ms`, `params` | validates and starts preview canvas playback; runs to completion and persists final values to `editor_universe` | `True` on success; else event `preview_rejected` and `False` |
 | `fixture.stop_preview` | none | not implemented | event `stop_preview_not_implemented`, returns `False` |
 
 Notes on `fixture.set_values`:
@@ -123,6 +133,12 @@ Notes on `fixture.set_values`:
 | `poi.delete` | `id` | deletes POI by `id` | `True` if POI existed |
 | `poi.update_fixture_target` | `poi_id`, `fixture_id`, `pan`, `tilt` | clamps `pan/tilt` to `0..65535`, stores under POI fixtures map, sets `canvas_dirty` | `True` on success |
 
+### Cue intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `cue.add` | `time`, `fixture_id`, `effect`, `duration`, `data` | validates fixture/effect, adds entry to cue sheet, persists to disk, re-renders canvas | `True` on success; else event `cue_add_failed` and `False` |
+
 ### LLM intents
 
 | Intent | Payload keys | Behavior | Returns |
@@ -138,7 +154,10 @@ Notes on `fixture.set_values`:
 | `warning` | `unsupported_message_type` | `{type: <received type>}` |
 | `warning` | `unknown_intent` | `{name}` |
 | `error` | `invalid_time_ms` | none |
-| `warning` | `jump_to_section_not_implemented` | none |
+| `error` | `song_not_loaded` | none |
+| `error` | `no_sections_available` | none |
+| `error` | `invalid_section_index` | none |
+| `error` | `section_index_out_of_range` | `{section_index, section_count}` |
 | `error` | `fixture_id_required` | none |
 | `warning` | `preview_rejected` | rejection object from `start_preview_effect` |
 | `info` | `preview_started` | preview result object (`requestId`, `fixtureId`, `effect`, `duration`) |
@@ -146,6 +165,8 @@ Notes on `fixture.set_values`:
 | `error` | `prompt_required` | none |
 | `info` | `llm_stream` | `{domain:"llm", chunk, done}` |
 | `info` | `llm_cancelled` | `{domain:"llm"}` |
+| `error` | `cue_add_failed` | `{reason, fixture_id?, effect?, supported?}` |
+| `info` | `cue_added` | `{ok, entry}` |
 
 ## Snapshot state schema
 
@@ -172,7 +193,8 @@ Top-level state object:
       "values": {},
       "capabilities": {"pan_tilt": true, "rgb": false},
       "meta_channels": {},
-      "mappings": {}
+      "mappings": {},
+      "supported_effects": ["flash", "strobe", "full"]
     }
   },
   "song": {
@@ -181,14 +203,16 @@ Top-level state object:
     "length_s": 180,
     "bpm": 120,
     "sections": [{"name": "intro", "start_s": 0.0, "end_s": 12.5}],
-    "beats": [0.5, 1.0],
-    "downbeats": [0.5, 2.5],
+    "beats": [{"time": 0.5, "bar": 0, "beat": 2}, {"time": 1.0, "bar": 0, "beat": 3}],
     "analysis": {
       "plots": [{"id": "rhythm", "title": "Rhythm", "svg_url": "/meta/Song/essentia/rhythm.svg"}],
       "chords": [{"time_s": 12.0, "label": "Fm", "bar": 8, "beat": 1}]
     }
   },
-  "pois": []
+  "pois": [],
+  "cues": [
+    {"time": 0.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}, "name": null}
+  ]
 }
 ```
 
@@ -198,6 +222,9 @@ Field notes:
 - `song` is `null` when no song is loaded.
 - `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song.
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
+- `fixtures.<id>.supported_effects` lists valid effect names for `fixture.preview_effect` and `cue.add` intents.
+- Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
+- `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet.
 
 ## Effect data contracts
 
@@ -229,3 +256,39 @@ Field notes:
 - `backend/api/websocket.py` re-exports websocket manager entrypoints.
 - `backend/api/ws_handlers.py` and `backend/api/ws_state_builder.py` are compatibility exports.
 - Domain `router.py` files exist but main dispatch uses `INTENT_HANDLERS` via `apply_intent`.
+
+## LLM Validation Commands
+
+Use this exact command after state-manager edits:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
+  tests/test_set_values_regression.py \
+  tests/test_preview_lifecycle_regression.py \
+  tests/test_metadata_sections_regression.py \
+  tests/test_dmx_canvas_render_new.py \
+  tests/test_fixture_loading_new.py \
+  tests/test_payload.py
+```
+
+If you changed websocket behavior, additionally run:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py
+```
+
+## LLM Change Matrix
+
+| If you change... | Edit here first | Then run... |
+| --- | --- | --- |
+| State bootstrap fields or shared state flags | `backend/store/state_manager/core/bootstrap.py` | state-manager validation command above |
+| Fixture load/save, arm defaults, POI fixture target persistence | `backend/store/state_manager/core/fixture_store.py`, `backend/store/state_manager/core/fixture_effects.py` | state-manager validation command above |
+| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | state-manager validation command above + `tests/test_metadata_sections_regression.py` |
+| Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | state-manager validation command above |
+| Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | state-manager validation command above |
+| Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | state-manager validation command above |
+| Preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_start.py`, `backend/store/state_manager/playback/preview_control.py`, `backend/store/state_manager/playback/preview_runner.py` | state-manager validation command above + `tests/test_preview_lifecycle_regression.py` |
+| Fixture live value write behavior | `backend/api/intents/fixture/actions/set_values.py`, `backend/store/state_manager/playback/channels.py` | state-manager validation command above + `tests/test_set_values_regression.py` |
+| Snapshot or patch payload schema | `backend/api/state/*`, `backend/api/websocket_manager/broadcasting.py` | `tests/test_payload.py` |
+| Websocket intent/message behavior | `backend/api/websocket_manager/*`, `backend/api/intents/*` | `PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py` |
+| Import path or module composition for state manager | `backend/store/state.py`, `backend/store/state_manager/manager.py` | state-manager validation command above |

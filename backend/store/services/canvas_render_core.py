@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Tuple
 
 from models.cue import CueEntry, CueSheet
-from models.fixture import Fixture
+from models.fixtures.fixture import Fixture
 
 
 def iter_cues_for_render(cue_sheet: CueSheet | None, fps: int) -> List[Tuple[int, int, CueEntry]]:

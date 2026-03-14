@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional, Union
-from ..fixture_template import FixtureTemplate, MetaChannel
+from .fixture_template import FixtureTemplate, MetaChannel
 
 
 class Fixture(BaseModel, ABC):

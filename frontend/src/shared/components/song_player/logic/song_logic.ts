@@ -1,4 +1,4 @@
-import type { SongState } from "../../../transport/protocol.ts";
+import type { SongState, BeatObject } from "../../../transport/protocol.ts";
 import type { Section } from "../types/types.ts";
 
 export function cleanSortedNumeric(values: unknown): number[] {
@@ -7,6 +7,28 @@ export function cleanSortedNumeric(values: unknown): number[] {
     .map((value) => Number(value))
     .filter((value) => Number.isFinite(value) && value >= 0)
     .sort((a, b) => a - b);
+}
+
+export function cleanBeatObjects(values: unknown): BeatObject[] {
+  if (!Array.isArray(values)) return [];
+  const picked: BeatObject[] = [];
+  for (const value of values) {
+    if (!value || typeof value !== "object") continue;
+    const obj = value as Partial<BeatObject>;
+    const time = Number(obj.time);
+    const bar = Number(obj.bar);
+    const beat = Number(obj.beat);
+    if (!Number.isFinite(time) || !Number.isFinite(bar) || !Number.isFinite(beat)) continue;
+    picked.push({
+      time,
+      bar,
+      beat,
+      bass: obj.bass ? String(obj.bass) : undefined,
+      chord: obj.chord ? String(obj.chord) : undefined,
+    });
+  }
+  picked.sort((a, b) => a.time - b.time);
+  return picked;
 }
 
 export function normalizeSections(input: unknown): Section[] {
@@ -122,8 +144,9 @@ export function computeBarBeatLabel(downbeats: number[], beats: number[], timeMs
 
 export function songFingerprint(song: SongState): string {
   const sections = Array.isArray(song.sections) ? song.sections : [];
-  const beats = Array.isArray(song.beats) ? song.beats : [];
-  const downbeats = Array.isArray(song.downbeats) ? song.downbeats : [];
+  const beatObjects = cleanBeatObjects(song.beats);
+  const beats = beatObjects.map(b => b.time);
+  const downbeats = beatObjects.filter(b => b.beat === 1).map(b => b.time);
 
   const firstSection = sections[0] as any;
   const lastSection = sections[sections.length - 1] as any;

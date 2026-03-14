@@ -15,7 +15,7 @@ async def build_frontend_state(manager) -> Dict[str, Any]:
     is_playing = bool(status.get("isPlaying", False))
     playback_state = "playing" if is_playing else ("stopped" if timecode <= 0.001 else "paused")
     show_state = "running" if is_playing else "idle"
-    bpm = getattr(getattr(manager.state_manager.current_song, "metadata", None), "bpm", None)
+    bpm = getattr(getattr(manager.state_manager.current_song, "meta", None), "bpm", None)
 
     return {
         "system": {"show_state": show_state, "edit_lock": is_playing},
@@ -28,4 +28,5 @@ async def build_frontend_state(manager) -> Dict[str, Any]:
         "fixtures": build_fixtures_payload(manager, universe),
         "song": build_song_payload(manager),
         "pois": await manager.state_manager.get_pois(),
+        "cues": manager.state_manager.get_cue_entries(),
     }

@@ -2,7 +2,7 @@ import math
 from typing import Any, Callable, Dict, List, Tuple
 
 from models.cue import CueEntry, CueSheet
-from models.fixture import Fixture
+from models.fixtures.fixture import Fixture
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.services.canvas_debug import dump_canvas_debug
 from store.services.canvas_render_core import iter_cues_for_render, render_entry_into_universe
