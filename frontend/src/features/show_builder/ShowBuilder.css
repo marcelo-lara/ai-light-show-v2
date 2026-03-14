@@ -21,6 +21,14 @@
   font-size: 0.7rem;
 }
 
+.effect-playlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  max-height: 360px;
+}
+
 .effect-playlist-row {
   display: flex;
   justify-content: space-between;
@@ -54,11 +62,63 @@
 }
 
 .effect-picker-middle {
-  grid-template-columns: 1fr 60px 48px 48px;
+  grid-template-columns: 1fr 120px;
+}
+
+.effect-picker-duration {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.effect-picker-duration input {
+  width: 60px;
+}
+
+.effect-picker-params {
+  display: grid;
+  gap: 8px;
 }
 
 .effect-picker-actions {
   grid-template-columns: 96px 96px;
+}
+
+/* Param form styles */
+.param-form {
+  display: grid;
+  gap: 8px;
+}
+
+.param-field {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.param-field--range .param-range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.param-range {
+  flex: 1;
+}
+
+.param-value {
+  min-width: 48px;
+  text-align: right;
+}
+
+.param-label {
+  font-size: 0.85rem;
+}
+
+.param-input,
+.param-select {
+  padding: 4px 8px;
 }
 
 @media (max-width: 1200px) {

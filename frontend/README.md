@@ -54,10 +54,11 @@ Backend -> client message types:
 Intent names currently emitted by frontend:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`
+- Cue: `cue.add`
 - LLM: `llm.send_prompt`, `llm.cancel`
 - POI: `poi.update_fixture_target`
 
-Protocol includes additional names (`transport.jump_to_section`, `fixture.stop_preview`, `poi.create`, `poi.update`, `poi.delete`) for compatibility with backend contracts.
+Protocol includes additional names (`fixture.stop_preview`, `poi.create`, `poi.update`, `poi.delete`) for compatibility with backend contracts.
 
 ## State stores and global bridges
 
@@ -124,8 +125,11 @@ Global bridge fields used across modules:
 
 ### Show Builder
 - `src/features/show_builder/ShowBuilderView.ts`: composes player with the shared chord progression card, effect playlist, and effect picker.
-- `src/features/show_builder/components/EffectPlaylist.ts`: builder playlist panel.
-- `src/features/show_builder/components/EffectPicker.ts`: builder effect selection panel.
+- `src/features/show_builder/cue_intents.ts`: cue intent sender (`addCue`).
+- `src/features/show_builder/components/EffectPlaylist.ts`: live cue list panel, subscribes to backend `cues` state.
+- `src/features/show_builder/components/EffectPicker.ts`: fixture/effect selection panel with dynamic parameter forms, sends `fixture.preview_effect` and `cue.add` intents.
+- `src/features/show_builder/components/effect_params/params_schema.ts`: effect parameter definitions for dynamic form generation.
+- `src/features/show_builder/components/effect_params/ParamForm.ts`: renders parameter inputs based on effect schema.
 
 ### DMX control
 - `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.

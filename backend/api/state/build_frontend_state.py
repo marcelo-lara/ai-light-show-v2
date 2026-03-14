@@ -28,4 +28,5 @@ async def build_frontend_state(manager) -> Dict[str, Any]:
         "fixtures": build_fixtures_payload(manager, universe),
         "song": build_song_payload(manager),
         "pois": await manager.state_manager.get_pois(),
+        "cues": manager.state_manager.get_cue_entries(),
     }

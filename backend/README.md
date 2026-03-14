@@ -5,7 +5,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 ## Purpose
 
 - Expose the websocket control plane at `/ws`.
-- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`).
+- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`).
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
@@ -40,6 +40,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 Supported intent names:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
+- Cue: `cue.add`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
 

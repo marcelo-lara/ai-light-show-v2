@@ -58,6 +58,7 @@ export type IntentName =
   | "fixture.set_values"
   | "fixture.preview_effect"
   | "fixture.stop_preview"
+  | "cue.add"
   | "llm.send_prompt"
   | "llm.cancel"
   | "poi.create"
@@ -80,7 +81,16 @@ export type BackendState = {
   fixtures?: Record<string, FixtureState>;
   song?: SongState | null;
   pois?: Poi[];
-  // Add other domains as backend evolves: analysis, show_builder, pois, etc.
+  cues?: CueEntry[];
+};
+
+export type CueEntry = {
+  time: number;
+  fixture_id: string;
+  effect: string;
+  duration: number;
+  data: Record<string, unknown>;
+  name?: string;
 };
 
 export type Poi = {
@@ -145,6 +155,7 @@ export type FixtureState = {
   capabilities?: Record<string, boolean>; // e.g. { pan_tilt: true, rgb: true }
   meta_channels?: Record<string, MetaChannel>;
   mappings?: Record<string, Record<string, number | string>>;
+  supported_effects?: string[];
 };
 
 export type MetaChannel = {

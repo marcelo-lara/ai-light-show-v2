@@ -20,7 +20,7 @@ Code is the source of truth.
 
 3. Intent routing: `backend/api/intents/*`
 - `apply_intent.py` dispatches by domain via `INTENT_HANDLERS`.
-- Domains: `transport`, `fixture`, `poi`, `llm`.
+- Domains: `transport`, `fixture`, `cue`, `poi`, `llm`.
 
 4. State authority: `backend/store/state.py`
 - Holds fixtures, POIs, song/cue state, playback flags, preview lifecycle.
@@ -90,7 +90,7 @@ Code is the source of truth.
 
 2. `patch`
 - Shape: `{"type":"patch","seq":number,"changes":[{"path":[key],"value":...}]}`
-- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `pois`).
+- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`).
 
 3. `event`
 - Shape: `{"type":"event","level":"info|warning|error","message":string,"data"?:object}`
@@ -133,6 +133,12 @@ Notes on `fixture.set_values`:
 | `poi.delete` | `id` | deletes POI by `id` | `True` if POI existed |
 | `poi.update_fixture_target` | `poi_id`, `fixture_id`, `pan`, `tilt` | clamps `pan/tilt` to `0..65535`, stores under POI fixtures map, sets `canvas_dirty` | `True` on success |
 
+### Cue intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `cue.add` | `time`, `fixture_id`, `effect`, `duration`, `data` | validates fixture/effect, adds entry to cue sheet, persists to disk, re-renders canvas | `True` on success; else event `cue_add_failed` and `False` |
+
 ### LLM intents
 
 | Intent | Payload keys | Behavior | Returns |
@@ -159,6 +165,8 @@ Notes on `fixture.set_values`:
 | `error` | `prompt_required` | none |
 | `info` | `llm_stream` | `{domain:"llm", chunk, done}` |
 | `info` | `llm_cancelled` | `{domain:"llm"}` |
+| `error` | `cue_add_failed` | `{reason, fixture_id?, effect?, supported?}` |
+| `info` | `cue_added` | `{ok, entry}` |
 
 ## Snapshot state schema
 
@@ -185,7 +193,8 @@ Top-level state object:
       "values": {},
       "capabilities": {"pan_tilt": true, "rgb": false},
       "meta_channels": {},
-      "mappings": {}
+      "mappings": {},
+      "supported_effects": ["flash", "strobe", "full"]
     }
   },
   "song": {
@@ -200,7 +209,10 @@ Top-level state object:
       "chords": [{"time_s": 12.0, "label": "Fm", "bar": 8, "beat": 1}]
     }
   },
-  "pois": []
+  "pois": [],
+  "cues": [
+    {"time": 0.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}, "name": null}
+  ]
 }
 ```
 
@@ -210,7 +222,9 @@ Field notes:
 - `song` is `null` when no song is loaded.
 - `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song.
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
+- `fixtures.<id>.supported_effects` lists valid effect names for `fixture.preview_effect` and `cue.add` intents.
 - Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
+- `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet.
 
 ## Effect data contracts
 
