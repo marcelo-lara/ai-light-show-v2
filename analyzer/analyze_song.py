@@ -314,7 +314,7 @@ def analyze_song(
 
     beat_data = find_beats_and_downbeats(song_path=song_path)
 
-    beats_file = song_meta_dir / "beats.json"
+    beats_file = song_meta_dir / "own.beats.json"
     _dump_json(
         beats_file,
         {

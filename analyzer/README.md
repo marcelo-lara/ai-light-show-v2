@@ -85,8 +85,24 @@ Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable J
 
 ### Beats.json file
 
-- "time": 0.0,  // time s.ms of the song
-- "bar": 0,     // bar number (increases on every downbeat)
-- "beat": 1,    // beat relative of the bar (count resets after a new downbeat, ussualy numbers from 1 to 4)
-- "bass": "G#", // infered chord from the bassline (from the bass stem)
-- "chord": "C#" // infered chord from the mix (the actual mp3 file)
+`beats.json` is an array of beat events:
+
+```json
+[
+	{
+		"time": 0.0,
+		"beat": 2,
+		"bar": 0,
+		"bass": null,
+		"chord": "N"
+	}
+]
+```
+
+Event fields:
+
+- `time` (number): beat timestamp in seconds (float precision of 3 digits. Example: 1.234).
+- `bar` (integer): bar index, incremented on each downbeat.
+- `beat` (integer): beat index within the current bar as produced by the analyzer.
+- `bass` (string | null): inferred bass note label, or `null` when unavailable.
+- `chord` (string): inferred chord label for the mix (for example `Fm`, `C#`, `N`).
