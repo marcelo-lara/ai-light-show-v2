@@ -129,7 +129,7 @@ body {
 
 .nav-btn,
 .btn {
-  background: var(--card-2);
+  background: var(--card);
   color: var(--text);
   padding: 8px 10px;
   cursor: pointer;
@@ -160,6 +160,7 @@ body {
 
 button {
   border: 0;
+  background-color: var(--card);
 }
 button:hover:not(:disabled) {
   background-color: color-mix(in oklab, var(--accent) 16%, var(--card-2));
@@ -202,6 +203,7 @@ button:hover:not(:disabled) {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
+  color: var(--text)
 }
 
 .input-control {

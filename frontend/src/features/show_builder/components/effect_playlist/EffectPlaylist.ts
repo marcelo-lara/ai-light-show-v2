@@ -17,10 +17,8 @@ export function EffectPlaylist(): HTMLElement {
 	const eyebrow = document.createElement("p");
 	eyebrow.className = "effect-playlist-header__eyebrow muted";
 	eyebrow.textContent = "Show flow";
-	const heading = document.createElement("h2");
-	heading.className = "effect-playlist-header__heading";
-	heading.textContent = "Effects Playlist";
-	title.append(eyebrow, heading);
+
+	title.append(eyebrow);
 	const count = document.createElement("span");
 	count.className = "effect-playlist-header__count";
 	header.append(title, count);

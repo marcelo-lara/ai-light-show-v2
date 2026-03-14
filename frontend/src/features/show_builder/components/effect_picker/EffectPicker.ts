@@ -26,11 +26,10 @@ export function EffectPicker(): HTMLElement {
 
 	const { root: topRoot, timeInput, fixtureDropdown, effectDropdown } = buildTopRow(formatTime(getPlaybackTimeMs()));
 	const { root: middleRoot, durationSlider, paramFormContainer } = buildMiddle(state.duration);
-	const { root: actionsRoot, modeLabel, commitBtn, cancelBtn, previewBtn } = buildActions();
+	const { root: actionsRoot, commitBtn, cancelBtn, previewBtn } = buildActions();
 
 	const refreshActionMode = () => {
 		const isEditing = state.editingIndex !== null;
-		modeLabel.textContent = isEditing ? `Edit cue #${state.editingIndex}` : "Add mode";
 		commitBtn.querySelector(".btn-caption")!.textContent = isEditing ? "Update" : "Add";
 		commitBtn.title = isEditing ? "Update selected cue" : "Add cue at the current playback time";
 		cancelBtn.disabled = !isEditing;

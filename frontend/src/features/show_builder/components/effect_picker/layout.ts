@@ -18,7 +18,6 @@ export type MiddleRefs = {
 
 export type ActionRefs = {
 	root: HTMLElement;
-	modeLabel: HTMLSpanElement;
 	commitBtn: HTMLButtonElement;
 	cancelBtn: HTMLButtonElement;
 	previewBtn: HTMLButtonElement;
@@ -94,18 +93,15 @@ export function buildMiddle(initialDuration: number): MiddleRefs {
 export function buildActions(): ActionRefs {
 	const root = document.createElement("div");
 	root.className = "effect-picker-actions";
-	const modeLabel = document.createElement("span");
-	modeLabel.className = "effect-picker-mode muted";
-	modeLabel.textContent = "Add mode";
 	const addGroup = document.createElement("div");
 	addGroup.className = "effect-picker-action-group";
 	const commitBtn = Button({ caption: "Add", icon: "playerPrev", state: "default", "icon-position": "start", bindings: { title: "Add cue at the current playback time" } });
 	const cancelBtn = Button({ caption: "Cancel", icon: "delete", state: "default", "icon-position": "start", bindings: { title: "Cancel cue editing", className: "effect-picker-cancel", disabled: true } });
-	addGroup.append(modeLabel, commitBtn, cancelBtn);
+	addGroup.append(commitBtn, cancelBtn);
 	const previewGroup = document.createElement("div");
 	previewGroup.className = "effect-picker-action-group effect-picker-action-group--preview";
 	const previewBtn = Button({ caption: "Preview", icon: "playerPlay", state: "default", "icon-position": "end", bindings: { title: "Preview the selected effect" } });
 	previewGroup.appendChild(previewBtn);
 	root.append(addGroup, previewGroup);
-	return { root, modeLabel, commitBtn, cancelBtn, previewBtn };
+	return { root, commitBtn, cancelBtn, previewBtn };
 }
