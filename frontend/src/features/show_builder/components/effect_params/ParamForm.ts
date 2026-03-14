@@ -53,7 +53,7 @@ function createRangeInput(param: ParamDef, value: unknown, onChange: (v: number)
 	if (param.step !== undefined) input.step = String(param.step);
 
 	const display = document.createElement("span");
-	display.className = "param-value mono";
+	display.className = "param-value";
 	display.textContent = input.value;
 
 	input.addEventListener("input", () => {

@@ -127,7 +127,11 @@ Global bridge fields used across modules:
 - `src/features/show_builder/ShowBuilderView.ts`: composes player with the shared chord progression card, effect playlist, and effect picker.
 - `src/features/show_builder/cue_intents.ts`: cue intent sender (`addCue`).
 - `src/features/show_builder/components/EffectPlaylist.ts`: live cue list panel, subscribes to backend `cues` state.
-- `src/features/show_builder/components/EffectPicker.ts`: fixture/effect selection panel with dynamic parameter forms, sends `fixture.preview_effect` and `cue.add` intents.
+- `src/features/show_builder/components/effect_picker/EffectPicker.ts`: fixture/effect selection panel — assembles DOM, wires events, manages subscription.
+- `src/features/show_builder/components/effect_picker/layout.ts`: DOM builders for top row, parameter section, and action row; returns typed ref objects.
+- `src/features/show_builder/components/effect_picker/updates.ts`: stateful DOM updaters (`applyEffectOptions`, `applyFixtureOptions`, `renderParamForm`).
+- `src/features/show_builder/components/effect_picker/selectors.ts`: backend state reads and `formatTime` helper.
+- `src/features/show_builder/components/effect_picker/types.ts`: `PickerState` type.
 - `src/features/show_builder/components/effect_params/params_schema.ts`: effect parameter definitions for dynamic form generation.
 - `src/features/show_builder/components/effect_params/ParamForm.ts`: renders parameter inputs based on effect schema.
 

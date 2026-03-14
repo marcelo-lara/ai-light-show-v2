@@ -12,8 +12,13 @@
 
 .effect-playlist-body,
 .effect-picker-body {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+}
+
+.effect-picker-body {
+  min-height: 100%;
 }
 
 .effect-playlist-labels {
@@ -50,57 +55,122 @@
   padding: 0;
 }
 
-.effect-picker-top,
-.effect-picker-middle,
-.effect-picker-actions {
-  display: grid;
-  gap: 8px;
-}
-
 .effect-picker-top {
-  grid-template-columns: 88px 1fr;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  flex-wrap: nowrap;
 }
 
 .effect-picker-middle {
-  grid-template-columns: 1fr 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
 }
 
-.effect-picker-duration {
+.effect-picker-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.effect-picker-field--time {
+  flex: 0 0 92px;
+}
+
+.effect-picker-field--fixture {
+  flex: 1 1 0;
+}
+
+.effect-picker-field--effect {
+  flex: 1 1 0;
+}
+
+.effect-picker-select {
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  background: var(--card-2);
+  color: var(--text);
+  font: inherit;
+}
+
+.effect-picker-time .input-shell,
+.effect-picker-duration-input .input-shell {
+  min-height: 46px;
+  padding: 0 16px;
+}
+
+.effect-picker-time .input-field {
+  text-align: center;
+}
+
+.effect-picker-divider {
+  border-top: 2px dashed color-mix(in oklab, var(--border-strong) 75%, transparent);
+  margin: 8px 0;
+}
+
+.effect-picker-param-stack,
+.effect-picker-params,
+.param-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.effect-picker-param-stack {
+  flex: 1 1 auto;
+}
+
+.effect-picker-duration,
+.param-field {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
 }
 
-.effect-picker-duration input {
-  width: 60px;
+.effect-picker-param-name,
+.param-label {
+  font-size: 0.85rem;
 }
 
-.effect-picker-params {
-  display: grid;
-  gap: 8px;
+.effect-picker-duration-input {
+  flex: 0 0 96px;
 }
 
 .effect-picker-actions {
-  grid-template-columns: 96px 96px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: auto;
 }
 
-/* Param form styles */
-.param-form {
-  display: grid;
+.effect-picker-action-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
 }
 
-.param-field {
-  display: grid;
-  grid-template-columns: 100px 1fr;
-  align-items: center;
-  gap: 8px;
+.effect-picker-action-group--preview {
+  align-items: flex-end;
 }
 
 .param-field--range .param-range-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.param-field--range {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.param-field--range .param-label {
+  order: 0;
 }
 
 .param-range {
@@ -113,12 +183,20 @@
 }
 
 .param-label {
-  font-size: 0.85rem;
+  order: 2;
 }
 
 .param-input,
 .param-select {
-  padding: 4px 8px;
+  order: 1;
+  flex: 0 0 96px;
+  width: 96px;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--card-2);
+  color: var(--text);
+  font: inherit;
 }
 
 @media (max-width: 1200px) {
@@ -128,5 +206,16 @@
 
   .show-builder-panel {
     min-height: auto;
+  }
+
+  .effect-picker-top,
+  .effect-picker-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .effect-picker-action-group,
+  .effect-picker-action-group--preview {
+    align-items: stretch;
   }
 }
