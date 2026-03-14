@@ -2,17 +2,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import List, Optional
 
 from beat_comparison import run_compare_beat_times_for
+from import_moises import import_moises
 from src.beat_finder import find_beats_and_downbeats
 from src.essentia_analysis import analyze_with_essentia
 from src.essentia_analysis.common import is_stem_worth_analyzing
 from src.split_stems import MODEL_NAME, TEMP_FILES_FOLDER, split_stems
 
-META_PATH = "/app/meta"
-SONGS_DIR = "/app/songs"
+META_PATH = os.environ.get("META_PATH", "/app/meta")
+SONGS_DIR = os.environ.get("SONGS_DIR", "/app/songs")
 
 
 def warn(message: str) -> None:
@@ -268,6 +270,14 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
         return None
 
 
+def run_import_moises_for(song_path: Path) -> None:
+    print(f"Running import moises for {song_path.name}")
+    try:
+        import_moises(song_path.stem)
+    except Exception as e:
+        warn(f"Import moises failed: {e}")
+
+
 def analyze_song(
     song_path: str | Path,
     meta_path: str | Path = META_PATH,
@@ -346,6 +356,7 @@ def main() -> int:
     parser.add_argument("--split-stems", action="store_true", help="Run stem splitting")
     parser.add_argument("--beat-finder", action="store_true", help="Run beat finder")
     parser.add_argument("--essentia-analysis", action="store_true", help="Run Essentia analysis")
+    parser.add_argument("--import-moises", action="store_true", help="Import Moises chords")
     args = parser.parse_args()
 
     current_song = resolve_song(args.song)
@@ -354,7 +365,7 @@ def main() -> int:
 
     device = autodetect_device()
 
-    if args.split_stems or args.beat_finder or args.essentia_analysis:
+    if args.split_stems or args.beat_finder or args.essentia_analysis or args.import_moises:
         if not current_song.exists():
             warn(f"Song file does not exist: {current_song}")
             return 1
@@ -364,6 +375,8 @@ def main() -> int:
             run_beat_finder_for(current_song)
         if args.essentia_analysis:
             run_essentia_analysis_for(current_song)
+        if args.import_moises:
+            run_import_moises_for(current_song)
         return 0
 
     while True:
@@ -373,6 +386,7 @@ def main() -> int:
         print("2. Beat Finder")
         print("3. Essentia Analysis")
         print("4. Compare Beat Times")
+        print("5. Import Moises Chords")
         print("9. Exit (Esc also exits)")
         choice = input("Choose an option: ").strip()
         if _is_escape_input(choice) or choice == "9":
@@ -403,6 +417,8 @@ def main() -> int:
                 warn(f"Current song file does not exist: {current_song}")
                 continue
             run_compare_beat_times_for(current_song)
+        elif choice == "5":
+            run_import_moises_for(current_song)
         else:
             warn("Invalid choice")
 
