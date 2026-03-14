@@ -40,7 +40,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 Supported intent names:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
-- Cue: `cue.add`.
+- Cue: `cue.add`, `cue.update`, `cue.delete`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
 
@@ -62,13 +62,14 @@ Patch behavior:
 - Section boundaries and labels are resolved from normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
 - `fixture.preview_effect` is rejected while playback is active. Preview runs to completion and final effect values persist to `editor_universe` (and `output_universe`).
 - `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings. For `kind="rgb"` meta-channels, send `values.rgb` as `#RRGGBB` (or mapped color name); backend converts it to channel bytes.
+- Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
 
 ## Data and file contracts
 
 - Fixtures: `backend/fixtures/fixtures.json`
 - Fixture templates: `backend/fixtures/fixture.<type>.<model>.json`
 - POIs: `backend/fixtures/pois.json`
-- Cues: `backend/cues/{song}.cue.json`
+- Cues: `backend/cues/{song}.json`
 - Songs: `backend/songs/*.mp3`
 - Metadata root in Docker: `/app/meta` (fallback local: `backend/meta`)
 - Static routes: `/songs/*` for audio and `/meta/*` for analyzer artifacts (SVG/JSON).

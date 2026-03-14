@@ -1,6 +1,7 @@
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
 import { setFixtureValues, updatePoiFixtureTarget } from "../../fixture_intents.ts";
 import { Dropdown } from "../../../../shared/components/controls/Dropdown.ts";
+import { Button } from "../../../../shared/components/controls/Button.ts";
 import type { DisposableElementHandle } from "./control_types.ts";
 import type { FixturePoiTarget } from "./poi_helpers.ts";
 import { hasFixtureTargetDiff, normalizePois } from "./poi_helpers.ts";
@@ -66,6 +67,7 @@ export function PoiLocationController(
     const dropdown = Dropdown({
       value: currentSelectedPoiId,
       options,
+      selectClassName: "poi-dropdown-select",
       onChange: (val) => {
         currentSelectedPoiId = val;
 
@@ -91,7 +93,7 @@ export function PoiLocationController(
         }, 120);
       },
     });
-    dropdownWrap.appendChild(dropdown);
+    dropdownWrap.appendChild(dropdown.root);
     container.appendChild(dropdownWrap);
 
     const showSet = (() => {
@@ -108,15 +110,19 @@ export function PoiLocationController(
     })();
 
     if (showSet) {
-      const setBtn = document.createElement("button");
-      setBtn.className = "poi-set-btn";
-      setBtn.textContent = "set";
-      setBtn.onclick = () => {
-        updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, currentPan, currentTilt);
-        selectedPoiTarget = { pan: currentPan, tilt: currentTilt };
-        optimisticSetVisibility = "hide_once";
-        render();
-      };
+      const setBtn = Button({
+        caption: "Set",
+        state: "default",
+        bindings: {
+          className: "poi-set-btn",
+          onClick: () => {
+            updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, currentPan, currentTilt);
+            selectedPoiTarget = { pan: currentPan, tilt: currentTilt };
+            optimisticSetVisibility = "hide_once";
+            render();
+          },
+        },
+      });
       container.appendChild(setBtn);
     }
   };

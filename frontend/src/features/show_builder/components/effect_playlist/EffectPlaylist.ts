@@ -1,6 +1,8 @@
 import { Card } from "../../../../shared/components/layout/Card.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
+import { deleteCue } from "../../cue_intents.ts";
+import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { cueSignature, findCurrentCueIndex } from "./format.ts";
 import { createCueRow, createEmptyPlaylistState } from "./row.ts";
 
@@ -46,18 +48,32 @@ export function EffectPlaylist(): HTMLElement {
 
 		if (signature !== lastCueSignature) {
 			lastCueSignature = signature;
-			listContainer.innerHTML = "";
+			listContainer.querySelectorAll(".effect-playlist-row, .effect-playlist-empty").forEach((node) => node.remove());
 			if (cues.length === 0) {
 				listContainer.appendChild(createEmptyPlaylistState());
 			} else {
-				for (const cue of cues) listContainer.appendChild(createCueRow(cue));
+				for (const [index, cue] of cues.entries()) {
+					listContainer.appendChild(createCueRow(cue, {
+						onEdit: () => {
+							window.dispatchEvent(new CustomEvent("show-builder:cue-edit", {
+								detail: { index, cue },
+							}));
+						},
+						onPreview: () => {
+							previewEffect(cue.fixture_id, cue.effect, cue.duration * 1000, cue.data ?? {});
+						},
+						onDelete: () => {
+							deleteCue(index);
+						},
+					}));
+				}
 			}
 		}
 
 		if (currentIndex !== lastCurrentIndex) {
 			lastCurrentIndex = currentIndex;
 			const rows = listContainer.querySelectorAll<HTMLElement>(".effect-playlist-row");
-			rows.forEach((row, index) => row.classList.toggle("is-current", index === currentIndex));
+			rows.forEach((row, index) => row.classList.toggle("is-active", index === currentIndex));
 			if (currentIndex >= 0 && rows[currentIndex]) {
 				rows[currentIndex].scrollIntoView({ block: "nearest", behavior: "smooth" });
 			}

@@ -1,9 +1,15 @@
 # pyright: reportAttributeAccessIssue=false
 
-import json
 from typing import Any, Dict, List, Optional
 
-from models.cue import CueEntry
+from models.cues import (
+    CueEntry,
+    create_cue_entry,
+    delete_cue_entry,
+    read_cue_entries,
+    save_cue_sheet,
+    update_cue_entry,
+)
 
 
 class StateSongCueMixin:
@@ -19,18 +25,19 @@ class StateSongCueMixin:
                     channel_values[channel_name] = int(self.editor_universe[channel_num - 1])
 
                 new_entries.append(
-                    CueEntry(
-                        time=float(timecode),
-                        fixture_id=fixture.id,
-                        effect="set_channels",
-                        duration=0.0,
-                        data={"channels": channel_values},
-                        name=name,
+                    create_cue_entry(
+                        self.cue_sheet,
+                        {
+                            "time": float(timecode),
+                            "fixture_id": fixture.id,
+                            "effect": "set_channels",
+                            "duration": 0.0,
+                            "data": {"channels": channel_values},
+                            "name": name,
+                        },
                     )
                 )
 
-            self.cue_sheet.entries.extend(new_entries)
-            self.cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
             await self.save_cue_sheet()
 
             if self.is_playing:
@@ -79,16 +86,16 @@ class StateSongCueMixin:
                     "supported": list(supported),
                 }
 
-            entry = CueEntry(
-                time=float(time),
-                fixture_id=fixture_id,
-                effect=effect_lower,
-                duration=float(duration),
-                data=data,
+            entry = create_cue_entry(
+                self.cue_sheet,
+                {
+                    "time": float(time),
+                    "fixture_id": fixture_id,
+                    "effect": effect_lower,
+                    "duration": float(duration),
+                    "data": data,
+                },
             )
-
-            self.cue_sheet.entries.append(entry)
-            self.cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
             await self.save_cue_sheet()
 
             if self.is_playing:
@@ -111,14 +118,32 @@ class StateSongCueMixin:
 
     async def save_cue_sheet(self):
         if self.cue_sheet:
-            cues_path = self.backend_path / "cues"
-            cues_path.mkdir(parents=True, exist_ok=True)
-            cue_file = cues_path / f"{self.cue_sheet.song_filename}.cue.json"
-            with open(cue_file, "w") as f:
-                json.dump(self.cue_sheet.model_dump(), f, indent=2)
+            save_cue_sheet(self.backend_path / "cues", self.cue_sheet)
 
     def get_cue_entries(self) -> List[Dict[str, Any]]:
         """Return cue entries as list of dicts for frontend state."""
         if not self.cue_sheet:
             return []
-        return [entry.model_dump() for entry in self.cue_sheet.entries]
+        return read_cue_entries(self.cue_sheet)
+
+    async def update_cue_entry(self, index: int, payload: Dict[str, Any]) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+            try:
+                entry = update_cue_entry(self.cue_sheet, index, payload)
+            except IndexError as exc:
+                return {"ok": False, "reason": str(exc)}
+            await self.save_cue_sheet()
+            return {"ok": True, "entry": entry.model_dump()}
+
+    async def delete_cue_entry(self, index: int) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+            try:
+                entry = delete_cue_entry(self.cue_sheet, index)
+            except IndexError as exc:
+                return {"ok": False, "reason": str(exc)}
+            await self.save_cue_sheet()
+            return {"ok": True, "entry": entry.model_dump()}

@@ -53,7 +53,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service.
 
 ## Playback model (DMX canvas)
-- Cue sheets are **effect-based**: each entry contains `time`, `fixture_id`, `effect`, `duration`, `data` (see [backend/models/cue.py](../backend/models/cue.py)).
+- Cue sheets are **effect-based**: each entry contains `time`, `fixture_id`, `effect`, `duration`, `data` (see [backend/models/cues/models.py](../backend/models/cues/models.py)).
 - On song load the backend renders a precomputed `60 FPS` DMX canvas for the song window (see [backend/store/dmx_canvas.py](../backend/store/dmx_canvas.py), [backend/store/state.py](../backend/store/state.py)).
 - Client audio time is authoritative for sync; backend maps timecode to nearest frame.
 - Fixture classes own effect math via `render_effect(...)` in [backend/models/fixtures](../backend/models/fixtures).
@@ -68,7 +68,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 ## Domain data + storage
 - Fixtures: [backend/fixtures/fixtures.json](../backend/fixtures/fixtures.json)
 - POIs: [backend/fixtures/pois.json](../backend/fixtures/pois.json)
-- Cues: [backend/cues](../backend/cues) as `{song}.cue.json`
+- Cues: [backend/cues](../backend/cues) as `{song}.json`
 - Song metadata: analyzer output at `analyzer/meta/<song>/info.json`, loaded by backend during song load
 
 ## Developer workflows
@@ -99,7 +99,14 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - For frontend UI implementation:
   - Prefer flexbox over grid for small/local components.
   - LoFi mockups are layout references only; do not reinterpret their intended layout.
+  - Never render annotation/instruction text from mockups in the final UI.
+  - Never copy annotation colors (for example pink guidance text) into production UI.
   - Do not implement explicit mockup dimensions or colors directly; use responsive sizing and existing theme tokens/variables.
+  - In `frontend/src/features`, use shared themed controls (`Button`, `Dropdown`, `Slider`, `Toggle`) instead of creating raw `button`, `select`, `input[type=range]`, or `input[type=checkbox]` elements.
+  - Avoid feature-local custom styling variants for those controls; extend shared control components/tokens when behavior or appearance changes are needed.
+  - Keep feature CSS layout-focused; do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
+  - Keep state visuals shared: use `.is-active` and `.is-selected` from `frontend/src/app/themes.css`; do not create feature-specific selected/active visual variants.
+  - For rows combining cue/info text and actions, use a two-column flex layout with right-aligned action group.
   - Use the reusable prompt in [frontend/README.md](../frontend/README.md) section `LLM UI Task Template` for layout tasks.
 
 ## Documentation update rule

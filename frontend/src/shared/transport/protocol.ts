@@ -59,6 +59,8 @@ export type IntentName =
   | "fixture.preview_effect"
   | "fixture.stop_preview"
   | "cue.add"
+  | "cue.update"
+  | "cue.delete"
   | "llm.send_prompt"
   | "llm.cancel"
   | "poi.create"
@@ -91,6 +93,7 @@ export type CueEntry = {
   duration: number;
   data: Record<string, unknown>;
   name?: string;
+  created_by?: string;
 };
 
 export type Poi = {

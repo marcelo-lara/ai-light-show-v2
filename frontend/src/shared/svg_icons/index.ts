@@ -8,7 +8,7 @@ export interface IconPath {
 	isAccent?: boolean;
 }
 
-export type IconName = "addFile" | "addSong" | "audioScan" | "dashboard" | "delete" | "edit" | "equalizer" | "playerNext" | "playerPause" | "playerPlay" | "playerPrev" | "playerStop" | "right" | "waveSignal" | "waveSignalMonitor";
+export type IconName = "addFile" | "addSong" | "audioScan" | "dashboard" | "delete" | "edit" | "equalizer" | "playerNext" | "playerPause" | "playerPlay" | "playerPrev" | "playerStop" | "preview" | "right" | "waveSignal" | "waveSignalMonitor";
 
 export const ICON_REGISTRY: Record<IconName, IconPath[]> = {
 	addFile: [
@@ -71,6 +71,9 @@ export const ICON_REGISTRY: Record<IconName, IconPath[]> = {
 	],
 	playerStop: [
 		{ d: "M20.87,1.5H3.12c-.89,0-1.62.73-1.62,1.62v17.76c0,.89.73,1.62,1.62,1.62h17.76c.89,0,1.62-.73,1.62-1.62V3.12c0-.89-.73-1.62-1.62-1.62h0Z" },
+	],
+	preview: [
+		{ d: "M320 112C434.9 112 528 205.1 528 320C528 434.9 434.9 528 320 528C205.1 528 112 434.9 112 320C112 205.1 205.1 112 320 112zM320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM331.3 188.7C325.1 182.5 314.9 182.5 308.7 188.7L204.7 292.7C200.1 297.3 198.8 304.2 201.2 310.1C203.6 316 209.5 320 216 320L288 320L288 424C288 437.3 298.7 448 312 448L328 448C341.3 448 352 437.3 352 424L352 320L424 320C430.5 320 436.3 316.1 438.8 310.1C441.3 304.1 439.9 297.2 435.3 292.7L331.3 188.7z" },
 	],
 	right: [
 		{ d: "M439.1 297.4C451.6 309.9 451.6 330.2 439.1 342.7L279.1 502.7C266.6 515.2 246.3 515.2 233.8 502.7C221.3 490.2 221.3 469.9 233.8 457.4L371.2 320L233.9 182.6C221.4 170.1 221.4 149.8 233.9 137.3C246.4 124.8 266.7 124.8 279.2 137.3L439.2 297.3z" },

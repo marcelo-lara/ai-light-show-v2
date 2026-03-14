@@ -28,7 +28,7 @@ Compatibility exports:
 
 ### Cue sheet (effect-based)
 
-- File: `backend/cues/{song}.cue.json`.
+- File: `backend/cues/{song}.json`.
 - Entries are effect instructions, not DMX snapshots.
 - Renderer expands entries into a full timeline canvas at `60 FPS`.
 
@@ -71,6 +71,7 @@ Behavior:
 
 - `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`; for `kind="rgb"` meta-channels, payload must use `values.rgb` as `#RRGGBB` (or mapped color name), and backend converts it to RGB channel writes.
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
+- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, and `cue.delete`.
 
 ### Preview
 

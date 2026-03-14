@@ -14,7 +14,7 @@
 .effect-picker-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .effect-picker-body {
@@ -60,87 +60,91 @@
 .effect-playlist-row__time,
 .effect-playlist-row__duration,
 .effect-playlist-row__param {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border: 1px solid color-mix(in oklab, var(--border-strong) 80%, transparent);
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--card-2) 92%, transparent);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
 }
 
 .effect-playlist-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
   flex: 1 1 auto;
-  overflow-y: auto;
+  overflow: auto;
   min-height: 0;
-  padding-right: 2px;
 }
 
 .effect-playlist-row {
   display: flex;
   justify-content: space-between;
-  align-items: stretch;
-  gap: 14px;
-  border: 1px solid var(--border);
-  background: var(--card-2);
-  border-radius: 18px;
-  padding: 14px;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
-}
-
-.effect-playlist-row.is-current {
-  border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 12%, var(--card-2));
-  transform: translateY(-1px);
-}
-
-.effect-playlist-row__main,
-.effect-playlist-empty {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 10px;
-  min-width: 0;
+  white-space: nowrap;
+  transition: color 160ms ease;
 }
 
 .effect-playlist-row__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
   flex: 1 1 auto;
 }
 
-.effect-playlist-row__meta,
-.effect-playlist-row__params,
 .effect-playlist-row__actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
-}
-
-.effect-playlist-row__copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.effect-playlist-row__actions {
+  margin-left: auto;
   flex: 0 0 auto;
-  align-self: center;
+}
+
+.effect-playlist-row__fixture {
+  flex: 0 0 170px;
+}
+
+.effect-playlist-row__effect {
+  flex: 1 1 140px;
+}
+
+.effect-playlist-row__duration {
+  flex: 0 0 96px;
+}
+
+.effect-playlist-action--delete,
+.effect-playlist-action--preview,
+.effect-playlist-action--edit {
+  flex: 0 0 auto;
+}
+
+.effect-playlist-row__time,
+.effect-playlist-row__fixture,
+.effect-playlist-row__effect,
+.effect-playlist-row__duration {
+  display: inline;
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--text);
+}
+
+.effect-playlist-row__time,
+.effect-playlist-row__duration {
+  color: var(--muted);
+}
+
+.effect-playlist-row__fixture,
+.effect-playlist-row__effect {
+  text-transform: none;
+  letter-spacing: normal;
+  margin: 0;
 }
 
 .effect-playlist-action {
-  width: 36px;
-  height: 36px;
-  padding: 0;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-}
-
-.effect-playlist-action .btn-content {
   justify-content: center;
 }
 
@@ -148,10 +152,6 @@
   justify-content: center;
   flex: 1 1 auto;
   min-height: 240px;
-  border: 1px dashed color-mix(in oklab, var(--border-strong) 80%, transparent);
-  border-radius: 18px;
-  padding: 18px;
-  background: color-mix(in oklab, var(--card-2) 94%, transparent);
 }
 
 .effect-playlist-empty__copy {
@@ -162,14 +162,14 @@
 .effect-picker-top {
   display: flex;
   align-items: stretch;
-  gap: 14px;
+  gap: 8px;
   flex-wrap: nowrap;
 }
 
 .effect-picker-middle {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   flex: 1 1 auto;
 }
 
@@ -191,28 +191,8 @@
   flex: 1 1 0;
 }
 
-.effect-picker-select {
-  min-height: 46px;
-  padding: 0 16px;
-  border: 1px solid var(--border-strong);
-  background: var(--card-2);
-  color: var(--text);
-  font: inherit;
-}
-
-.effect-picker-time .input-shell,
-.effect-picker-duration-input .input-shell {
-  min-height: 46px;
-  padding: 0 16px;
-}
-
-.effect-picker-time .input-field {
-  text-align: center;
-}
-
 .effect-picker-divider {
-  border-top: 2px dashed color-mix(in oklab, var(--border-strong) 75%, transparent);
-  margin: 8px 0;
+  margin: 2px 0;
 }
 
 .effect-picker-param-stack,
@@ -231,7 +211,7 @@
 .param-field {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 
 .effect-picker-param-name,
@@ -240,14 +220,14 @@
 }
 
 .effect-picker-duration-input {
-  flex: 0 0 96px;
+  flex: 1 1 auto;
 }
 
 .effect-picker-actions {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 16px;
+  gap: 8px;
   margin-top: auto;
 }
 
@@ -255,7 +235,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
 }
 
 .effect-picker-action-group--preview {
@@ -293,14 +273,6 @@
 .param-input,
 .param-select {
   order: 1;
-  flex: 0 0 96px;
-  width: 96px;
-  min-height: 46px;
-  padding: 0 12px;
-  border: 1px solid var(--border-strong);
-  background: var(--card-2);
-  color: var(--text);
-  font: inherit;
 }
 
 @media (max-width: 1200px) {
@@ -313,10 +285,13 @@
   }
 
   .effect-picker-top,
-  .effect-picker-actions,
-  .effect-playlist-row {
+  .effect-picker-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .effect-playlist-row {
+    min-width: 0;
   }
 
   .effect-picker-action-group,
@@ -329,7 +304,4 @@
     flex-direction: column;
   }
 
-  .effect-playlist-row__actions {
-    justify-content: flex-end;
-  }
 }

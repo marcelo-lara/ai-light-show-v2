@@ -9,7 +9,6 @@
   --fixture-left-column-width-rgb: 108px;
   --fixture-left-column-width-moving-head: 210px;
   border: 1px solid var(--border);
-  border-radius: 0;
   background: var(--card);
   padding: 8px;
   display: grid;
@@ -37,58 +36,9 @@
   flex: 1;
 }
 
-.effect-duration {
-  width: 80px;
-}
-
 .effect-params {
   display: flex;
   gap: 8px;
-}
-
-.effect-param {
-  width: 80px;
-}
-
-.effect-preview {
-  width: 92px;
-  text-transform: lowercase;
-}
-
-/* Chrome-first input controls for DMX panel */
-.effect-select,
-.effect-duration,
-.effect-param,
-.poi-dropdown-wrap select,
-.poi-set-btn,
-.enum-grid-option {
-  -webkit-appearance: none;
-  appearance: none;
-  border-radius: 0;
-}
-
-.effect-select,
-.effect-duration,
-.effect-param,
-.poi-dropdown-wrap select {
-  background: var(--card-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  height: 32px;
-  padding: 4px 8px;
-}
-
-.effect-duration::-webkit-outer-spin-button,
-.effect-duration::-webkit-inner-spin-button,
-.effect-param::-webkit-outer-spin-button,
-.effect-param::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.effect-duration,
-.effect-param {
-  font-variant-numeric: tabular-nums;
 }
 
 .rgb-preview {
@@ -107,13 +57,6 @@
 
 .rgb-preview-label {
   font-size: 0.75rem;
-}
-
-.dmx-arm {
-  width: 48px;
-  height: 24px;
-  padding: 0;
-  font-size: 0.6rem;
 }
 
 .fixture-card h3 {
@@ -153,7 +96,6 @@
   border: 1px solid var(--border);
   position: relative;
   cursor: crosshair;
-  border-radius: 0;
   margin: 0;
   overflow: hidden;
   user-select: none;
@@ -191,7 +133,6 @@
   height: 12px;
   background: transparent;
   border: 2px solid var(--accent);
-  border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
   box-shadow: none;
@@ -232,18 +173,7 @@
   flex: 1;
 }
 .poi-set-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  height: 34px;
-  cursor: pointer;
   min-width: 52px;
-}
-.poi-set-btn:hover {
-  border-color: var(--border-strong);
-}
-.poi-set-btn:active {
-  transform: translateY(1px);
 }
 
 .enum-grid {
@@ -264,18 +194,8 @@
 
 .enum-grid-option {
   width: 100%;
-  min-height: 26px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  cursor: pointer;
-  color: var(--text);
-  font-size: 0.72rem;
   text-transform: lowercase;
   overflow: hidden;
-}
-
-.enum-grid-option.selected {
-  border: 2px solid var(--text);
 }
 
 .enum-grid-option-swatch {

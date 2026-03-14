@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from backend.store.state import StateManager
-from backend.models.cue import CueSheet
+from backend.models.cues import CueSheet
 
 
 @pytest.fixture
@@ -150,3 +150,37 @@ async def test_get_cue_entries(state_manager, workspace_root):
     assert entries[0]["time"] == 1.0
     assert entries[1]["time"] == 3.0
     assert isinstance(entries[0], dict)
+
+
+@pytest.mark.asyncio
+async def test_update_cue_entry(state_manager, workspace_root):
+    fixtures_json = workspace_root / "backend" / "fixtures" / "fixtures.json"
+    await state_manager.load_fixtures(fixtures_json)
+
+    state_manager.cue_sheet = CueSheet(song_filename="test_cue_add", entries=[])
+    await state_manager.add_effect_cue_entry(
+        time=1.0, fixture_id="parcan_l", effect="flash", duration=0.5, data={}
+    )
+
+    result = await state_manager.update_cue_entry(0, {"duration": 1.25, "name": "updated"})
+
+    assert result["ok"] is True
+    assert result["entry"]["duration"] == 1.25
+    assert result["entry"]["name"] == "updated"
+
+
+@pytest.mark.asyncio
+async def test_delete_cue_entry(state_manager, workspace_root):
+    fixtures_json = workspace_root / "backend" / "fixtures" / "fixtures.json"
+    await state_manager.load_fixtures(fixtures_json)
+
+    state_manager.cue_sheet = CueSheet(song_filename="test_cue_add", entries=[])
+    await state_manager.add_effect_cue_entry(
+        time=1.0, fixture_id="parcan_l", effect="flash", duration=0.5, data={}
+    )
+
+    result = await state_manager.delete_cue_entry(0)
+
+    assert result["ok"] is True
+    assert result["entry"]["effect"] == "flash"
+    assert len(state_manager.cue_sheet.entries) == 0

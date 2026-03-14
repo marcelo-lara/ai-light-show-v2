@@ -2,6 +2,7 @@ import { getDefaultParams } from "../effect_params/params_schema.ts";
 import { ParamForm } from "../effect_params/ParamForm.ts";
 import { getFixtures, getPois, getSupportedEffects } from "./selectors.ts";
 import type { PickerState } from "./types.ts";
+import type { DropdownControl } from "../../../../shared/components/controls/Dropdown.ts";
 
 export function renderParamForm(state: PickerState, container: HTMLElement): void {
 	container.innerHTML = "";
@@ -15,46 +16,33 @@ export function renderParamForm(state: PickerState, container: HTMLElement): voi
 
 export function applyEffectOptions(
 	state: PickerState,
-	effectSelect: HTMLSelectElement,
+	effectDropdown: DropdownControl,
 	paramContainer: HTMLElement,
 ): void {
 	const effects = getSupportedEffects(state.fixtureId);
-	effectSelect.innerHTML = "";
-	for (const e of effects) {
-		const opt = document.createElement("option");
-		opt.value = e;
-		opt.textContent = e;
-		if (e === state.effect) opt.selected = true;
-		effectSelect.appendChild(opt);
-	}
+	effectDropdown.setOptions(effects.map((e) => ({ value: e, label: e })), state.effect);
 	if (!effects.includes(state.effect)) {
 		state.effect = effects.includes("flash") ? "flash" : (effects[0] ?? "");
-		effectSelect.value = state.effect;
+		effectDropdown.setValue(state.effect);
 		state.params = getDefaultParams(state.effect);
 	}
 	renderParamForm(state, paramContainer);
 }
 
 export function applyFixtureOptions(
-	fixtureSelect: HTMLSelectElement,
+	fixtureDropdown: DropdownControl,
 	state: PickerState,
 	onUpdated: () => void,
 ): void {
 	const fixtures = getFixtures();
-	const currentVal = fixtureSelect.value;
-	fixtureSelect.innerHTML = "";
-	for (const f of fixtures) {
-		const opt = document.createElement("option");
-		opt.value = f.id;
-		opt.textContent = f.name ?? f.id;
-		fixtureSelect.appendChild(opt);
-	}
+	const currentVal = fixtureDropdown.select.value;
+	fixtureDropdown.setOptions(fixtures.map((f) => ({ value: f.id, label: f.name ?? f.id })), currentVal);
 	if (fixtures.some((f) => f.id === currentVal)) {
-		fixtureSelect.value = currentVal;
+		fixtureDropdown.setValue(currentVal);
 		state.fixtureId = currentVal;
 	} else if (fixtures.length > 0) {
 		state.fixtureId = fixtures[0].id;
-		fixtureSelect.value = state.fixtureId;
+		fixtureDropdown.setValue(state.fixtureId);
 	}
 	onUpdated();
 }

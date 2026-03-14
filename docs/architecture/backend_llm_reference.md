@@ -138,6 +138,8 @@ Notes on `fixture.set_values`:
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
 | `cue.add` | `time`, `fixture_id`, `effect`, `duration`, `data` | validates fixture/effect, adds entry to cue sheet, persists to disk, re-renders canvas | `True` on success; else event `cue_add_failed` and `False` |
+| `cue.update` | `index`, `patch` | validates index/patch, updates cue entry, persists to disk | `True` on success; else event `cue_update_failed` and `False` |
+| `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 
 ### LLM intents
 
@@ -167,6 +169,10 @@ Notes on `fixture.set_values`:
 | `info` | `llm_cancelled` | `{domain:"llm"}` |
 | `error` | `cue_add_failed` | `{reason, fixture_id?, effect?, supported?}` |
 | `info` | `cue_added` | `{ok, entry}` |
+| `error` | `cue_update_failed` | `{reason}` |
+| `info` | `cue_updated` | `{ok, entry}` |
+| `error` | `cue_delete_failed` | `{reason}` |
+| `info` | `cue_deleted` | `{ok, entry}` |
 
 ## Snapshot state schema
 
@@ -211,7 +217,7 @@ Top-level state object:
   },
   "pois": [],
   "cues": [
-    {"time": 0.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}, "name": null}
+    {"time": 0.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}, "name": null, "created_by": "user"}
   ]
 }
 ```
@@ -224,7 +230,7 @@ Field notes:
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
 - `fixtures.<id>.supported_effects` lists valid effect names for `fixture.preview_effect` and `cue.add` intents.
 - Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
-- `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet.
+- `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet. Each cue entry includes `created_by`.
 
 ## Effect data contracts
 

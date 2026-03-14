@@ -1,5 +1,8 @@
 import { previewEffect } from "../fixture_intents.ts";
 import type { FixtureVM } from "../adapters/fixture_vm.ts";
+import { Button } from "../../../shared/components/controls/Button.ts";
+import { Dropdown } from "../../../shared/components/controls/Dropdown.ts";
+import { Slider } from "../../../shared/components/controls/Slider.ts";
 
 function effectOptions(fixture: FixtureVM): string[] {
   if (fixture.hasPanTilt) return ["flash", "strobe", "full", "move_to", "move_to_poi", "seek", "sweep"];
@@ -14,54 +17,65 @@ export function EffectTray(fixture: FixtureVM): HTMLElement {
   const topRow = document.createElement("div");
   topRow.className = "effect-tray-top";
 
-  const select = document.createElement("select");
-  select.className = "input effect-select";
-  for (const effect of effectOptions(fixture)) {
-    const option = document.createElement("option");
-    option.value = effect;
-    option.textContent = effect;
-    select.appendChild(option);
-  }
+  const effects = effectOptions(fixture);
+  const effectControl = Dropdown({
+    value: effects[0] ?? "",
+    options: effects.map((effect) => ({ value: effect, label: effect })),
+    className: "effect-select",
+    attributes: { "aria-label": "Preview effect" },
+  });
+  const durationControl = Slider({
+    label: "Duration",
+    min: 50,
+    max: 5000,
+    step: 50,
+    value: 1000,
+    className: "effect-duration",
+    onInput: () => {},
+  });
 
-  const duration = document.createElement("input");
-  duration.className = "input effect-duration";
-  duration.type = "number";
-  duration.min = "50";
-  duration.step = "50";
-  duration.value = "1000";
-
-  topRow.append(select, duration);
+  topRow.append(effectControl.root, durationControl.root);
 
   const paramsRow = document.createElement("div");
   paramsRow.className = "effect-params";
-  const fromInput = document.createElement("input");
-  fromInput.className = "input effect-param";
-  fromInput.type = "number";
-  fromInput.step = "1";
-  fromInput.value = "1";
-  fromInput.placeholder = "from";
+  const fromControl = Slider({
+    label: "From",
+    min: 0,
+    max: 255,
+    step: 1,
+    value: 1,
+    className: "effect-param",
+    onInput: () => {},
+  });
 
-  const toInput = document.createElement("input");
-  toInput.className = "input effect-param";
-  toInput.type = "number";
-  toInput.step = "1";
-  toInput.value = "0";
-  toInput.placeholder = "to";
+  const toControl = Slider({
+    label: "To",
+    min: 0,
+    max: 255,
+    step: 1,
+    value: 0,
+    className: "effect-param",
+    onInput: () => {},
+  });
 
-  paramsRow.append(fromInput, toInput);
+  paramsRow.append(fromControl.root, toControl.root);
 
-  const preview = document.createElement("button");
-  preview.type = "button";
-  preview.className = "btn effect-preview";
-  preview.textContent = "preview";
-  preview.addEventListener("click", () => {
+  const preview = Button({
+    caption: "Preview",
+    state: "default",
+    bindings: {
+      className: "effect-preview",
+      title: "Preview effect",
+      onClick: () => {
     const payload: Record<string, number> = {};
-    const from = Number(fromInput.value);
-    const to = Number(toInput.value);
+    const from = Number(fromControl.input.value);
+    const to = Number(toControl.input.value);
     if (Number.isFinite(from)) payload.from = from;
     if (Number.isFinite(to)) payload.to = to;
-    const durationMs = Math.max(50, Number(duration.value) || 1000);
-    previewEffect(fixture.id, select.value, durationMs, payload);
+    const durationMs = Math.max(50, Number(durationControl.input.value) || 1000);
+    previewEffect(fixture.id, effectControl.select.value, durationMs, payload);
+      },
+    },
   });
 
   root.append(topRow, paramsRow, preview);

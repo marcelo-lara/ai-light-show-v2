@@ -21,7 +21,18 @@ Use this file first for UI tasks. Keep prompts short and reference exact assets 
 - Do not inline binary image data in prompts.
 - Cite only the specific screen file(s) needed for the task.
 - Treat LoFi files as layout references.
-  - Read pink text is for refernce/intentions, DO NOT use in final UI.
+  - Pink annotation text is for reference/intent only and is never rendered in UI.
+  - Do not create DOM elements from instructional labels in mockups (for example: `time`, `fixture`, `effect`, `duration`, `delete`, `preview`, `edit` when shown as annotation text).
+  - Do not copy annotation colors from mockups into production UI.
 - Use frontend token/style rules from [frontend/README.md](../../frontend/README.md).
 - Never use mono fonts, unless strictly specified.
+- Prioritize Flexbox, do not use Grid unless strictly necessary.
 - For DMX layout tasks, use `4 DMX Control.png` plus `common_player.md` and request structure parity (not color/dimension parity).
+
+## Explicit implementation directives
+
+- In `frontend/src/features`, use shared controls (`Button`, `Dropdown`, `Slider`, `Toggle`) for interaction elements.
+- Keep feature CSS layout-only where possible; do not style shared control internals (`.btn`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
+- Keep active/selected visuals shared and token-driven via `frontend/src/app/themes.css` (`.is-active`, `.is-selected`).
+- Do not add feature-local visual state classes for common controls (for example feature-specific `.selected` or custom active border variants).
+- For playlist/list rows containing info + actions, structure as two-column flex rows with actions aligned to the end.

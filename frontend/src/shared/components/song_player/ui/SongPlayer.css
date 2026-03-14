@@ -61,7 +61,6 @@
   border: 0;
   background: var(--card-2);
   color: var(--text);
-  border-radius: 8px;
   padding: 0;
   cursor: pointer;
   width: 36px;
@@ -81,7 +80,6 @@
   height: 44px;
   background: var(--accent);
   color: white;
-  border-radius: 12px;
 }
 
 .song-player-transport .play-pause-btn:hover {

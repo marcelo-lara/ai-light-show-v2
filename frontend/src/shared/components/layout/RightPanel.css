@@ -6,7 +6,6 @@
   align-content: stretch;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: var(--r);
   padding: 12px;
   overflow: hidden;
 }

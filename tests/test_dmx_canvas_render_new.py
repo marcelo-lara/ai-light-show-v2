@@ -48,15 +48,15 @@ async def test_dmx_canvas_render_with_templates(state_manager, workspace_root):
     ]
     
     # Save these to a temp cue file
-    temp_cue_path = workspace_root / "backend" / "cues" / "test_render.cue.json"
+    temp_cue_path = workspace_root / "backend" / "cues" / "test_render.json"
     temp_cue_path.parent.mkdir(parents=True, exist_ok=True)
     with open(temp_cue_path, "w") as f:
-        json.dump({"song_filename": "test_render", "entries": cues}, f)
+        json.dump(cues, f)
     
     # Load into state manager
-    from backend.models.cue import CueSheet
+    from backend.models.cues import CueSheet
     with open(temp_cue_path, "r") as f:
-        state_manager.cue_sheet = CueSheet(**json.load(f))
+        state_manager.cue_sheet = CueSheet(song_filename="test_render", entries=json.load(f))
     
     # Precompute canvas (using 60fps)
     # Mock song length
