@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import quote
+
+logger = logging.getLogger(__name__)
 
 def pick_numeric_list(*candidates: Any) -> List[float]:
     for candidate in candidates:
@@ -29,14 +32,32 @@ def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
     if not isinstance(payload, list):
         return []
 
+    raw_sample = [
+        {
+            "time": row.get("time"),
+            "beat": row.get("beat"),
+            "bar": row.get("bar"),
+            "chord": row.get("chord"),
+        }
+        for row in payload[:8]
+        if isinstance(row, dict)
+    ]
+    logger.debug("[SONG_PAYLOAD] beats.json sample %s -> %s", chords_path, raw_sample)
+
     picked: List[Dict[str, Any]] = []
     previous_label = ""
+    skipped_no_label = 0
+    skipped_duplicate = 0
     for row in payload:
         if not isinstance(row, dict):
             continue
 
         label = str(row.get("chord") or "").strip()
-        if not label or label.upper() == "N" or label == previous_label:
+        if not label:
+            skipped_no_label += 1
+            continue
+        if label == previous_label:
+            skipped_duplicate += 1
             continue
 
         try:
@@ -51,6 +72,15 @@ def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
             entry["beat"] = int(row["beat"])
         picked.append(entry)
         previous_label = label
+
+    logger.debug(
+        "[SONG_PAYLOAD] parsed chords %s -> kept=%s skipped_empty=%s skipped_duplicate=%s first_kept=%s",
+        chords_path,
+        len(picked),
+        skipped_no_label,
+        skipped_duplicate,
+        picked[:8],
+    )
 
     return picked[:512]
 
@@ -94,6 +124,12 @@ def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[st
 
     chords_path = meta_root / song_filename / "beats.json"
     chords = parse_chords(chords_path) if chords_path.exists() else []
+    logger.debug(
+        "[SONG_PAYLOAD] analysis payload for %s -> chords=%s first=%s",
+        song_filename,
+        len(chords),
+        chords[:8],
+    )
 
     if not plots and not chords:
         return None

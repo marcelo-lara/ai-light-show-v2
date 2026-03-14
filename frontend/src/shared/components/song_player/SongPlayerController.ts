@@ -1,4 +1,5 @@
 import { getBackendStore } from "../../state/backend_state.ts";
+import { setSongPlayerTimeMs } from "../../state/song_player_time.ts";
 import type { SongState } from "../../transport/protocol.ts";
 import {
   transportPause,
@@ -337,6 +338,7 @@ export class SongPlayerController {
   }
 
   private renderReadout() {
+    setSongPlayerTimeMs(this.localTimeMs);
     this.positionEl.textContent = `${formatMs(this.localTimeMs)} / ${formatMs(this.durationMs)}`;
     this.barBeatEl.textContent = computeBarBeatLabel(this.downbeats, this.beats, this.localTimeMs);
   }

@@ -11,7 +11,7 @@ export function SongAnalysisView(): HTMLElement {
 	const data = getSongAnalysisData();
 
 	const left = Cards([
-		ChordsPanel({ chords: data.chords, sections: data.sections }),
+		ChordsPanel({ beats: data.beats, sections: data.sections }),
 	], { className: "song-analysis-left" });
 	const right = AnalysisPlot({ plots: data.plots });
 

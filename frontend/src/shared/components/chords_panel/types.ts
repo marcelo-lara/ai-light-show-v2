@@ -1,14 +1,14 @@
-import type { SongChord, SongSection } from "../../transport/protocol.ts";
+import type { BeatObject, SongSection } from "../../transport/protocol.ts";
 
 export type ChordsPanelProps = {
-	chords: SongChord[];
+	beats: BeatObject[];
 	sections: SongSection[];
 	cardClassName?: string;
 };
 
-export type ChordSectionGroup = {
+export type BeatSectionGroup = {
 	label: string;
 	start_s: number;
 	end_s: number;
-	chords: SongChord[];
+	beats: BeatObject[];
 };

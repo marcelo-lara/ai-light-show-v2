@@ -12,7 +12,7 @@ export function ShowBuilderView(): HTMLElement {
 	const main = document.createElement("div");
 	main.className = "show-builder-main";
 	main.append(
-		ChordsPanel({ ...song, cardClassName: "show-builder-panel" }),
+		ChordsPanel({ beats: song.beats, sections: song.sections, cardClassName: "show-builder-panel" }),
 		EffectPlaylist(),
 		EffectPicker(),
 	);

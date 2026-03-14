@@ -1,6 +1,22 @@
-import type { ChordSectionGroup } from "./types.ts";
+import type { BeatSectionGroup } from "./types.ts";
 
-export function appendChordSection(sectionsRoot: HTMLElement, group: ChordSectionGroup): void {
+type AppendChordSectionOptions = {
+	activeBeatIndex: number;
+	beatOffset: number;
+	onBeatSelect: (timeS: number) => void;
+	onCellRender: (cell: HTMLElement, absoluteIndex: number) => void;
+};
+
+function displayLabel(chord?: string): string {
+	if (!chord) return "";
+	return chord.toUpperCase() === "N" ? "" : chord;
+}
+
+export function appendChordSection(
+	sectionsRoot: HTMLElement,
+	group: BeatSectionGroup,
+	options: AppendChordSectionOptions,
+): void {
 	const block = document.createElement("section");
 	block.className = "chords-panel-section";
 
@@ -12,10 +28,23 @@ export function appendChordSection(sectionsRoot: HTMLElement, group: ChordSectio
 	const rowEl = document.createElement("div");
 	rowEl.className = "chords-panel-row";
 
-	for (const chord of group.chords) {
+	for (const [index, beat] of group.beats.entries()) {
 		const cell = document.createElement("span");
-		cell.className = "chords-panel-cell";
-		cell.textContent = chord.label;
+		const labelText = displayLabel(beat.chord);
+		const absoluteIndex = options.beatOffset + index;
+		const isActive = absoluteIndex === options.activeBeatIndex;
+		cell.className = `chords-panel-cell${labelText ? "" : " is-empty"}${isActive ? " is-active" : ""}`;
+		cell.textContent = labelText;
+		cell.tabIndex = 0;
+		cell.setAttribute("role", "button");
+		cell.setAttribute("aria-label", `Jump to beat ${beat.bar}.${beat.beat} at ${beat.time.toFixed(2)} seconds`);
+		cell.onclick = () => options.onBeatSelect(beat.time);
+		cell.onkeydown = (event) => {
+			if (event.key !== "Enter" && event.key !== " ") return;
+			event.preventDefault();
+			options.onBeatSelect(beat.time);
+		};
+		options.onCellRender(cell, absoluteIndex);
 		rowEl.appendChild(cell);
 	}
 

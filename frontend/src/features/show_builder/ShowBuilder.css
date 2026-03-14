@@ -7,6 +7,7 @@
 
 .show-builder-panel {
   min-height: 420px;
+  max-height: 74vh
 }
 
 .effect-playlist-body,

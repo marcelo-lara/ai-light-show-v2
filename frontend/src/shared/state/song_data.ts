@@ -1,36 +1,41 @@
 import { getBackendStore } from "./backend_state.ts";
-import type { SongChord, SongSection, SongState } from "../transport/protocol.ts";
+import type { BeatObject, SongSection, SongState } from "../transport/protocol.ts";
 
 export type SongStructureData = {
-	chords: SongChord[];
+	beats: BeatObject[];
 	sections: SongSection[];
 };
 
-function cleanChords(song: SongState): SongChord[] {
-	const rows = song.analysis?.chords;
+function cleanBeats(song: SongState): BeatObject[] {
+	const rows = song.beats;
 	if (!Array.isArray(rows)) return [];
+	console.debug("[CHORD_DEBUG] cleanBeats input", rows.slice(0, 8));
 
-	const picked: SongChord[] = [];
+	const picked: BeatObject[] = [];
 	for (const row of rows) {
 		if (!row || typeof row !== "object") continue;
-		const time = Number((row as SongChord).time_s);
-		const label = String((row as SongChord).label ?? "").trim();
-		if (!Number.isFinite(time) || !label) continue;
+		const time = Number((row as BeatObject).time);
+		const bar = Number((row as BeatObject).bar);
+		const beat = Number((row as BeatObject).beat);
+		if (!Number.isFinite(time) || !Number.isFinite(bar) || !Number.isFinite(beat)) continue;
 		picked.push({
-			time_s: time,
-			label,
-			bar: Number.isFinite(Number((row as SongChord).bar)) ? Number((row as SongChord).bar) : undefined,
-			beat: Number.isFinite(Number((row as SongChord).beat)) ? Number((row as SongChord).beat) : undefined,
+			time,
+			bar,
+			beat,
+			bass: (row as BeatObject).bass ? String((row as BeatObject).bass) : undefined,
+			chord: (row as BeatObject).chord ? String((row as BeatObject).chord) : undefined,
 		});
 	}
 
-	picked.sort((a, b) => a.time_s - b.time_s);
+	picked.sort((a, b) => a.time - b.time);
+	console.debug("[CHORD_DEBUG] cleanBeats output", picked.slice(0, 8));
 	return picked;
 }
 
 function cleanSections(song: SongState): SongSection[] {
 	const rows = song.sections;
 	if (!Array.isArray(rows)) return [];
+	console.debug("[CHORD_DEBUG] cleanSections input", rows.slice(0, 6));
 
 	const picked: SongSection[] = [];
 	for (const row of rows) {
@@ -43,14 +48,21 @@ function cleanSections(song: SongState): SongSection[] {
 	}
 
 	picked.sort((a, b) => a.start_s - b.start_s);
+	console.debug("[CHORD_DEBUG] cleanSections output", picked.slice(0, 6));
 	return picked;
 }
 
 export function getSongStructureData(): SongStructureData {
 	const song = getBackendStore().state.song;
-	if (!song) return { chords: [], sections: [] };
-	return {
-		chords: cleanChords(song),
+	if (!song) return { beats: [], sections: [] };
+	const result = {
+		beats: cleanBeats(song),
 		sections: cleanSections(song),
 	};
+	console.debug("[CHORD_DEBUG] getSongStructureData", {
+		song: song.filename,
+		beats: result.beats.slice(0, 8),
+		sections: result.sections.slice(0, 6),
+	});
+	return result;
 }
