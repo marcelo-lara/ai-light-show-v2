@@ -12,25 +12,6 @@ export type SongAnalysisData = {
   plots: Array<{ id: string; title: string; svgUrl: string }>;
 };
 
-const MOCK_BEATS: BeatObject[] = [
-  { time: 1.376, bar: 0, beat: 1 },
-  { time: 1.824, bar: 0, beat: 2 },
-  { time: 2.272, bar: 0, beat: 3 },
-  { time: 2.709, bar: 0, beat: 4 },
-  { time: 3.168, bar: 1, beat: 1 },
-  { time: 3.605, bar: 1, beat: 2 },
-  { time: 4.064, bar: 1, beat: 3 },
-  { time: 4.501, bar: 1, beat: 4 },
-  { time: 4.96, bar: 2, beat: 1 },
-  { time: 5.397, bar: 2, beat: 2 },
-  { time: 5.856, bar: 2, beat: 3 },
-  { time: 6.293, bar: 2, beat: 4 },
-  { time: 6.731, bar: 3, beat: 1 },
-  { time: 7.179, bar: 3, beat: 2 },
-  { time: 7.637, bar: 3, beat: 3 },
-  { time: 8.064, bar: 3, beat: 4 },
-];
-
 function resolveBackendUrl(rawUrl: string): string {
   if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) return rawUrl;
   const origin = String((globalThis as BackendOriginGlobal).__BACKEND_HTTP_ORIGIN__ ?? "").trim();
@@ -105,7 +86,6 @@ export function getSongAnalysisData(): SongAnalysisData {
   if (!song) return { beats: [], chords: [], sections: [], plots: [] };
 
   const beats = cleanBeatObjects(song.beats);
-  const fallbackBeats = beats.length ? beats : MOCK_BEATS;
 
   const plots = (song.analysis?.plots ?? [])
     .filter((plot) => Boolean(plot?.id) && Boolean(plot?.title) && Boolean(plot?.svg_url))
@@ -116,7 +96,7 @@ export function getSongAnalysisData(): SongAnalysisData {
     }));
 
   return {
-    beats: fallbackBeats,
+    beats,
     chords: cleanChords(song),
     sections: cleanSections(song),
     plots,

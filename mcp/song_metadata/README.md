@@ -44,6 +44,10 @@ Clients must keep the same SSE stream open while posting JSON-RPC calls to the s
 - `SONG_METADATA_MCP_MAX_RAW_POINTS` (default: `20000`)
 - `SONG_METADATA_MCP_DEFAULT_MAX_POINTS` (default: `5000`)
 
+## Third-party external metadata
+
+- **Moises metadata:** Source files from Moises (e.g. `moises/chords.json`, `moises/beats.json`) are **strictly internal** to the analyzer module for comparison/legacy importing purposes. They must be ignored by the backend, MCP, and frontend. Do not load or query these files directly. The system source-of-truth for beats and chords is `analyzer/meta/<song>/beats.json` and the features generated natively by the analyzer.
+
 ## Run locally
 
 ```bash

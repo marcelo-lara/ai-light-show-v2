@@ -20,6 +20,7 @@ def pick_numeric_list(*candidates: Any) -> List[float]:
     return []
 
 def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
+    """Parse chords from the analyzer beats.json format"""
     try:
         payload = json.loads(chords_path.read_text())
     except Exception:
@@ -34,25 +35,20 @@ def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
         if not isinstance(row, dict):
             continue
 
-        label = str(
-            row.get("chord_simple_pop")
-            or row.get("chord_basic_pop")
-            or row.get("prev_chord")
-            or ""
-        ).strip()
+        label = str(row.get("chord") or "").strip()
         if not label or label.upper() == "N" or label == previous_label:
             continue
 
         try:
-            time_s = float(row.get("curr_beat_time", 0.0))
+            time_s = float(row.get("time", 0.0))
         except Exception:
             continue
 
         entry: Dict[str, Any] = {"time_s": time_s, "label": label}
-        if isinstance(row.get("bar_num"), int):
-            entry["bar"] = int(row["bar_num"])
-        if isinstance(row.get("beat_num"), int):
-            entry["beat"] = int(row["beat_num"])
+        if isinstance(row.get("bar"), int):
+            entry["bar"] = int(row["bar"])
+        if isinstance(row.get("beat"), int):
+            entry["beat"] = int(row["beat"])
         picked.append(entry)
         previous_label = label
 
@@ -96,7 +92,7 @@ def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[st
 
             plots.append({"id": str(key), "title": str(key).replace("_", " ").title(), "svg_url": svg_url})
 
-    chords_path = meta_root / song_filename / "moises" / "chords.json"
+    chords_path = meta_root / song_filename / "beats.json"
     chords = parse_chords(chords_path) if chords_path.exists() else []
 
     if not plots and not chords:
