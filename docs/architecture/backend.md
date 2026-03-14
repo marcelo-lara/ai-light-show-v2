@@ -74,11 +74,12 @@ Behavior:
 
 ### Preview
 
-- `fixture.preview_effect` validates fixture/effect/duration, renders temporary canvas, streams it to output, and emits:
+- `fixture.preview_effect` validates fixture/effect/duration, renders temporary canvas, streams it to output at 60 FPS via Art-Net, and emits:
   - `preview_started` on success.
   - `preview_rejected` on failure.
+- Preview runs to completion; final effect values persist to `editor_universe` and `output_universe`.
 - `fixture.stop_preview` currently emits warning event and is not implemented.
-- Preview is non-persistent (not written to cues/files).
+- Preview is not written to cues/files, but final values remain active until overwritten.
 
 ## WebSocket protocol
 

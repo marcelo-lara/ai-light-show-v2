@@ -113,7 +113,7 @@ Code is the source of truth.
 | --- | --- | --- | --- |
 | `fixture.set_arm` | `fixture_id`, `armed` | updates `manager.fixture_armed` only | `True` if `fixture_id` present, else event `fixture_id_required` and `False` |
 | `fixture.set_values` | `fixture_id`, `values` | updates fixture `current_values` and applies mapped DMX channel writes to `ArtNetService` | `True` if any channel write applied |
-| `fixture.preview_effect` | `fixture_id`, `effect_id`, `duration_ms`, `params` | validates and starts preview canvas playback | `True` on success; else event `preview_rejected` and `False` |
+| `fixture.preview_effect` | `fixture_id`, `effect_id`, `duration_ms`, `params` | validates and starts preview canvas playback; runs to completion and persists final values to `editor_universe` | `True` on success; else event `preview_rejected` and `False` |
 | `fixture.stop_preview` | none | not implemented | event `stop_preview_not_implemented`, returns `False` |
 
 Notes on `fixture.set_values`:
