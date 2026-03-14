@@ -1,8 +1,8 @@
 import { AnalysisPlot } from "./components/AnalysisPlot.ts";
-import { ChordsPanel } from "./components/chords_panel/ChordsPanel.ts";
 import { SongPlayer } from "../../shared/components/song_player/SongPlayer.ts";
 import { Columns } from "../../shared/components/layout/Columns.ts";
 import { Cards } from "../../shared/components/layout/Cards.ts";
+import { ChordsPanel } from "../../shared/components/chords_panel/ChordsPanel.ts";
 import { getSongAnalysisData } from "./song_analysis_state.ts";
 
 export function SongAnalysisView(): HTMLElement {

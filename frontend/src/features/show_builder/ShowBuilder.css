@@ -9,49 +9,10 @@
   min-height: 420px;
 }
 
-.song-progression-body,
 .effect-playlist-body,
 .effect-picker-body {
   display: grid;
   gap: 10px;
-}
-
-.song-progression-title {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-
-.song-progression-block {
-  display: grid;
-  gap: 4px;
-}
-
-.song-progression-item {
-  display: grid;
-  gap: 4px;
-}
-
-.song-progression-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-}
-
-.song-progression-cell {
-  min-height: 34px;
-  border: 1px solid var(--border);
-  background: var(--card-2);
-  padding: 6px 8px;
-}
-
-.song-progression-item.is-current .song-progression-title {
-  color: var(--accent);
-}
-
-.song-progression-cell.is-current {
-  border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 16%, var(--card-2));
 }
 
 .effect-playlist-labels {
