@@ -9,7 +9,7 @@ function createText(tagName: keyof HTMLElementTagNameMap, className: string, tex
 	return node;
 }
 
-function createAction(icon: "delete" | "edit" | "right", title: string, className = ""): HTMLButtonElement {
+function createAction(icon: "delete" | "edit", title: string, className = ""): HTMLButtonElement {
 	return Button({
 		icon,
 		bindings: { className: `effect-playlist-action ${className}`.trim(), title },
@@ -61,7 +61,6 @@ export function createCueRow(cue: CueEntry): HTMLElement {
 	actions.append(
 		createAction("edit", "Edit cue"),
 		createAction("delete", "Delete cue"),
-		createAction("right", "Expand cue details", "effect-playlist-action--expand"),
 	);
 
 	row.append(main, actions);

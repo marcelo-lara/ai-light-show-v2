@@ -144,10 +144,6 @@
   justify-content: center;
 }
 
-.effect-playlist-action--expand .btn-icon {
-  transform: scale(0.9);
-}
-
 .effect-playlist-empty {
   justify-content: center;
   flex: 1 1 auto;
