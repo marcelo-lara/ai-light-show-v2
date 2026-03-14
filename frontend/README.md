@@ -33,7 +33,7 @@ Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`
 | --- | --- | --- | --- |
 | `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` with `SongSectionsPanel`, cue sheet panel, and fixture effects panel |
 | `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with live beat/chord analysis panels sourced from backend song metadata |
-| `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` + placeholder builder panels |
+| `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` with shared chord progression, effect playlist, and effect picker panels |
 | `dmx_control` | DMX Control | `DmxControlView()` | Renders fixture grid with dynamic controls |
 
 `features/home/HomeView.ts` exists but is not wired into current route state or sidebar.
@@ -87,9 +87,17 @@ Global bridge fields used across modules:
 - `src/shared/transport/protocol.ts`: all backend/frontend protocol types.
 - `src/shared/transport/transport_intents.ts`: transport intent senders.
 - `src/shared/state/backend_state.ts`: snapshot/patch reducer and subscribers.
+- `src/shared/state/song_data.ts`: cleaned song chord/section selectors shared by analysis and builder views.
 - `src/shared/state/selectors.ts`: UI-safe selectors (`show_state`, lock, playback, fixtures, arm count).
 - `src/shared/state/ui_state.ts`: route selection/persistence.
 - `src/shared/state/theme_state.ts`: theme init/apply/persistence.
+
+### Shared musical structure panel
+- `src/shared/components/chords_panel/ChordsPanel.ts`: section-based chord progression card shared by song analysis and show builder.
+- `src/shared/components/chords_panel/grouping.ts`: groups chord changes by song section boundaries (`start_s/end_s`).
+- `src/shared/components/chords_panel/render.ts`: section block rendering helper.
+- `src/shared/components/chords_panel/types.ts`: panel/group type contracts.
+- `src/shared/components/chords_panel/ChordsPanel.css`: shared styling for the chord progression card.
 
 ### Song player (shared across routes)
 - `src/shared/components/song_player/SongPlayer.ts`: singleton facade (`SongPlayer`, `refreshSongPlayer`).
@@ -111,12 +119,13 @@ Global bridge fields used across modules:
 
 ### Song Analysis
 - `src/features/song_analysis/SongAnalysisView.ts`: composes player with beat/chord/plot analysis cards.
-- `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats, downbeats, chords, and sections from backend state.
+- `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats and analyzer plots from backend state and composes shared song structure data.
 - `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel (downbeat/bar fallback behavior).
-- `src/features/song_analysis/components/chords_panel/ChordsPanel.ts`: section-based chord grouping panel.
-- `src/features/song_analysis/components/chords_panel/grouping.ts`: groups chord changes by song section boundaries (`start_s/end_s`).
-- `src/features/song_analysis/components/chords_panel/render.ts`: section block rendering helper.
-- `src/features/song_analysis/components/chords_panel/types.ts`: panel/group type contracts.
+
+### Show Builder
+- `src/features/show_builder/ShowBuilderView.ts`: composes player with the shared chord progression card, effect playlist, and effect picker.
+- `src/features/show_builder/components/EffectPlaylist.ts`: builder playlist panel.
+- `src/features/show_builder/components/EffectPicker.ts`: builder effect selection panel.
 
 ### DMX control
 - `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.
@@ -155,6 +164,7 @@ Global bridge fields used across modules:
 - `src/app/AppShell.css`: shell columns (`sidebar | main | right-panel`) and main viewport behavior.
 - `src/shared/components/layout/Sidebar.css`, `RightPanel.css`: persistent shell side areas.
 - `src/shared/components/controls/Slider.css`: range slider skin.
+- `src/shared/components/chords_panel/ChordsPanel.css`: shared chord progression panel styling.
 - `src/shared/components/song_player/ui/SongPlayer.css`: player layout and transport styling.
 - `src/features/dmx_control/DmxControl.css`: fixture cards, pan/tilt surface, POI controls.
 - `src/features/llm_chat/LlmChat.css`: chat layout and message styles.
@@ -210,7 +220,7 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
 ## Current implementation status
 
 - `SongAnalysis` panels render live backend-derived beats/chords/sections and analyzer plots when available.
-- `ShowBuilder` panels (`SongProgression`, `EffectPlaylist`, `EffectPicker`) are placeholders.
+- `ShowBuilder` reuses the shared chord progression card and renders builder-side effect playlist and picker panels.
 - `ShowControl` route renders a live sections panel backed by websocket song metadata.
 - `HomeView` exists in source but is not part of current route rendering.
 
