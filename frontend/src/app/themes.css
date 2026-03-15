@@ -206,6 +206,10 @@ button:hover:not(:disabled) {
   color: var(--text)
 }
 
+.btn-icon path {
+  stroke: var(--text);
+}
+
 .input-control {
   display: flex;
   flex-direction: column;
