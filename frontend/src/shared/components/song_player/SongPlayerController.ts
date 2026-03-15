@@ -6,7 +6,7 @@ import {
   transportPlay,
   transportStop,
 } from "../../transport/transport_intents.ts";
-import { formatMs } from "./logic/time.ts";
+import { formatCurrentTimeMs, formatDurationMs } from "./logic/time.ts";
 import type { Section } from "./types/types.ts";
 import { computeBarBeatLabel } from "./logic/song_logic.ts";
 import {
@@ -346,7 +346,7 @@ export class SongPlayerController {
 
   private renderReadout() {
     setSongPlayerTimeMs(this.localTimeMs);
-    this.positionEl.textContent = `${formatMs(this.localTimeMs)} / ${formatMs(this.durationMs)}`;
+    this.positionEl.textContent = `${formatCurrentTimeMs(this.localTimeMs)} / ${formatDurationMs(this.durationMs)}`;
     this.barBeatEl.textContent = computeBarBeatLabel(this.downbeats, this.beats, this.localTimeMs);
   }
 

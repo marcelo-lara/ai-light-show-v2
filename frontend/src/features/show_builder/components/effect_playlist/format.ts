@@ -1,7 +1,7 @@
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 
 export function formatCueTime(time: number): string {
-	return `${time.toFixed(2)}`;
+	return `${time.toFixed(3)}`;
 }
 
 export function formatCueLabel(value: string): string {
