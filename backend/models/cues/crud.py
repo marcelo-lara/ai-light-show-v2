@@ -7,6 +7,16 @@ from typing import Any, Dict, List
 from .models import CueEntry, CueSheet
 
 
+def _round_floats_for_save(value: Any) -> Any:
+    if isinstance(value, float):
+        return round(value, 3)
+    if isinstance(value, dict):
+        return {k: _round_floats_for_save(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_round_floats_for_save(item) for item in value]
+    return value
+
+
 def cue_file_path(cues_path: Path, song_filename: str) -> Path:
     return cues_path / f"{song_filename}.json"
 
@@ -24,7 +34,7 @@ def load_cue_sheet(cues_path: Path, song_filename: str) -> CueSheet:
 def save_cue_sheet(cues_path: Path, cue_sheet: CueSheet) -> None:
     cues_path.mkdir(parents=True, exist_ok=True)
     cue_file = cue_file_path(cues_path, cue_sheet.song_filename)
-    entries = [entry.model_dump() for entry in cue_sheet.entries]
+    entries = [_round_floats_for_save(entry.model_dump()) for entry in cue_sheet.entries]
     with open(cue_file, "w") as f:
         json.dump(entries, f, indent=2)
 
