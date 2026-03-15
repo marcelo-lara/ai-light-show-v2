@@ -4,6 +4,7 @@ import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
 import { deleteCue } from "../../cue_intents.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
+import { transportJumpToTime } from "../../../../shared/transport/transport_intents.ts";
 import { cueSignature, findCurrentCueIndex } from "./format.ts";
 import { createCueRow, createEmptyPlaylistState } from "./row.ts";
 
@@ -65,6 +66,7 @@ export function EffectPlaylist(): HTMLElement {
 				for (const [index, cue] of cues.entries()) {
 					listContainer.appendChild(createCueRow(cue, {
 						onEdit: () => {
+							transportJumpToTime(cue.time * 1000);
 							window.dispatchEvent(new CustomEvent("show-builder:cue-edit", {
 								detail: { index, cue },
 							}));
@@ -74,6 +76,9 @@ export function EffectPlaylist(): HTMLElement {
 						},
 						onDelete: () => {
 							void confirmDeleteCue(index);
+						},
+						onSelect: () => {
+							transportJumpToTime(cue.time * 1000);
 						},
 					}));
 				}

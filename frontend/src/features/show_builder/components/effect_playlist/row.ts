@@ -6,6 +6,7 @@ type CueRowHandlers = {
 	onEdit: () => void;
 	onPreview: () => void;
 	onDelete: () => void;
+	onSelect: () => void;
 };
 
 function createText(tagName: keyof HTMLElementTagNameMap, className: string, text: string): HTMLElement {
@@ -45,6 +46,7 @@ export function createCueRow(cue: CueEntry, handlers: CueRowHandlers): HTMLEleme
 
 	const main = document.createElement("div");
 	main.className = "effect-playlist-row__main";
+	main.addEventListener("click", handlers.onSelect);
 	main.append(
 		createText("span", "effect-playlist-row__time", formatCueTime(cue.time)),
 		createText("span", "effect-playlist-row__fixture", formatCueLabel(cue.fixture_id)),
