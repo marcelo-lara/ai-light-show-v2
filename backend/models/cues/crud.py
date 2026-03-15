@@ -54,3 +54,43 @@ def delete_cue_entry(cue_sheet: CueSheet, index: int) -> CueEntry:
     if index < 0 or index >= len(cue_sheet.entries):
         raise IndexError("cue_index_out_of_range")
     return cue_sheet.entries.pop(index)
+
+
+def upsert_cue_entries(cue_sheet: CueSheet, new_entries: List[Dict[str, Any]]) -> Dict[str, int]:
+    """Upsert cue entries by (time, fixture_id) key.
+
+    Replaces existing entries with matching time+fixture_id, inserts new ones.
+    Returns counts of generated, replaced, and skipped entries.
+    """
+    # Create a lookup map for existing entries by (time, fixture_id)
+    existing_map: Dict[tuple[float, str], int] = {}
+    for i, entry in enumerate(cue_sheet.entries):
+        key = (round(entry.time, 6), entry.fixture_id)  # Normalize time to avoid float precision issues
+        existing_map[key] = i
+
+    generated = 0
+    replaced = 0
+    skipped = 0
+
+    for new_payload in new_entries:
+        new_entry = CueEntry(**new_payload)
+        key = (round(new_entry.time, 6), new_entry.fixture_id)
+
+        if key in existing_map:
+            # Replace existing entry
+            index = existing_map[key]
+            cue_sheet.entries[index] = new_entry
+            replaced += 1
+        else:
+            # Insert new entry
+            cue_sheet.entries.append(new_entry)
+            generated += 1
+
+    # Re-sort all entries after modifications
+    cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
+
+    return {
+        "generated": generated,
+        "replaced": replaced,
+        "skipped": skipped,
+    }

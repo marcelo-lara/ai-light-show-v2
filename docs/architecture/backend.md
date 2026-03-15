@@ -56,10 +56,11 @@ Behavior:
 
 ### Playback and time sync
 
-- Browser timeline is authoritative.
+- Browser timeline provides periodic alignment (for example every 10s), while backend advances playback timecode continuously during `playing`.
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
 - `jump_to_time` seeks and applies nearest precomputed frame.
 - `jump_to_section` resolves `payload.section_index` against sections sorted by normalized start time (`start_s|start`), seeks to the section start time, and applies the nearest precomputed frame.
+- `transport.stop` applies blackout by zeroing output universe before Art-Net update.
 
 ### Section metadata normalization
 
@@ -71,7 +72,8 @@ Behavior:
 
 - `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`; for `kind="rgb"` meta-channels, payload must use `values.rgb` as `#RRGGBB` (or mapped color name), and backend converts it to RGB channel writes.
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
-- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, and `cue.delete`.
+- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, and `cue.apply_helper`.
+- Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
 
 ### Preview
 
@@ -100,6 +102,7 @@ Static file serving for frontend assets consumed from snapshots:
 
 Patch behavior:
 - Current diff granularity is top-level key replacement only.
+- While playback is `playing`, backend suppresses `fixtures` patch updates to reduce frontend churn.
 
 ## Art-Net output
 

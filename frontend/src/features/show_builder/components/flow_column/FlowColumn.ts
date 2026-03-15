@@ -1,5 +1,6 @@
 import { Card } from "../../../../shared/components/layout/Card.ts";
 import { EffectPicker } from "../effect_picker/EffectPicker.ts";
+import { CueHelpers } from "../cue_helpers/CueHelpers.ts";
 
 function EmptyFlowCard(title: string): HTMLElement {
 	const content = document.createElement("div");
@@ -17,7 +18,7 @@ export function FlowColumn(): HTMLElement {
 	col.append(
 		EffectPicker(),
 		EmptyFlowCard("ChaserPicker"),
-		EmptyFlowCard("CueHelpers"),
+		CueHelpers(),
 	);
 	return col;
 }

@@ -28,6 +28,46 @@ class WebSocketManager:
         self._broadcast_throttle_ms = 50
         self._pending_broadcast_task: Optional[asyncio.Task] = None
         self._last_state_snapshot: Optional[Dict[str, Any]] = None
+        self._playback_task: Optional[asyncio.Task] = None
+        self._playback_task_running: bool = False
+
+    async def start_playback_ticker(self) -> None:
+        if self._playback_task and not self._playback_task.done():
+            return
+        self._playback_task_running = True
+        self._playback_task = asyncio.create_task(self._playback_ticker_loop())
+
+    async def stop_playback_ticker(self) -> None:
+        self._playback_task_running = False
+        if not self._playback_task:
+            return
+        self._playback_task.cancel()
+        try:
+            await self._playback_task
+        except asyncio.CancelledError:
+            pass
+        self._playback_task = None
+
+    async def _playback_ticker_loop(self) -> None:
+        target_fps = 60.0
+        frame_interval = 1.0 / target_fps
+        last_tick = time.perf_counter()
+
+        while self._playback_task_running:
+            now = time.perf_counter()
+            delta = now - last_tick
+            if delta < frame_interval:
+                await asyncio.sleep(frame_interval - delta)
+                continue
+            last_tick = now
+
+            if not await self.state_manager.get_is_playing():
+                continue
+
+            await self.state_manager.advance_timecode(delta)
+            universe = await self.state_manager.get_output_universe()
+            await self.artnet_service.update_universe(universe)
+            await self._schedule_broadcast()
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()

@@ -152,6 +152,14 @@ export class SongPlayerController {
     const state = getBackendStore().state;
     const song = state.song ?? null;
     const playback = state.playback ?? {};
+    const backendPlaybackState = String(playback.state ?? "stopped");
+    const backendIsPlaying = backendPlaybackState === "playing";
+
+    if (!backendIsPlaying && this.isPlaying) {
+      this.waveSurferManager.pause();
+      this.isPlaying = false;
+      this.playbackSync.stop();
+    }
 
     if (song) {
       const { key: nextKey, fingerprint: nextFingerprint } = songIdentity(song);
@@ -218,15 +226,14 @@ export class SongPlayerController {
   }
 
   private handleStop() {
+    this.playbackSync.stop();
+    this.isPlaying = false;
     this.waveSurferManager.pause();
     this.waveSurferManager.setTime(0);
-    this.isPlaying = false;
     this.localTimeMs = 0;
     this.renderReadout();
     this.playPauseBtn.textContent = "Play";
     transportStop();
-    this.playbackSync.syncNow(0);
-    this.playbackSync.stop();
     this.implicitLoopSectionIndex = null;
   }
 

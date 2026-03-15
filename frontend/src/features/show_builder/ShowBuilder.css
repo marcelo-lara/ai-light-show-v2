@@ -7,7 +7,7 @@
 
 .show-builder-panel {
   min-height: 420px;
-  max-height: 74vh
+  max-height: 73vh
 }
 
 .show-builder-flow-column {
@@ -15,7 +15,7 @@
   flex-direction: column;
   gap: 12px;
   min-height: 420px;
-  max-height: 74vh;
+  max-height: 73vh;
 }
 
 .show-builder-flow-column > .show-builder-panel {
@@ -49,8 +49,34 @@
   min-height: 100%;
 }
 
+.cue-helpers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cue-helper-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.cue-helper-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.cue-helper-description {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
 .effect-playlist-body {
   min-height: 100%;
+  max-height: 65vh;
 }
 
 .effect-playlist-header {

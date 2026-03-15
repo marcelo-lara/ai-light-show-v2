@@ -5,7 +5,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 ## Purpose
 
 - Expose the websocket control plane at `/ws`.
-- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`).
+- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`).
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
@@ -27,8 +27,9 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 
 1. Startup loads POIs and fixtures, applies arm defaults, starts Art-Net loop, then loads a default song.
 2. Song load pre-renders a full `60 FPS` DMX canvas.
-3. Clients send websocket `intent` messages.
-4. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
+3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net frames continuously.
+4. Clients send websocket `intent` messages.
+5. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
 
 ## WebSocket protocol essentials
 
@@ -41,6 +42,7 @@ Supported intent names:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`.
+- Cue helpers: `cue.apply_helper`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
 
@@ -53,16 +55,19 @@ Supported intent names:
 Patch behavior:
 - Diffs are currently top-level replacements only.
 - `changes[].path` is one key deep (for example `[`system`]`, `[`fixtures`]`).
+- While playback is `playing`, backend suppresses `fixtures` patches.
 
 ## Playback and editing behavior
 
-- Browser audio timeline is authoritative for timecode sync.
-- Clients should send `transport.jump_to_time` periodically during playback and on immediate transport changes.
+- Browser audio timeline periodically aligns backend timecode (default 10s sync).
+- Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
 - Clients can send `transport.jump_to_section` with `payload.section_index` to seek to the matching section start.
 - Section boundaries and labels are resolved from normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
 - `fixture.preview_effect` is rejected while playback is active. Preview runs to completion and final effect values persist to `editor_universe` (and `output_universe`).
 - `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings. For `kind="rgb"` meta-channels, send `values.rgb` as `#RRGGBB` (or mapped color name); backend converts it to channel bytes.
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
+- `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
+- `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.
 
 ## Data and file contracts
 
@@ -77,6 +82,9 @@ Patch behavior:
 Song payload fields under `state.song`:
 - Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`.
 - Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`) and `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`).
+
+Cue helpers payload under `state.cue_helpers`:
+- List of helper definitions (`id`, `label`, `description`, `mode`) for frontend helper UI.
 
 Section payload normalization:
 - Backend accepts analyzer section records with either `start/end/label` or `start_s/end_s/name` keys.

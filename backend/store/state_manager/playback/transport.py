@@ -44,6 +44,23 @@ class StatePlaybackTransportMixin:
             self.current_frame_index = self._time_to_frame_index(self.timecode)
             self._apply_canvas_frame_to_output(self.current_frame_index)
 
+    async def advance_timecode(self, delta_seconds: float) -> None:
+        async with self.lock:
+            if not self.is_playing:
+                return
+            next_timecode = float(self.timecode) + max(0.0, float(delta_seconds or 0.0))
+            if self.song_length_seconds > 0.0 and next_timecode >= self.song_length_seconds:
+                self.timecode = float(self.song_length_seconds)
+                self.is_playing = False
+            else:
+                self.timecode = next_timecode
+            self.current_frame_index = self._time_to_frame_index(self.timecode)
+            self._apply_canvas_frame_to_output(self.current_frame_index)
+
+    async def blackout_output(self) -> None:
+        async with self.lock:
+            self.output_universe[:] = bytearray(len(self.output_universe))
+
     def _time_to_frame_index(self, timecode: float) -> int:
         if not self.canvas:
             return 0

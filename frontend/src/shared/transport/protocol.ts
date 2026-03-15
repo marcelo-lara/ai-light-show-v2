@@ -61,6 +61,7 @@ export type IntentName =
   | "cue.add"
   | "cue.update"
   | "cue.delete"
+  | "cue.apply_helper"
   | "llm.send_prompt"
   | "llm.cancel"
   | "poi.create"
@@ -84,6 +85,7 @@ export type BackendState = {
   song?: SongState | null;
   pois?: Poi[];
   cues?: CueEntry[];
+  cue_helpers?: CueHelperDefinition[];
 };
 
 export type CueEntry = {
@@ -94,6 +96,13 @@ export type CueEntry = {
   data: Record<string, unknown>;
   name?: string;
   created_by?: string;
+};
+
+export type CueHelperDefinition = {
+  id: string;
+  label: string;
+  description: string;
+  mode: string;
 };
 
 export type Poi = {

@@ -76,6 +76,16 @@ export function boot(ctx: BootContext) {
         if (m.level === "error") {
           addSystemMessage(m.message, "error");
         }
+        if (m.message === "cue_helper_applied") {
+          const data = m.data as { helper_id?: string; generated?: number; replaced?: number; skipped?: number } | undefined;
+          if (data) {
+            const { helper_id, generated = 0, replaced = 0, skipped = 0 } = data;
+            addSystemMessage(
+              `Applied ${helper_id}: ${generated} generated, ${replaced} replaced, ${skipped} skipped`,
+              "info"
+            );
+          }
+        }
       }
     },
   });

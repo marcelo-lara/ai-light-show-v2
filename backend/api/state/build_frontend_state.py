@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from api.state.cue_helpers import build_cue_helpers_payload
 from api.state.fixtures import build_fixtures_payload
 from api.state.section_name_for_time import section_name_for_time
 from api.state.song_payload import build_song_payload
@@ -29,4 +30,5 @@ async def build_frontend_state(manager) -> Dict[str, Any]:
         "song": build_song_payload(manager),
         "pois": await manager.state_manager.get_pois(),
         "cues": manager.state_manager.get_cue_entries(),
+        "cue_helpers": build_cue_helpers_payload(),
     }

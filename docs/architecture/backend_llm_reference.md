@@ -15,7 +15,7 @@ Code is the source of truth.
 2. WebSocket transport: `backend/api/websocket_manager/*`
 - `endpoint.py`: accepts and reads websocket frames.
 - `messaging.py`: parses incoming frames and dispatches intents.
-- `broadcasting.py`: throttled patch broadcast (`50ms` min interval).
+- `broadcasting.py`: throttled patch broadcast (default `50ms`, slower cadence while playing).
 - `manager.py`: shared state (`seq`, active connections, fixture arm cache).
 
 3. Intent routing: `backend/api/intents/*`
@@ -32,6 +32,7 @@ Code is the source of truth.
 - Delegates fixture/template loading, song metadata resolution, section persistence, and canvas rendering helpers to `backend/store/services/*`.
 - Pre-renders full song DMX canvas at `60 FPS`.
 - Computes output frame from synchronized timecode.
+- Advances playback timecode in backend via websocket-manager ticker while `playing`.
 
 5. DMX output: `backend/services/artnet.py`
 - Maintains active DMX universe.
@@ -62,6 +63,7 @@ Code is the source of truth.
 | `backend/store/services/canvas_rendering.py` | `render_cue_sheet_to_canvas`, `render_preview_canvas`, `dump_canvas_debug` | DMX canvas rendering + debug log dump |
 | `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
 | `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canvas debug file writer |
+| `backend/services/cue_helpers/*` | `generate_downbeats_and_beats` | Backend-owned cue helper generation logic |
 | `backend/store/pois.py` | `PoiDatabase` | POI CRUD + disk sync + runtime target lookup |
 | `backend/store/dmx_canvas.py` | `DMXCanvas` | Packed DMX frame buffer |
 | `backend/services/artnet.py` | `ArtNetService` | UDP Art-Net output |
@@ -101,9 +103,9 @@ Code is the source of truth.
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `transport.play` | none | `set_playback_state(True)`, enable continuous Art-Net send | `True` |
-| `transport.pause` | none | `set_playback_state(False)`, disable continuous send | `True` |
-| `transport.stop` | none | pause + seek `0` + push current output universe + disable continuous send | `True` |
+| `transport.play` | none | `set_playback_state(True)`, start backend playback ticker, enable continuous Art-Net send | `True` |
+| `transport.pause` | none | `set_playback_state(False)`, stop backend playback ticker, disable continuous send | `True` |
+| `transport.stop` | none | pause + stop ticker + seek `0` + blackout output universe + push Art-Net + disable continuous send | `True` |
 | `transport.jump_to_time` | `time_ms` | seek to `max(0, time_ms/1000)` and push output universe | `True` on valid time, else event `invalid_time_ms` and `False` |
 | `transport.jump_to_section` | `section_index` | sort sections by normalized start (`start_s|start`), seek to selected section start, then push output universe | `True` on valid index; else event `invalid_section_index`/`section_index_out_of_range`/`no_sections_available`/`song_not_loaded` and `False` |
 
@@ -140,6 +142,7 @@ Notes on `fixture.set_values`:
 | `cue.add` | `time`, `fixture_id`, `effect`, `duration`, `data` | validates fixture/effect, adds entry to cue sheet, persists to disk, re-renders canvas | `True` on success; else event `cue_add_failed` and `False` |
 | `cue.update` | `index`, `patch` | validates index/patch, updates cue entry, persists to disk | `True` on success; else event `cue_update_failed` and `False` |
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
+| `cue.apply_helper` | `helper_id` | validates helper, generates cue entries from song beats, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 ### LLM intents
 
@@ -173,6 +176,8 @@ Notes on `fixture.set_values`:
 | `info` | `cue_updated` | `{ok, entry}` |
 | `error` | `cue_delete_failed` | `{reason}` |
 | `info` | `cue_deleted` | `{ok, entry}` |
+| `error` | `cue_helper_apply_failed` | `{reason, helper_id?}` |
+| `info` | `cue_helper_applied` | `{helper_id, generated, replaced, skipped}` |
 
 ## Snapshot state schema
 
@@ -218,6 +223,9 @@ Top-level state object:
   "pois": [],
   "cues": [
     {"time": 0.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}, "name": null, "created_by": "user"}
+  ],
+  "cue_helpers": [
+    {"id": "downbeats_and_beats", "label": "DownBeats and Beats", "description": "...", "mode": "full_song"}
   ]
 }
 ```
@@ -231,6 +239,10 @@ Field notes:
 - `fixtures.<id>.supported_effects` lists valid effect names for `fixture.preview_effect` and `cue.add` intents.
 - Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
 - `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet. Each cue entry includes `created_by`.
+- `cue_helpers` lists backend-declared helper definitions for frontend helper execution UI.
+
+Patch behavior during playback:
+- While `playback.state` is `playing`, websocket patch generation suppresses `fixtures` updates.
 
 ## Effect data contracts
 

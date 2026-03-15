@@ -20,3 +20,7 @@ export function getSupportedEffects(fixtureId: string): string[] {
 	const fixtures = getBackendStore().state.fixtures ?? {};
 	return fixtures[fixtureId]?.supported_effects ?? [];
 }
+
+export function getCueHelpers() {
+	return getBackendStore().state.cue_helpers ?? [];
+}

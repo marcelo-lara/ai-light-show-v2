@@ -76,3 +76,14 @@ export function deleteCue(index: number) {
 		},
 	});
 }
+
+export function applyCueHelper(helperId: string) {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "cue.apply_helper",
+		payload: {
+			helper_id: helperId,
+		},
+	});
+}

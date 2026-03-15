@@ -13,12 +13,14 @@ logger = logging.getLogger(__name__)
 
 async def schedule_broadcast(manager, now: float) -> None:
     elapsed_ms = (now - manager._last_broadcast_time) * 1000.0
+    is_playing = await manager.state_manager.get_is_playing()
+    throttle_ms = 250 if is_playing else manager._broadcast_throttle_ms
     if manager._pending_broadcast_task and not manager._pending_broadcast_task.done():
         return
-    if elapsed_ms >= manager._broadcast_throttle_ms:
+    if elapsed_ms >= throttle_ms:
         await execute_broadcast(manager, now)
         return
-    delay = (manager._broadcast_throttle_ms - elapsed_ms) / 1000.0
+    delay = (throttle_ms - elapsed_ms) / 1000.0
     manager._pending_broadcast_task = asyncio.create_task(delayed_broadcast(manager, delay))
 
 
@@ -32,6 +34,12 @@ async def execute_broadcast(manager, now: float) -> None:
         return
 
     new_state = await build_frontend_state(manager)
+    is_playing = str(((new_state.get("playback") or {}).get("state") or "")).lower() == "playing"
+
+    # While playing, freeze fixtures at the previous snapshot value so fixture patches are never emitted.
+    if is_playing and manager._last_state_snapshot:
+        new_state["fixtures"] = manager._last_state_snapshot.get("fixtures")
+
     if manager._last_state_snapshot:
         await broadcast_patch(manager, manager._last_state_snapshot, new_state)
     else:
@@ -43,9 +51,16 @@ async def execute_broadcast(manager, now: float) -> None:
 
 
 async def broadcast_patch(manager, before: Dict[str, Any], after: Dict[str, Any]) -> None:
+    after_playback_state = str(((after.get("playback") or {}).get("state") or "")).lower()
+    before_playback_state = str(((before.get("playback") or {}).get("state") or "")).lower()
+    is_playing = after_playback_state == "playing" or before_playback_state == "playing"
+
     changes = []
     keys = sorted(set(before.keys()) | set(after.keys()))
     for key in keys:
+        # While playing, never send fixture updates.
+        if is_playing and key == "fixtures":
+            continue
         if before.get(key) != after.get(key):
             changes.append({"path": [key], "value": after.get(key)})
 

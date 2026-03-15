@@ -62,6 +62,8 @@ async def handle_message(manager, websocket: WebSocket, data: str) -> None:
     if not isinstance(payload, dict):
         payload = {}
 
+    logger.info("[WS] Intent received: %s", name)
+
     if not manager._last_state_snapshot:
         manager._last_state_snapshot = await build_frontend_state(manager)
 
