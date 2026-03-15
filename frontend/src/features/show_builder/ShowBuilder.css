@@ -132,6 +132,8 @@
 .effect-playlist-row__time,
 .effect-playlist-row__duration {
   color: var(--muted);
+  text-align: right;
+  min-width: 5em;
 }
 
 .effect-playlist-row__fixture,
@@ -139,6 +141,7 @@
   text-transform: none;
   letter-spacing: normal;
   margin: 0;
+  min-width: 8em;
 }
 
 .effect-playlist-action {

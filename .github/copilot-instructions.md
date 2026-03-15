@@ -106,6 +106,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
   - Avoid feature-local custom styling variants for those controls; extend shared control components/tokens when behavior or appearance changes are needed.
   - Keep feature CSS layout-focused; do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
   - Keep state visuals shared: use `.is-active` and `.is-selected` from `frontend/src/app/themes.css`; do not create feature-specific selected/active visual variants.
+  - For destructive actions (for example deleting cues), use `frontend/src/shared/components/feedback/ConfirmCancelPrompt.ts` instead of direct delete execution.
   - For rows combining cue/info text and actions, use a two-column flex layout with right-aligned action group.
   - Use the reusable prompt in [frontend/README.md](../frontend/README.md) section `LLM UI Task Template` for layout tasks.
 

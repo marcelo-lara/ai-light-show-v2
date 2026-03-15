@@ -1,4 +1,5 @@
 import { Card } from "../../../../shared/components/layout/Card.ts";
+import { ConfirmCancelPrompt } from "../../../../shared/components/feedback/ConfirmCancelPrompt.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
 import { deleteCue } from "../../cue_intents.ts";
@@ -38,6 +39,17 @@ export function EffectPlaylist(): HTMLElement {
 		return getBackendStore().state.playback?.time_ms ?? 0;
 	}
 
+	async function confirmDeleteCue(index: number): Promise<void> {
+		const confirmed = await ConfirmCancelPrompt({
+			title: "Delete cue",
+			message: "This cue will be removed from the playlist.",
+			confirmLabel: "Delete",
+			cancelLabel: "Cancel",
+		});
+		if (!confirmed) return;
+		deleteCue(index);
+	}
+
 	function renderList(): void {
 		const cues = getCues();
 		const currentIndex = findCurrentCueIndex(cues, getTimeMs());
@@ -61,7 +73,7 @@ export function EffectPlaylist(): HTMLElement {
 							previewEffect(cue.fixture_id, cue.effect, cue.duration * 1000, cue.data ?? {});
 						},
 						onDelete: () => {
-							deleteCue(index);
+							void confirmDeleteCue(index);
 						},
 					}));
 				}
