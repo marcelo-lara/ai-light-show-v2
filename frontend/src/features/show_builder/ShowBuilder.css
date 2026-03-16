@@ -74,6 +74,34 @@
   color: var(--color-text-secondary);
 }
 
+.chaser-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chaser-picker-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chaser-picker-field--small {
+  max-width: 160px;
+}
+
+.chaser-picker-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chaser-picker-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
 .effect-playlist-body {
   min-height: 100%;
   max-height: 65vh;

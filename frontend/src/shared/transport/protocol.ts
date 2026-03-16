@@ -62,6 +62,10 @@ export type IntentName =
   | "cue.update"
   | "cue.delete"
   | "cue.apply_helper"
+  | "chaser.apply"
+  | "chaser.start"
+  | "chaser.stop"
+  | "chaser.list"
   | "llm.send_prompt"
   | "llm.cancel"
   | "poi.create"
@@ -86,6 +90,7 @@ export type BackendState = {
   pois?: Poi[];
   cues?: CueEntry[];
   cue_helpers?: CueHelperDefinition[];
+  chasers?: ChaserDefinition[];
 };
 
 export type CueEntry = {
@@ -103,6 +108,20 @@ export type CueHelperDefinition = {
   label: string;
   description: string;
   mode: string;
+};
+
+export type ChaserDefinition = {
+  name: string;
+  description: string;
+  effects: ChaserEffect[];
+};
+
+export type ChaserEffect = {
+  beat: number;
+  fixture_id: string;
+  effect: string;
+  duration: number;
+  data: Record<string, unknown>;
 };
 
 export type Poi = {

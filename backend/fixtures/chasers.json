@@ -4,28 +4,28 @@
     "description": "A simple chaser that flashes the par cans and mini beams on the downbeat and two beats after.",
     "effects": [
       {
-        "time": 0.0,
+        "beat": 0.0,
         "fixture_id": "parcan_pl",
         "effect": "flash",
         "duration": 1.5,
         "data": {}
       },
       {
-        "time": 1.0,
+        "beat": 1.0,
         "fixture_id": "parcan_pr",
         "effect": "flash",
         "duration": 1.0,
         "data": {}
       },
       {
-        "time": 2.0,
+        "beat": 2.0,
         "fixture_id": "parcan_l",
         "effect": "flash",
         "duration": 1.0,
         "data": {}
       },
       {
-        "time": 3.0,
+        "beat": 3.0,
         "fixture_id": "parcan_l",
         "effect": "flash",
         "duration": 1.0,

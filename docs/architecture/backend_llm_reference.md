@@ -20,7 +20,7 @@ Code is the source of truth.
 
 3. Intent routing: `backend/api/intents/*`
 - `apply_intent.py` dispatches by domain via `INTENT_HANDLERS`.
-- Domains: `transport`, `fixture`, `cue`, `poi`, `llm`.
+- Domains: `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm`.
 
 4. State authority: `backend/store/state.py`
 - Holds fixtures, POIs, song/cue state, playback flags, preview lifecycle.
@@ -92,7 +92,7 @@ Code is the source of truth.
 
 2. `patch`
 - Shape: `{"type":"patch","seq":number,"changes":[{"path":[key],"value":...}]}`
-- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`).
+- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
 
 3. `event`
 - Shape: `{"type":"event","level":"info|warning|error","message":string,"data"?:object}`
@@ -144,6 +144,15 @@ Notes on `fixture.set_values`:
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.apply_helper` | `helper_id` | validates helper, generates cue entries from song beats, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
+### Chaser intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `chaser.apply` | `chaser_name`, `start_time_ms?`, `repetitions?` | loads chaser definition, converts beat fields via `beatToTimeMs`, upserts generated cue entries, persists, re-renders canvas, tags `created_by` as `chaser:{name}` | `True` on success; else event `chaser_apply_failed` and `False` |
+| `chaser.start` | `chaser_name`, `start_time_ms?`, `repetitions?` | applies chaser and tracks runtime instance id in memory | `True` on success; else event `chaser_start_failed` and `False` |
+| `chaser.stop` | `instance_id` | removes tracked runtime instance id from memory | emits `chaser_stopped`, returns `False` |
+| `chaser.list` | none | emits `chaser_list` event with current chaser definitions | `False` |
+
 ### LLM intents
 
 | Intent | Payload keys | Behavior | Returns |
@@ -178,6 +187,13 @@ Notes on `fixture.set_values`:
 | `info` | `cue_deleted` | `{ok, entry}` |
 | `error` | `cue_helper_apply_failed` | `{reason, helper_id?}` |
 | `info` | `cue_helper_applied` | `{helper_id, generated, replaced, skipped}` |
+| `error` | `chaser_apply_failed` | `{reason, chaser_name?}` |
+| `info` | `chaser_applied` | `{chaser_name, entries, generated, replaced, skipped}` |
+| `error` | `chaser_start_failed` | `{reason, chaser_name?}` |
+| `info` | `chaser_started` | `{instance_id, chaser_name, ...}` |
+| `error` | `chaser_stop_failed` | `{reason, instance_id?}` |
+| `info` | `chaser_stopped` | `{instance_id}` |
+| `info` | `chaser_list` | `{chasers:[...]}` |
 
 ## Snapshot state schema
 
@@ -226,6 +242,15 @@ Top-level state object:
   ],
   "cue_helpers": [
     {"id": "downbeats_and_beats", "label": "DownBeats and Beats", "description": "...", "mode": "full_song"}
+  ],
+  "chasers": [
+    {
+      "name": "Downbeat plus two beats",
+      "description": "A simple chaser pattern",
+      "effects": [
+        {"beat": 0.0, "fixture_id": "parcan_pl", "effect": "flash", "duration": 1.5, "data": {}}
+      ]
+    }
   ]
 }
 ```
@@ -240,6 +265,8 @@ Field notes:
 - Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
 - `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet. Each cue entry includes `created_by`.
 - `cue_helpers` lists backend-declared helper definitions for frontend helper execution UI.
+- `chasers` lists chaser definitions loaded from `backend/fixtures/chasers.json`.
+- Chaser effect fields `beat` and `duration` are in beats and converted using `beatToTimeMs(beat_count, bpm)` when generating cues.
 
 Patch behavior during playback:
 - While `playback.state` is `playing`, websocket patch generation suppresses `fixtures` updates.

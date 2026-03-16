@@ -8,6 +8,7 @@ Use these module guides first, then drill into architecture detail docs.
 - Frontend module: [../frontend/README.md](../frontend/README.md)
 - Backend module: [../backend/README.md](../backend/README.md)
 - Backend implementation contract: [architecture/backend_llm_reference.md](architecture/backend_llm_reference.md)
+- Backend chasers schema: [architecture/backend_chasers_schema.md](architecture/backend_chasers_schema.md)
 - Analyzer module: [../analyzer/README.md](../analyzer/README.md)
 - LLM server + gateway: [../llm-server/README.md](../llm-server/README.md)
 - MCP services: [../mcp/README.md](../mcp/README.md)

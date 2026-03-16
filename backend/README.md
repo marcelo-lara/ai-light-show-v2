@@ -5,7 +5,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 ## Purpose
 
 - Expose the websocket control plane at `/ws`.
-- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`).
+- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
@@ -43,6 +43,7 @@ Supported intent names:
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`.
 - Cue helpers: `cue.apply_helper`.
+- Chaser: `chaser.apply`, `chaser.start`, `chaser.stop`, `chaser.list`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
 
@@ -68,6 +69,9 @@ Patch behavior:
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.
+- `chaser.apply` and `chaser.start` generate cue entries from `backend/fixtures/chasers.json`.
+- Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
+- Generated chaser entries persist to cue sheets with `created_by` set to `chaser:{name}`.
 
 ## Data and file contracts
 
@@ -86,6 +90,9 @@ Song payload fields under `state.song`:
 Cue helpers payload under `state.cue_helpers`:
 - List of helper definitions (`id`, `label`, `description`, `mode`) for frontend helper UI.
 
+Chasers payload under `state.chasers`:
+- List of chaser definitions loaded from `backend/fixtures/chasers.json`.
+
 Section payload normalization:
 - Backend accepts analyzer section records with either `start/end/label` or `start_s/end_s/name` keys.
 - Snapshot payload always emits normalized section entries as `{name, start_s, end_s}`.
@@ -96,6 +103,7 @@ Section payload normalization:
 - [Backend architecture narrative](../docs/architecture/backend.md)
 - [Backend fixture schema](../docs/architecture/backend_fixtures_schema.md)
 - [Backend POI schema](../docs/architecture/backend_pois_schema.md)
+- [Backend chasers schema](../docs/architecture/backend_chasers_schema.md)
 
 ## Development
 

@@ -40,6 +40,9 @@ class StateCoreBootstrapMixin:
         self.preview_effect: Optional[str] = None
         self.preview_duration: float = 0.0
         self.max_used_channel: int = 0
+        self.chasers_path: Path = backend_path / "fixtures" / "chasers.json"
+        self.chasers: List[Any] = []
+        self.active_chasers: Dict[str, Dict[str, Any]] = {}
 
     async def get_status(self) -> Dict[str, Any]:
         async with self.lock:

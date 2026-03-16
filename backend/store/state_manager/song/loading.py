@@ -39,6 +39,7 @@ class StateSongLoadingMixin:
             self.preview_fixture_id = None
             self.preview_effect = None
             self.preview_duration = 0.0
+            self.active_chasers = {}
             self.canvas_dirty = False
             self.canvas = self._render_cue_sheet_to_canvas()
             print(

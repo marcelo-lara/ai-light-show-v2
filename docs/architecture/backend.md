@@ -8,7 +8,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 - `backend/api/websocket_manager/endpoint.py`: websocket accept/read loop.
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
-- `backend/api/intents/*`: intent registry + action handlers (`transport`, `fixture`, `cue`, `poi`, `llm` domains).
+- `backend/api/intents/*`: intent registry + action handlers (`transport`, `fixture`, `cue`, `chaser`, `poi`, `llm` domains).
 - `backend/store/state.py`: compatibility export for `StateManager`, `FPS`, and `MAX_SONG_SECONDS`.
 - `backend/store/state_manager/manager.py`: `StateManager` mixin composition root.
 - `backend/store/state_manager/core/*`: bootstrap, fixture/POI store operations, metadata helpers, render wrappers.
@@ -74,6 +74,10 @@ Behavior:
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, and `cue.apply_helper`.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
+- Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
+- Chaser intents are `chaser.apply`, `chaser.start`, `chaser.stop`, and `chaser.list`.
+- Chaser effect fields `beat` and `duration` are beat-based; conversion uses `beatToTimeMs(beat_count, bpm)`.
+- Generated chaser entries persist into `backend/cues/{song}.json` with `created_by` set to `chaser:{name}`.
 
 ### Preview
 

@@ -87,3 +87,55 @@ export function applyCueHelper(helperId: string) {
 		},
 	});
 }
+
+export function applyChaser(chaserName: string, startTimeMs = 0, repetitions?: number) {
+	const payload: Record<string, unknown> = {
+		chaser_name: chaserName,
+		start_time_ms: Math.max(0, Math.round(startTimeMs)),
+	};
+	if (typeof repetitions === "number" && Number.isFinite(repetitions)) {
+		payload.repetitions = Math.max(1, Math.floor(repetitions));
+	}
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.apply",
+		payload,
+	});
+}
+
+export function startChaser(chaserName: string, startTimeMs = 0, repetitions?: number) {
+	const payload: Record<string, unknown> = {
+		chaser_name: chaserName,
+		start_time_ms: Math.max(0, Math.round(startTimeMs)),
+	};
+	if (typeof repetitions === "number" && Number.isFinite(repetitions)) {
+		payload.repetitions = Math.max(1, Math.floor(repetitions));
+	}
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.start",
+		payload,
+	});
+}
+
+export function stopChaser(instanceId: string) {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.stop",
+		payload: {
+			instance_id: instanceId,
+		},
+	});
+}
+
+export function listChasers() {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.list",
+		payload: {},
+	});
+}

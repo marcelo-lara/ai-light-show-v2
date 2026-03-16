@@ -30,3 +30,7 @@ export function selectArmedCount() {
   const armed = ids.filter((id) => fixtures[id]?.armed).length;
   return { armed, total: ids.length };
 }
+
+export function selectChasers() {
+  return getBackendStore().state.chasers ?? [];
+}

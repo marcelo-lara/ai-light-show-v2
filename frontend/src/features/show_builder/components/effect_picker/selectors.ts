@@ -1,4 +1,5 @@
 import { getBackendStore } from "../../../../shared/state/backend_state.ts";
+import type { ChaserDefinition } from "../../../../shared/transport/protocol.ts";
 
 export function formatTime(ms: number): string {
 	return (ms / 1000).toFixed(3);
@@ -23,4 +24,8 @@ export function getSupportedEffects(fixtureId: string): string[] {
 
 export function getCueHelpers() {
 	return getBackendStore().state.cue_helpers ?? [];
+}
+
+export function getChasers(): ChaserDefinition[] {
+	return getBackendStore().state.chasers ?? [];
 }

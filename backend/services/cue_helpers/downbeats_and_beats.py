@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from models.song.beats import Beat
+from services.cue_helpers.timing import beats_to_seconds
 
 
 def _beats_to_seconds(beat_count: float, bpm: float) -> float:
-    return float(beat_count) * (60.0 / float(bpm))
+    return beats_to_seconds(beat_count, bpm)
 
 
 def generate_downbeats_and_beats(beats: List[Beat], bpm: float) -> List[Dict[str, Any]]:
