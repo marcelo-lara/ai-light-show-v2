@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .models import CueEntry, CueSheet
 
@@ -38,6 +38,50 @@ def save_cue_sheet(cues_path: Path, cue_sheet: CueSheet) -> None:
     with open(cue_file, "w") as f:
         json.dump(entries, f, indent=2)
 
+
+def clear_cue_sheet(
+    cues_path: Path,
+    song_filename: str,
+    from_time: float = 0.0,
+    to_time: Optional[float] = None,
+) -> None:
+    cue_file = cue_file_path(cues_path, song_filename)
+    if to_time is not None and to_time < from_time:
+        raise ValueError("invalid_time_range")
+
+    if cue_file.exists():
+        # No range means "clear all" by deleting the cue file.
+        if from_time <= 0.0 and to_time is None:
+            cue_file.unlink()
+            return
+
+        with open(cue_file, "r") as f:
+            raw = json.load(f)
+
+        if not isinstance(raw, list):
+            raw = []
+
+        def _in_clear_window(item: Any) -> bool:
+            if not isinstance(item, dict):
+                return False
+            try:
+                entry_time = float(item.get("time", 0.0))
+            except (TypeError, ValueError):
+                return False
+            if entry_time < from_time:
+                return False
+            if to_time is None:
+                return True
+            return entry_time <= to_time
+
+        remaining = [item for item in raw if not _in_clear_window(item)]
+
+        if not remaining:
+            cue_file.unlink()
+            return
+
+        with open(cue_file, "w") as f:
+            json.dump(_round_floats_for_save(remaining), f, indent=2)
 
 def create_cue_entry(cue_sheet: CueSheet, payload: Dict[str, Any]) -> CueEntry:
     entry = CueEntry(**payload)

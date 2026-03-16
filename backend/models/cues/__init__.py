@@ -1,4 +1,5 @@
 from .crud import (
+    clear_cue_sheet,
     create_cue_entry,
     delete_cue_entry,
     load_cue_sheet,
@@ -12,6 +13,7 @@ from .models import CueEntry, CueSheet
 __all__ = [
     "CueEntry",
     "CueSheet",
+    "clear_cue_sheet",
     "create_cue_entry",
     "read_cue_entries",
     "update_cue_entry",

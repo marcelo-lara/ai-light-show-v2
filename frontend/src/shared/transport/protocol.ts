@@ -61,6 +61,7 @@ export type IntentName =
   | "cue.add"
   | "cue.update"
   | "cue.delete"
+  | "cue.clear"
   | "cue.apply_helper"
   | "chaser.apply"
   | "chaser.start"

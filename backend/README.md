@@ -41,7 +41,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 Supported intent names:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
-- Cue: `cue.add`, `cue.update`, `cue.delete`.
+- Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
 - Cue helpers: `cue.apply_helper`.
 - Chaser: `chaser.apply`, `chaser.start`, `chaser.stop`, `chaser.list`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
@@ -67,6 +67,7 @@ Patch behavior:
 - `fixture.preview_effect` is rejected while playback is active. Preview runs to completion and final effect values persist to `editor_universe` (and `output_universe`).
 - `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings. For `kind="rgb"` meta-channels, send `values.rgb` as `#RRGGBB` (or mapped color name); backend converts it to channel bytes.
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
+- `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.
 - `chaser.apply` and `chaser.start` generate cue entries from `backend/fixtures/chasers.json`.

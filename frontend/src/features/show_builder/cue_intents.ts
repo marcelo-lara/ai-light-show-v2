@@ -77,6 +77,21 @@ export function deleteCue(index: number) {
 	});
 }
 
+export function clearCues(fromTime = 0, toTime?: number) {
+	const payload: Record<string, unknown> = {
+		from_time: fromTime,
+	};
+	if (typeof toTime === "number" && Number.isFinite(toTime)) {
+		payload.to_time = toTime;
+	}
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "cue.clear",
+		payload,
+	});
+}
+
 export function applyCueHelper(helperId: string) {
 	wsSend({
 		type: "intent",

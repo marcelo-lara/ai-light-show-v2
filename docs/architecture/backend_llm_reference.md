@@ -142,6 +142,7 @@ Notes on `fixture.set_values`:
 | `cue.add` | `time`, `fixture_id`, `effect`, `duration`, `data` | validates fixture/effect, adds entry to cue sheet, persists to disk, re-renders canvas | `True` on success; else event `cue_add_failed` and `False` |
 | `cue.update` | `index`, `patch` | validates index/patch, updates cue entry, persists to disk | `True` on success; else event `cue_update_failed` and `False` |
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
+| `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.apply_helper` | `helper_id` | validates helper, generates cue entries from song beats, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 ### Chaser intents

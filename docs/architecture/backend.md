@@ -72,7 +72,8 @@ Behavior:
 
 - `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`; for `kind="rgb"` meta-channels, payload must use `values.rgb` as `#RRGGBB` (or mapped color name), and backend converts it to RGB channel writes.
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
-- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, and `cue.apply_helper`.
+- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, and `cue.apply_helper`.
+- `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
 - Chaser intents are `chaser.apply`, `chaser.start`, `chaser.stop`, and `chaser.list`.

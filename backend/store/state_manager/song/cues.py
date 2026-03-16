@@ -4,8 +4,10 @@ from typing import Any, Dict, List, Optional
 
 from models.cues import (
     CueEntry,
+    clear_cue_sheet,
     create_cue_entry,
     delete_cue_entry,
+    load_cue_sheet,
     read_cue_entries,
     save_cue_sheet,
     update_cue_entry,
@@ -141,6 +143,34 @@ class StateSongCueMixin:
             await self.save_cue_sheet()
             self._refresh_canvas_after_cue_change()
             return {"ok": True, "entry": entry.model_dump()}
+
+    async def clear_cue_entries(
+        self,
+        from_time: float = 0.0,
+        to_time: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+            if to_time is not None and to_time < from_time:
+                return {"ok": False, "reason": "invalid_time_range"}
+
+            cues_path = self.backend_path / "cues"
+            song_filename = self.cue_sheet.song_filename
+            before_count = len(self.cue_sheet.entries)
+
+            clear_cue_sheet(cues_path, song_filename, from_time=from_time, to_time=to_time)
+            self.cue_sheet = load_cue_sheet(cues_path, song_filename)
+
+            removed = before_count - len(self.cue_sheet.entries)
+            if removed > 0:
+                self._refresh_canvas_after_cue_change()
+
+            return {
+                "ok": True,
+                "removed": max(0, removed),
+                "remaining": len(self.cue_sheet.entries),
+            }
 
     async def apply_cue_helper(self, helper_id: str) -> Dict[str, Any]:
         """Apply a cue helper to generate and upsert cue entries."""
