@@ -134,7 +134,6 @@ body {
 .btn {
   background: var(--card);
   color: var(--text);
-  padding: 8px 10px;
   cursor: pointer;
 }
 
@@ -196,6 +195,7 @@ button:hover:not(:disabled) {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;  
 }
 
 .btn-content--end {
@@ -206,7 +206,7 @@ button:hover:not(:disabled) {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
-  color: var(--text)
+  color: var(--text); 
 }
 
 .btn-icon path {
