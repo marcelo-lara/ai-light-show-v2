@@ -11,6 +11,7 @@ from store.state import StateManager
 from services.artnet import ArtNetService
 from services.song_service import SongService
 from services.startup_animation import run_startup_blue_wipe
+from api.vulnerabilities import list_backend_vulnerabilities
 from api.websocket import WebSocketManager, websocket_endpoint
 
 # Configure logging
@@ -84,11 +85,11 @@ app = FastAPI(lifespan=lifespan, title="AI Light Show v2 Backend")
 
 # Serve audio files - use absolute path for Docker, relative for local development
 songs_directory = Path("/app/songs") if Path("/app/songs").exists() else Path(__file__).parent / "songs"
-app.mount("/songs", StaticFiles(directory=songs_directory), name="songs")
+app.mount("/songs", StaticFiles(directory=songs_directory, check_dir=False), name="songs")
 
 # Serve analyzer metadata artifacts (plots/chords/json)
 meta_directory = Path("/app/meta") if Path("/app/meta").exists() else Path(__file__).parent / "meta"
-app.mount("/meta", StaticFiles(directory=meta_directory), name="meta")
+app.mount("/meta", StaticFiles(directory=meta_directory, check_dir=False), name="meta")
 
 # CORS for browser-based control clients
 app.add_middleware(
@@ -102,6 +103,10 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "AI Light Show v2 Backend"}
+
+@app.get("/vulnerabilities")
+async def vulnerabilities():
+    return list_backend_vulnerabilities()
 
 @app.websocket("/ws")
 async def websocket_route(websocket: WebSocket):

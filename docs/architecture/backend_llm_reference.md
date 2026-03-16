@@ -10,7 +10,7 @@ Code is the source of truth.
 - Loads POIs and fixtures.
 - Arms fixtures and starts Art-Net send loop.
 - Loads default song (`Yonaka - Seize the Power` if present, else first available).
-- Mounts songs at `/songs` and exposes websocket endpoint at `/ws`.
+- Mounts songs at `/songs`, metadata at `/meta`, exposes websocket endpoint at `/ws`, and exposes backend vulnerabilities at `/vulnerabilities`.
 
 2. WebSocket transport: `backend/api/websocket_manager/*`
 - `endpoint.py`: accepts and reads websocket frames.
