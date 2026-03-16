@@ -27,7 +27,7 @@ export function PlayerOptions(callbacks: {
   };
 
   const loop = toggle("Loop Regions", false, callbacks.onLoopToggle);
-  const showSections = toggle("Sections", true, callbacks.onShowSectionsToggle);
+  const showSections = toggle("Sections", false, callbacks.onShowSectionsToggle);
   const showDownbeats = toggle("Downbeats", true, callbacks.onShowDownbeatsToggle);
 
   container.append(loop.labelEl, showSections.labelEl, showDownbeats.labelEl);

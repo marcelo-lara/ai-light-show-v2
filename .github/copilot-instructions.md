@@ -99,6 +99,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - For frontend UI implementation:
   - Prefer flexbox over grid for small/local components.
   - DO NOT CREATE BORDERS unless explicitly requested.
+  - NEVER EVER USE ROUNDED CORNERS.
   - LoFi mockups are layout references only; do not reinterpret their intended layout.
   - Never render annotation/instruction text from mockups in the final UI.
   - Never copy annotation colors (for example pink guidance text) into production UI.

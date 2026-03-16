@@ -25,8 +25,8 @@
 
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 
-  --r: 14px;
-  --r2: 20px;
+  --r: 0;
+  --r2: 0;
 
   --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -79,6 +79,9 @@
 
 * {
   box-sizing: border-box;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 html,
@@ -373,6 +376,7 @@ input[type="range"] {
 
 .muted {
   color: var(--muted);
+  font-size: 0.6rem;
 }
 
 .columns {

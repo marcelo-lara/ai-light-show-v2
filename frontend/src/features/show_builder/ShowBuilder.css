@@ -61,7 +61,6 @@
   gap: 4px;
   padding: 8px;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
 }
 
 .cue-helper-label {
@@ -140,7 +139,7 @@
   min-height: 34px;
   padding: 0 10px;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: 0;
   background: transparent;
   color: var(--text);
 }
@@ -226,7 +225,7 @@
 .chaser-picker-row {
   padding: 5px 8px;
   border: 1px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 .chaser-picker-row__start,
@@ -324,10 +323,7 @@
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-  min-height: 40px;
-  padding: 4px 8px;
-  border-bottom: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
-  transition: color 160ms ease;
+  transition: color 50ms ease;
 }
 
 .cue-sheet-row__main {
@@ -384,7 +380,7 @@
 .cue-sheet-row__duration {
   color: var(--muted);
   text-align: right;
-  min-width: 5em;
+  min-width: 3em;
 }
 
 .cue-sheet-row__fixture,
@@ -392,7 +388,7 @@
   text-transform: none;
   letter-spacing: normal;
   margin: 0;
-  min-width: 8em;
+  width: 8em;
 }
 
 .cue-sheet-action {

@@ -25,21 +25,6 @@
   overflow: auto;
 }
 
-.show-control-row,
-.fixture-effects-row,
-.cue-sheet-row {
-  border: 1px solid var(--border);
-  background: var(--card-2);
-  padding: 8px;
-}
-
-
-.show-control-row {
-  display: grid;
-  grid-template-columns: 58px 1fr;
-  gap: 8px;
-}
-
 .show-control-time {
   color: var(--muted);
 }

@@ -31,14 +31,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
 }
 
 .chords-panel-cell {
-  flex: 1 1 calc(25% - 1px);
-  min-width: calc(25% - 1px);
-  min-height: 2.25rem;
+  flex: 0 1 3em;
   background: var(--card);
   border: 0;
   cursor: pointer;
