@@ -1,5 +1,7 @@
 import { transportJumpToTime } from "../../../transport/transport_intents.ts";
 
+const BACKEND_SYNC_INTERVAL_MS = 10_000;
+
 export interface PlaybackSyncOptions {
   onSync: (localTimeMs: number) => void;
 }
@@ -14,10 +16,10 @@ export class PlaybackSync {
   start(getCurrentTimeMs: () => number) {
     this.stop();
 
-    // Periodic backend sync (every 10s)
+    // Periodic backend sync for drift alignment.
     this.syncTimerId = window.setInterval(() => {
       transportJumpToTime(getCurrentTimeMs());
-    }, 10_000);
+    }, BACKEND_SYNC_INTERVAL_MS);
 
     // Animation frame for UI updates
     const tick = () => {
@@ -37,6 +39,10 @@ export class PlaybackSync {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
+    }
+    if (this.seekSyncTimerId !== null) {
+      clearTimeout(this.seekSyncTimerId);
+      this.seekSyncTimerId = null;
     }
   }
 

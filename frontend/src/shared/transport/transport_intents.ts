@@ -3,7 +3,10 @@ import { makeId } from "../utils/id.ts";
 
 function wsSend(msg: IntentMsg) {
   const ws = (globalThis as any).__WS_CLIENT__;
-  if (!ws) return;
+  if (!ws) {
+    console.warn("[WS_SEND] dropped (no ws client)", msg.name);
+    return;
+  }
   ws.send(msg);
 }
 

@@ -4,12 +4,34 @@ export type DropdownProps = {
 	label?: string;
 	value: string;
 	options: DropdownOption[];
+	className?: string;
+	selectClassName?: string;
+	attributes?: Record<string, string>;
 	onChange?: (value: string) => void;
 };
 
-export function Dropdown(props: DropdownProps): HTMLElement {
+export type DropdownControl = {
+	root: HTMLLabelElement;
+	select: HTMLSelectElement;
+	setOptions: (options: DropdownOption[], value?: string) => void;
+	setValue: (value: string) => void;
+};
+
+function applyOptions(select: HTMLSelectElement, options: DropdownOption[], value: string): void {
+	select.innerHTML = "";
+	for (const option of options) {
+		const node = document.createElement("option");
+		node.value = option.value;
+		node.textContent = option.label;
+		node.selected = option.value === value;
+		select.appendChild(node);
+	}
+	select.value = value;
+}
+
+export function Dropdown(props: DropdownProps): DropdownControl {
 	const wrap = document.createElement("label");
-	wrap.className = "dropdown";
+	wrap.className = `dropdown${props.className ? ` ${props.className}` : ""}`;
 
 	if (props.label) {
 		const text = document.createElement("span");
@@ -18,15 +40,24 @@ export function Dropdown(props: DropdownProps): HTMLElement {
 	}
 
 	const select = document.createElement("select");
-	for (const option of props.options) {
-		const node = document.createElement("option");
-		node.value = option.value;
-		node.textContent = option.label;
-		node.selected = option.value === props.value;
-		select.appendChild(node);
+	if (props.selectClassName) {
+		select.className = props.selectClassName;
 	}
+	for (const [name, value] of Object.entries(props.attributes ?? {})) {
+		select.setAttribute(name, value);
+	}
+	applyOptions(select, props.options, props.value);
 	select.addEventListener("change", () => props.onChange?.(select.value));
 
 	wrap.append(select);
-	return wrap;
+	return {
+		root: wrap,
+		select,
+		setOptions: (options, value) => {
+			applyOptions(select, options, value ?? select.value);
+		},
+		setValue: (value) => {
+			select.value = value;
+		},
+	};
 }

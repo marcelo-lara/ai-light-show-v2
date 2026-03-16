@@ -32,7 +32,6 @@ class Parcan(Fixture):
         data: Dict[str, Any],
         render_state: Dict[str, Any],
     ) -> None:
-        print(f"DEBUG: Rendering {effect} for {self.id} at frame {frame_index}")
         effect = (effect or "").lower().strip()
         effect_handlers = {
             "set_channels": handle_set_channels,

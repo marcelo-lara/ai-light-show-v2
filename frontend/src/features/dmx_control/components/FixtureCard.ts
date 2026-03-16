@@ -1,5 +1,6 @@
 import type { FixtureVM } from "../adapters/fixture_vm.ts";
 import { setArm } from "../fixture_intents.ts";
+import { Toggle } from "../../../shared/components/controls/Toggle.ts";
 
 /**
  * Shared container concept.
@@ -29,15 +30,16 @@ export function FixtureCard(_props: FixtureCardProps) {
   type.textContent = props.fixture.type;
   left.append(name, type);
 
-  const armButton = document.createElement("button");
-  armButton.type = "button";
-  armButton.className = `btn dmx-arm ${props.fixture.armed ? "primary" : ""}`.trim();
-  armButton.textContent = props.fixture.armed ? "ARMED" : "ARM";
-  armButton.addEventListener("click", () => {
-    setArm(props.fixture.id, !props.fixture.armed);
+  const armToggle = Toggle({
+    label: "Armed",
+    checked: props.fixture.armed,
+    className: "dmx-arm-toggle",
+    onChange: (checked) => {
+      setArm(props.fixture.id, checked);
+    },
   });
 
-  header.append(left, armButton);
+  header.append(left, armToggle.root);
 
   const body = document.createElement("div");
   body.className = "fixture-card-body";

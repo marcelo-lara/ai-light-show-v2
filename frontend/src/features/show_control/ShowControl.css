@@ -33,12 +33,6 @@
   padding: 8px;
 }
 
-.show-control-row.is-active,
-.fixture-effects-row.is-active,
-.cue-sheet-row.is-active {
-  border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 16%, var(--card-2));
-}
 
 .show-control-row {
   display: grid;
@@ -48,10 +42,6 @@
 
 .show-control-time {
   color: var(--muted);
-}
-
-.show-control-row.is-active .show-control-time {
-  color: var(--accent);
 }
 
 .show-control-label,

@@ -1,5 +1,5 @@
 import { EffectPlaylist } from "./components/effect_playlist/EffectPlaylist.ts";
-import { EffectPicker } from "./components/effect_picker/EffectPicker.ts";
+import { FlowColumn } from "./components/flow_column/FlowColumn.ts";
 import { SongPlayer } from "../../shared/components/song_player/SongPlayer.ts";
 import { ChordsPanel } from "../../shared/components/chords_panel/ChordsPanel.ts";
 import { getSongStructureData } from "../../shared/state/song_data.ts";
@@ -14,7 +14,7 @@ export function ShowBuilderView(): HTMLElement {
 	main.append(
 		ChordsPanel({ beats: song.beats, sections: song.sections, cardClassName: "show-builder-panel" }),
 		EffectPlaylist(),
-		EffectPicker(),
+		FlowColumn(),
 	);
 
 	wrap.append(SongPlayer(), main);

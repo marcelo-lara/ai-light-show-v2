@@ -5,7 +5,7 @@ import type { SongSection } from "../../../shared/transport/protocol.ts";
 
 function formatSectionStart(startSeconds: number): string {
   const safeValue = Number.isFinite(startSeconds) ? startSeconds : 0;
-  return safeValue.toFixed(2);
+  return safeValue.toFixed(3);
 }
 
 function normalizedSections(sections: SongSection[] | undefined): SongSection[] {

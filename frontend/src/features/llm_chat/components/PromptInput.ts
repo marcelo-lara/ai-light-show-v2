@@ -1,5 +1,6 @@
 import { cancelPrompt, sendPrompt } from "../llm_intents.ts";
 import { getLlmState } from "../llm_state.ts";
+import { Button } from "../../../shared/components/controls/Button.ts";
 
 export function PromptInput(): HTMLElement {
 	const state = getLlmState();
@@ -17,19 +18,24 @@ export function PromptInput(): HTMLElement {
 	const actions = document.createElement("div");
 	actions.className = "prompt-actions";
 
-	const send = document.createElement("button");
-	send.type = "button";
-	send.textContent = "↑";
-	send.setAttribute("aria-label", "Send prompt");
-	send.title = "Send";
-	send.className = "btn primary send-arrow";
-	send.disabled = isStreaming;
+	const send = Button({
+		caption: "↑",
+		state: "primary",
+		bindings: {
+			className: "send-arrow",
+			title: "Send prompt",
+			disabled: isStreaming,
+		},
+	});
 
-	const stop = document.createElement("button");
-	stop.type = "button";
-	stop.textContent = "Stop";
-	stop.className = "btn stop-stream";
-	stop.title = "Stop generating";
+	const stop = Button({
+		caption: "Stop",
+		state: "default",
+		bindings: {
+			className: "stop-stream",
+			title: "Stop generating",
+		},
+	});
 
 	const updateSendState = () => {
 		send.disabled = isStreaming || input.value.trim().length === 0;

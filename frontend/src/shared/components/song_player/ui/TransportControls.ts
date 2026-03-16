@@ -23,6 +23,7 @@ export function TransportControls(callbacks: {
 
   const btn = (label: string, iconName: string, onClick: () => void, className = "btn") => {
     const b = document.createElement("button");
+    b.type = "button";
     b.className = className;
     b.title = label;
     b.setAttribute("aria-label", label);
@@ -35,7 +36,11 @@ export function TransportControls(callbacks: {
       b.textContent = label;
     }
 
-    b.addEventListener("click", onClick);
+    b.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onClick();
+    });
     return b;
   };
 

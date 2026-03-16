@@ -1,17 +1,28 @@
 # Show Builder - Effect Playlist
+A list of plain effects stacked in rows.
+This Effect Playlist is stored in the cues list.
+
+## Row detail
+Each row is divided in three blocks
+
+## 1. Select
+Only availabe when:
+
+1. Chase Builder is in "Create" mode.
 
 
-## Action Buttons
-1. The user seeks the song to the desired position.
-2. The user selects one fixture from the dropdown.
-3. The UI populates the list of the effects available to the selected fixture.
-4. The UI renders the paramenters of the selected effect.
-  4.1. if the user select a different fixture that has the current selected effect, the effect does not change (parameters)
-  4.2. if the selected fixture does not have the effect, the 'flash' effect is selected or the first available effect.
+## 2. Info 
 
-5. The user change the effect parameters (from step 4).
-6. The user click on 'Preview', and the effect is rendered directly to the Artnet/Dmx node (leave other fixtures with their current values)
-7. The user click on 'Add', and the effect is stored in the cue at the current position with the selected parameters (from step 5).
+- time: time when the effect will start
+- fixture: the fixture that will perform
+- effect: the effect that will be rendered on the fixture
+- duration: the total time the effect will require the fixture to perform
+
+## 3. Action Buttons
+
+- delete: removes the cue entry
+- preview: executes the effect on the fixture in real-time (direct sent to dmx)
+- edit: expand cue entry in the effect picker to edit parameters.
 
 ## LLM Hints
 

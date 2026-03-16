@@ -1,9 +1,8 @@
 # pyright: reportAttributeAccessIssue=false
 
-import json
 from urllib.parse import quote
 
-from models.cue import CueSheet
+from models.cues import load_cue_sheet
 from models.song import Song
 from store.dmx_canvas import DMX_CHANNELS
 
@@ -24,13 +23,7 @@ class StateSongLoadingMixin:
             )
             self.song_length_seconds = self._infer_song_length_seconds(self.current_song)
 
-            cue_file = self.cues_path / f"{song_filename}.cue.json"
-            if cue_file.exists():
-                with open(cue_file, "r") as f:
-                    cue_data = json.load(f)
-                    self.cue_sheet = CueSheet(**cue_data)
-            else:
-                self.cue_sheet = CueSheet(song_filename=song_filename, entries=[])
+            self.cue_sheet = load_cue_sheet(self.cues_path, song_filename)
 
             self.editor_universe = bytearray(DMX_CHANNELS)
             self.output_universe = bytearray(DMX_CHANNELS)

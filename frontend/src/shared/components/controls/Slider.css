@@ -27,7 +27,6 @@
   -webkit-appearance: none;
   width: 100%;
   height: var(--slider-track-height);
-  border-radius: 999px;
   background: linear-gradient(
     to right,
     var(--slider-fill-color) var(--slider-fill),
@@ -39,7 +38,6 @@
 
 .slider-row input::-webkit-slider-runnable-track {
   height: var(--slider-track-height);
-  border-radius: 999px;
   background: transparent;
 }
 
@@ -56,7 +54,6 @@
 
 .slider-row input::-moz-range-track {
   height: var(--slider-track-height);
-  border-radius: 999px;
   background: transparent;
 }
 

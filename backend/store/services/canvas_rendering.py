@@ -1,7 +1,7 @@
 import math
 from typing import Any, Callable, Dict, List, Tuple
 
-from models.cue import CueEntry, CueSheet
+from models.cues import CueEntry, CueSheet
 from models.fixtures.fixture import Fixture
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.services.canvas_debug import dump_canvas_debug

@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Tuple
 
-from models.cue import CueEntry, CueSheet
+from models.cues import CueEntry, CueSheet
 from models.fixtures.fixture import Fixture
 
 

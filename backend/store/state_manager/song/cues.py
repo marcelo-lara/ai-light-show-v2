@@ -1,12 +1,34 @@
 # pyright: reportAttributeAccessIssue=false
 
-import json
 from typing import Any, Dict, List, Optional
 
-from models.cue import CueEntry
+from models.cues import (
+    CueEntry,
+    create_cue_entry,
+    delete_cue_entry,
+    read_cue_entries,
+    save_cue_sheet,
+    update_cue_entry,
+    upsert_cue_entries,
+)
 
 
 class StateSongCueMixin:
+    def _refresh_canvas_after_cue_change(self) -> None:
+        self.canvas_dirty = False
+        self.canvas = self._render_cue_sheet_to_canvas()
+        song_name = self.cue_sheet.song_filename
+        print(
+            f"[DMX CANVAS] re-render complete for '{song_name}' — "
+            f"frames={self.canvas.total_frames} fps={self.canvas.fps}",
+            flush=True,
+        )
+        self._dump_canvas_debug(song_name)
+
+        if self.is_playing:
+            self.current_frame_index = self._time_to_frame_index(self.timecode)
+            self._apply_canvas_frame_to_output(self.current_frame_index)
+
     async def add_cue_entry(self, timecode: float, name: Optional[str] = None) -> List[CueEntry]:
         async with self.lock:
             if not self.cue_sheet:
@@ -19,32 +41,21 @@ class StateSongCueMixin:
                     channel_values[channel_name] = int(self.editor_universe[channel_num - 1])
 
                 new_entries.append(
-                    CueEntry(
-                        time=float(timecode),
-                        fixture_id=fixture.id,
-                        effect="set_channels",
-                        duration=0.0,
-                        data={"channels": channel_values},
-                        name=name,
+                    create_cue_entry(
+                        self.cue_sheet,
+                        {
+                            "time": float(timecode),
+                            "fixture_id": fixture.id,
+                            "effect": "set_channels",
+                            "duration": 0.0,
+                            "data": {"channels": channel_values},
+                            "name": name,
+                        },
                     )
                 )
 
-            self.cue_sheet.entries.extend(new_entries)
-            self.cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
             await self.save_cue_sheet()
-
-            if self.is_playing:
-                self.canvas_dirty = True
-            else:
-                self.canvas_dirty = False
-                self.canvas = self._render_cue_sheet_to_canvas()
-                song_name = self.cue_sheet.song_filename
-                print(
-                    f"[DMX CANVAS] re-render complete for '{song_name}' — "
-                    f"frames={self.canvas.total_frames} fps={self.canvas.fps}",
-                    flush=True,
-                )
-                self._dump_canvas_debug(song_name)
+            self._refresh_canvas_after_cue_change()
 
             return new_entries
 
@@ -79,30 +90,18 @@ class StateSongCueMixin:
                     "supported": list(supported),
                 }
 
-            entry = CueEntry(
-                time=float(time),
-                fixture_id=fixture_id,
-                effect=effect_lower,
-                duration=float(duration),
-                data=data,
+            entry = create_cue_entry(
+                self.cue_sheet,
+                {
+                    "time": float(time),
+                    "fixture_id": fixture_id,
+                    "effect": effect_lower,
+                    "duration": float(duration),
+                    "data": data,
+                },
             )
-
-            self.cue_sheet.entries.append(entry)
-            self.cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
             await self.save_cue_sheet()
-
-            if self.is_playing:
-                self.canvas_dirty = True
-            else:
-                self.canvas_dirty = False
-                self.canvas = self._render_cue_sheet_to_canvas()
-                song_name = self.cue_sheet.song_filename
-                print(
-                    f"[DMX CANVAS] re-render complete for '{song_name}' — "
-                    f"frames={self.canvas.total_frames} fps={self.canvas.fps}",
-                    flush=True,
-                )
-                self._dump_canvas_debug(song_name)
+            self._refresh_canvas_after_cue_change()
 
             return {
                 "ok": True,
@@ -111,14 +110,67 @@ class StateSongCueMixin:
 
     async def save_cue_sheet(self):
         if self.cue_sheet:
-            cues_path = self.backend_path / "cues"
-            cues_path.mkdir(parents=True, exist_ok=True)
-            cue_file = cues_path / f"{self.cue_sheet.song_filename}.cue.json"
-            with open(cue_file, "w") as f:
-                json.dump(self.cue_sheet.model_dump(), f, indent=2)
+            save_cue_sheet(self.backend_path / "cues", self.cue_sheet)
 
     def get_cue_entries(self) -> List[Dict[str, Any]]:
         """Return cue entries as list of dicts for frontend state."""
         if not self.cue_sheet:
             return []
-        return [entry.model_dump() for entry in self.cue_sheet.entries]
+        return read_cue_entries(self.cue_sheet)
+
+    async def update_cue_entry(self, index: int, payload: Dict[str, Any]) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+            try:
+                entry = update_cue_entry(self.cue_sheet, index, payload)
+            except IndexError as exc:
+                return {"ok": False, "reason": str(exc)}
+            await self.save_cue_sheet()
+            self._refresh_canvas_after_cue_change()
+            return {"ok": True, "entry": entry.model_dump()}
+
+    async def delete_cue_entry(self, index: int) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+            try:
+                entry = delete_cue_entry(self.cue_sheet, index)
+            except IndexError as exc:
+                return {"ok": False, "reason": str(exc)}
+            await self.save_cue_sheet()
+            self._refresh_canvas_after_cue_change()
+            return {"ok": True, "entry": entry.model_dump()}
+
+    async def apply_cue_helper(self, helper_id: str) -> Dict[str, Any]:
+        """Apply a cue helper to generate and upsert cue entries."""
+        from services.cue_helpers import generate_downbeats_and_beats
+
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+
+            if not self.current_song or not self.current_song.beats or not self.current_song.beats.beats:
+                return {"ok": False, "reason": "beats_unavailable"}
+
+            try:
+                bpm = float(getattr(self.current_song.meta, "bpm", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                bpm = 0.0
+            if bpm <= 0.0:
+                return {"ok": False, "reason": "bpm_unavailable"}
+
+            if helper_id == "downbeats_and_beats":
+                new_entries = generate_downbeats_and_beats(self.current_song.beats.beats, bpm)
+            else:
+                return {"ok": False, "reason": "unknown_helper_id", "helper_id": helper_id}
+
+            for entry in new_entries:
+                entry["created_by"] = helper_id
+
+            # Apply upsert logic
+            counts = upsert_cue_entries(self.cue_sheet, new_entries)
+            await self.save_cue_sheet()
+            self._refresh_canvas_after_cue_change()
+
+            return {"ok": True, **counts}

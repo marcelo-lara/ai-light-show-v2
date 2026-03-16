@@ -54,7 +54,7 @@ Backend -> client message types:
 Intent names currently emitted by frontend:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`
-- Cue: `cue.add`
+- Cue: `cue.add`, `cue.update`, `cue.delete`
 - LLM: `llm.send_prompt`, `llm.cancel`
 - POI: `poi.update_fixture_target`
 
@@ -125,8 +125,8 @@ Global bridge fields used across modules:
 
 ### Show Builder
 - `src/features/show_builder/ShowBuilderView.ts`: composes player with the shared chord progression card, effect playlist, and effect picker.
-- `src/features/show_builder/cue_intents.ts`: cue intent sender (`addCue`).
-- `src/features/show_builder/components/EffectPlaylist.ts`: live cue list panel, subscribes to backend `cues` state.
+- `src/features/show_builder/cue_intents.ts`: cue intent senders (`addCue`, `updateCue`, `deleteCue`).
+- `src/features/show_builder/components/EffectPlaylist.ts`: live cue list panel, subscribes to backend `cues` state and emits cue edit/preview/delete actions.
 - `src/features/show_builder/components/effect_picker/EffectPicker.ts`: fixture/effect selection panel — assembles DOM, wires events, manages subscription.
 - `src/features/show_builder/components/effect_picker/layout.ts`: DOM builders for top row, parameter section, and action row; returns typed ref objects.
 - `src/features/show_builder/components/effect_picker/updates.ts`: stateful DOM updaters (`applyEffectOptions`, `applyFixtureOptions`, `renderParamForm`).
@@ -255,10 +255,24 @@ npm run sync-icons
 ## Frontend UI implementation rules
 
 - Prefer flexbox for small/local component layout.
+- Use grid only when the layout is truly two-dimensional and cannot be expressed cleanly with flexbox.
 - Treat LoFi mockups as layout references only.
 - Use existing token variables from `themes.css`.
 - Keep backend integration capability-driven and backend-agnostic. Avoid frontend assumptions tied to one backend implementation.
 - Prefer referencing explicit files from [../docs/ui/README.md](../docs/ui/README.md) instead of generic "mockup" wording in prompts.
+- Never render instructional/mockup annotation text in the final UI.
+- Never create UI labels directly from annotation callouts in LoFi files.
+- Never copy annotation colors (including pink guidance text color) into production UI styles.
+- In `src/features`, use shared themed controls (`Button`, `Dropdown`, `Slider`, `Toggle`) instead of raw `button`, `select`, `input[type=range]`, or `input[type=checkbox]` elements.
+- Do not create feature-local custom variants of those controls; extend shared control components when customization is required.
+
+## Explicit coding style directives
+
+- Keep feature CSS focused on layout and spacing. Do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
+- Keep control state visuals centralized in shared styles. Use shared state classes (`.is-active`, `.is-selected`) from `src/app/themes.css`.
+- Do not add feature-scoped state variants such as `.selected`, `.is-current`, or feature-specific `.is-active` color/border overrides.
+- For list rows with metadata + actions (such as show-builder playlist rows), use a two-column flex layout: left content block and right action block aligned to end.
+- When adding or changing interactive UI behavior, wire state class toggling in TypeScript and rely on shared CSS tokens/styles for rendering.
 
 ## LLM UI task template
 
@@ -268,11 +282,13 @@ Build/update <screen/component> to match the LoFi layout reference.
 Layout constraints (authoritative):
 - Keep placement/order exactly as in LoFi (columns, panel order, key section positions).
 - Treat LoFi as layout-only reference; do not reinterpret structure.
+- Never render annotation/instruction text from the mockup in the final UI.
 
 Implementation constraints:
 - Prefer flexbox for small/local component layout; use grid only for true two-dimensional layouts.
 - Do not copy explicit mockup dimensions or colors.
 - Use responsive sizing and project theme tokens/variables.
+- In `src/features`, use shared themed controls (`Button`, `Dropdown`, `Slider`, `Toggle`) for interaction elements instead of bare HTML control tags.
 
 Acceptance checks:
 - Column/panel placement matches LoFi.

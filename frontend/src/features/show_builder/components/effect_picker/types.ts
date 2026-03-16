@@ -3,4 +3,6 @@ export type PickerState = {
 	effect: string;
 	duration: number;
 	params: Record<string, unknown>;
+	editingIndex: number | null;
+	editingTime: number | null;
 };

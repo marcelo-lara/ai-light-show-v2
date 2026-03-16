@@ -5,3 +5,8 @@ export function formatTimeMs(ms: number): string {
   const ss = String(s % 60).padStart(2, "0");
   return `${m}:${ss}`;
 }
+
+export function formatPositionMs(time: number): string {
+	return `${time.toFixed(3)}`;
+}
+

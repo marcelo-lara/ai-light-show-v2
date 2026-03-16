@@ -73,6 +73,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown: perform blackout so fixtures go dark, then stop the Art-Net service
+    await ws_manager.stop_playback_ticker()
     try:
         await artnet_service.blackout()
     except Exception:

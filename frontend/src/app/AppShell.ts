@@ -5,7 +5,7 @@ import { SongAnalysisView } from "../features/song_analysis/SongAnalysisView.ts"
 import { ShowBuilderView } from "../features/show_builder/ShowBuilderView.ts";
 import { DmxControlView } from "../features/dmx_control/DmxControlView.ts";
 import { ShowControlView } from "../features/show_control/ShowControlView.ts";
-import { subscribeBackendStore } from "../shared/state/backend_state.ts";
+import { getBackendStore, subscribeBackendStore } from "../shared/state/backend_state.ts";
 import { getLlmState, subscribeLlmState } from "../features/llm_chat/llm_state.ts";
 import { refreshSongPlayer } from "../shared/components/song_player/SongPlayer.ts";
 import { selectFixtureVms } from "../features/dmx_control/fixture_selectors.ts";
@@ -42,6 +42,7 @@ export function mountAppShell(root: HTMLElement) {
 	let currentMain: MainViewHandle = renderMain();
 	main.appendChild(currentMain.root);
 	let right = RightPanel();
+	let lastSongKey = getBackendStore().state.song?.filename ?? "";
 
 	layout.append(sidebar, main, right);
 	root.appendChild(layout);
@@ -72,23 +73,23 @@ export function mountAppShell(root: HTMLElement) {
 	});
 
 	subscribeBackendStore(() => {
-		console.log("BackendStore updated, current route:", getUiState().route);
-		const vms = selectFixtureVms();
-		console.log(`Store update: ${vms.length} fixtures available`);
+		const route = getUiState().route;
+		const songKey = getBackendStore().state.song?.filename ?? "";
+		const songChanged = songKey !== lastSongKey;
+		lastSongKey = songKey;
 
-		if (getUiState().route === "dmx_control") {
+		if (route === "dmx_control") {
+			const vms = selectFixtureVms();
 			if (typeof currentMain.updateFixtures === "function") {
-				console.log("Performing partial update for DMX Control");
 				currentMain.updateFixtures(vms);
 			} else {
-				console.log("No partial update available, re-rendering DmxControlView");
 				replaceMain(renderMain());
 			}
-		} else {
+		} else if (songChanged) {
 			replaceMain(renderMain());
 		}
+
 		refreshSongPlayer();
-		renderRight();
 	});
 
 	let previousLlmStatus = getLlmState().status;

@@ -1,6 +1,10 @@
 import { Card } from "../../../../shared/components/layout/Card.ts";
+import { ConfirmCancelPrompt } from "../../../../shared/components/feedback/ConfirmCancelPrompt.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
+import { deleteCue } from "../../cue_intents.ts";
+import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
+import { transportJumpToTime } from "../../../../shared/transport/transport_intents.ts";
 import { cueSignature, findCurrentCueIndex } from "./format.ts";
 import { createCueRow, createEmptyPlaylistState } from "./row.ts";
 
@@ -15,10 +19,8 @@ export function EffectPlaylist(): HTMLElement {
 	const eyebrow = document.createElement("p");
 	eyebrow.className = "effect-playlist-header__eyebrow muted";
 	eyebrow.textContent = "Show flow";
-	const heading = document.createElement("h2");
-	heading.className = "effect-playlist-header__heading";
-	heading.textContent = "Effects Playlist";
-	title.append(eyebrow, heading);
+
+	title.append(eyebrow);
 	const count = document.createElement("span");
 	count.className = "effect-playlist-header__count";
 	header.append(title, count);
@@ -38,6 +40,17 @@ export function EffectPlaylist(): HTMLElement {
 		return getBackendStore().state.playback?.time_ms ?? 0;
 	}
 
+	async function confirmDeleteCue(index: number): Promise<void> {
+		const confirmed = await ConfirmCancelPrompt({
+			title: "Delete cue",
+			message: "This cue will be removed from the playlist.",
+			confirmLabel: "Delete",
+			cancelLabel: "Cancel",
+		});
+		if (!confirmed) return;
+		deleteCue(index);
+	}
+
 	function renderList(): void {
 		const cues = getCues();
 		const currentIndex = findCurrentCueIndex(cues, getTimeMs());
@@ -46,18 +59,36 @@ export function EffectPlaylist(): HTMLElement {
 
 		if (signature !== lastCueSignature) {
 			lastCueSignature = signature;
-			listContainer.innerHTML = "";
+			listContainer.querySelectorAll(".effect-playlist-row, .effect-playlist-empty").forEach((node) => node.remove());
 			if (cues.length === 0) {
 				listContainer.appendChild(createEmptyPlaylistState());
 			} else {
-				for (const cue of cues) listContainer.appendChild(createCueRow(cue));
+				for (const [index, cue] of cues.entries()) {
+					listContainer.appendChild(createCueRow(cue, {
+						onEdit: () => {
+							transportJumpToTime(cue.time * 1000);
+							window.dispatchEvent(new CustomEvent("show-builder:cue-edit", {
+								detail: { index, cue },
+							}));
+						},
+						onPreview: () => {
+							previewEffect(cue.fixture_id, cue.effect, cue.duration * 1000, cue.data ?? {});
+						},
+						onDelete: () => {
+							void confirmDeleteCue(index);
+						},
+						onSelect: () => {
+							transportJumpToTime(cue.time * 1000);
+						},
+					}));
+				}
 			}
 		}
 
 		if (currentIndex !== lastCurrentIndex) {
 			lastCurrentIndex = currentIndex;
 			const rows = listContainer.querySelectorAll<HTMLElement>(".effect-playlist-row");
-			rows.forEach((row, index) => row.classList.toggle("is-current", index === currentIndex));
+			rows.forEach((row, index) => row.classList.toggle("is-active", index === currentIndex));
 			if (currentIndex >= 0 && rows[currentIndex]) {
 				rows[currentIndex].scrollIntoView({ block: "nearest", behavior: "smooth" });
 			}

@@ -8,7 +8,7 @@ export function PlaybackReadout(): {
 
   const positionEl = document.createElement("div");
   positionEl.className = "song-player-position mono muted";
-  positionEl.textContent = "0:00 / 0:00";
+  positionEl.textContent = "0:00.000 / 0:00";
 
   return { barBeatEl, positionEl };
 }

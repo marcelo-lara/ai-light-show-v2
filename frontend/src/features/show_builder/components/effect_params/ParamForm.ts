@@ -1,4 +1,6 @@
 import type { Poi } from "../../../../shared/transport/protocol.ts";
+import { Dropdown } from "../../../../shared/components/controls/Dropdown.ts";
+import { Slider } from "../../../../shared/components/controls/Slider.ts";
 import type { ParamDef } from "./params_schema.ts";
 import { getEffectSchema } from "./params_schema.ts";
 
@@ -10,119 +12,73 @@ export type ParamFormProps = {
 };
 
 function createNumberInput(param: ParamDef, value: unknown, onChange: (v: number) => void): HTMLElement {
-	const wrap = document.createElement("label");
+	const wrap = document.createElement("div");
 	wrap.className = "param-field";
 
-	const label = document.createElement("span");
-	label.className = "param-label";
-	label.textContent = param.label;
-
-	const input = document.createElement("input");
-	input.type = "number";
-	input.className = "param-input";
-	input.value = String(value ?? param.default ?? 0);
-	if (param.min !== undefined) input.min = String(param.min);
-	if (param.max !== undefined) input.max = String(param.max);
-	if (param.step !== undefined) input.step = String(param.step);
-
-	input.addEventListener("input", () => {
-		onChange(Number(input.value));
+	const slider = Slider({
+		label: param.label,
+		min: param.min ?? 0,
+		max: param.max ?? 255,
+		step: param.step ?? 1,
+		value: Number(value ?? param.default ?? 0),
+		className: "param-input",
+		onInput: onChange,
 	});
 
-	wrap.append(label, input);
+	wrap.appendChild(slider.root);
 	return wrap;
 }
 
 function createRangeInput(param: ParamDef, value: unknown, onChange: (v: number) => void): HTMLElement {
-	const wrap = document.createElement("label");
+	const wrap = document.createElement("div");
 	wrap.className = "param-field param-field--range";
 
-	const label = document.createElement("span");
-	label.className = "param-label";
-	label.textContent = param.label;
-
-	const rangeWrap = document.createElement("div");
-	rangeWrap.className = "param-range-wrap";
-
-	const input = document.createElement("input");
-	input.type = "range";
-	input.className = "param-range";
-	input.value = String(value ?? param.default ?? 0);
-	if (param.min !== undefined) input.min = String(param.min);
-	if (param.max !== undefined) input.max = String(param.max);
-	if (param.step !== undefined) input.step = String(param.step);
-
-	const display = document.createElement("span");
-	display.className = "param-value";
-	display.textContent = input.value;
-
-	input.addEventListener("input", () => {
-		display.textContent = input.value;
-		onChange(Number(input.value));
+	const slider = Slider({
+		label: param.label,
+		min: param.min ?? 0,
+		max: param.max ?? 255,
+		step: param.step ?? 1,
+		value: Number(value ?? param.default ?? 0),
+		className: "param-range",
+		onInput: onChange,
 	});
 
-	rangeWrap.append(input, display);
-	wrap.append(label, rangeWrap);
+	wrap.appendChild(slider.root);
 	return wrap;
 }
 
 function createPoiSelect(param: ParamDef, value: unknown, pois: Poi[], onChange: (v: string) => void): HTMLElement {
-	const wrap = document.createElement("label");
+	const wrap = document.createElement("div");
 	wrap.className = "param-field";
 
-	const label = document.createElement("span");
-	label.className = "param-label";
-	label.textContent = param.label;
-
-	const select = document.createElement("select");
-	select.className = "param-select";
-
-	// Empty option for optional POIs
-	const emptyOpt = document.createElement("option");
-	emptyOpt.value = "";
-	emptyOpt.textContent = "— Select POI —";
-	select.appendChild(emptyOpt);
-
-	for (const poi of pois) {
-		const opt = document.createElement("option");
-		opt.value = poi.name;
-		opt.textContent = poi.name;
-		if (poi.name === value) opt.selected = true;
-		select.appendChild(opt);
-	}
-
-	select.addEventListener("change", () => {
-		onChange(select.value);
+	const dropdown = Dropdown({
+		label: param.label,
+		value: String(value ?? ""),
+		selectClassName: "param-select",
+		options: [
+			{ value: "", label: "- Select POI -" },
+			...pois.map((poi) => ({ value: poi.name, label: poi.name })),
+		],
+		onChange,
 	});
 
-	wrap.append(label, select);
+	wrap.appendChild(dropdown.root);
 	return wrap;
 }
 
 function createSelectInput(param: ParamDef, value: unknown, onChange: (v: string) => void): HTMLElement {
-	const wrap = document.createElement("label");
+	const wrap = document.createElement("div");
 	wrap.className = "param-field";
 
-	const label = document.createElement("span");
-	label.className = "param-label";
-	label.textContent = param.label;
-
-	const select = document.createElement("select");
-	select.className = "param-select";
-
-	for (const option of param.options || []) {
-		const opt = document.createElement("option");
-		opt.value = option;
-		opt.textContent = option;
-		if (option === value) opt.selected = true;
-		select.appendChild(opt);
-	}
-
-	select.addEventListener("change", () => {
-		onChange(select.value);
+	const dropdown = Dropdown({
+		label: param.label,
+		value: String(value ?? param.options?.[0] ?? ""),
+		selectClassName: "param-select",
+		options: (param.options || []).map((option) => ({ value: option, label: option })),
+		onChange,
 	});
 
-	wrap.append(label, select);
+	wrap.appendChild(dropdown.root);
 	return wrap;
 }
 
