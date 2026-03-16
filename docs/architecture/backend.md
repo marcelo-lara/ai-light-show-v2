@@ -5,6 +5,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 ## Key modules
 
 - `backend/main.py`: application lifecycle, startup loading, route wiring.
+- `backend/api/vulnerabilities.py`: structured backend vulnerability catalog for the HTTP API.
 - `backend/api/websocket_manager/endpoint.py`: websocket accept/read loop.
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
@@ -99,6 +100,7 @@ Song snapshot payload includes optional analysis artifacts under `song.analysis`
 Static file serving for frontend assets consumed from snapshots:
 - `/songs/*`: song audio files.
 - `/meta/*`: analyzer metadata artifacts (SVG/JSON).
+- `/vulnerabilities`: structured list of backend vulnerabilities detected from the current backend configuration.
 
 Patch behavior:
 - Current diff granularity is top-level key replacement only.

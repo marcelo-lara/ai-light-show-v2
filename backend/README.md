@@ -5,12 +5,14 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 ## Purpose
 
 - Expose the websocket control plane at `/ws`.
+- Expose a read-only vulnerability catalog at `/vulnerabilities`.
 - Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`).
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
 
 - `main.py`: lifecycle wiring, startup loading, route setup.
+- `api/vulnerabilities.py`: structured catalog of backend vulnerabilities exposed by the HTTP route.
 - `api/websocket_manager/*`: websocket endpoint, message parsing, broadcasts, sequencing.
 - `api/intents/*`: intent handlers and registry.
 - `api/state/*`: snapshot/patch payload builders.
@@ -30,6 +32,11 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net frames continuously.
 4. Clients send websocket `intent` messages.
 5. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
+
+## HTTP routes
+
+- `/`: backend identifier payload.
+- `/vulnerabilities`: returns the current structured list of backend vulnerabilities with severity, affected surfaces, evidence, and remediation guidance.
 
 ## WebSocket protocol essentials
 
