@@ -6,9 +6,9 @@ import { deleteCue } from "../../cue_intents.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { transportJumpToTime } from "../../../../shared/transport/transport_intents.ts";
 import { cueSignature, findCurrentCueTime } from "./format.ts";
-import { createCueRow, createEmptyPlaylistState } from "./row.ts";
+import { createCueRow, createEmptyCueSheetState } from "./row.ts";
 
-export function EffectPlaylist(): HTMLElement {
+export function CueSheet(): HTMLElement {
 	const content = document.createElement("div");
 	content.className = "cue-sheet-body";
 
@@ -43,7 +43,7 @@ export function EffectPlaylist(): HTMLElement {
 	async function confirmDeleteCue(index: number): Promise<void> {
 		const confirmed = await ConfirmCancelPrompt({
 			title: "Delete cue",
-			message: "This cue will be removed from the playlist.",
+			message: "This cue will be removed from the cue sheet.",
 			confirmLabel: "Delete",
 			cancelLabel: "Cancel",
 		});
@@ -61,7 +61,7 @@ export function EffectPlaylist(): HTMLElement {
 			lastCueSignature = signature;
 			listContainer.querySelectorAll(".cue-sheet-row, .cue-sheet-empty").forEach((node) => node.remove());
 			if (cues.length === 0) {
-				listContainer.appendChild(createEmptyPlaylistState());
+				listContainer.appendChild(createEmptyCueSheetState());
 			} else {
 				for (const [index, cue] of cues.entries()) {
 					listContainer.appendChild(createCueRow(cue, {

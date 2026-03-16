@@ -76,15 +76,21 @@ Behavior:
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
-- Chaser intents are `chaser.apply`, `chaser.start`, `chaser.stop`, and `chaser.list`.
+- Chaser intents are `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, and `chaser.list`.
 - Chaser effect fields `beat` and `duration` are beat-based; conversion uses `beatToTimeMs(beat_count, bpm)`.
 - Generated chaser entries persist into `backend/cues/{song}.json` with `created_by` set to `chaser:{name}`.
+- `chaser.preview` renders temporary Art-Net output and does not persist cue data.
+- Chaser upsert behavior replaces existing entries at matching `(time, fixture_id)` rather than duplicating them.
 
 ### Preview
 
 - `fixture.preview_effect` validates fixture/effect/duration, renders temporary canvas, streams it to output at 60 FPS via Art-Net, and emits:
   - `preview_started` on success.
   - `preview_rejected` on failure.
+- `chaser.preview` validates chaser input, renders temporary chaser canvas, streams output at 60 FPS via Art-Net, and emits:
+  - `chaser_preview_started` on success.
+  - `chaser_preview_rejected` on failure.
+- `chaser.stop_preview` emits `chaser_preview_stopped` when active preview is cancelled.
 - Preview runs to completion; final effect values persist to `editor_universe` and `output_universe`.
 - `fixture.stop_preview` currently emits warning event and is not implemented.
 - Preview is not written to cues/files, but final values remain active until overwritten.

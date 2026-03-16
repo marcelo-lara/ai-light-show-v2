@@ -39,6 +39,11 @@ class StateCoreBootstrapMixin:
         self.preview_fixture_id: Optional[str] = None
         self.preview_effect: Optional[str] = None
         self.preview_duration: float = 0.0
+        self.preview_chaser_active: bool = False
+        self.preview_chaser_task: Optional[asyncio.Task] = None
+        self.preview_chaser_canvas: Optional[DMXCanvas] = None
+        self.preview_chaser_request_id: Optional[str] = None
+        self.preview_chaser_name: Optional[str] = None
         self.max_used_channel: int = 0
         self.chasers_path: Path = backend_path / "fixtures" / "chasers.json"
         self.chasers: List[Any] = []

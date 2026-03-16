@@ -43,7 +43,7 @@ Supported intent names:
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
 - Cue helpers: `cue.apply_helper`.
-- Chaser: `chaser.apply`, `chaser.start`, `chaser.stop`, `chaser.list`.
+- Chaser: `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, `chaser.list`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
 
@@ -71,8 +71,11 @@ Patch behavior:
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.
 - `chaser.apply` and `chaser.start` generate cue entries from `backend/fixtures/chasers.json`.
+- `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
+- `chaser.stop_preview` stops temporary chaser preview output without writing cues.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
 - Generated chaser entries persist to cue sheets with `created_by` set to `chaser:{name}`.
+- Chaser cue upsert prevents duplicates at the same `(time, fixture_id)` and replaces existing entries when needed.
 
 ## Data and file contracts
 

@@ -64,6 +64,8 @@ export type IntentName =
   | "cue.clear"
   | "cue.apply_helper"
   | "chaser.apply"
+  | "chaser.preview"
+  | "chaser.stop_preview"
   | "chaser.start"
   | "chaser.stop"
   | "chaser.list"

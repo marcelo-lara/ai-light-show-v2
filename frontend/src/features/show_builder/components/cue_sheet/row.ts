@@ -28,7 +28,7 @@ function createAction(
 	});
 }
 
-export function createEmptyPlaylistState(): HTMLElement {
+export function createEmptyCueSheetState(): HTMLElement {
 	const empty = document.createElement("section");
 	empty.className = "cue-sheet-empty";
 	empty.append(

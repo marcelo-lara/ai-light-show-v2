@@ -263,6 +263,7 @@ npm run sync-icons
 - Never render instructional/mockup annotation text in the final UI.
 - Never create UI labels directly from annotation callouts in LoFi files.
 - Never copy annotation colors (including pink guidance text color) into production UI styles.
+- Never ship annotation text or annotation color tokens into final HTML, DOM content, or production CSS.
 - In `src/features`, use shared themed controls (`Button`, `Dropdown`, `Slider`, `Toggle`) instead of raw `button`, `select`, `input[type=range]`, or `input[type=checkbox]` elements.
 - Do not create feature-local custom variants of those controls; extend shared control components when customization is required.
 

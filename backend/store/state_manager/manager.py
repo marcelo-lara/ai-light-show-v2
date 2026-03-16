@@ -7,6 +7,7 @@ from .core import (
 )
 from .playback import (
     StatePlaybackChannelMixin,
+    StatePlaybackPreviewChaserMixin,
     StatePlaybackPreviewControlMixin,
     StatePlaybackPreviewRunnerMixin,
     StatePlaybackPreviewStartMixin,
@@ -21,6 +22,7 @@ class StateManager(
     StateSongCueMixin,
     StateSongLoadingMixin,
     StatePlaybackTransportMixin,
+    StatePlaybackPreviewChaserMixin,
     StatePlaybackPreviewRunnerMixin,
     StatePlaybackPreviewControlMixin,
     StatePlaybackPreviewStartMixin,

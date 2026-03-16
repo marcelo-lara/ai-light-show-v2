@@ -98,6 +98,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Whenever fixture effect contracts change, update backend docs and active client integration in the same change.
 - For frontend UI implementation:
   - Prefer flexbox over grid for small/local components.
+  - DO NOT CREATE BORDERS unless explicitly requested.
   - LoFi mockups are layout references only; do not reinterpret their intended layout.
   - Never render annotation/instruction text from mockups in the final UI.
   - Never copy annotation colors (for example pink guidance text) into production UI.

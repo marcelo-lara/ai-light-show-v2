@@ -22,6 +22,7 @@ Use this file first for UI tasks. Keep prompts short and reference exact assets 
 - Cite only the specific screen file(s) needed for the task.
 - Treat LoFi files as layout references.
   - Pink annotation text is for reference/intent only and is never rendered in UI.
+  - Annotation text and annotation colors are never copied into final HTML, DOM labels, or production CSS.
   - Do not create DOM elements from instructional labels in mockups (for example: `time`, `fixture`, `effect`, `duration`, `delete`, `preview`, `edit` when shown as annotation text).
   - Do not copy annotation colors from mockups into production UI.
 - Use frontend token/style rules from [frontend/README.md](../../frontend/README.md).

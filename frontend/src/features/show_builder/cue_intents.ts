@@ -119,6 +119,31 @@ export function applyChaser(chaserName: string, startTimeMs = 0, repetitions?: n
 	});
 }
 
+export function previewChaser(chaserName: string, startTimeMs = 0, repetitions?: number) {
+	const payload: Record<string, unknown> = {
+		chaser_name: chaserName,
+		start_time_ms: Math.max(0, Math.round(startTimeMs)),
+	};
+	if (typeof repetitions === "number" && Number.isFinite(repetitions)) {
+		payload.repetitions = Math.max(1, Math.floor(repetitions));
+	}
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.preview",
+		payload,
+	});
+}
+
+export function stopChaserPreview() {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.stop_preview",
+		payload: {},
+	});
+}
+
 export function startChaser(chaserName: string, startTimeMs = 0, repetitions?: number) {
 	const payload: Record<string, unknown> = {
 		chaser_name: chaserName,

@@ -150,6 +150,8 @@ Notes on `fixture.set_values`:
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
 | `chaser.apply` | `chaser_name`, `start_time_ms?`, `repetitions?` | loads chaser definition, converts beat fields via `beatToTimeMs`, upserts generated cue entries, persists, re-renders canvas, tags `created_by` as `chaser:{name}` | `True` on success; else event `chaser_apply_failed` and `False` |
+| `chaser.preview` | `chaser_name`, `start_time_ms?`, `repetitions?` | expands chaser into temporary cue entries, renders non-persistent preview frames at 60 FPS, streams Art-Net output, does not write cues | `True` on success; else event `chaser_preview_rejected` and `False` |
+| `chaser.stop_preview` | none | cancels active non-persistent chaser preview and restores editor output universe | emits `chaser_preview_stopped` when preview was active, otherwise `chaser_preview_stop_ignored`; returns `False` |
 | `chaser.start` | `chaser_name`, `start_time_ms?`, `repetitions?` | applies chaser and tracks runtime instance id in memory | `True` on success; else event `chaser_start_failed` and `False` |
 | `chaser.stop` | `instance_id` | removes tracked runtime instance id from memory | emits `chaser_stopped`, returns `False` |
 | `chaser.list` | none | emits `chaser_list` event with current chaser definitions | `False` |
@@ -177,6 +179,10 @@ Notes on `fixture.set_values`:
 | `warning` | `preview_rejected` | rejection object from `start_preview_effect` |
 | `info` | `preview_started` | preview result object (`requestId`, `fixtureId`, `effect`, `duration`) |
 | `warning` | `stop_preview_not_implemented` | none |
+| `warning` | `chaser_preview_rejected` | rejection object from `start_preview_chaser` |
+| `info` | `chaser_preview_started` | preview result object (`requestId`, `chaser_name`, `entries`) |
+| `info` | `chaser_preview_stopped` | `{}` |
+| `warning` | `chaser_preview_stop_ignored` | `{reason:"preview_not_active"}` |
 | `error` | `prompt_required` | none |
 | `info` | `llm_stream` | `{domain:"llm", chunk, done}` |
 | `info` | `llm_cancelled` | `{domain:"llm"}` |
