@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-import main as backend_main
+import backend.main as backend_main
 from services.artnet import ArtNetService
 from services.song_service import SongService
 
@@ -30,4 +30,5 @@ def test_backend_vulnerabilities_route_lists_known_backend_risks(monkeypatch):
     }
     assert by_id["unauthenticated_control_access"]["severity"] == "high"
     assert "/ws" in by_id["unauthenticated_control_access"]["surface"]
+    assert "/vulnerabilities" in by_id["permissive_cors_policy"]["surface"]
     assert "/songs" in by_id["unauthenticated_static_asset_exposure"]["surface"]

@@ -13,7 +13,7 @@ BACKEND_VULNERABILITIES = (
     {
         "id": "permissive_cors_policy",
         "severity": "medium",
-        "surface": ["/", "/ws", "/songs", "/meta"],
+        "surface": ["/", "/vulnerabilities", "/ws", "/songs", "/meta"],
         "summary": "The backend allows cross-origin requests from any origin with every method and header enabled.",
         "evidence": [
             "backend/main.py configures CORSMiddleware with allow_origins=['*'].",
