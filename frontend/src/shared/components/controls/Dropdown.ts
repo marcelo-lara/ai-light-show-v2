@@ -4,8 +4,6 @@ export type DropdownProps = {
 	label?: string;
 	value: string;
 	options: DropdownOption[];
-	className?: string;
-	selectClassName?: string;
 	attributes?: Record<string, string>;
 	onChange?: (value: string) => void;
 };
@@ -31,7 +29,7 @@ function applyOptions(select: HTMLSelectElement, options: DropdownOption[], valu
 
 export function Dropdown(props: DropdownProps): DropdownControl {
 	const wrap = document.createElement("label");
-	wrap.className = `dropdown${props.className ? ` ${props.className}` : ""}`;
+	wrap.className = "dropdown";
 
 	if (props.label) {
 		const text = document.createElement("span");
@@ -40,9 +38,6 @@ export function Dropdown(props: DropdownProps): DropdownControl {
 	}
 
 	const select = document.createElement("select");
-	if (props.selectClassName) {
-		select.className = props.selectClassName;
-	}
 	for (const [name, value] of Object.entries(props.attributes ?? {})) {
 		select.setAttribute(name, value);
 	}

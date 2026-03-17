@@ -418,8 +418,7 @@
   order: 2;
 }
 
-.param-input,
-.param-select {
+.param-input {
   order: 1;
 }
 

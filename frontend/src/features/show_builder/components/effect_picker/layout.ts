@@ -45,7 +45,6 @@ export function buildTopRow(timeValue: string): TopRowRefs {
 	const fixtureDropdown = Dropdown({
 		value: "",
 		options: [],
-		selectClassName: "effect-picker-select",
 		attributes: { "aria-label": "Fixture" },
 	});
 	fixtureField.appendChild(fixtureDropdown.root);
@@ -53,7 +52,6 @@ export function buildTopRow(timeValue: string): TopRowRefs {
 	const effectDropdown = Dropdown({
 		value: "",
 		options: [],
-		selectClassName: "effect-picker-select",
 		attributes: { "aria-label": "Effect" },
 	});
 	effectField.appendChild(effectDropdown.root);

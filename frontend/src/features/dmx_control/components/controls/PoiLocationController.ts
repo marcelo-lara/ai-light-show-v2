@@ -67,7 +67,6 @@ export function PoiLocationController(
     const dropdown = Dropdown({
       value: currentSelectedPoiId,
       options,
-      selectClassName: "poi-dropdown-select",
       onChange: (val) => {
         currentSelectedPoiId = val;
 

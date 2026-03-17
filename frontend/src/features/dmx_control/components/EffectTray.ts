@@ -21,7 +21,6 @@ export function EffectTray(fixture: FixtureVM): HTMLElement {
   const effectControl = Dropdown({
     value: effects[0] ?? "",
     options: effects.map((effect) => ({ value: effect, label: effect })),
-    className: "effect-select",
     attributes: { "aria-label": "Preview effect" },
   });
   const durationControl = Slider({

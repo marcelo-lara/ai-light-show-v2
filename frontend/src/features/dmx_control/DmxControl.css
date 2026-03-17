@@ -32,10 +32,6 @@
   align-items: center;
 }
 
-.effect-select {
-  flex: 1;
-}
-
 .effect-params {
   display: flex;
   gap: 8px;

@@ -335,13 +335,6 @@ button:disabled {
   margin-top: 2px;
 }
 
-.status-row-theme .theme-select {
-  max-width: 124px;
-  margin-left: auto;
-  font-size: 11px;
-  padding: 2px 4px;
-}
-
 .badge.ok {
   border-color: var(--ok);
 }
@@ -354,8 +347,6 @@ button:disabled {
   border-color: var(--err);
 }
 
-.theme-select,
-select,
 textarea,
 input[type="range"] {
   width: 100%;
