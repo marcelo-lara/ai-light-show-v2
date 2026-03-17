@@ -20,8 +20,8 @@ export function FixtureEffectsPanel(): HTMLElement {
   const content = document.createElement("div");
   content.className = "show-control-body";
 
-  const list = document.createElement("ol");
-  list.className = "fixture-effects-list mono c-list";
+  const list = document.createElement("div");
+  list.className = "fixture-effects-list c-list";
 
   for (const effect of EFFECT_ROWS) {
     const [timeToken, ...rest] = effect.split(" ");
@@ -34,7 +34,6 @@ export function FixtureEffectsPanel(): HTMLElement {
     details.textContent = rest.join(" ");
 
     const item = List({
-      tagName: "li",
       className: "fixture-effects-row",
       content: [time, details],
       isActive: effect.startsWith("0.00"),

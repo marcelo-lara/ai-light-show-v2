@@ -33,8 +33,8 @@ export function SongSectionsPanel(): HTMLElement {
   const content = document.createElement("div");
   content.className = "show-control-body";
 
-  const list = document.createElement("ol");
-  list.className = "show-control-list mono c-list";
+  const list = document.createElement("div");
+  list.className = "show-control-list c-list";
 
   const sections = normalizedSections(store.state.song?.sections);
   const highlightedIndex = activeSectionIndex(sections, store.state.playback?.time_ms);
@@ -50,7 +50,6 @@ export function SongSectionsPanel(): HTMLElement {
     name.textContent = section.name;
 
     const item = List({
-      tagName: "li",
       className: "show-control-row",
       content: [time, name],
       isActive,
@@ -77,7 +76,6 @@ export function SongSectionsPanel(): HTMLElement {
     name.textContent = "No sections available";
 
     const item = List({
-      tagName: "li",
       className: "show-control-row",
       content: [time, name],
       isActive: true,

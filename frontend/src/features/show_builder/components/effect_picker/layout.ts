@@ -1,7 +1,7 @@
-import { Input } from "../../../../shared/components/controls/Input.ts";
 import { Button } from "../../../../shared/components/controls/Button.ts";
 import { Dropdown, type DropdownControl } from "../../../../shared/components/controls/Dropdown.ts";
 import { Slider, type SliderControl } from "../../../../shared/components/controls/Slider.ts";
+import { time_position } from "../time_position.ts";
 
 export type TopRowRefs = {
 	root: HTMLElement;
@@ -39,9 +39,8 @@ function field(cls: string): HTMLElement {
 export function buildTopRow(timeValue: string): TopRowRefs {
 	const root = document.createElement("div");
 	root.className = "effect-picker-top";
-	const timeField = field("effect-picker-field--time");
-	const tc = Input({ state: "default", "icon-position": "start", bindings: { value: timeValue, readOnly: true, className: "effect-picker-time", type: "text", attributes: { "aria-label": "Current playback time" } } });
-	timeField.appendChild(tc.root);
+	const tc = time_position(timeValue, "Current playback time");
+	tc.root.classList.add("effect-picker-field", "time_position-field");
 	const fixtureField = field("effect-picker-field--fixture");
 	const fixtureDropdown = Dropdown({
 		value: "",
@@ -58,7 +57,7 @@ export function buildTopRow(timeValue: string): TopRowRefs {
 		attributes: { "aria-label": "Effect" },
 	});
 	effectField.appendChild(effectDropdown.root);
-	root.append(timeField, fixtureField, effectField);
+	root.append(tc.root, fixtureField, effectField);
 	return { root, timeInput: tc.input, fixtureDropdown, effectDropdown };
 }
 

@@ -5,7 +5,8 @@ import { List } from "../../../../shared/components/layout/List.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { applyChaser, previewChaser } from "../../cue_intents.ts";
-import { getChasers } from "../effect_picker/selectors.ts";
+import { formatTime, getChasers } from "../effect_picker/selectors.ts";
+import { time_position } from "../time_position.ts";
 
 export function ChaserPicker(): HTMLElement {
 	const body = document.createElement("div");
@@ -21,19 +22,9 @@ export function ChaserPicker(): HTMLElement {
 	const headControls = document.createElement("div");
 	headControls.className = "chaser-picker-head-controls";
 
-	const startTimeField = document.createElement("label");
-	startTimeField.className = "chaser-picker-head-field";
-	const startTimeInput = document.createElement("input");
-	startTimeInput.type = "number";
-	startTimeInput.min = "0";
-	startTimeInput.step = "0.001";
-	startTimeInput.className = "chaser-picker-start-input";
-	startTimeInput.setAttribute("aria-label", "Start time");
-	startTimeInput.addEventListener("input", () => {
-		const value = Number(startTimeInput.value);
-		startTimeSeconds = Number.isFinite(value) ? Math.max(0, value) : 0;
-	});
-	startTimeField.append(startTimeInput);
+	const startTime = time_position(formatTime(0), "Current playback time");
+	startTime.root.classList.add("chaser-picker-head-field", "time_position-field");
+	const startTimeInput = startTime.input;
 
 	const chaserDropdown = Dropdown({
 		label: "",
@@ -68,7 +59,7 @@ export function ChaserPicker(): HTMLElement {
 	});
 	modeActions.append(newBtn, editBtn);
 
-	headControls.append(startTimeField, chaserField, modeActions);
+	headControls.append(startTime.root, chaserField, modeActions);
 	head.append(headControls);
 
 	const repsDropdown = Dropdown({
@@ -197,7 +188,7 @@ export function ChaserPicker(): HTMLElement {
 	function refresh() {
 		const playbackMs = Number(getBackendStore().state.playback?.time_ms ?? 0);
 		startTimeSeconds = Math.max(0, playbackMs / 1000);
-		startTimeInput.value = startTimeSeconds.toFixed(3);
+		startTimeInput.value = formatTime(playbackMs);
 
 		const chasers = getChasers();
 		const options: DropdownOption[] = chasers.map((chaser) => ({

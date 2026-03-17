@@ -24,11 +24,11 @@ export function CueSheetPanel(): HTMLElement {
 
   for (const cue of CUES) {
     const time = document.createElement("span");
-    time.className = "u-cell u-cell-time mono";
+    time.className = "u-cell u-cell-time";
     time.textContent = cue.time;
 
     const title = document.createElement("span");
-    title.className = "cue-sheet-title u-cell u-cell-effect mono";
+    title.className = "cue-sheet-title u-cell u-cell-effect";
     title.textContent = cue.name;
 
     const meta = document.createElement("span");
