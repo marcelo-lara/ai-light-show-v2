@@ -7,7 +7,8 @@
 
 .show-builder-panel {
   min-height: 420px;
-  max-height: 73vh
+  max-height: 73vh;
+  min-width: 11em;
 }
 
 .show-builder-flow-column {

@@ -25,7 +25,7 @@ export function Button(props: ButtonProps): HTMLButtonElement {
 	button.type = "button";
 
 	const stateClass = props.state && props.state !== "default" ? ` ${props.state}` : "";
-	button.className = `btn${stateClass}`;
+	button.className = `${stateClass}`;
 	button.disabled = Boolean(props.bindings?.disabled);
 
 	for (const [name, value] of Object.entries(props.bindings?.attributes ?? {})) {
