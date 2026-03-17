@@ -22,6 +22,8 @@
   --err: #ff5c5c;
 
   --focus: rgba(105, 167, 255, 0.65);
+  --btn-state-bg-strong: color-mix(in oklab, var(--accent) 20%, var(--card-2));
+  --btn-state-bg-soft: color-mix(in oklab, var(--accent) 16%, var(--card-2));
 
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 
@@ -79,7 +81,6 @@
 
 * {
   box-sizing: border-box;
-  cursor: default;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -92,6 +93,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
+  cursor: default;
 }
 
 #app {
@@ -130,19 +132,6 @@ body {
   padding: 1px 0;
 }
 
-.nav-btn,
-.btn {
-  background: var(--card);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .nav-btn {
   width: 48px;
   height: 48px;
@@ -151,6 +140,9 @@ body {
   padding: 0;
   display: grid;
   place-items: center;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
 }
 
 .nav-icon {
@@ -162,23 +154,26 @@ body {
 
 button {
   border: 0;
-  background-color: var(--card);
+  padding: 0.5em;
+  color: var(--text);
+  background-color: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+  cursor: pointer;
 }
 button:hover:not(:disabled) {
-  background-color: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+  background-color: color-mix(in oklab, var(--accent) 32%, var(--card-2));
 }
 
 .nav-btn.active,
 .btn.primary,
 .btn.active {
   border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 20%, var(--card-2));
+  background: var(--btn-state-bg-strong);
 }
 
 .is-active,
 .is-selected {
   border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+  background: var(--btn-state-bg-soft);
 }
 
 .is-active .muted,
@@ -186,7 +181,7 @@ button:hover:not(:disabled) {
   color: var(--accent);
 }
 
-.btn:disabled {
+button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -195,7 +190,6 @@ button:hover:not(:disabled) {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;  
 }
 
 .btn-content--end {

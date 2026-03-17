@@ -96,7 +96,7 @@ export function buildActions(): ActionRefs {
 	const addGroup = document.createElement("div");
 	addGroup.className = "effect-picker-action-group";
 	const commitBtn = Button({ caption: "Add", icon: "playerPrev", state: "default", "icon-position": "start", bindings: { title: "Add cue at the current playback time" } });
-	const cancelBtn = Button({ caption: "Cancel", icon: "delete", state: "default", "icon-position": "start", bindings: { title: "Cancel cue editing", className: "effect-picker-cancel", disabled: true } });
+	const cancelBtn = Button({ caption: "Cancel", icon: "delete", state: "default", "icon-position": "start", bindings: { title: "Cancel cue editing", disabled: true } });
 	addGroup.append(commitBtn, cancelBtn);
 	const previewGroup = document.createElement("div");
 	previewGroup.className = "effect-picker-action-group effect-picker-action-group--preview";

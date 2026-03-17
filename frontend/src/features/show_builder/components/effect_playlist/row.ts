@@ -20,11 +20,10 @@ function createAction(
 	icon: "delete" | "preview" | "edit",
 	title: string,
 	onClick: () => void,
-	className = "",
 ): HTMLButtonElement {
 	return Button({
 		icon,
-		bindings: { className: `cue-sheet-action ${className}`.trim(), title, onClick },
+		bindings: { title, onClick },
 	});
 }
 
@@ -57,9 +56,9 @@ export function createCueRow(cue: CueEntry, handlers: CueRowHandlers): HTMLEleme
 	const actions = document.createElement("div");
 	actions.className = "cue-sheet-row__actions";
 	actions.append(
-		createAction("delete", "Delete cue", handlers.onDelete, "cue-sheet-action--delete"),
-		createAction("preview", "Preview cue", handlers.onPreview, "cue-sheet-action--preview"),
-		createAction("edit", "Edit cue", handlers.onEdit, "cue-sheet-action--edit"),
+		createAction("delete", "Delete cue", handlers.onDelete),
+		createAction("preview", "Preview cue", handlers.onPreview),
+		createAction("edit", "Edit cue", handlers.onEdit),
 	);
 
 	row.append(main, actions);

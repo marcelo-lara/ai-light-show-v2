@@ -172,9 +172,6 @@
 .poi-dropdown-wrap {
   flex: 1;
 }
-.poi-set-btn {
-  min-width: 52px;
-}
 
 .enum-grid {
   display: grid;
@@ -190,18 +187,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
   gap: 4px;
-}
-
-.enum-grid-option {
-  width: 100%;
-  text-transform: lowercase;
-  overflow: hidden;
-}
-
-.enum-grid-option-swatch {
-  color: transparent;
-  font-size: 0;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 @media (max-width: 1100px) {

@@ -114,7 +114,6 @@ export function PoiLocationController(
         caption: "Set",
         state: "default",
         bindings: {
-          className: "poi-set-btn",
           onClick: () => {
             updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, currentPan, currentTilt);
             selectedPoiTarget = { pan: currentPan, tilt: currentTilt };

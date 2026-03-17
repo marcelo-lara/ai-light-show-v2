@@ -41,10 +41,9 @@ export function EnumGrid(options: {
 
   for (const option of options.options) {
     const button = Button({
-      caption: option.swatch ? undefined : option.label,
+      caption: option.label,
       state: "default",
       bindings: {
-        className: "enum-grid-option",
         title: option.label,
         dataset: { value: option.value },
         attributes: { "aria-pressed": "false" },
@@ -55,14 +54,6 @@ export function EnumGrid(options: {
         },
       },
     });
-    if (!option.swatch) {
-      button.querySelector(".btn-content")?.classList.add("enum-grid-option-content");
-    }
-    if (option.swatch) {
-      button.style.background = option.swatch;
-      button.classList.add("enum-grid-option-swatch");
-      button.querySelector(".btn-content")?.remove();
-    }
     buttons.push({ element: button, value: option.value });
     grid.appendChild(button);
   }

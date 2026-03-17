@@ -16,20 +16,6 @@
   padding: 1px 0;
 }
 
-.nav-btn {
-  border: 0;
-  background: var(--card-2);
-  color: var(--text);
-  padding: 0;
-  cursor: pointer;
-  width: 48px;
-  height: 48px;
-  max-width: 48px;
-  max-height: 48px;
-  display: grid;
-  place-items: center;
-}
-
 .nav-icon {
   width: 24px;
   height: 24px;
@@ -37,9 +23,4 @@
 
 .nav-icon .svg-accent {
   stroke: var(--accent);
-}
-
-.nav-btn.active {
-  border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 20%, var(--card-2));
 }

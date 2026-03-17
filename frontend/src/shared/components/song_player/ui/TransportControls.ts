@@ -21,10 +21,9 @@ export function TransportControls(callbacks: {
   const container = document.createElement("div");
   container.className = "song-player-transport";
 
-  const btn = (label: string, iconName: string, onClick: () => void, className = "btn") => {
+  const btn = (label: string, iconName: string, onClick: () => void) => {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = className;
     b.title = label;
     b.setAttribute("aria-label", label);
     
@@ -47,7 +46,7 @@ export function TransportControls(callbacks: {
   const prevSectionBtn = btn("Prev Section", "playerPrev", callbacks.onPrevSection);
   const prevBeatBtn = btn("Prev Beat", "playerPrev", callbacks.onPrevBeat);
   const stopBtn = btn("Stop", "playerStop", callbacks.onStop);
-  const playPauseBtn = btn("Play", "playerPlay", callbacks.onPlayPause, "btn play-pause-btn");
+  const playPauseBtn = btn("Play", "playerPlay", callbacks.onPlayPause);
   const nextBeatBtn = btn("Next Beat", "playerNext", callbacks.onNextBeat);
   const nextSectionBtn = btn("Next Section", "playerNext", callbacks.onNextSection);
 

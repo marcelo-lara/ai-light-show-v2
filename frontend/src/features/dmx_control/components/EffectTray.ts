@@ -64,7 +64,6 @@ export function EffectTray(fixture: FixtureVM): HTMLElement {
     caption: "Preview",
     state: "default",
     bindings: {
-      className: "effect-preview",
       title: "Preview effect",
       onClick: () => {
     const payload: Record<string, number> = {};

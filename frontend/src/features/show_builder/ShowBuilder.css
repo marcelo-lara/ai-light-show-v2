@@ -24,7 +24,7 @@
 }
 
 .show-builder-flow-column > .show-builder-panel:first-child {
-  flex: 2 1 0;
+  flex: 1 1 0;
 }
 
 .show-builder-flow-card {
@@ -177,12 +177,6 @@
   font-size: 0.74rem;
 }
 
-.chaser-picker-list-header,
-.chaser-picker-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
 .chaser-picker-list-header {
   font-size: 0.72rem;
@@ -214,14 +208,8 @@
 .chaser-picker-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-height: 120px;
-  max-height: 220px;
+  max-height: 100px;
   overflow: auto;
-  padding-right: 2px;
-}
-
-.chaser-picker-row {
 }
 
 .chaser-picker-row__start,
@@ -232,17 +220,8 @@
   color: var(--muted);
 }
 
-.chaser-picker-row__fixture,
-.chaser-picker-row__effect {
-  flex: 1 1 120px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .chaser-picker-row__preview {
-  flex: 0 0 44px;
+  flex: 0 0 20px;
   margin-left: auto;
 }
 
@@ -312,7 +291,7 @@
   min-height: 0;
   gap: 0;
 }
-
+.chaser-picker-row,
 .cue-sheet-row {
   display: flex;
   justify-content: space-between;
@@ -334,9 +313,12 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 2px;
   margin-left: auto;
   flex: 0 0 auto;
+}
+.chaser-picker-row > button,
+.cue-sheet-row__actions > button {
+  padding: 2px;
 }
 
 .cue-sheet-row__fixture {
@@ -350,13 +332,11 @@
 .cue-sheet-row__duration {
   flex: 0 0 96px;
 }
-
-.cue-sheet-action--delete,
-.cue-sheet-action--preview,
-.cue-sheet-action--edit {
-  flex: 0 0 auto;
-}
-
+.chaser-picker-row__start,
+.chaser-picker-row__beat,
+.chaser-picker-row__fixture,
+.chaser-picker-row__effect,
+.chaser-picker-row__duration,
 .cue-sheet-row__time,
 .cue-sheet-row__fixture,
 .cue-sheet-row__effect,
@@ -372,29 +352,27 @@
   color: var(--text);
 }
 
+.chaser-picker-row__duration,
+.chaser-picker-row__beat {
+  text-align: right;
+  min-width: 2em;
+}
+
 .cue-sheet-row__time,
+.chaser-picker-row__start,
 .cue-sheet-row__duration {
   color: var(--muted);
   text-align: right;
   min-width: 3em;
 }
-
+.chaser-picker-row__fixture,
+.chaser-picker-row__effect,
 .cue-sheet-row__fixture,
 .cue-sheet-row__effect {
   text-transform: none;
   letter-spacing: normal;
   margin: 0;
   width: 8em;
-}
-
-.cue-sheet-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  min-height: 24px;
-  padding: 2px 4px;
-  background: transparent;
 }
 
 .cue-sheet-empty {

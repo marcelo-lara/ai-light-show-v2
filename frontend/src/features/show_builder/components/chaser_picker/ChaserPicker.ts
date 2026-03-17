@@ -83,15 +83,6 @@ export function ChaserPicker(): HTMLElement {
 	});
 	repsDropdown.root.classList.add("chaser-picker-field", "chaser-picker-field--small");
 
-	const listHeader = document.createElement("div");
-	listHeader.className = "chaser-picker-list-header muted";
-	for (const titleText of ["", "", "", "", "", ""]) {
-		const label = document.createElement("span");
-		label.textContent = titleText;
-		label.className = "chaser-picker-header-cell";
-		listHeader.append(label);
-	}
-
 	const list = document.createElement("div");
 	list.className = "chaser-picker-list";
 
@@ -222,7 +213,7 @@ export function ChaserPicker(): HTMLElement {
 	const unsubscribe = subscribeBackendStore(refresh);
 	(body as unknown as { _cleanup: () => void })._cleanup = () => unsubscribe();
 
-	body.append(head, repsDropdown.root, listHeader, list, divider, actions, empty);
+	body.append(head, repsDropdown.root, list, divider, actions, empty);
 	return Card(body, {
 		title: "",
 		variant: "outlined",
