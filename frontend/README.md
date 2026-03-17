@@ -269,6 +269,10 @@ npm run sync-icons
 
 ## Explicit coding style directives
 
+- Use CUBE CSS; do not use BEM class patterns (`__`, `--`).
+- CUBE model in this repo: Composition uses `l-`/`o-`, Utilities use `u-`, Blocks use semantic component names, Exceptions use `is-`/`has-`.
+- Keep component structure as plain as possible; avoid wrapper-over-wrapper nesting unless required for semantics, accessibility, or behavior.
+- Do not add padding or gap values unless explicitly required by the task or LoFi constraints.
 - Keep feature CSS focused on layout and spacing. Do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
 - Keep control state visuals centralized in shared styles. Use shared state classes (`.is-active`, `.is-selected`) from `src/app/themes.css`.
 - Do not add feature-scoped state variants such as `.selected`, `.is-current`, or feature-specific `.is-active` color/border overrides.

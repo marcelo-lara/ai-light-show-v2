@@ -34,7 +34,7 @@ export function SongSectionsPanel(): HTMLElement {
   content.className = "show-control-body";
 
   const list = document.createElement("div");
-  list.className = "show-control-list c-list";
+  list.className = "show-control-list o-list";
 
   const sections = normalizedSections(store.state.song?.sections);
   const highlightedIndex = activeSectionIndex(sections, store.state.playback?.time_ms);

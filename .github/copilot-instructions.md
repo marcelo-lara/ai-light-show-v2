@@ -104,6 +104,10 @@ PYENV_VERSION=ai-light pyenv exec <command>
   - Never render annotation/instruction text from mockups in the final UI.
   - Never copy annotation colors (for example pink guidance text) into production UI.
   - Do not implement explicit mockup dimensions or colors directly; use responsive sizing and existing theme tokens/variables.
+  - Use CUBE CSS naming and structure; do not introduce BEM class patterns (`__`, `--`) in frontend code.
+  - CUBE model in this repo: Composition uses `l-`/`o-`, Utilities use `u-`, Blocks use semantic component names, Exceptions use `is-`/`has-`.
+  - Keep components plain: avoid wrapper-over-wrapper nesting unless required for semantics, accessibility, or behavior.
+  - Do not add padding or gap values unless explicitly required by the task or LoFi constraints.
   - In `frontend/src/features`, use shared themed controls (`Button`, `Dropdown`, `Slider`, `Toggle`) instead of creating raw `button`, `select`, `input[type=range]`, or `input[type=checkbox]` elements.
   - Avoid feature-local custom styling variants for those controls; extend shared control components/tokens when behavior or appearance changes are needed.
   - Keep feature CSS layout-focused; do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).

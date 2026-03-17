@@ -21,7 +21,7 @@ export function FixtureEffectsPanel(): HTMLElement {
   content.className = "show-control-body";
 
   const list = document.createElement("div");
-  list.className = "fixture-effects-list c-list";
+  list.className = "fixture-effects-list o-list";
 
   for (const effect of EFFECT_ROWS) {
     const [timeToken, ...rest] = effect.split(" ");
@@ -30,7 +30,7 @@ export function FixtureEffectsPanel(): HTMLElement {
     time.textContent = timeToken ?? "0.00";
 
     const details = document.createElement("span");
-    details.className = "fixture-effects-row__details u-cell u-cell-effect";
+    details.className = "fixture-effects-row-details u-cell u-cell-effect";
     details.textContent = rest.join(" ");
 
     const item = List({

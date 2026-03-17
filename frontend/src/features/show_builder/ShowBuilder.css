@@ -105,7 +105,7 @@
   min-width: 108px;
 }
 
-.chaser-picker-head-field--grow {
+.chaser-picker-head-field-grow {
   flex: 1 1 auto;
 }
 
@@ -122,15 +122,15 @@
   min-width: 0;
 }
 
-.chaser-picker-field--compact {
+.chaser-picker-field-compact {
   gap: 0;
 }
 
-.chaser-picker-field--compact > span {
+.chaser-picker-field-compact > span {
   display: none;
 }
 
-.chaser-picker-field--small {
+.chaser-picker-field-small {
   max-width: 140px;
 }
 
@@ -174,7 +174,7 @@
   gap: 6px;
 }
 
-.chaser-picker-action-group--right {
+.chaser-picker-action-group-right {
   align-items: flex-end;
 }
 
@@ -222,7 +222,7 @@
   overflow: auto;
 }
 
-.chaser-picker-row__preview {
+.chaser-picker-row-preview {
   flex: 0 0 20px;
   margin-left: auto;
 }
@@ -254,29 +254,29 @@
   gap: 12px;
 }
 
-.cue-sheet-header__title {
+.cue-sheet-header-title {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.cue-sheet-header__eyebrow,
-.cue-sheet-empty__eyebrow {
+.cue-sheet-header-eyebrow,
+.cue-sheet-empty-eyebrow {
   margin: 0;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.cue-sheet-header__heading,
-.cue-sheet-empty__title {
+.cue-sheet-header-heading,
+.cue-sheet-empty-title {
   margin: 0;
   font-size: 1rem;
   line-height: 1.2;
 }
 
-.cue-sheet-header__count {
+.cue-sheet-header-count {
   font-size: 0.82rem;
 }
 
@@ -307,7 +307,7 @@
   min-height: 240px;
 }
 
-.cue-sheet-empty__copy {
+.cue-sheet-empty-copy {
   margin: 0;
   max-width: 28ch;
 }
@@ -332,11 +332,7 @@
   min-width: 0;
 }
 
-.effect-picker-field--fixture {
-  flex: 1 1 0;
-}
-
-.effect-picker-field--effect {
+.effect-picker-field-grow {
   flex: 1 1 0;
 }
 
@@ -386,22 +382,22 @@
   gap: 6px;
 }
 
-.effect-picker-action-group--preview {
+.effect-picker-action-group-preview {
   align-items: flex-end;
 }
 
-.param-field--range .param-range-wrap {
+.param-field-range .param-range-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.param-field--range {
+.param-field-range {
   flex-direction: column;
   align-items: stretch;
 }
 
-.param-field--range .param-label {
+.param-field-range .param-label {
   order: 0;
 }
 
@@ -442,7 +438,7 @@
   }
 
   .effect-picker-action-group,
-  .effect-picker-action-group--preview {
+  .effect-picker-action-group-preview {
     align-items: stretch;
   }
 

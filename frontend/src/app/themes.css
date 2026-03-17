@@ -192,7 +192,7 @@ button:disabled {
   gap: 8px;
 }
 
-.btn-content--end {
+.btn-content-end {
   flex-direction: row-reverse;
 }
 
@@ -214,7 +214,7 @@ button:disabled {
   min-width: 0;
 }
 
-.input-control__label {
+.input-control-label {
   font-size: 0.85rem;
 }
 
@@ -229,15 +229,15 @@ button:disabled {
   padding: 8px 10px;
 }
 
-.input-shell--active {
+.is-input-active {
   border-color: var(--accent);
 }
 
-.input-shell--end {
+.u-row-reverse {
   flex-direction: row-reverse;
 }
 
-.input-shell__icon {
+.input-shell-icon {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
@@ -285,7 +285,7 @@ button:disabled {
   background: var(--card);
 }
 
-.card--outlined {
+.card-outlined {
   border: 1px solid var(--border-strong);
   background: var(--panel);
 }

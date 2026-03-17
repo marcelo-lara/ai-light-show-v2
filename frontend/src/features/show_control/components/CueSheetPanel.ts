@@ -20,7 +20,7 @@ export function CueSheetPanel(): HTMLElement {
   const content = document.createElement("div");
   content.className = "show-control-body";
   const list = document.createElement("div");
-  list.className = "show-control-list c-list";
+  list.className = "show-control-list o-list";
 
   for (const cue of CUES) {
     const time = document.createElement("span");

@@ -32,6 +32,10 @@ Use this file first for UI tasks. Keep prompts short and reference exact assets 
 
 ## Explicit implementation directives
 
+- Use CUBE CSS in frontend code; do not introduce BEM class patterns (`__`, `--`).
+- CUBE model in this repo: Composition uses `l-`/`o-`, Utilities use `u-`, Blocks use semantic component names, Exceptions use `is-`/`has-`.
+- Keep component structures plain; avoid wrapper-over-wrapper nesting unless required for semantics, accessibility, or behavior.
+- Do not add padding or gap values unless explicitly required by the task or LoFi constraints.
 - In `frontend/src/features`, use shared controls (`Button`, `Dropdown`, `Slider`, `Toggle`) for interaction elements.
 - Keep feature CSS layout-only where possible; do not style shared control internals (`.btn`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
 - Keep active/selected visuals shared and token-driven via `frontend/src/app/themes.css` (`.is-active`, `.is-selected`).

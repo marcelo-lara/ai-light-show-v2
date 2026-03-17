@@ -41,14 +41,14 @@ export function buildTopRow(timeValue: string): TopRowRefs {
 	root.className = "effect-picker-top";
 	const tc = time_position(timeValue, "Current playback time");
 	tc.root.classList.add("effect-picker-field", "time_position-field");
-	const fixtureField = field("effect-picker-field--fixture");
+	const fixtureField = field("effect-picker-field-grow");
 	const fixtureDropdown = Dropdown({
 		value: "",
 		options: [],
 		attributes: { "aria-label": "Fixture" },
 	});
 	fixtureField.appendChild(fixtureDropdown.root);
-	const effectField = field("effect-picker-field--effect");
+	const effectField = field("effect-picker-field-grow");
 	const effectDropdown = Dropdown({
 		value: "",
 		options: [],
@@ -96,7 +96,7 @@ export function buildActions(): ActionRefs {
 	const cancelBtn = Button({ caption: "Cancel", icon: "delete", state: "default", "icon-position": "start", bindings: { title: "Cancel cue editing", disabled: true } });
 	addGroup.append(commitBtn, cancelBtn);
 	const previewGroup = document.createElement("div");
-	previewGroup.className = "effect-picker-action-group effect-picker-action-group--preview";
+	previewGroup.className = "effect-picker-action-group effect-picker-action-group-preview";
 	const previewBtn = Button({ caption: "Preview", icon: "playerPlay", state: "default", "icon-position": "end", bindings: { title: "Preview the selected effect" } });
 	previewGroup.appendChild(previewBtn);
 	root.append(addGroup, previewGroup);

@@ -42,7 +42,8 @@ export function Button(props: ButtonProps): HTMLButtonElement {
 	}
 
 	const content = document.createElement("span");
-	content.className = `btn-content btn-content--${props["icon-position"] ?? "start"}`;
+	const iconPositionClass = props["icon-position"] === "end" ? " btn-content-end" : "";
+	content.className = `btn-content${iconPositionClass}`;
 
 	if (props.icon) {
 		content.appendChild(createSvgIcon(ICON_REGISTRY[props.icon], "btn-icon"));

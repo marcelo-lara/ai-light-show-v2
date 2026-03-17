@@ -6,7 +6,7 @@ export type CardOptions = {
 
 export function Card(content: HTMLElement, options: CardOptions = {}): HTMLElement {
 	const card = document.createElement("section");
-	const variantClass = options.variant === "outlined" ? "card--outlined" : "";
+	const variantClass = options.variant === "outlined" ? "card-outlined" : "";
 	card.className = `card ${variantClass} ${options.className ?? ""}`.trim();
 
 	if (options.title) {

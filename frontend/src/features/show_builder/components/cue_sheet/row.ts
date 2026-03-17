@@ -32,9 +32,9 @@ export function createEmptyCueSheetState(): HTMLElement {
 	const empty = document.createElement("section");
 	empty.className = "cue-sheet-empty";
 	empty.append(
-		createText("p", "cue-sheet-empty__eyebrow muted", "Cue Sheet"),
-		createText("h3", "cue-sheet-empty__title", "No cues queued yet"),
-		createText("p", "cue-sheet-empty__copy muted", "Add cues from the picker to build the show timeline."),
+		createText("p", "cue-sheet-empty-eyebrow muted", "Cue Sheet"),
+		createText("h3", "cue-sheet-empty-title", "No cues queued yet"),
+		createText("p", "cue-sheet-empty-copy muted", "Add cues from the picker to build the show timeline."),
 	);
 	return empty;
 }

@@ -46,17 +46,18 @@ export function Input(props: InputProps): InputControl {
 
 	if (props.caption) {
 		const caption = document.createElement("span");
-		caption.className = "input-control__label";
+		caption.className = "input-control-label";
 		caption.textContent = props.caption;
 		root.appendChild(caption);
 	}
 
-	const stateClass = props.state && props.state !== "default" ? ` input-shell--${props.state}` : "";
+	const stateClass = props.state === "active" ? " is-input-active" : "";
+	const iconPositionClass = props["icon-position"] === "end" ? " u-row-reverse" : "";
 	const shell = document.createElement("span");
-	shell.className = `input-shell input-shell--${props["icon-position"] ?? "start"}${stateClass}`;
+	shell.className = `input-shell${iconPositionClass}${stateClass}`;
 
 	if (props.icon) {
-		shell.appendChild(createSvgIcon(ICON_REGISTRY[props.icon], "input-shell__icon"));
+		shell.appendChild(createSvgIcon(ICON_REGISTRY[props.icon], "input-shell-icon"));
 	}
 
 	const input = document.createElement("input");

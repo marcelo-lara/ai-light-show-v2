@@ -1,10 +1,10 @@
-.c-list {
+.o-list {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.c-list__row {
+.o-list-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -13,7 +13,7 @@
   transition: color 50ms ease;
 }
 
-.c-list__content {
+.o-list-content {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -22,7 +22,7 @@
 }
 
 /* Consumers often pass a wrapper div with cells; keep it flex so u-cell flex sizing is effective. */
-.c-list__content > div {
+.o-list-content > div {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -30,7 +30,7 @@
   flex: 1 1 auto;
 }
 
-.c-list__actions {
+.o-list-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -39,7 +39,7 @@
   gap: 2px;
 }
 
-.c-list__actions button {
+.o-list-actions button {
   padding: 2px;
 }
 

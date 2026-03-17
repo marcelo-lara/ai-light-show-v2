@@ -15,18 +15,18 @@ export function EffectPlaylist(): HTMLElement {
 	const header = document.createElement("div");
 	header.className = "cue-sheet-header";
 	const title = document.createElement("div");
-	title.className = "cue-sheet-header__title";
+	title.className = "cue-sheet-header-title";
 	const eyebrow = document.createElement("p");
-	eyebrow.className = "cue-sheet-header__eyebrow muted";
+	eyebrow.className = "cue-sheet-header-eyebrow muted";
 	eyebrow.textContent = "Cue Sheet";
 
 	title.append(eyebrow);
 	const count = document.createElement("span");
-	count.className = "cue-sheet-header__count";
+	count.className = "cue-sheet-header-count";
 	header.append(title, count);
 
 	const listContainer = document.createElement("div");
-	listContainer.className = "cue-sheet-list c-list";
+	listContainer.className = "cue-sheet-list o-list";
 	content.append(header, listContainer);
 
 	let lastCueSignature = "";

@@ -31,7 +31,7 @@ function createNumberInput(param: ParamDef, value: unknown, onChange: (v: number
 
 function createRangeInput(param: ParamDef, value: unknown, onChange: (v: number) => void): HTMLElement {
 	const wrap = document.createElement("div");
-	wrap.className = "param-field param-field--range";
+	wrap.className = "param-field param-field-range";
 
 	const slider = Slider({
 		label: param.label,

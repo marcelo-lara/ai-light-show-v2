@@ -36,8 +36,8 @@ export function ChaserPicker(): HTMLElement {
 		},
 	});
 	const chaserField = document.createElement("div");
-	chaserField.className = "chaser-picker-head-field chaser-picker-head-field--grow";
-	chaserDropdown.root.classList.add("chaser-picker-field", "chaser-picker-field--compact");
+	chaserField.className = "chaser-picker-head-field chaser-picker-head-field-grow";
+	chaserDropdown.root.classList.add("chaser-picker-field", "chaser-picker-field-compact");
 	chaserDropdown.select.setAttribute("aria-label", "Chaser name");
 	chaserField.append(chaserDropdown.root);
 
@@ -73,10 +73,10 @@ export function ChaserPicker(): HTMLElement {
 			repetitions = value;
 		},
 	});
-	repsDropdown.root.classList.add("chaser-picker-field", "chaser-picker-field--small");
+	repsDropdown.root.classList.add("chaser-picker-field", "chaser-picker-field-small");
 
 	const list = document.createElement("div");
-	list.className = "chaser-picker-list c-list";
+	list.className = "chaser-picker-list o-list";
 
 	const divider = document.createElement("div");
 	divider.className = "chaser-picker-divider";
@@ -112,7 +112,7 @@ export function ChaserPicker(): HTMLElement {
 	actionLeft.append(addBtn);
 
 	const actionRight = document.createElement("div");
-	actionRight.className = "chaser-picker-action-group chaser-picker-action-group--right";
+	actionRight.className = "chaser-picker-action-group chaser-picker-action-group-right";
 	actionRight.append(previewBtn);
 
 	actions.append(actionLeft, actionRight);
@@ -167,7 +167,7 @@ export function ChaserPicker(): HTMLElement {
 					},
 				},
 			});
-			preview.classList.add("chaser-picker-row__preview");
+			preview.classList.add("chaser-picker-row-preview");
 
 			const content = document.createElement("div");
 			content.append(start, beat, fixture, cueEffect, duration);
