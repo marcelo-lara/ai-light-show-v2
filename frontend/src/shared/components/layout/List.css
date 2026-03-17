@@ -1,0 +1,86 @@
+.c-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.c-list__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: color 50ms ease;
+}
+
+.c-list__content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Consumers often pass a wrapper div with cells; keep it flex so u-cell flex sizing is effective. */
+.c-list__content > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.c-list__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.c-list__actions button {
+  padding: 2px;
+}
+
+.u-cell,
+.u-cell-time,
+.u-cell-fixture,
+.u-cell-effect,
+.u-cell-duration,
+.u-cell-beat,
+.u-cell-actions {
+  display: inline;
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.u-cell-time,
+.u-cell-duration,
+.u-cell-beat {
+  color: var(--muted);
+  text-align: right;
+  min-width: 3em;
+}
+
+.u-cell-fixture,
+.u-cell-effect {
+  text-transform: none;
+  letter-spacing: normal;
+  margin: 0;
+}
+
+.u-cell-fixture {
+  width: 9em;
+  flex: 0 0 9em;
+}
+
+.u-cell-effect {
+  width: 8em;
+}

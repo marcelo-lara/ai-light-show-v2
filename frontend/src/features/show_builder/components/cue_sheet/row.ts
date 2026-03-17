@@ -1,4 +1,5 @@
 import { Button } from "../../../../shared/components/controls/Button.ts";
+import { List } from "../../../../shared/components/layout/List.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { formatCueLabel, formatCueTime } from "./format.ts";
 
@@ -39,29 +40,27 @@ export function createEmptyCueSheetState(): HTMLElement {
 }
 
 export function createCueRow(cue: CueEntry, handlers: CueRowHandlers): HTMLElement {
-	const row = document.createElement("article");
-	row.className = "cue-sheet-row";
-	row.dataset.time = String(cue.time);
-
 	const main = document.createElement("div");
-	main.className = "cue-sheet-row__main";
-	main.addEventListener("click", handlers.onSelect);
 	main.append(
-		createText("span", "cue-sheet-row__time", formatCueTime(cue.time)),
-		createText("span", "cue-sheet-row__fixture", formatCueLabel(cue.fixture_id)),
-		createText("span", "cue-sheet-row__effect", formatCueLabel(cue.effect)),
-		createText("span", "cue-sheet-row__duration", `${cue.duration.toFixed(1)}s`),
+		createText("span", "u-cell u-cell-time", formatCueTime(cue.time)),
+		createText("span", "u-cell u-cell-fixture", formatCueLabel(cue.fixture_id)),
+		createText("span", "u-cell u-cell-effect", formatCueLabel(cue.effect)),
+		createText("span", "u-cell u-cell-duration", `${cue.duration.toFixed(1)}s`),
 	);
 
 	const actions = document.createElement("div");
-	actions.className = "cue-sheet-row__actions";
 	actions.append(
 		createAction("delete", "Delete cue", handlers.onDelete),
 		createAction("preview", "Preview cue", handlers.onPreview),
 		createAction("edit", "Edit cue", handlers.onEdit),
 	);
 
-	row.append(main, actions);
-	row.title = JSON.stringify(cue.data ?? {});
-	return row;
+	return List({
+		className: "cue-sheet-row",
+		content: main,
+		actions,
+		onSelect: handlers.onSelect,
+		dataset: { time: String(cue.time) },
+		title: JSON.stringify(cue.data ?? {}),
+	});
 }

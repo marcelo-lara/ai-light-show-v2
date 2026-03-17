@@ -6,7 +6,7 @@ import { deleteCue } from "../../cue_intents.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { transportJumpToTime } from "../../../../shared/transport/transport_intents.ts";
 import { cueSignature, findCurrentCueTime } from "./format.ts";
-import { createCueRow, createEmptyPlaylistState } from "./row.ts";
+import { createCueRow, createEmptyCueSheetState } from "../cue_sheet/row.ts";
 
 export function EffectPlaylist(): HTMLElement {
 	const content = document.createElement("div");
@@ -26,7 +26,7 @@ export function EffectPlaylist(): HTMLElement {
 	header.append(title, count);
 
 	const listContainer = document.createElement("div");
-	listContainer.className = "cue-sheet-list";
+	listContainer.className = "cue-sheet-list c-list";
 	content.append(header, listContainer);
 
 	let lastCueSignature = "";
@@ -61,7 +61,7 @@ export function EffectPlaylist(): HTMLElement {
 			lastCueSignature = signature;
 			listContainer.querySelectorAll(".cue-sheet-row, .cue-sheet-empty").forEach((node) => node.remove());
 			if (cues.length === 0) {
-				listContainer.appendChild(createEmptyPlaylistState());
+				listContainer.appendChild(createEmptyCueSheetState());
 			} else {
 				for (const [index, cue] of cues.entries()) {
 					listContainer.appendChild(createCueRow(cue, {

@@ -1,6 +1,7 @@
 import { Button } from "../../../../shared/components/controls/Button.ts";
 import { Dropdown, type DropdownOption } from "../../../../shared/components/controls/Dropdown.ts";
 import { Card } from "../../../../shared/components/layout/Card.ts";
+import { List } from "../../../../shared/components/layout/List.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { applyChaser, previewChaser } from "../../cue_intents.ts";
@@ -84,7 +85,7 @@ export function ChaserPicker(): HTMLElement {
 	repsDropdown.root.classList.add("chaser-picker-field", "chaser-picker-field--small");
 
 	const list = document.createElement("div");
-	list.className = "chaser-picker-list";
+	list.className = "chaser-picker-list c-list";
 
 	const divider = document.createElement("div");
 	divider.className = "chaser-picker-divider";
@@ -147,27 +148,24 @@ export function ChaserPicker(): HTMLElement {
 		}
 
 		for (const effect of [...chaser.effects].sort((a, b) => a.beat - b.beat)) {
-			const row = document.createElement("div");
-			row.className = "chaser-picker-row";
-
 			const start = document.createElement("span");
-			start.className = "chaser-picker-row__start";
+			start.className = "u-cell u-cell-time";
 			start.textContent = getStartTimeForBeat(effect.beat, bpm).toFixed(3);
 
 			const beat = document.createElement("span");
-			beat.className = "chaser-picker-row__beat";
+			beat.className = "u-cell u-cell-beat";
 			beat.textContent = String(effect.beat);
 
 			const fixture = document.createElement("span");
-			fixture.className = "chaser-picker-row__fixture";
+			fixture.className = "u-cell u-cell-fixture";
 			fixture.textContent = effect.fixture_id;
 
 			const cueEffect = document.createElement("span");
-			cueEffect.className = "chaser-picker-row__effect";
+			cueEffect.className = "u-cell u-cell-effect";
 			cueEffect.textContent = effect.effect;
 
 			const duration = document.createElement("span");
-			duration.className = "chaser-picker-row__duration";
+			duration.className = "u-cell u-cell-duration";
 			duration.textContent = String(effect.duration);
 
 			const preview = Button({
@@ -180,7 +178,18 @@ export function ChaserPicker(): HTMLElement {
 			});
 			preview.classList.add("chaser-picker-row__preview");
 
-			row.append(start, beat, fixture, cueEffect, duration, preview);
+			const content = document.createElement("div");
+			content.append(start, beat, fixture, cueEffect, duration);
+
+			const actions = document.createElement("div");
+			actions.append(preview);
+
+			const row = List({
+				tagName: "div",
+				className: "chaser-picker-row",
+				content,
+				actions,
+			});
 			list.append(row);
 		}
 	}

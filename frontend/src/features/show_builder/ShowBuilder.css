@@ -206,18 +206,8 @@
 }
 
 .chaser-picker-list {
-  display: flex;
-  flex-direction: column;
   max-height: 100px;
   overflow: auto;
-}
-
-.chaser-picker-row__start,
-.chaser-picker-row__beat,
-.chaser-picker-row__duration {
-  flex: 0 0 58px;
-  text-align: right;
-  color: var(--muted);
 }
 
 .chaser-picker-row__preview {
@@ -260,8 +250,7 @@
 }
 
 .cue-sheet-header__eyebrow,
-.cue-sheet-empty__eyebrow,
-.cue-sheet-row__fixture {
+.cue-sheet-empty__eyebrow {
   margin: 0;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
@@ -269,110 +258,35 @@
 }
 
 .cue-sheet-header__heading,
-.cue-sheet-empty__title,
-.cue-sheet-row__effect {
+.cue-sheet-empty__title {
   margin: 0;
   font-size: 1rem;
   line-height: 1.2;
 }
 
-.cue-sheet-header__count,
-.cue-sheet-row__time,
-.cue-sheet-row__duration,
-.cue-sheet-row__param {
+.cue-sheet-header__count {
   font-size: 0.82rem;
 }
 
 .cue-sheet-list {
-  display: flex;
-  flex-direction: column;
   flex: 1 1 auto;
   overflow: auto;
   min-height: 0;
-  gap: 0;
-}
-.chaser-picker-row,
-.cue-sheet-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  transition: color 50ms ease;
 }
 
-.cue-sheet-row__main {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.cue-sheet-row__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-left: auto;
-  flex: 0 0 auto;
-}
-.chaser-picker-row > button,
-.cue-sheet-row__actions > button {
-  padding: 2px;
-}
-
-.cue-sheet-row__fixture {
-  flex: 0 0 170px;
-}
-
-.cue-sheet-row__effect {
+.cue-sheet-row .u-cell-effect {
   flex: 1 1 140px;
+  width: auto;
 }
 
-.cue-sheet-row__duration {
+.cue-sheet-row .u-cell-duration {
   flex: 0 0 96px;
 }
-.chaser-picker-row__start,
-.chaser-picker-row__beat,
-.chaser-picker-row__fixture,
-.chaser-picker-row__effect,
-.chaser-picker-row__duration,
-.cue-sheet-row__time,
-.cue-sheet-row__fixture,
-.cue-sheet-row__effect,
-.cue-sheet-row__duration {
-  display: inline;
-  flex: 0 0 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.86rem;
-  line-height: 1.1;
-  color: var(--text);
-}
 
-.chaser-picker-row__duration,
-.chaser-picker-row__beat {
+.chaser-picker-row .u-cell-duration,
+.chaser-picker-row .u-cell-beat {
   text-align: right;
   min-width: 2em;
-}
-
-.cue-sheet-row__time,
-.chaser-picker-row__start,
-.cue-sheet-row__duration {
-  color: var(--muted);
-  text-align: right;
-  min-width: 3em;
-}
-.chaser-picker-row__fixture,
-.chaser-picker-row__effect,
-.cue-sheet-row__fixture,
-.cue-sheet-row__effect {
-  text-transform: none;
-  letter-spacing: normal;
-  margin: 0;
-  width: 8em;
 }
 
 .cue-sheet-empty {

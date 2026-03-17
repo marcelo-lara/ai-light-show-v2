@@ -1,4 +1,5 @@
 import { Card } from "../../../shared/components/layout/Card.ts";
+import { List } from "../../../shared/components/layout/List.ts";
 import { getBackendStore } from "../../../shared/state/backend_state.ts";
 import { transportJumpToSection } from "../../../shared/transport/transport_intents.ts";
 import type { SongSection } from "../../../shared/transport/protocol.ts";
@@ -33,14 +34,27 @@ export function SongSectionsPanel(): HTMLElement {
   content.className = "show-control-body";
 
   const list = document.createElement("ol");
-  list.className = "show-control-list mono";
+  list.className = "show-control-list mono c-list";
 
   const sections = normalizedSections(store.state.song?.sections);
   const highlightedIndex = activeSectionIndex(sections, store.state.playback?.time_ms);
   for (const [index, section] of sections.entries()) {
-    const item = document.createElement("li");
     const isActive = index === highlightedIndex;
-    item.className = `show-control-row${isActive ? " is-active" : ""}`;
+
+    const time = document.createElement("span");
+    time.className = "show-control-time u-cell u-cell-time";
+    time.textContent = formatSectionStart(section.start_s);
+
+    const name = document.createElement("span");
+    name.className = "show-control-label u-cell u-cell-effect";
+    name.textContent = section.name;
+
+    const item = List({
+      tagName: "li",
+      className: "show-control-row",
+      content: [time, name],
+      isActive,
+    });
     item.tabIndex = 0;
     item.setAttribute("role", "button");
     item.onclick = () => transportJumpToSection(index);
@@ -50,31 +64,24 @@ export function SongSectionsPanel(): HTMLElement {
       transportJumpToSection(index);
     };
 
-    const time = document.createElement("span");
-    time.className = "show-control-time";
-    time.textContent = formatSectionStart(section.start_s);
-
-    const name = document.createElement("span");
-    name.className = "show-control-label";
-    name.textContent = section.name;
-
-    item.append(time, name);
     list.appendChild(item);
   }
 
   if (sections.length === 0) {
-    const item = document.createElement("li");
-    item.className = "show-control-row is-active";
-
     const time = document.createElement("span");
-    time.className = "show-control-time";
+    time.className = "show-control-time u-cell u-cell-time";
     time.textContent = "--.--";
 
     const name = document.createElement("span");
-    name.className = "show-control-label";
+    name.className = "show-control-label u-cell u-cell-effect";
     name.textContent = "No sections available";
 
-    item.append(time, name);
+    const item = List({
+      tagName: "li",
+      className: "show-control-row",
+      content: [time, name],
+      isActive: true,
+    });
     list.appendChild(item);
   }
 

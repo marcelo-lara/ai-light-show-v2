@@ -26,7 +26,7 @@ export function CueSheet(): HTMLElement {
 	header.append(title, count);
 
 	const listContainer = document.createElement("div");
-	listContainer.className = "cue-sheet-list";
+	listContainer.className = "cue-sheet-list c-list";
 	content.append(header, listContainer);
 
 	let lastCueSignature = "";

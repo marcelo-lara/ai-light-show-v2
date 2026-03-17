@@ -19,26 +19,19 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: 6px;
   max-height: 390px;
   overflow: auto;
 }
 
-.show-control-time {
-  color: var(--muted);
+.show-control-row .u-cell-effect,
+.cue-sheet-row .u-cell-effect,
+.fixture-effects-row .u-cell-effect {
+  width: auto;
+  flex: 1 1 auto;
 }
 
-.show-control-label,
-.fixture-effects-row {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cue-sheet-title,
 .cue-sheet-meta {
-  margin: 0;
+  font-size: 0.82rem;
 }
 
 @media (max-width: 1200px) {
