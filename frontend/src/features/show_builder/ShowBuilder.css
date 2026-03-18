@@ -77,7 +77,8 @@
 .chaser-picker-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 0.2em;
   min-height: 100%;
 }
 
@@ -95,13 +96,11 @@
 
 .chaser-picker-head-controls {
   display: flex;
-  align-items: flex-end;
   gap: 8px;
 }
 
 .chaser-picker-head-field {
   display: flex;
-  flex-direction: column;
   gap: 4px;
   min-width: 108px;
 }
@@ -115,12 +114,6 @@
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.chaser-picker-field {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
 }
 
 .chaser-picker-field-compact {
@@ -146,14 +139,14 @@
   min-width: 0;
   min-height: 34px;
   padding: 8px 10px;
-  border: 1px solid var(--border-strong);
+  text-align: right;
   background: var(--card-2);
   color: var(--text);
 }
 
 .time_position-field {
-  flex: 0 0 92px;
-  min-width: 92px;
+  flex: 0 0 4em;
+  min-width: 4em;
 }
 
 .chaser-picker-mode-actions {
@@ -165,13 +158,11 @@
 .chaser-picker-actions {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
   gap: 12px;
 }
 
 .chaser-picker-action-group {
   display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 
@@ -219,7 +210,7 @@
 }
 
 .chaser-picker-list {
-  max-height: 100px;
+  flex: 1 1 auto;  
   overflow: auto;
 }
 
@@ -229,7 +220,7 @@
 }
 
 .chaser-picker-divider {
-  border-top: 1px dashed var(--color-border);
+  border-top: 1px dashed var(--border);
   margin: 2px 0 0;
 }
 
@@ -329,8 +320,6 @@
 
 .effect-picker-field {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
 }
 
 .effect-picker-field-grow {

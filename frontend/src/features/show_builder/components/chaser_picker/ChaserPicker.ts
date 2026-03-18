@@ -111,6 +111,8 @@ export function ChaserPicker(): HTMLElement {
 	actionLeft.className = "chaser-picker-action-group";
 	actionLeft.append(addBtn);
 
+	actionLeft.append(repsDropdown.root);
+
 	const actionRight = document.createElement("div");
 	actionRight.className = "chaser-picker-action-group chaser-picker-action-group-right";
 	actionRight.append(previewBtn);
@@ -213,7 +215,7 @@ export function ChaserPicker(): HTMLElement {
 	const unsubscribe = subscribeBackendStore(refresh);
 	(body as unknown as { _cleanup: () => void })._cleanup = () => unsubscribe();
 
-	body.append(head, repsDropdown.root, list, divider, actions, empty);
+	body.append(head, list, divider, actions, empty);
 	return Card(body, {
 		title: "",
 		variant: "outlined",

@@ -152,6 +152,9 @@ body {
   max-height: 48px;
 }
 
+input {
+  border: 0;
+}
 button {
   border: 0;
   padding: 0.5em;
