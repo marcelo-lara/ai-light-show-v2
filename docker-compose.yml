@@ -128,6 +128,7 @@ services:
       - FRONTEND_URL=http://frontend:5173
       - BACKEND_URL=http://backend:5001
       - DMX_NODE_URL=http://dmx-node:9010
+      - GITHUB_ACTIONS=${GITHUB_ACTIONS:-}
     volumes:
       - ./tests/browser:/app/tests/browser
     working_dir: /app/tests/browser

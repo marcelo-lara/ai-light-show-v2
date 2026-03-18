@@ -129,7 +129,7 @@ function buildSummary(entries, statuses) {
   lines.push("- HTML report: `tests/browser/artifacts/html-report/`");
   lines.push("- Raw Playwright JSON: `tests/browser/artifacts/playwright-results.json`");
   lines.push("- JUnit XML: `tests/browser/artifacts/junit.xml`");
-  lines.push("- Videos (.mp4), traces, screenshots: `tests/browser/artifacts/test-results/`");
+  lines.push("- Videos, traces, screenshots: `tests/browser/artifacts/test-results/`");
 
   if (fs.existsSync(dmxSummaryPath)) {
     const dmxSummary = JSON.parse(fs.readFileSync(dmxSummaryPath, "utf8"));

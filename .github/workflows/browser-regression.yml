@@ -92,7 +92,7 @@ jobs:
               "## Browser Regression Failed",
               "",
               "The advisory browser regression workflow reported a failure for this pull request.",
-              "Check the workflow run artifacts for the HTML report, MP4 videos, traces, screenshots, and DMX capture dumps.",
+              "Check the workflow run artifacts for the HTML report, videos, traces, screenshots, and DMX capture dumps.",
               "",
               "<details>",
               "<summary>Checklist summary</summary>",
