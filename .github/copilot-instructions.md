@@ -53,10 +53,13 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service.
 
 ## Playback model (DMX canvas)
-- Cue sheets are **effect-based**: each entry contains `time`, `fixture_id`, `effect`, `duration`, `data` (see [backend/models/cues/models.py](../backend/models/cues/models.py)).
+- Cue sheets use a mixed schema:
+  - effect row: `time`, `fixture_id`, `effect`, `duration`, `data`
+  - chaser row: `time`, `chaser_id`, `data`
 - On song load the backend renders a precomputed `60 FPS` DMX canvas for the song window (see [backend/store/dmx_canvas.py](../backend/store/dmx_canvas.py), [backend/store/state.py](../backend/store/state.py)).
 - Client audio time is authoritative for sync; backend maps timecode to nearest frame.
 - Fixture classes own effect math via `render_effect(...)` in [backend/models/fixtures](../backend/models/fixtures).
+- Chaser cue rows persist by `chaser_id` and expand into effect renders only at canvas/preview time.
 
 ## Message protocol (WebSocket)
 - **Client -> Backend:** `hello`, `intent`

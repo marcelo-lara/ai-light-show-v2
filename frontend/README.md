@@ -63,6 +63,14 @@ Intent names currently emitted by frontend:
 
 Protocol includes additional names (`fixture.stop_preview`, `poi.create`, `poi.update`, `poi.delete`) for compatibility with backend contracts.
 
+Frontend cue/chaser payload expectations:
+- `state.cues` is a mixed list of cue entries:
+  - effect cue: `time`, `fixture_id`, `effect`, `duration`, `data`, optional `name`, optional `created_by`
+  - chaser cue: `time`, `chaser_id`, `data`, optional `name`, optional `created_by`
+- `state.chasers` entries include stable `id`, display `name`, `description`, and beat-based `effects`.
+- Chaser intents use `chaser_id` in payloads, not `chaser_name`.
+- Chaser cue repetitions live in `cue.data.repetitions`.
+
 ## State stores and global bridges
 
 Store modules:
@@ -130,18 +138,31 @@ Global bridge fields used across modules:
 
 ### Show Builder
 - `src/features/show_builder/ShowBuilderView.ts`: composes player with the shared chord progression card, `CueSheet()`, and `FlowColumn()`.
-- `src/features/show_builder/cue_intents.ts`: cue/chaser intent senders (`addCue`, `updateCue`, `deleteCue`, `clearCues`, `applyCueHelper`, chaser apply/preview/start/stop/list helpers).
-- `src/features/show_builder/components/cue_sheet/CueSheet.ts`: live cue list panel, subscribes to backend `cues` state and emits cue edit/preview/delete/select actions.
+- `src/features/show_builder/cue_intents.ts`: cue/chaser intent senders (`addCue`, `updateCue`, `deleteCue`, `clearCues`, `applyCueHelper`, chaser apply/preview/start/stop/list helpers). Chaser helpers send `chaser_id`.
+- `src/features/show_builder/cue_utils.ts`: cue type guards and shared cue/chaser helpers for labels, repetitions, duration, and signatures.
+- `src/features/show_builder/components/cue_sheet/CueSheet.ts`: live cue list panel, subscribes to backend `cues` state and emits cue edit/preview/delete/select actions. Delete confirmation names the selected cue type, label, and time.
 - `src/features/show_builder/components/flow_column/FlowColumn.ts`: composes `EffectPicker()`, `ChaserPicker()`, and `CueHelpers()`.
-- `src/features/show_builder/components/effect_picker/EffectPicker.ts`: fixture/effect selection panel — assembles DOM, wires events, manages subscription.
+- `src/features/show_builder/components/effect_picker/EffectPicker.ts`: fixture/effect selection panel for effect cue rows only — assembles DOM, wires events, manages subscription.
 - `src/features/show_builder/components/effect_picker/layout.ts`: DOM builders for top row, parameter section, and action row; returns typed ref objects.
 - `src/features/show_builder/components/effect_picker/updates.ts`: stateful DOM updaters (`applyEffectOptions`, `applyFixtureOptions`, `renderParamForm`).
 - `src/features/show_builder/components/effect_picker/selectors.ts`: backend state reads and `formatTime` helper.
 - `src/features/show_builder/components/effect_picker/types.ts`: `PickerState` type.
 - `src/features/show_builder/components/effect_params/params_schema.ts`: effect parameter definitions for dynamic form generation.
 - `src/features/show_builder/components/effect_params/ParamForm.ts`: renders parameter inputs based on effect schema.
-- `src/features/show_builder/components/chaser_picker/ChaserPicker.ts`: chaser selection, effect preview rows, and add/preview actions with repetition control.
+- `src/features/show_builder/components/chaser_picker/ChaserPicker.ts`: chaser selection and chaser cue editing. The picker shows the individual chaser effects for reference/preview, but `Add` and `Update` persist a single cue row with `chaser_id` plus `data.repetitions`.
 - `src/features/show_builder/components/cue_helpers/CueHelpers.ts`: backend-driven helper list with `Apply` actions.
+
+Show Builder current cue-sheet behavior:
+- Cue sheet rows render one of two layouts:
+  - effect cue row: `time / fixture / effect / duration`
+  - chaser cue row: `time / chaser / calculated duration`
+- Chaser row duration is calculated in the frontend from chaser beat offsets plus current song/playback BPM.
+- Cue sheet preview dispatch is type-aware:
+  - effect rows use `fixture.preview_effect`
+  - chaser rows use `chaser.preview`
+- Cue sheet edit dispatch is type-aware:
+  - effect rows hydrate `EffectPicker`
+  - chaser rows hydrate `ChaserPicker`
 
 ### DMX control
 - `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.
@@ -236,7 +257,7 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
 ## Current implementation status
 
 - `SongAnalysis` renders the shared chord progression panel and analyzer plots when available.
-- `ShowBuilder` reuses the shared chord progression card and renders a live cue sheet plus builder tools for effects, chasers, and cue helpers.
+- `ShowBuilder` reuses the shared chord progression card and renders a live mixed cue sheet plus builder tools for effects, chasers, and cue helpers.
 - `ShowControl` renders a live sections panel backed by websocket song metadata, but its cue summary and fixture-effects panels are still static placeholder content.
 - `HomeView` exists in source but is not part of current route rendering.
 

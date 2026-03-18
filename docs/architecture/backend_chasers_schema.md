@@ -9,6 +9,7 @@ The file content is an array.
 ```json
 [
   {
+    "id": "downbeats_and_beats",
     "name": "Downbeat plus two beats",
     "description": "A simple chaser pattern",
     "effects": [
@@ -28,7 +29,8 @@ The file content is an array.
 
 Each array item is an object with these fields:
 
-- `name`: string. Unique chaser name used by `chaser.*` intents.
+- `id`: string. Stable chaser identifier used by `chaser.*` intents and cue-sheet `chaser_id` entries.
+- `name`: string. Human-readable label shown in the UI.
 - `description`: string. Human-readable summary.
 - `effects`: array of effect rows.
 
@@ -51,4 +53,5 @@ Examples at `bpm = 120`:
 - `beatToTimeMs(1.0, 120) = 500`
 - `beatToTimeMs(1.5, 120) = 750`
 
-The backend converts chaser rows to cue entries in seconds for cue-sheet persistence and DMX canvas rendering.
+The backend persists chaser cue rows with `chaser_id` in the cue sheet.
+Runtime expansion to effect entries in seconds happens only during DMX canvas rendering and chaser preview.
