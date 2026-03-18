@@ -5,7 +5,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 ## Purpose
 
 - Expose the websocket control plane at `/ws`.
-- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`).
+- Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
@@ -41,8 +41,9 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 Supported intent names:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
-- Cue: `cue.add`, `cue.update`, `cue.delete`.
+- Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
 - Cue helpers: `cue.apply_helper`.
+- Chaser: `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, `chaser.list`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
 
@@ -66,8 +67,18 @@ Patch behavior:
 - `fixture.preview_effect` is rejected while playback is active. Preview runs to completion and final effect values persist to `editor_universe` (and `output_universe`).
 - `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings. For `kind="rgb"` meta-channels, send `values.rgb` as `#RRGGBB` (or mapped color name); backend converts it to channel bytes.
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
+- `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.
+- `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
+- `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
+- `chaser.stop_preview` stops temporary chaser preview output without writing cues.
+- Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
+- Cue sheets store mixed entries:
+  - effect row: `time`, `fixture_id`, `effect`, `duration`, `data`, `name`, `created_by`
+  - chaser row: `time`, `chaser_id`, `data`, `name`, `created_by`
+- Chaser rows store `data.repetitions` and are expanded into effect renders only at canvas/preview time.
+- Persisted chaser rows use `created_by` set to `chaser:{id}`.
 
 ## Data and file contracts
 
@@ -86,6 +97,9 @@ Song payload fields under `state.song`:
 Cue helpers payload under `state.cue_helpers`:
 - List of helper definitions (`id`, `label`, `description`, `mode`) for frontend helper UI.
 
+Chasers payload under `state.chasers`:
+- List of chaser definitions loaded from `backend/fixtures/chasers.json`, including stable `id`, display `name`, `description`, and beat-based `effects`.
+
 Section payload normalization:
 - Backend accepts analyzer section records with either `start/end/label` or `start_s/end_s/name` keys.
 - Snapshot payload always emits normalized section entries as `{name, start_s, end_s}`.
@@ -96,6 +110,7 @@ Section payload normalization:
 - [Backend architecture narrative](../docs/architecture/backend.md)
 - [Backend fixture schema](../docs/architecture/backend_fixtures_schema.md)
 - [Backend POI schema](../docs/architecture/backend_pois_schema.md)
+- [Backend chasers schema](../docs/architecture/backend_chasers_schema.md)
 
 ## Development
 

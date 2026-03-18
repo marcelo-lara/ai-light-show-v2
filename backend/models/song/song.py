@@ -49,6 +49,11 @@ class Song:
         return self._beats
 
     @property
+    def bpm(self) -> int:
+        self._load_meta()
+        return self._meta.bpm if self._meta.bpm is not None else 120    
+    
+    @property
     def sections(self) -> Sections:
         self._load_sections()
         return self._sections

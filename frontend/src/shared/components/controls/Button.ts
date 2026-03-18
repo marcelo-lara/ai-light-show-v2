@@ -5,7 +5,6 @@ export type ButtonState = "default" | "primary" | "active";
 export type ButtonIconPosition = "start" | "end";
 
 export type ButtonBindings = {
-	className?: string;
 	title?: string;
 	disabled?: boolean;
 	attributes?: Record<string, string>;
@@ -26,8 +25,7 @@ export function Button(props: ButtonProps): HTMLButtonElement {
 	button.type = "button";
 
 	const stateClass = props.state && props.state !== "default" ? ` ${props.state}` : "";
-	const className = props.bindings?.className ? ` ${props.bindings.className}` : "";
-	button.className = `btn${stateClass}${className}`;
+	button.className = `${stateClass}`;
 	button.disabled = Boolean(props.bindings?.disabled);
 
 	for (const [name, value] of Object.entries(props.bindings?.attributes ?? {})) {
@@ -44,7 +42,8 @@ export function Button(props: ButtonProps): HTMLButtonElement {
 	}
 
 	const content = document.createElement("span");
-	content.className = `btn-content btn-content--${props["icon-position"] ?? "start"}`;
+	const iconPositionClass = props["icon-position"] === "end" ? " btn-content-end" : "";
+	content.className = `btn-content${iconPositionClass}`;
 
 	if (props.icon) {
 		content.appendChild(createSvgIcon(ICON_REGISTRY[props.icon], "btn-icon"));

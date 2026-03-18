@@ -22,11 +22,13 @@
   --err: #ff5c5c;
 
   --focus: rgba(105, 167, 255, 0.65);
+  --btn-state-bg-strong: color-mix(in oklab, var(--accent) 20%, var(--card-2));
+  --btn-state-bg-soft: color-mix(in oklab, var(--accent) 16%, var(--card-2));
 
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 
-  --r: 14px;
-  --r2: 20px;
+  --r: 0;
+  --r2: 0;
 
   --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -79,6 +81,8 @@
 
 * {
   box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 html,
@@ -89,6 +93,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
+  cursor: default;
 }
 
 #app {
@@ -127,20 +132,6 @@ body {
   padding: 1px 0;
 }
 
-.nav-btn,
-.btn {
-  background: var(--card);
-  color: var(--text);
-  padding: 8px 10px;
-  cursor: pointer;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .nav-btn {
   width: 48px;
   height: 48px;
@@ -149,6 +140,9 @@ body {
   padding: 0;
   display: grid;
   place-items: center;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
 }
 
 .nav-icon {
@@ -158,25 +152,31 @@ body {
   max-height: 48px;
 }
 
+input {
+  border: 0;
+}
 button {
   border: 0;
-  background-color: var(--card);
+  padding: 0.5em;
+  color: var(--text);
+  background-color: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+  cursor: pointer;
 }
 button:hover:not(:disabled) {
-  background-color: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+  background-color: color-mix(in oklab, var(--accent) 32%, var(--card-2));
 }
 
 .nav-btn.active,
 .btn.primary,
 .btn.active {
   border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 20%, var(--card-2));
+  background: var(--btn-state-bg-strong);
 }
 
 .is-active,
 .is-selected {
   border-color: var(--accent);
-  background: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+  background: var(--btn-state-bg-soft);
 }
 
 .is-active .muted,
@@ -184,7 +184,7 @@ button:hover:not(:disabled) {
   color: var(--accent);
 }
 
-.btn:disabled {
+button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -195,7 +195,7 @@ button:hover:not(:disabled) {
   gap: 8px;
 }
 
-.btn-content--end {
+.btn-content-end {
   flex-direction: row-reverse;
 }
 
@@ -203,7 +203,7 @@ button:hover:not(:disabled) {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
-  color: var(--text)
+  color: var(--text); 
 }
 
 .btn-icon path {
@@ -217,7 +217,7 @@ button:hover:not(:disabled) {
   min-width: 0;
 }
 
-.input-control__label {
+.input-control-label {
   font-size: 0.85rem;
 }
 
@@ -232,15 +232,15 @@ button:hover:not(:disabled) {
   padding: 8px 10px;
 }
 
-.input-shell--active {
+.is-input-active {
   border-color: var(--accent);
 }
 
-.input-shell--end {
+.u-row-reverse {
   flex-direction: row-reverse;
 }
 
-.input-shell__icon {
+.input-shell-icon {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
@@ -288,7 +288,7 @@ button:hover:not(:disabled) {
   background: var(--card);
 }
 
-.card--outlined {
+.card-outlined {
   border: 1px solid var(--border-strong);
   background: var(--panel);
 }
@@ -338,13 +338,6 @@ button:hover:not(:disabled) {
   margin-top: 2px;
 }
 
-.status-row-theme .theme-select {
-  max-width: 124px;
-  margin-left: auto;
-  font-size: 11px;
-  padding: 2px 4px;
-}
-
 .badge.ok {
   border-color: var(--ok);
 }
@@ -357,8 +350,6 @@ button:hover:not(:disabled) {
   border-color: var(--err);
 }
 
-.theme-select,
-select,
 textarea,
 input[type="range"] {
   width: 100%;
@@ -373,6 +364,7 @@ input[type="range"] {
 
 .muted {
   color: var(--muted);
+  font-size: 0.6rem;
 }
 
 .columns {
@@ -395,4 +387,47 @@ input[type="range"] {
   align-items: stretch;
   align-content: start;
   min-width: 0;
+}
+
+.confirm-cancel-prompt {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.confirm-cancel-prompt::backdrop {
+  background: rgba(8, 12, 18, 0.72);
+  backdrop-filter: blur(1px);
+}
+
+.confirm-cancel-prompt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: min(420px, calc(100vw - 32px));
+  padding: 16px;
+  background: color-mix(in oklab, var(--card) 72%, var(--card-2));
+  box-shadow: var(--shadow);
+}
+
+.confirm-cancel-prompt-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.confirm-cancel-prompt-message {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.confirm-cancel-prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }

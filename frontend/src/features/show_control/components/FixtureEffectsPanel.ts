@@ -1,4 +1,5 @@
 import { Card } from "../../../shared/components/layout/Card.ts";
+import { List } from "../../../shared/components/layout/List.ts";
 
 const EFFECT_ROWS = [
   "0.00 ParCan L Fade B 1 to 0",
@@ -19,13 +20,24 @@ export function FixtureEffectsPanel(): HTMLElement {
   const content = document.createElement("div");
   content.className = "show-control-body";
 
-  const list = document.createElement("ol");
-  list.className = "fixture-effects-list mono";
+  const list = document.createElement("div");
+  list.className = "fixture-effects-list o-list";
 
   for (const effect of EFFECT_ROWS) {
-    const item = document.createElement("li");
-    item.className = `fixture-effects-row${effect.startsWith("0.00") ? " is-active" : ""}`;
-    item.textContent = effect;
+    const [timeToken, ...rest] = effect.split(" ");
+    const time = document.createElement("span");
+    time.className = "u-cell u-cell-time";
+    time.textContent = timeToken ?? "0.00";
+
+    const details = document.createElement("span");
+    details.className = "fixture-effects-row-details u-cell u-cell-effect";
+    details.textContent = rest.join(" ");
+
+    const item = List({
+      className: "fixture-effects-row",
+      content: [time, details],
+      isActive: effect.startsWith("0.00"),
+    });
     list.appendChild(item);
   }
 

@@ -22,7 +22,6 @@ export function PromptInput(): HTMLElement {
 		caption: "↑",
 		state: "primary",
 		bindings: {
-			className: "send-arrow",
 			title: "Send prompt",
 			disabled: isStreaming,
 		},
@@ -32,7 +31,6 @@ export function PromptInput(): HTMLElement {
 		caption: "Stop",
 		state: "default",
 		bindings: {
-			className: "stop-stream",
 			title: "Stop generating",
 		},
 	});

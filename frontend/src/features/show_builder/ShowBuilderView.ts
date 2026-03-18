@@ -1,4 +1,4 @@
-import { EffectPlaylist } from "./components/effect_playlist/EffectPlaylist.ts";
+import { CueSheet } from "./components/cue_sheet/CueSheet.ts";
 import { FlowColumn } from "./components/flow_column/FlowColumn.ts";
 import { SongPlayer } from "../../shared/components/song_player/SongPlayer.ts";
 import { ChordsPanel } from "../../shared/components/chords_panel/ChordsPanel.ts";
@@ -13,7 +13,7 @@ export function ShowBuilderView(): HTMLElement {
 	main.className = "show-builder-main";
 	main.append(
 		ChordsPanel({ beats: song.beats, sections: song.sections, cardClassName: "show-builder-panel" }),
-		EffectPlaylist(),
+		CueSheet(),
 		FlowColumn(),
 	);
 

@@ -7,19 +7,22 @@ from .core import (
 )
 from .playback import (
     StatePlaybackChannelMixin,
+    StatePlaybackPreviewChaserMixin,
     StatePlaybackPreviewControlMixin,
     StatePlaybackPreviewRunnerMixin,
     StatePlaybackPreviewStartMixin,
     StatePlaybackTransportMixin,
 )
-from .song import StateSongCueMixin, StateSongLoadingMixin, StateSongSectionsMixin
+from .song import StateSongChaserMixin, StateSongCueMixin, StateSongLoadingMixin, StateSongSectionsMixin
 
 
 class StateManager(
     StateSongSectionsMixin,
+    StateSongChaserMixin,
     StateSongCueMixin,
     StateSongLoadingMixin,
     StatePlaybackTransportMixin,
+    StatePlaybackPreviewChaserMixin,
     StatePlaybackPreviewRunnerMixin,
     StatePlaybackPreviewControlMixin,
     StatePlaybackPreviewStartMixin,

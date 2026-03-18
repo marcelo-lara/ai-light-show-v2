@@ -23,7 +23,13 @@ Why: To have precise control of the effects/chasers that will be triggered in th
 How:
 - The user moves the song cursor to the desired position.
 - Using the Effect Picker: select the fixture, the effect, set the optional parameters, preview the effect, and add it to the cue-sheet.
-- Using the Chaser Picker: select the chase name, set the optional parameters, preview the chase, and add it to the cue-sheet.
+- Using the Chaser Picker: select the chaser, set repetitions, preview the chase, and add it to the cue-sheet.
+- In the Cue Sheet:
+  - effect rows show time, fixture, effect, and duration
+  - chaser rows show time, chaser name, and calculated duration
+- Editing is type-aware:
+  - effect rows reopen the Effect Picker
+  - chaser rows reopen the Chaser Picker
 
 Goal: Create Chasers from selected effects.
 Why: To simplify the chase creation based on a song, so it can be re-used in the song or globally.
@@ -41,8 +47,8 @@ Goal: Preview fixture effects in realtime.
 Why: To have a visual reference on how the effects work (on the POIs when referenced)
 How:
 - From a fixture panel, select the desired effect.
-- set the optional parameters and duration, then click on preview.
-- the dmx canvas renders the effect on the involved channels, then send the frames to the artnet node (preview the effect).
+- Set the optional parameters and duration, then click on preview.
+- The DMX canvas renders the effect on the involved channels, then sends the frames to the Art-Net node.
 
 Goal: Manage POI position for a fixture.
 Why: To check and set POIs for each fixture.

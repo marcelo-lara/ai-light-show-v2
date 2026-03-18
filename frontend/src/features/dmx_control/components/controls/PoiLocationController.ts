@@ -67,7 +67,6 @@ export function PoiLocationController(
     const dropdown = Dropdown({
       value: currentSelectedPoiId,
       options,
-      selectClassName: "poi-dropdown-select",
       onChange: (val) => {
         currentSelectedPoiId = val;
 
@@ -114,7 +113,6 @@ export function PoiLocationController(
         caption: "Set",
         state: "default",
         bindings: {
-          className: "poi-set-btn",
           onClick: () => {
             updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, currentPan, currentTilt);
             selectedPoiTarget = { pan: currentPan, tilt: currentTilt };

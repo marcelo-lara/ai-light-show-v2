@@ -53,10 +53,13 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service.
 
 ## Playback model (DMX canvas)
-- Cue sheets are **effect-based**: each entry contains `time`, `fixture_id`, `effect`, `duration`, `data` (see [backend/models/cues/models.py](../backend/models/cues/models.py)).
+- Cue sheets use a mixed schema:
+  - effect row: `time`, `fixture_id`, `effect`, `duration`, `data`
+  - chaser row: `time`, `chaser_id`, `data`
 - On song load the backend renders a precomputed `60 FPS` DMX canvas for the song window (see [backend/store/dmx_canvas.py](../backend/store/dmx_canvas.py), [backend/store/state.py](../backend/store/state.py)).
 - Client audio time is authoritative for sync; backend maps timecode to nearest frame.
 - Fixture classes own effect math via `render_effect(...)` in [backend/models/fixtures](../backend/models/fixtures).
+- Chaser cue rows persist by `chaser_id` and expand into effect renders only at canvas/preview time.
 
 ## Message protocol (WebSocket)
 - **Client -> Backend:** `hello`, `intent`
@@ -98,10 +101,16 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Whenever fixture effect contracts change, update backend docs and active client integration in the same change.
 - For frontend UI implementation:
   - Prefer flexbox over grid for small/local components.
+  - DO NOT CREATE BORDERS unless explicitly requested.
+  - NEVER EVER USE ROUNDED CORNERS.
   - LoFi mockups are layout references only; do not reinterpret their intended layout.
   - Never render annotation/instruction text from mockups in the final UI.
   - Never copy annotation colors (for example pink guidance text) into production UI.
   - Do not implement explicit mockup dimensions or colors directly; use responsive sizing and existing theme tokens/variables.
+  - Use CUBE CSS naming and structure; do not introduce BEM class patterns (`__`, `--`) in frontend code.
+  - CUBE model in this repo: Composition uses `l-`/`o-`, Utilities use `u-`, Blocks use semantic component names, Exceptions use `is-`/`has-`.
+  - Keep components plain: avoid wrapper-over-wrapper nesting unless required for semantics, accessibility, or behavior.
+  - Do not add padding or gap values unless explicitly required by the task or LoFi constraints.
   - In `frontend/src/features`, use shared themed controls (`Button`, `Dropdown`, `Slider`, `Toggle`) instead of creating raw `button`, `select`, `input[type=range]`, or `input[type=checkbox]` elements.
   - Avoid feature-local custom styling variants for those controls; extend shared control components/tokens when behavior or appearance changes are needed.
   - Keep feature CSS layout-focused; do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).

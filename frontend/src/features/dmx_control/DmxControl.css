@@ -32,10 +32,6 @@
   align-items: center;
 }
 
-.effect-select {
-  flex: 1;
-}
-
 .effect-params {
   display: flex;
   gap: 8px;
@@ -166,14 +162,10 @@
 /* POI Location Controller */
 .poi-controller-row {
   display: flex;
-  align-items: flex-end;
   gap: 8px;
 }
 .poi-dropdown-wrap {
   flex: 1;
-}
-.poi-set-btn {
-  min-width: 52px;
 }
 
 .enum-grid {
@@ -187,21 +179,17 @@
 }
 
 .enum-grid-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
-  gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
-.enum-grid-option {
-  width: 100%;
-  text-transform: lowercase;
+.enum-grid-options button{
+  width: 2.5em;
+  height: 2.5em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   overflow: hidden;
-}
-
-.enum-grid-option-swatch {
-  color: transparent;
-  font-size: 0;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 @media (max-width: 1100px) {

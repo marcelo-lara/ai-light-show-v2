@@ -1,7 +1,7 @@
-import { Input } from "../../../../shared/components/controls/Input.ts";
 import { Button } from "../../../../shared/components/controls/Button.ts";
 import { Dropdown, type DropdownControl } from "../../../../shared/components/controls/Dropdown.ts";
 import { Slider, type SliderControl } from "../../../../shared/components/controls/Slider.ts";
+import { time_position } from "../time_position.ts";
 
 export type TopRowRefs = {
 	root: HTMLElement;
@@ -39,26 +39,23 @@ function field(cls: string): HTMLElement {
 export function buildTopRow(timeValue: string): TopRowRefs {
 	const root = document.createElement("div");
 	root.className = "effect-picker-top";
-	const timeField = field("effect-picker-field--time");
-	const tc = Input({ state: "default", "icon-position": "start", bindings: { value: timeValue, readOnly: true, className: "effect-picker-time", type: "text", attributes: { "aria-label": "Current playback time" } } });
-	timeField.appendChild(tc.root);
-	const fixtureField = field("effect-picker-field--fixture");
+	const tc = time_position(timeValue, "Current playback time");
+	tc.root.classList.add("effect-picker-field", "time_position-field");
+	const fixtureField = field("effect-picker-field-grow");
 	const fixtureDropdown = Dropdown({
 		value: "",
 		options: [],
-		selectClassName: "effect-picker-select",
 		attributes: { "aria-label": "Fixture" },
 	});
 	fixtureField.appendChild(fixtureDropdown.root);
-	const effectField = field("effect-picker-field--effect");
+	const effectField = field("effect-picker-field-grow");
 	const effectDropdown = Dropdown({
 		value: "",
 		options: [],
-		selectClassName: "effect-picker-select",
 		attributes: { "aria-label": "Effect" },
 	});
 	effectField.appendChild(effectDropdown.root);
-	root.append(timeField, fixtureField, effectField);
+	root.append(tc.root, fixtureField, effectField);
 	return { root, timeInput: tc.input, fixtureDropdown, effectDropdown };
 }
 
@@ -96,10 +93,10 @@ export function buildActions(): ActionRefs {
 	const addGroup = document.createElement("div");
 	addGroup.className = "effect-picker-action-group";
 	const commitBtn = Button({ caption: "Add", icon: "playerPrev", state: "default", "icon-position": "start", bindings: { title: "Add cue at the current playback time" } });
-	const cancelBtn = Button({ caption: "Cancel", icon: "delete", state: "default", "icon-position": "start", bindings: { title: "Cancel cue editing", className: "effect-picker-cancel", disabled: true } });
+	const cancelBtn = Button({ caption: "Cancel", icon: "delete", state: "default", "icon-position": "start", bindings: { title: "Cancel cue editing", disabled: true } });
 	addGroup.append(commitBtn, cancelBtn);
 	const previewGroup = document.createElement("div");
-	previewGroup.className = "effect-picker-action-group effect-picker-action-group--preview";
+	previewGroup.className = "effect-picker-action-group effect-picker-action-group-preview";
 	const previewBtn = Button({ caption: "Preview", icon: "playerPlay", state: "default", "icon-position": "end", bindings: { title: "Preview the selected effect" } });
 	previewGroup.appendChild(previewBtn);
 	root.append(addGroup, previewGroup);

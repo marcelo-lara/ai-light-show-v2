@@ -5,6 +5,11 @@
   gap: 8px;
 }
 
+.slider-row > span {
+  color: var(--text);
+  font-size: 0.8em;
+}
+
 .slider-value {
   text-align: right;
   font-family: monospace;

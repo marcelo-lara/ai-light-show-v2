@@ -23,7 +23,9 @@ class StateSongLoadingMixin:
             )
             self.song_length_seconds = self._infer_song_length_seconds(self.current_song)
 
+            self.load_chasers()
             self.cue_sheet = load_cue_sheet(self.cues_path, song_filename)
+            self._validate_cue_sheet()
 
             self.editor_universe = bytearray(DMX_CHANNELS)
             self.output_universe = bytearray(DMX_CHANNELS)
@@ -39,6 +41,7 @@ class StateSongLoadingMixin:
             self.preview_fixture_id = None
             self.preview_effect = None
             self.preview_duration = 0.0
+            self.active_chasers = {}
             self.canvas_dirty = False
             self.canvas = self._render_cue_sheet_to_canvas()
             print(

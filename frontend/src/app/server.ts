@@ -15,6 +15,8 @@ export function renderDocument(opts: RenderOptions): string {
     <link rel="stylesheet" href="/src/app/AppShell.css" />
     <link rel="stylesheet" href="/src/shared/components/layout/Sidebar.css" />
     <link rel="stylesheet" href="/src/shared/components/layout/RightPanel.css" />
+    <link rel="stylesheet" href="/src/shared/components/layout/List.css" />
+    <link rel="stylesheet" href="/src/shared/components/controls/Dropdown.css" />
     <link rel="stylesheet" href="/src/shared/components/controls/Slider.css" />
     <link rel="stylesheet" href="/src/shared/components/chords_panel/ChordsPanel.css" />
     <link rel="stylesheet" href="/src/shared/components/song_player/ui/SongPlayer.css" />

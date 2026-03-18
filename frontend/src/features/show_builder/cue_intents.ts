@@ -1,6 +1,7 @@
 import type { IntentMsg } from "../../shared/transport/protocol.ts";
 import { getBackendStore } from "../../shared/state/backend_state.ts";
 import { makeId } from "../../shared/utils/id.ts";
+import { isEffectCue } from "./cue_utils.ts";
 
 const CUE_TIME_MERGE_WINDOW_SECONDS = 0.05;
 
@@ -23,6 +24,7 @@ export function addCue(
 
 	for (let index = 0; index < cues.length; index += 1) {
 		const cue = cues[index];
+		if (!isEffectCue(cue)) continue;
 		if (cue.fixture_id !== fixtureId) continue;
 		const delta = Math.abs(cue.time - time);
 		if (delta <= CUE_TIME_MERGE_WINDOW_SECONDS && delta < nearestDelta) {
@@ -77,6 +79,21 @@ export function deleteCue(index: number) {
 	});
 }
 
+export function clearCues(fromTime = 0, toTime?: number) {
+	const payload: Record<string, unknown> = {
+		from_time: fromTime,
+	};
+	if (typeof toTime === "number" && Number.isFinite(toTime)) {
+		payload.to_time = toTime;
+	}
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "cue.clear",
+		payload,
+	});
+}
+
 export function applyCueHelper(helperId: string) {
 	wsSend({
 		type: "intent",
@@ -85,5 +102,82 @@ export function applyCueHelper(helperId: string) {
 		payload: {
 			helper_id: helperId,
 		},
+	});
+}
+
+export function applyChaser(chaserName: string, startTimeMs = 0, repetitions?: number) {
+	const payload: Record<string, unknown> = {
+		chaser_id: chaserName,
+		start_time_ms: Math.max(0, Math.round(startTimeMs)),
+	};
+	if (typeof repetitions === "number" && Number.isFinite(repetitions)) {
+		payload.repetitions = Math.max(1, Math.floor(repetitions));
+	}
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.apply",
+		payload,
+	});
+}
+
+export function previewChaser(chaserName: string, startTimeMs = 0, repetitions?: number) {
+	const payload: Record<string, unknown> = {
+		chaser_id: chaserName,
+		start_time_ms: Math.max(0, Math.round(startTimeMs)),
+	};
+	if (typeof repetitions === "number" && Number.isFinite(repetitions)) {
+		payload.repetitions = Math.max(1, Math.floor(repetitions));
+	}
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.preview",
+		payload,
+	});
+}
+
+export function stopChaserPreview() {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.stop_preview",
+		payload: {},
+	});
+}
+
+export function startChaser(chaserName: string, startTimeMs = 0, repetitions?: number) {
+	const payload: Record<string, unknown> = {
+		chaser_id: chaserName,
+		start_time_ms: Math.max(0, Math.round(startTimeMs)),
+	};
+	if (typeof repetitions === "number" && Number.isFinite(repetitions)) {
+		payload.repetitions = Math.max(1, Math.floor(repetitions));
+	}
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.start",
+		payload,
+	});
+}
+
+export function stopChaser(instanceId: string) {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.stop",
+		payload: {
+			instance_id: instanceId,
+		},
+	});
+}
+
+export function listChasers() {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "chaser.list",
+		payload: {},
 	});
 }

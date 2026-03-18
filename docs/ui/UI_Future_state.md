@@ -89,12 +89,15 @@ The UI must support a production workflow from preparation to show execution wit
     - Commit to cue sheet
   - Add chaser cue from Chaser Picker:
     - Select chaser
-    - Set optional parameters
+    - Set repetitions
     - Preview chaser
     - Commit to cue sheet
 - Cue sheet editing:
   - Select one or more cues
   - Edit/remove/reposition cues with exact timecode
+  - Show type-aware rows:
+    - effect cue row: time, fixture, effect, duration
+    - chaser cue row: time, chaser, calculated duration
 - Save as Chaser:
   - Create a chaser from selected cues
   - Persist with relative offsets where first selected cue is `t=0`

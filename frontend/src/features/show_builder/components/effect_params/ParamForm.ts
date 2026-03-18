@@ -31,7 +31,7 @@ function createNumberInput(param: ParamDef, value: unknown, onChange: (v: number
 
 function createRangeInput(param: ParamDef, value: unknown, onChange: (v: number) => void): HTMLElement {
 	const wrap = document.createElement("div");
-	wrap.className = "param-field param-field--range";
+	wrap.className = "param-field param-field-range";
 
 	const slider = Slider({
 		label: param.label,
@@ -54,7 +54,6 @@ function createPoiSelect(param: ParamDef, value: unknown, pois: Poi[], onChange:
 	const dropdown = Dropdown({
 		label: param.label,
 		value: String(value ?? ""),
-		selectClassName: "param-select",
 		options: [
 			{ value: "", label: "- Select POI -" },
 			...pois.map((poi) => ({ value: poi.name, label: poi.name })),
@@ -73,7 +72,6 @@ function createSelectInput(param: ParamDef, value: unknown, onChange: (v: string
 	const dropdown = Dropdown({
 		label: param.label,
 		value: String(value ?? param.options?.[0] ?? ""),
-		selectClassName: "param-select",
 		options: (param.options || []).map((option) => ({ value: option, label: option })),
 		onChange,
 	});

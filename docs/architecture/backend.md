@@ -8,7 +8,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 - `backend/api/websocket_manager/endpoint.py`: websocket accept/read loop.
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
-- `backend/api/intents/*`: intent registry + action handlers (`transport`, `fixture`, `cue`, `poi`, `llm` domains).
+- `backend/api/intents/*`: intent registry + action handlers (`transport`, `fixture`, `cue`, `chaser`, `poi`, `llm` domains).
 - `backend/store/state.py`: compatibility export for `StateManager`, `FPS`, and `MAX_SONG_SECONDS`.
 - `backend/store/state_manager/manager.py`: `StateManager` mixin composition root.
 - `backend/store/state_manager/core/*`: bootstrap, fixture/POI store operations, metadata helpers, render wrappers.
@@ -26,11 +26,13 @@ Compatibility exports:
 
 ## Data model
 
-### Cue sheet (effect-based)
+### Cue sheet (mixed effect + chaser)
 
 - File: `backend/cues/{song}.json`.
-- Entries are effect instructions, not DMX snapshots.
-- Renderer expands entries into a full timeline canvas at `60 FPS`.
+- Entries are cue instructions, not DMX snapshots.
+- Effect rows store `time`, `fixture_id`, `effect`, `duration`, `data`, `name`, `created_by`.
+- Chaser rows store `time`, `chaser_id`, `data`, `name`, `created_by`.
+- Renderer expands chaser rows into effect rows at render time and builds the full timeline canvas at `60 FPS`.
 
 ### Dual universe model
 
@@ -72,14 +74,26 @@ Behavior:
 
 - `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`; for `kind="rgb"` meta-channels, payload must use `values.rgb` as `#RRGGBB` (or mapped color name), and backend converts it to RGB channel writes.
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
-- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, and `cue.apply_helper`.
+- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, and `cue.apply_helper`.
+- `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
+- Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
+- Chaser intents are `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, and `chaser.list`.
+- Chaser effect fields `beat` and `duration` are beat-based; conversion uses `beatToTimeMs(beat_count, bpm)`.
+- Persisted chaser cue rows store `chaser_id` and `data.repetitions`; they are not flattened on save.
+- Render and preview paths expand chaser cue rows using song BPM plus beat offsets from the chaser definition.
+- Persisted chaser rows use `created_by` set to `chaser:{id}`.
+- `chaser.preview` renders temporary Art-Net output and does not persist cue data.
 
 ### Preview
 
 - `fixture.preview_effect` validates fixture/effect/duration, renders temporary canvas, streams it to output at 60 FPS via Art-Net, and emits:
   - `preview_started` on success.
   - `preview_rejected` on failure.
+- `chaser.preview` validates chaser input, renders temporary chaser canvas, streams output at 60 FPS via Art-Net, and emits:
+  - `chaser_preview_started` on success.
+  - `chaser_preview_rejected` on failure.
+- `chaser.stop_preview` emits `chaser_preview_stopped` when active preview is cancelled.
 - Preview runs to completion; final effect values persist to `editor_universe` and `output_universe`.
 - `fixture.stop_preview` currently emits warning event and is not implemented.
 - Preview is not written to cues/files, but final values remain active until overwritten.

@@ -97,24 +97,3 @@
   background: transparent;
   padding: 8px;
 }
-
-.send-arrow {
-  min-width: 36px;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  line-height: 1;
-}
-
-.stop-stream {
-  height: 36px;
-  padding-inline: 10px;
-}
-
-.send-arrow:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}

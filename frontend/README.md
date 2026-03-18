@@ -31,12 +31,14 @@ Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`
 
 | Route id | Sidebar label | View function | Current behavior |
 | --- | --- | --- | --- |
-| `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` with `SongSectionsPanel`, cue sheet panel, and fixture effects panel |
-| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with live beat/chord analysis panels sourced from backend song metadata |
-| `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` with shared chord progression, effect playlist, and effect picker panels |
+| `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` with `SongSectionsPanel`, a placeholder cue summary panel, and a placeholder fixture-effects panel |
+| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with the shared chord progression panel and analyzer plot panels |
+| `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` with the shared chord progression panel, live cue sheet, effect picker, chaser picker, and cue helpers |
 | `dmx_control` | DMX Control | `DmxControlView()` | Renders fixture grid with dynamic controls |
 
 `features/home/HomeView.ts` exists but is not wired into current route state or sidebar.
+
+Default local route state is `song_analysis` when nothing is stored in `localStorage.ui_route`.
 
 ## Protocol and intent surface
 
@@ -54,11 +56,20 @@ Backend -> client message types:
 Intent names currently emitted by frontend:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`
-- Cue: `cue.add`, `cue.update`, `cue.delete`
+- Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.apply_helper`
+- Chaser: `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, `chaser.list`
 - LLM: `llm.send_prompt`, `llm.cancel`
 - POI: `poi.update_fixture_target`
 
 Protocol includes additional names (`fixture.stop_preview`, `poi.create`, `poi.update`, `poi.delete`) for compatibility with backend contracts.
+
+Frontend cue/chaser payload expectations:
+- `state.cues` is a mixed list of cue entries:
+  - effect cue: `time`, `fixture_id`, `effect`, `duration`, `data`, optional `name`, optional `created_by`
+  - chaser cue: `time`, `chaser_id`, `data`, optional `name`, optional `created_by`
+- `state.chasers` entries include stable `id`, display `name`, `description`, and beat-based `effects`.
+- Chaser intents use `chaser_id` in payloads, not `chaser_name`.
+- Chaser cue repetitions live in `cue.data.repetitions`.
 
 ## State stores and global bridges
 
@@ -79,7 +90,7 @@ Global bridge fields used across modules:
 ### App shell and boot
 - `src/app/main.ts`: app bootstrap entry.
 - `src/app/boot.ts`: `boot(ctx)` + hydration + WS event dispatch.
-- `src/app/AppShell.ts`: `mountAppShell(root)` + route/main/right panel rerender policy.
+- `src/app/AppShell.ts`: `mountAppShell(root)` + route/main/right panel rerender policy. The right panel always renders `StatusCard()` and `LlmChatView()`.
 - `src/app/routes.ts`: `ROUTES` metadata for sidebar buttons.
 - `src/app/server.ts`: `renderDocument()` HTML shell with CSS includes + bootstrap injection.
 
@@ -119,21 +130,39 @@ Global bridge fields used across modules:
 - `SongSectionsPanel` highlight rule uses section bounds with a small start-time tolerance (`start_s - 0.01`): active when `timeS > (start_s - 0.01) && timeS < end_s`.
 
 ### Song Analysis
-- `src/features/song_analysis/SongAnalysisView.ts`: composes player with beat/chord/plot analysis cards.
+- `src/features/song_analysis/SongAnalysisView.ts`: composes player with the shared chord progression card and analyzer plot cards.
 - `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats and analyzer plots from backend state and composes shared song structure data.
 - `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel (downbeat/bar fallback behavior).
 
+`BeatTable.ts` exists but is not mounted by the current `SongAnalysisView()`.
+
 ### Show Builder
-- `src/features/show_builder/ShowBuilderView.ts`: composes player with the shared chord progression card, effect playlist, and effect picker.
-- `src/features/show_builder/cue_intents.ts`: cue intent senders (`addCue`, `updateCue`, `deleteCue`).
-- `src/features/show_builder/components/EffectPlaylist.ts`: live cue list panel, subscribes to backend `cues` state and emits cue edit/preview/delete actions.
-- `src/features/show_builder/components/effect_picker/EffectPicker.ts`: fixture/effect selection panel — assembles DOM, wires events, manages subscription.
+- `src/features/show_builder/ShowBuilderView.ts`: composes player with the shared chord progression card, `CueSheet()`, and `FlowColumn()`.
+- `src/features/show_builder/cue_intents.ts`: cue/chaser intent senders (`addCue`, `updateCue`, `deleteCue`, `clearCues`, `applyCueHelper`, chaser apply/preview/start/stop/list helpers). Chaser helpers send `chaser_id`.
+- `src/features/show_builder/cue_utils.ts`: cue type guards and shared cue/chaser helpers for labels, repetitions, duration, and signatures.
+- `src/features/show_builder/components/cue_sheet/CueSheet.ts`: live cue list panel, subscribes to backend `cues` state and emits cue edit/preview/delete/select actions. Delete confirmation names the selected cue type, label, and time.
+- `src/features/show_builder/components/flow_column/FlowColumn.ts`: composes `EffectPicker()`, `ChaserPicker()`, and `CueHelpers()`.
+- `src/features/show_builder/components/effect_picker/EffectPicker.ts`: fixture/effect selection panel for effect cue rows only — assembles DOM, wires events, manages subscription.
 - `src/features/show_builder/components/effect_picker/layout.ts`: DOM builders for top row, parameter section, and action row; returns typed ref objects.
 - `src/features/show_builder/components/effect_picker/updates.ts`: stateful DOM updaters (`applyEffectOptions`, `applyFixtureOptions`, `renderParamForm`).
 - `src/features/show_builder/components/effect_picker/selectors.ts`: backend state reads and `formatTime` helper.
 - `src/features/show_builder/components/effect_picker/types.ts`: `PickerState` type.
 - `src/features/show_builder/components/effect_params/params_schema.ts`: effect parameter definitions for dynamic form generation.
 - `src/features/show_builder/components/effect_params/ParamForm.ts`: renders parameter inputs based on effect schema.
+- `src/features/show_builder/components/chaser_picker/ChaserPicker.ts`: chaser selection and chaser cue editing. The picker shows the individual chaser effects for reference/preview, but `Add` and `Update` persist a single cue row with `chaser_id` plus `data.repetitions`.
+- `src/features/show_builder/components/cue_helpers/CueHelpers.ts`: backend-driven helper list with `Apply` actions.
+
+Show Builder current cue-sheet behavior:
+- Cue sheet rows render one of two layouts:
+  - effect cue row: `time / fixture / effect / duration`
+  - chaser cue row: `time / chaser / calculated duration`
+- Chaser row duration is calculated in the frontend from chaser beat offsets plus current song/playback BPM.
+- Cue sheet preview dispatch is type-aware:
+  - effect rows use `fixture.preview_effect`
+  - chaser rows use `chaser.preview`
+- Cue sheet edit dispatch is type-aware:
+  - effect rows hydrate `EffectPicker`
+  - chaser rows hydrate `ChaserPicker`
 
 ### DMX control
 - `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.
@@ -227,9 +256,9 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
 
 ## Current implementation status
 
-- `SongAnalysis` panels render live backend-derived beats/chords/sections and analyzer plots when available.
-- `ShowBuilder` reuses the shared chord progression card and renders builder-side effect playlist and picker panels.
-- `ShowControl` route renders a live sections panel backed by websocket song metadata.
+- `SongAnalysis` renders the shared chord progression panel and analyzer plots when available.
+- `ShowBuilder` reuses the shared chord progression card and renders a live mixed cue sheet plus builder tools for effects, chasers, and cue helpers.
+- `ShowControl` renders a live sections panel backed by websocket song metadata, but its cue summary and fixture-effects panels are still static placeholder content.
 - `HomeView` exists in source but is not part of current route rendering.
 
 ## Development commands
@@ -263,11 +292,16 @@ npm run sync-icons
 - Never render instructional/mockup annotation text in the final UI.
 - Never create UI labels directly from annotation callouts in LoFi files.
 - Never copy annotation colors (including pink guidance text color) into production UI styles.
+- Never ship annotation text or annotation color tokens into final HTML, DOM content, or production CSS.
 - In `src/features`, use shared themed controls (`Button`, `Dropdown`, `Slider`, `Toggle`) instead of raw `button`, `select`, `input[type=range]`, or `input[type=checkbox]` elements.
 - Do not create feature-local custom variants of those controls; extend shared control components when customization is required.
 
 ## Explicit coding style directives
 
+- Use CUBE CSS; do not use BEM class patterns (`__`, `--`).
+- CUBE model in this repo: Composition uses `l-`/`o-`, Utilities use `u-`, Blocks use semantic component names, Exceptions use `is-`/`has-`.
+- Keep component structure as plain as possible; avoid wrapper-over-wrapper nesting unless required for semantics, accessibility, or behavior.
+- Do not add padding or gap values unless explicitly required by the task or LoFi constraints.
 - Keep feature CSS focused on layout and spacing. Do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
 - Keep control state visuals centralized in shared styles. Use shared state classes (`.is-active`, `.is-selected`) from `src/app/themes.css`.
 - Do not add feature-scoped state variants such as `.selected`, `.is-current`, or feature-specific `.is-active` color/border overrides.
