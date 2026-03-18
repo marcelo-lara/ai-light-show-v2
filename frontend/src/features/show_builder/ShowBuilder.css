@@ -137,8 +137,7 @@
 .time_position-input {
   width: 100%;
   min-width: 0;
-  min-height: 34px;
-  padding: 8px 10px;
+  min-height: 2em;
   text-align: right;
   background: var(--card-2);
   color: var(--text);
