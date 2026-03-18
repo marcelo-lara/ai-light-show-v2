@@ -34,6 +34,7 @@ export function CueSheet(): HTMLElement {
 
 	const listContainer = document.createElement("div");
 	listContainer.className = "cue-sheet-list o-list";
+	listContainer.setAttribute("aria-label", "Cue Sheet list");
 	content.append(header, listContainer);
 
 	let lastCueSignature = "";
@@ -128,5 +129,9 @@ export function CueSheet(): HTMLElement {
 	renderList();
 	const unsubscribe = subscribeBackendStore(renderList);
 	(content as unknown as { _cleanup: () => void })._cleanup = unsubscribe;
-	return Card(content, { variant: "outlined", className: "show-builder-panel" });
+	return Card(content, {
+		ariaLabel: "Cue Sheet panel",
+		variant: "outlined",
+		className: "show-builder-panel",
+	});
 }

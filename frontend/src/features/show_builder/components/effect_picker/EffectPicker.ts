@@ -31,8 +31,10 @@ export function EffectPicker(): HTMLElement {
 
 	const refreshActionMode = () => {
 		const isEditing = state.editingIndex !== null;
+		const commitLabel = isEditing ? "Update selected cue" : "Add cue at the current playback time";
 		commitBtn.querySelector(".btn-caption")!.textContent = isEditing ? "Update" : "Add";
-		commitBtn.title = isEditing ? "Update selected cue" : "Add cue at the current playback time";
+		commitBtn.title = commitLabel;
+		commitBtn.setAttribute("aria-label", commitLabel);
 		cancelBtn.disabled = !isEditing;
 	};
 
@@ -115,5 +117,9 @@ export function EffectPicker(): HTMLElement {
 		window.removeEventListener("show-builder:cue-edit", onCueEdit as EventListener);
 	};
 	content.append(topRoot, createDivider(), middleRoot, createDivider(), actionsRoot);
-	return Card(content, { variant: "outlined", className: "show-builder-panel" });
+	return Card(content, {
+		ariaLabel: "Effect Picker panel",
+		variant: "outlined",
+		className: "show-builder-panel",
+	});
 }

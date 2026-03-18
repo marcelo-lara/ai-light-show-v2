@@ -42,5 +42,9 @@ export function FixtureEffectsPanel(): HTMLElement {
   }
 
   content.appendChild(list);
-  return Card(content, { variant: "outlined", className: "show-control-panel" });
+  return Card(content, {
+    ariaLabel: "Fixture Effects panel",
+    variant: "outlined",
+    className: "show-control-panel",
+  });
 }

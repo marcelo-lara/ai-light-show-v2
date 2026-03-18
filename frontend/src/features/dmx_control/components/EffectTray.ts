@@ -13,6 +13,7 @@ function effectOptions(fixture: FixtureVM): string[] {
 export function EffectTray(fixture: FixtureVM): HTMLElement {
   const root = document.createElement("div");
   root.className = "effect-tray";
+  root.setAttribute("aria-label", `${fixture.name} effect preview`);
 
   const topRow = document.createElement("div");
   topRow.className = "effect-tray-top";
@@ -21,7 +22,7 @@ export function EffectTray(fixture: FixtureVM): HTMLElement {
   const effectControl = Dropdown({
     value: effects[0] ?? "",
     options: effects.map((effect) => ({ value: effect, label: effect })),
-    attributes: { "aria-label": "Preview effect" },
+    attributes: { "aria-label": "Preview effect type" },
   });
   const durationControl = Slider({
     label: "Duration",

@@ -8,6 +8,7 @@ import { getSongAnalysisData } from "./song_analysis_state.ts";
 export function SongAnalysisView(): HTMLElement {
 	const wrap = document.createElement("section");
 	wrap.className = "view song-analysis-view";
+	wrap.setAttribute("aria-label", "Song Analysis view");
 	const data = getSongAnalysisData();
 
 	const left = Cards([

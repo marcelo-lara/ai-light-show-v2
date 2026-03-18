@@ -6,6 +6,7 @@ import { FixtureEffectsPanel } from "./components/FixtureEffectsPanel.ts";
 export function ShowControlView(): HTMLElement {
   const view = document.createElement("section");
   view.className = "view";
+  view.setAttribute("aria-label", "Show Control view");
 
   const main = document.createElement("div");
   main.className = "show-control-main";

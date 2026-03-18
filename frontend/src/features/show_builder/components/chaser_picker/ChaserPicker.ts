@@ -89,6 +89,7 @@ export function ChaserPicker(): HTMLElement {
 
 	const list = document.createElement("div");
 	list.className = "chaser-picker-list o-list";
+	list.setAttribute("aria-label", "Chaser effects");
 
 	const divider = document.createElement("div");
 	divider.className = "chaser-picker-divider";
@@ -148,7 +149,10 @@ export function ChaserPicker(): HTMLElement {
 
 	function refreshActionMode() {
 		const isEditing = editingIndex !== null;
+		const addLabel = isEditing ? "Update chaser cue" : "Add chaser cue";
 		addBtn.querySelector(".btn-caption")!.textContent = isEditing ? "Update" : "Add";
+		addBtn.title = addLabel;
+		addBtn.setAttribute("aria-label", addLabel);
 		newBtn.disabled = !isEditing;
 		editBtn.disabled = true;
 	}
@@ -279,7 +283,7 @@ export function ChaserPicker(): HTMLElement {
 
 	body.append(head, list, divider, actions, empty);
 	return Card(body, {
-		title: "",
+		ariaLabel: "Chaser Picker panel",
 		variant: "outlined",
 		className: "show-builder-panel show-builder-flow-card",
 	});

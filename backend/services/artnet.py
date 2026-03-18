@@ -1,14 +1,15 @@
 import asyncio
+import os
 import socket
 from pathlib import Path
 from time import perf_counter
 from typing import Iterable, Optional, Union
 
-ARTNET_IP = "192.168.10.221"
-ARTNET_PORT = 6454
-ARTNET_UNIVERSE = 0
+ARTNET_IP = os.getenv("DMX_NODE_IP", "192.168.10.221")
+ARTNET_PORT = int(os.getenv("DMX_NODE_PORT", "6454"))
+ARTNET_UNIVERSE = int(os.getenv("ARTNET_UNIVERSE", "0"))
 DMX_CHANNELS = 512
-FPS = 60
+FPS = int(os.getenv("FPS", "60"))
 
 UniverseLike = Union[bytes, bytearray, memoryview, Iterable[int]]
 

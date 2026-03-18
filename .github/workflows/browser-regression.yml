@@ -1,0 +1,73 @@
+name: Browser Regression
+
+on:
+  pull_request:
+
+jobs:
+  browser-regression:
+    runs-on: ubuntu-latest
+    env:
+      DMX_NODE_IP: dmx-node
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build services
+        run: |
+          docker compose build frontend backend browser-tests dmx-node
+
+      - name: Start application stack
+        run: |
+          docker compose up -d dmx-node frontend backend
+
+      - name: Run browser regression suite
+        id: browser_tests
+        continue-on-error: true
+        run: |
+          docker compose run --rm browser-tests
+
+      - name: Publish checklist summary
+        if: always()
+        run: |
+          if [ -f tests/browser/artifacts/checklist-summary.md ]; then
+            cat tests/browser/artifacts/checklist-summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "# Browser Regression Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No checklist summary was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Publish DMX node summary
+        if: always()
+        run: |
+          if [ -f tests/dmx-node/artifacts/summary.json ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "## DMX Node Summary" >> "$GITHUB_STEP_SUMMARY"
+            cat tests/dmx-node/artifacts/summary.json >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "## DMX Node Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "No DMX node summary was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload browser regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-regression-artifacts
+          path: tests/browser/artifacts/
+          if-no-files-found: warn
+
+      - name: Upload DMX node artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dmx-node-artifacts
+          path: tests/dmx-node/artifacts/
+          if-no-files-found: warn
+
+      - name: Stop application stack
+        if: always()
+        run: |
+          docker compose down --remove-orphans

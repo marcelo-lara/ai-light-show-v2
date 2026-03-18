@@ -41,7 +41,11 @@ export function ChordsPanel(props: ChordsPanelProps): HTMLElement {
 		empty.className = "muted";
 		empty.textContent = "No beat data for current song.";
 		content.appendChild(empty);
-		return Card(content, { variant: "outlined", className: props.cardClassName });
+		return Card(content, {
+			ariaLabel: "Song Structure panel",
+			variant: "outlined",
+			className: props.cardClassName,
+		});
 	}
 
 	const sectionsRoot = document.createElement("div");
@@ -145,5 +149,9 @@ export function ChordsPanel(props: ChordsPanelProps): HTMLElement {
 		if (rafId) cancelAnimationFrame(rafId);
 	}, { once: true });
 
-	return Card(content, { variant: "outlined", className: props.cardClassName });
+	return Card(content, {
+		ariaLabel: "Song Structure panel",
+		variant: "outlined",
+		className: props.cardClassName,
+	});
 }

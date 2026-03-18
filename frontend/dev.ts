@@ -12,10 +12,13 @@ let bundleBuiltAt = 0;
 function getWsUrl(req: Request): string {
   const url = new URL(req.url);
   const protocol = url.protocol === "https:" ? "wss" : "ws";
-  // The backend is exposed at port 5001 on the host machine.
-  // We use the request host (s2.local:5173) and swap the port to 5001.
-  const host = url.hostname;
-  return `${protocol}://${host}:5001/ws`;
+  const configuredHost = Deno.env.get("BACKEND_WS_HOST")?.trim();
+
+  // When the frontend is requested from another Docker service, prefer the
+  // configured backend service host instead of swapping the request hostname.
+  const useConfiguredHost = Boolean(configuredHost) && url.hostname === "frontend";
+  const host = useConfiguredHost ? configuredHost! : `${url.hostname}:5001`;
+  return `${protocol}://${host}/ws`;
 }
 
 async function bundleClient(): Promise<string> {
