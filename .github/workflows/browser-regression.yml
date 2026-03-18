@@ -132,6 +132,42 @@ jobs:
               });
             }
 
+      - name: Approve PR when regression passes
+        if: always() && steps.browser_tests.outcome == 'success'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+            const commit_id = context.payload.pull_request.head.sha;
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            });
+
+            const alreadyApproved = reviews.some((review) =>
+              review.user?.login === "github-actions[bot]" &&
+              review.state === "APPROVED" &&
+              review.commit_id === commit_id
+            );
+
+            if (alreadyApproved) {
+              core.info("An approval for this commit already exists from github-actions[bot].");
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number,
+              commit_id,
+              event: "APPROVE",
+              body: "Browser Regression passed. Auto-approved by CI.",
+            });
+
       - name: Stop application stack
         if: always()
         run: |
