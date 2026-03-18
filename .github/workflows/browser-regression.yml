@@ -168,6 +168,12 @@ jobs:
               body: "Browser Regression passed. Auto-approved by CI.",
             });
 
+      - name: Fail workflow when browser regression fails
+        if: always() && steps.browser_tests.outcome == 'failure'
+        run: |
+          echo "Browser regression reported failures. Marking workflow as failed."
+          exit 1
+
       - name: Stop application stack
         if: always()
         run: |
