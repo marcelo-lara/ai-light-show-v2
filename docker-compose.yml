@@ -106,7 +106,7 @@ services:
       - ./backend/cues:/app/cues
       - ./analyzer/meta:/app/meta
     environment:
-      - DMX_NODE_IP=${DMX_NODE_IP:-192.168.10.221}
+      - DMX_NODE_IP=${DMX_NODE_IP-}
       - DMX_NODE_PORT=${DMX_NODE_PORT:-6454}
       - FPS=60
       - ARTNET_DEBUG=${ARTNET_DEBUG:-0}

@@ -23,5 +23,9 @@ test("[DMX-EFFECT-PREVIEW-ENTRY] shows fixture effect preview controls", async (
 
   await expect(fixture.getByLabel("Preview effect type")).toBeVisible();
   await expect(fixture.getByLabel("Duration")).toBeVisible();
-  await expect(fixture.getByRole("button", { name: "Preview effect" })).toBeVisible();
+  const previewButton = fixture.getByRole("button", { name: "Preview effect" });
+  await expect(previewButton).toBeVisible();
+
+  await previewButton.click();
+  await page.waitForTimeout(750);
 });

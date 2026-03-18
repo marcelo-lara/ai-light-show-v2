@@ -10,8 +10,6 @@ permissions:
 jobs:
   browser-regression:
     runs-on: ubuntu-latest
-    env:
-      DMX_NODE_IP: dmx-node
 
     steps:
       - name: Check out repository
@@ -19,17 +17,17 @@ jobs:
 
       - name: Build services
         run: |
-          docker compose build frontend backend browser-tests dmx-node
+          docker compose --profile ci build frontend backend browser-tests dmx-node
 
       - name: Start application stack
         run: |
-          docker compose up -d dmx-node frontend backend
+          docker compose --profile ci up -d dmx-node frontend backend
 
       - name: Run browser regression suite
         id: browser_tests
         continue-on-error: true
         run: |
-          docker compose run --rm browser-tests
+          docker compose --profile ci run --rm browser-tests
 
       - name: Publish checklist summary
         if: always()
@@ -137,4 +135,4 @@ jobs:
       - name: Stop application stack
         if: always()
         run: |
-          docker compose down --remove-orphans
+          docker compose --profile ci down --remove-orphans

@@ -17,5 +17,5 @@ test-live:
 	docker compose down && docker compose up --build -d
 
 test-browser:
-	DMX_NODE_IP=dmx-node docker compose up -d dmx-node frontend backend
-	DMX_NODE_IP=dmx-node docker compose run --rm browser-tests
+	docker compose --profile regression up -d dmx-node frontend backend
+	docker compose --profile regression run --rm browser-tests
