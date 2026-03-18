@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from backend.store.state import StateManager
-from backend.models.cues import CueSheet
+from backend.models.cues import CueSheet, load_cue_sheet
 
 
 @pytest.fixture
@@ -150,6 +150,31 @@ async def test_get_cue_entries(state_manager, workspace_root):
     assert entries[0]["time"] == 1.0
     assert entries[1]["time"] == 3.0
     assert isinstance(entries[0], dict)
+
+
+@pytest.mark.asyncio
+async def test_add_chaser_cue_entry_valid(state_manager, workspace_root):
+    fixtures_json = workspace_root / "backend" / "fixtures" / "fixtures.json"
+    await state_manager.load_fixtures(fixtures_json)
+    state_manager.load_chasers()
+
+    state_manager.cue_sheet = CueSheet(song_filename="test_cue_add", entries=[])
+
+    result = await state_manager.add_chaser_cue_entry(
+        time=1.36,
+        chaser_id="blue_parcan_chase",
+        data={"repetitions": 2},
+    )
+
+    assert result["ok"] is True
+    assert result["entry"]["chaser_id"] == "blue_parcan_chase"
+    assert result["entry"]["data"] == {"repetitions": 2}
+
+
+def test_load_mixed_cue_sheet_real_file(workspace_root):
+    cue_sheet = load_cue_sheet(workspace_root / "backend" / "cues", "Yonaka - Seize the Power")
+    assert any(getattr(entry, "chaser_id", None) == "blue_parcan_chase" for entry in cue_sheet.entries)
+    assert any(getattr(entry, "effect", None) == "flash" for entry in cue_sheet.entries)
 
 
 @pytest.mark.asyncio

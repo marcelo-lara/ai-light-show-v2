@@ -20,20 +20,15 @@ export function ConfirmCancelPrompt(options: ConfirmCancelPromptOptions): Promis
 		dialog.className = "confirm-cancel-prompt";
 
 		const title = document.createElement("h3");
+		title.className = "confirm-cancel-prompt-title";
 		title.textContent = options.title ?? "Confirm action";
-		title.style.margin = "0";
-		title.style.fontSize = "1rem";
 
 		const message = document.createElement("p");
+		message.className = "confirm-cancel-prompt-message";
 		message.textContent = options.message;
-		message.style.margin = "0";
-		message.style.fontSize = "0.9rem";
-		message.style.color = "var(--muted)";
 
 		const actions = document.createElement("div");
-		actions.style.display = "flex";
-		actions.style.justifyContent = "flex-end";
-		actions.style.gap = "8px";
+		actions.className = "confirm-cancel-prompt-actions";
 
 		actions.append(
 			Button({
@@ -52,9 +47,7 @@ export function ConfirmCancelPrompt(options: ConfirmCancelPromptOptions): Promis
 		);
 
 		const body = document.createElement("div");
-		body.style.display = "flex";
-		body.style.flexDirection = "column";
-		body.style.gap = "12px";
+		body.className = "confirm-cancel-prompt-body card card-outlined";
 		body.append(title, message, actions);
 
 		dialog.appendChild(body);

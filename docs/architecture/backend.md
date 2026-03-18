@@ -26,11 +26,13 @@ Compatibility exports:
 
 ## Data model
 
-### Cue sheet (effect-based)
+### Cue sheet (mixed effect + chaser)
 
 - File: `backend/cues/{song}.json`.
-- Entries are effect instructions, not DMX snapshots.
-- Renderer expands entries into a full timeline canvas at `60 FPS`.
+- Entries are cue instructions, not DMX snapshots.
+- Effect rows store `time`, `fixture_id`, `effect`, `duration`, `data`, `name`, `created_by`.
+- Chaser rows store `time`, `chaser_id`, `data`, `name`, `created_by`.
+- Renderer expands chaser rows into effect rows at render time and builds the full timeline canvas at `60 FPS`.
 
 ### Dual universe model
 
@@ -78,9 +80,10 @@ Behavior:
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
 - Chaser intents are `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, and `chaser.list`.
 - Chaser effect fields `beat` and `duration` are beat-based; conversion uses `beatToTimeMs(beat_count, bpm)`.
-- Generated chaser entries persist into `backend/cues/{song}.json` with `created_by` set to `chaser:{name}`.
+- Persisted chaser cue rows store `chaser_id` and `data.repetitions`; they are not flattened on save.
+- Render and preview paths expand chaser cue rows using song BPM plus beat offsets from the chaser definition.
+- Persisted chaser rows use `created_by` set to `chaser:{id}`.
 - `chaser.preview` renders temporary Art-Net output and does not persist cue data.
-- Chaser upsert behavior replaces existing entries at matching `(time, fixture_id)` rather than duplicating them.
 
 ### Preview
 

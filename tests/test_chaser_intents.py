@@ -17,40 +17,37 @@ class _FakeStateManager:
         self.lock = _NoopLock()
 
     def get_chasers(self):
-        return [{"name": "Downbeat plus two beats", "description": "x", "effects": []}]
+        return [{"id": "downbeats_and_beats", "name": "Downbeat plus two beats", "description": "x", "effects": []}]
 
     async def get_output_universe(self):
         return bytearray(self.output_universe)
 
-    async def apply_chaser(self, chaser_name, start_time_ms, repetitions):
-        if chaser_name == "bad":
+    async def apply_chaser(self, chaser_id, start_time_ms, repetitions):
+        if chaser_id == "bad":
             return {"ok": False, "reason": "unknown_chaser"}
         return {
             "ok": True,
-            "chaser_name": chaser_name,
-            "entries": 4,
-            "generated": 4,
-            "replaced": 0,
-            "skipped": 0,
+            "chaser_id": chaser_id,
+            "entry": {"time": start_time_ms / 1000, "chaser_id": chaser_id, "data": {"repetitions": repetitions}},
         }
 
-    async def start_chaser_instance(self, chaser_name, start_time_ms, repetitions):
-        if chaser_name == "bad":
+    async def start_chaser_instance(self, chaser_id, start_time_ms, repetitions):
+        if chaser_id == "bad":
             return {"ok": False, "reason": "unknown_chaser"}
-        return {"ok": True, "instance_id": "chaser-1", "chaser_name": chaser_name}
+        return {"ok": True, "instance_id": "chaser-1", "chaser_id": chaser_id}
 
     async def stop_chaser_instance(self, instance_id):
         if instance_id != "chaser-1":
             return {"ok": False, "reason": "unknown_instance_id"}
         return {"ok": True, "instance_id": instance_id}
 
-    async def start_preview_chaser(self, chaser_name, start_time_ms, repetitions, request_id=None):
+    async def start_preview_chaser(self, chaser_id, start_time_ms, repetitions, request_id=None):
         del start_time_ms, repetitions, request_id
-        if chaser_name == "bad":
+        if chaser_id == "bad":
             return {"ok": False, "reason": "unknown_chaser"}
         self.preview_active = True
         self.preview_chaser_request_id = "preview-1"
-        return {"ok": True, "requestId": "preview-1", "chaser_name": chaser_name, "entries": 4}
+        return {"ok": True, "requestId": "preview-1", "chaser_id": chaser_id, "entries": 4}
 
     async def cancel_preview_chaser(self):
         if not self.preview_active:
@@ -94,7 +91,7 @@ class _FakeManager:
 @pytest.mark.asyncio
 async def test_apply_chaser_intent_success():
     manager = _FakeManager()
-    ok = await apply_chaser(manager, {"chaser_name": "Downbeat plus two beats", "start_time_ms": 0, "repetitions": 1})
+    ok = await apply_chaser(manager, {"chaser_id": "downbeats_and_beats", "start_time_ms": 0, "repetitions": 1})
     assert ok is True
     assert manager.events[-1][1] == "chaser_applied"
 
@@ -102,7 +99,7 @@ async def test_apply_chaser_intent_success():
 @pytest.mark.asyncio
 async def test_apply_chaser_intent_success_without_repetitions():
     manager = _FakeManager()
-    ok = await apply_chaser(manager, {"chaser_name": "Downbeat plus two beats", "start_time_ms": 0})
+    ok = await apply_chaser(manager, {"chaser_id": "downbeats_and_beats", "start_time_ms": 0})
     assert ok is True
     assert manager.events[-1][1] == "chaser_applied"
 
@@ -110,7 +107,7 @@ async def test_apply_chaser_intent_success_without_repetitions():
 @pytest.mark.asyncio
 async def test_start_chaser_intent_success():
     manager = _FakeManager()
-    ok = await start_chaser(manager, {"chaser_name": "Downbeat plus two beats"})
+    ok = await start_chaser(manager, {"chaser_id": "downbeats_and_beats"})
     assert ok is True
     assert manager.events[-1][1] == "chaser_started"
 
@@ -118,7 +115,7 @@ async def test_start_chaser_intent_success():
 @pytest.mark.asyncio
 async def test_start_chaser_intent_success_without_repetitions():
     manager = _FakeManager()
-    ok = await start_chaser(manager, {"chaser_name": "Downbeat plus two beats"})
+    ok = await start_chaser(manager, {"chaser_id": "downbeats_and_beats"})
     assert ok is True
     assert manager.events[-1][1] == "chaser_started"
 
@@ -143,7 +140,7 @@ async def test_list_chasers_intent_emits_event_only():
 @pytest.mark.asyncio
 async def test_preview_chaser_intent_success():
     manager = _FakeManager()
-    ok = await preview_chaser(manager, {"chaser_name": "Downbeat plus two beats"})
+    ok = await preview_chaser(manager, {"chaser_id": "downbeats_and_beats"})
     assert ok is True
     assert manager.events[-1][1] == "chaser_preview_started"
     await stop_preview_chaser(manager, {})
@@ -152,7 +149,7 @@ async def test_preview_chaser_intent_success():
 @pytest.mark.asyncio
 async def test_preview_chaser_stop_event_only():
     manager = _FakeManager()
-    await preview_chaser(manager, {"chaser_name": "Downbeat plus two beats"})
+    await preview_chaser(manager, {"chaser_id": "downbeats_and_beats"})
     ok = await stop_preview_chaser(manager, {})
     assert ok is False
     assert manager.events[-1][1] == "chaser_preview_stopped"

@@ -18,6 +18,8 @@ class StateCoreRenderMixin:
         return render_cue_sheet_to_canvas(
             fixtures=self.fixtures,
             cue_sheet=self.cue_sheet,
+            chasers=self.chasers,
+            bpm=self._current_bpm(),
             song_length_seconds=self.song_length_seconds,
             fps=FPS,
             apply_arm=self._apply_arm,

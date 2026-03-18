@@ -2,10 +2,17 @@ import { Card } from "../../../../shared/components/layout/Card.ts";
 import { ConfirmCancelPrompt } from "../../../../shared/components/feedback/ConfirmCancelPrompt.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
-import { deleteCue } from "../../cue_intents.ts";
+import { deleteCue, previewChaser } from "../../cue_intents.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { transportJumpToTime } from "../../../../shared/transport/transport_intents.ts";
-import { cueSignature, findCurrentCueTime } from "./format.ts";
+import {
+	formatCueLabel,
+	getChaserById,
+	getCueRepetitions,
+	isChaserCue,
+	isEffectCue,
+} from "../../cue_utils.ts";
+import { cueSignature, findCurrentCueTime, formatCueTime } from "./format.ts";
 import { createCueRow, createEmptyCueSheetState } from "./row.ts";
 
 export function CueSheet(): HTMLElement {
@@ -40,10 +47,21 @@ export function CueSheet(): HTMLElement {
 		return getBackendStore().state.playback?.time_ms ?? 0;
 	}
 
-	async function confirmDeleteCue(index: number): Promise<void> {
+	function getDeletePromptMessage(cue: CueEntry): string {
+		if (isChaserCue(cue)) {
+			const chasers = getBackendStore().state.chasers ?? [];
+			const chaser = getChaserById(chasers, cue.chaser_id);
+			const name = chaser?.name ?? formatCueLabel(cue.chaser_id);
+			return `Delete Chaser '${name}' at ${formatCueTime(cue.time)} from the Cue?`;
+		}
+		const effectName = formatCueLabel(cue.effect);
+		return `Delete Effect '${effectName}' at ${formatCueTime(cue.time)} from the Cue?`;
+	}
+
+	async function confirmDeleteCue(index: number, cue: CueEntry): Promise<void> {
 		const confirmed = await ConfirmCancelPrompt({
 			title: "Delete cue",
-			message: "This cue will be removed from the cue sheet.",
+			message: getDeletePromptMessage(cue),
 			confirmLabel: "Delete",
 			cancelLabel: "Cancel",
 		});
@@ -72,10 +90,16 @@ export function CueSheet(): HTMLElement {
 							}));
 						},
 						onPreview: () => {
-							previewEffect(cue.fixture_id, cue.effect, cue.duration * 1000, cue.data ?? {});
+							if (isEffectCue(cue)) {
+								previewEffect(cue.fixture_id, cue.effect, cue.duration * 1000, cue.data ?? {});
+								return;
+							}
+							if (isChaserCue(cue)) {
+								previewChaser(cue.chaser_id, cue.time * 1000, getCueRepetitions(cue));
+							}
 						},
 						onDelete: () => {
-							void confirmDeleteCue(index);
+							void confirmDeleteCue(index, cue);
 						},
 						onSelect: () => {
 							transportJumpToTime(cue.time * 1000);

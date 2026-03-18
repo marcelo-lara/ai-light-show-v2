@@ -16,6 +16,7 @@ async def add_cue(manager, payload: Dict[str, Any]) -> bool:
     time = payload.get("time")
     fixture_id = str(payload.get("fixture_id") or "")
     effect = str(payload.get("effect") or "")
+    chaser_id = str(payload.get("chaser_id") or "")
     duration = payload.get("duration", 0.0)
     data = payload.get("data") or {}
 
@@ -28,6 +29,23 @@ async def add_cue(manager, payload: Dict[str, Any]) -> bool:
     except (TypeError, ValueError):
         await manager.broadcast_event("error", "cue_add_failed", {"reason": "invalid_time"})
         return False
+
+    if bool(chaser_id) == bool(effect or fixture_id):
+        await manager.broadcast_event("error", "cue_add_failed", {"reason": "invalid_cue_shape"})
+        return False
+
+    if chaser_id:
+        result = await manager.state_manager.add_chaser_cue_entry(
+            time=time_f,
+            chaser_id=chaser_id,
+            data=data if isinstance(data, dict) else {},
+        )
+        if not result.get("ok"):
+            await manager.broadcast_event("error", "cue_add_failed", result)
+            return False
+
+        await manager.broadcast_event("info", "cue_added", result)
+        return True
 
     if not fixture_id:
         await manager.broadcast_event("error", "cue_add_failed", {"reason": "missing_fixture_id"})

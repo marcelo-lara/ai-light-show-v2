@@ -1,7 +1,15 @@
 import { Button } from "../../../../shared/components/controls/Button.ts";
+import { getBackendStore } from "../../../../shared/state/backend_state.ts";
 import { List } from "../../../../shared/components/layout/List.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
-import { formatCueLabel, formatCueTime } from "./format.ts";
+import {
+	formatCueLabel,
+	getChaserById,
+	getCueDurationSeconds,
+	isChaserCue,
+	isEffectCue,
+} from "../../cue_utils.ts";
+import { formatCueTime } from "./format.ts";
 
 type CueRowHandlers = {
 	onEdit: () => void;
@@ -41,11 +49,21 @@ export function createEmptyCueSheetState(): HTMLElement {
 
 export function createCueRow(cue: CueEntry, handlers: CueRowHandlers): HTMLElement {
 	const main = document.createElement("div");
+	const bpm = Number(getBackendStore().state.playback?.bpm ?? getBackendStore().state.song?.bpm ?? 0);
+	const chasers = getBackendStore().state.chasers ?? [];
+	main.append(createText("span", "u-cell u-cell-time", formatCueTime(cue.time)));
+	if (isEffectCue(cue)) {
+		main.append(
+			createText("span", "u-cell u-cell-fixture", formatCueLabel(cue.fixture_id)),
+			createText("span", "u-cell u-cell-effect", formatCueLabel(cue.effect)),
+		);
+	}
+	if (isChaserCue(cue)) {
+		const chaser = getChaserById(chasers, cue.chaser_id);
+		main.append(createText("span", "u-cell u-cell-effect", chaser?.name ?? formatCueLabel(cue.chaser_id)));
+	}
 	main.append(
-		createText("span", "u-cell u-cell-time", formatCueTime(cue.time)),
-		createText("span", "u-cell u-cell-fixture", formatCueLabel(cue.fixture_id)),
-		createText("span", "u-cell u-cell-effect", formatCueLabel(cue.effect)),
-		createText("span", "u-cell u-cell-duration", `${cue.duration.toFixed(1)}s`),
+		createText("span", "u-cell u-cell-duration", `${getCueDurationSeconds(cue, chasers, bpm).toFixed(1)}s`),
 	);
 
 	const actions = document.createElement("div");

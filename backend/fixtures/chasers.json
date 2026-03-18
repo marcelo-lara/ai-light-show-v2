@@ -1,5 +1,6 @@
 [
   {
+    "id": "downbeats_and_beats",
     "name": "Downbeat plus two beats",
     "description": "A simple chaser that flashes the par cans and mini beams on the downbeat and two beats after.",
     "effects": [
@@ -34,6 +35,7 @@
     ]
   },  
   {
+    "id": "blue_parcan_chase",
     "name": "Parcans left to right blue",
     "description": "A simple chaser that flashes the par cans from left to right in blue.",
     "effects": [

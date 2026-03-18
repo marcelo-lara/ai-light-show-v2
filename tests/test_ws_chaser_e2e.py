@@ -16,7 +16,7 @@ from store.state import StateManager
 
 
 SONG_NAME = "Yonaka - Seize the Power"
-CHASER_NAME = "Downbeat plus two beats"
+CHASER_ID = "downbeats_and_beats"
 
 
 def _read_until_type(ws, expected_type: str, max_reads: int = 12):
@@ -83,7 +83,7 @@ def test_ws_chaser_apply_persists_and_restores_real_file(request, monkeypatch):
                         "req_id": "e2e-chaser-apply-1",
                         "name": "chaser.apply",
                         "payload": {
-                            "chaser_name": CHASER_NAME,
+                            "chaser_id": CHASER_ID,
                             "start_time_ms": 0,
                             "repetitions": 1,
                         },
@@ -91,17 +91,17 @@ def test_ws_chaser_apply_persists_and_restores_real_file(request, monkeypatch):
                 )
 
                 evt = _read_until_event(ws, "chaser_applied")
-                assert evt["data"]["chaser_name"] == CHASER_NAME
-                assert int(evt["data"].get("entries", 0)) > 0
+                assert evt["data"]["chaser_id"] == CHASER_ID
+                assert evt["data"]["entry"]["chaser_id"] == CHASER_ID
 
                 ws.send_json({"type": "hello"})
                 refreshed = _read_until_type(ws, "snapshot")
                 cues = refreshed["state"].get("cues", [])
                 assert len(cues) >= baseline_count
-                assert any(str(item.get("created_by", "")).startswith("chaser:") for item in cues)
+                assert any(item.get("chaser_id") == CHASER_ID for item in cues)
 
         persisted = json.loads(cues_path.read_text(encoding="utf-8"))
-        assert any(str(item.get("created_by", "")).startswith("chaser:") for item in persisted)
+        assert any(item.get("chaser_id") == CHASER_ID for item in persisted)
     finally:
         cues_path.write_bytes(original_bytes)
         assert cues_path.read_bytes() == original_bytes
@@ -151,7 +151,7 @@ def test_ws_chaser_start_and_stop_event_flow(request, monkeypatch):
                         "req_id": "e2e-chaser-start-1",
                         "name": "chaser.start",
                         "payload": {
-                            "chaser_name": CHASER_NAME,
+                            "chaser_id": CHASER_ID,
                             "start_time_ms": 0,
                             "repetitions": 1,
                         },

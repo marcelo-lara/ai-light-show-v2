@@ -388,3 +388,46 @@ input[type="range"] {
   align-content: start;
   min-width: 0;
 }
+
+.confirm-cancel-prompt {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.confirm-cancel-prompt::backdrop {
+  background: rgba(8, 12, 18, 0.72);
+  backdrop-filter: blur(1px);
+}
+
+.confirm-cancel-prompt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: min(420px, calc(100vw - 32px));
+  padding: 16px;
+  background: color-mix(in oklab, var(--card) 72%, var(--card-2));
+  box-shadow: var(--shadow);
+}
+
+.confirm-cancel-prompt-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.confirm-cancel-prompt-message {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.confirm-cancel-prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

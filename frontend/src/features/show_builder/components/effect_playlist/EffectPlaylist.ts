@@ -2,9 +2,10 @@ import { Card } from "../../../../shared/components/layout/Card.ts";
 import { ConfirmCancelPrompt } from "../../../../shared/components/feedback/ConfirmCancelPrompt.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
-import { deleteCue } from "../../cue_intents.ts";
+import { deleteCue, previewChaser } from "../../cue_intents.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { transportJumpToTime } from "../../../../shared/transport/transport_intents.ts";
+import { getCueRepetitions, isChaserCue, isEffectCue } from "../../cue_utils.ts";
 import { cueSignature, findCurrentCueTime } from "./format.ts";
 import { createCueRow, createEmptyCueSheetState } from "../cue_sheet/row.ts";
 
@@ -72,7 +73,13 @@ export function EffectPlaylist(): HTMLElement {
 							}));
 						},
 						onPreview: () => {
-							previewEffect(cue.fixture_id, cue.effect, cue.duration * 1000, cue.data ?? {});
+							if (isEffectCue(cue)) {
+								previewEffect(cue.fixture_id, cue.effect, cue.duration * 1000, cue.data ?? {});
+								return;
+							}
+							if (isChaserCue(cue)) {
+								previewChaser(cue.chaser_id, cue.time * 1000, getCueRepetitions(cue));
+							}
 						},
 						onDelete: () => {
 							void confirmDeleteCue(index);

@@ -2,9 +2,11 @@ import pytest
 import os
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from backend.store.state import StateManager
 from backend.models.fixtures.moving_heads.moving_head import MovingHead
 from backend.models.fixtures.parcans.parcan import Parcan
+from backend.models.cues import CueSheet
 
 @pytest.fixture
 def workspace_root():
@@ -83,3 +85,24 @@ async def test_dmx_canvas_render_with_templates(state_manager, workspace_root):
     # Cleanup
     if temp_cue_path.exists():
         temp_cue_path.unlink()
+
+
+@pytest.mark.asyncio
+async def test_dmx_canvas_render_with_chaser_entry(state_manager, workspace_root):
+    fixtures_json = workspace_root / "backend" / "fixtures" / "fixtures.json"
+    await state_manager.load_fixtures(fixtures_json)
+    state_manager.load_chasers()
+    state_manager.current_song = SimpleNamespace(meta=SimpleNamespace(bpm=120.0))
+    state_manager.song_length_seconds = 5.0
+    state_manager.cue_sheet = CueSheet(
+        song_filename="test_render",
+        entries=[{"time": 0.0, "chaser_id": "blue_parcan_chase", "data": {"repetitions": 1}}],
+    )
+
+    state_manager.canvas = state_manager._render_cue_sheet_to_canvas()
+
+    first_flash = state_manager.canvas.frame_view(0)
+    second_flash = state_manager.canvas.frame_view(30)
+
+    assert first_flash[30] == 255
+    assert second_flash[18] == 255

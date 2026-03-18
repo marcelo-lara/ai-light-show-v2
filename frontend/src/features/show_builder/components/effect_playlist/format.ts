@@ -1,4 +1,5 @@
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
+import { getCueSignatureToken } from "../../cue_utils.ts";
 
 export function formatCueTime(time: number): string {
 	return `${time.toFixed(3)}`;
@@ -15,9 +16,7 @@ export function formatCueParams(data: Record<string, unknown>): string[] {
 }
 
 export function cueSignature(cues: CueEntry[]): string {
-	return cues
-		.map((cue) => [cue.time, cue.fixture_id, cue.effect, cue.duration, JSON.stringify(cue.data)].join("|"))
-		.join("~");
+	return cues.map(getCueSignatureToken).join("~");
 }
 
 export function findCurrentCueTime(cues: CueEntry[], timeMs: number): number | null {

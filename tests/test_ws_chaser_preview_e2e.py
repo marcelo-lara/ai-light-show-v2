@@ -13,7 +13,7 @@ from store.state import StateManager
 
 
 SONG_NAME = "Yonaka - Seize the Power"
-CHASER_NAME = "Downbeat plus two beats"
+CHASER_ID = "downbeats_and_beats"
 
 
 def _read_until_type(ws, expected_type: str, max_reads: int = 20):
@@ -70,14 +70,14 @@ def test_ws_chaser_preview_no_persist(request, monkeypatch):
                     "req_id": "e2e-chaser-preview-1",
                     "name": "chaser.preview",
                     "payload": {
-                        "chaser_name": CHASER_NAME,
+                        "chaser_id": CHASER_ID,
                         "start_time_ms": 0,
                         "repetitions": 2,
                     },
                 }
             )
             started = _read_until_event(ws, "chaser_preview_started")
-            assert started["data"]["chaser_name"] == CHASER_NAME
+            assert started["data"]["chaser_id"] == CHASER_ID
 
             ws.send_json(
                 {

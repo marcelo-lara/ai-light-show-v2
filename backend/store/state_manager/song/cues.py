@@ -16,6 +16,28 @@ from models.cues import (
 
 
 class StateSongCueMixin:
+    def _validate_cue_entry(self, entry: CueEntry) -> None:
+        if entry.is_chaser:
+            chaser = self.get_chaser_definition(entry.chaser_id or "")
+            if not chaser:
+                raise ValueError("unknown_chaser_id")
+            return
+
+        fixture = self._get_fixture(entry.fixture_id or "")
+        if not fixture:
+            raise ValueError("fixture_not_found")
+
+        supported = self._fixture_supported_effects(fixture)
+        effect_lower = str(entry.effect or "").lower().strip()
+        if effect_lower not in supported:
+            raise ValueError("effect_not_supported")
+
+    def _validate_cue_sheet(self) -> None:
+        if not self.cue_sheet:
+            return
+        for entry in self.cue_sheet.entries:
+            self._validate_cue_entry(entry)
+
     def _refresh_canvas_after_cue_change(self) -> None:
         self.canvas_dirty = False
         self.canvas = self._render_cue_sheet_to_canvas()
@@ -102,13 +124,42 @@ class StateSongCueMixin:
                     "data": data,
                 },
             )
+            self._validate_cue_entry(entry)
             await self.save_cue_sheet()
             self._refresh_canvas_after_cue_change()
 
             return {
                 "ok": True,
-                "entry": entry.model_dump(),
+                "entry": entry.model_dump(exclude_none=True),
             }
+
+    async def add_chaser_cue_entry(
+        self,
+        time: float,
+        chaser_id: str,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+
+            current_entries = list(self.cue_sheet.entries)
+            entry = create_cue_entry(
+                self.cue_sheet,
+                {
+                    "time": float(time),
+                    "chaser_id": chaser_id,
+                    "data": data if isinstance(data, dict) else {},
+                },
+            )
+            try:
+                self._validate_cue_entry(entry)
+            except ValueError as exc:
+                self.cue_sheet.entries = current_entries
+                return {"ok": False, "reason": str(exc)}
+            await self.save_cue_sheet()
+            self._refresh_canvas_after_cue_change()
+            return {"ok": True, "entry": entry.model_dump(exclude_none=True)}
 
     async def save_cue_sheet(self):
         if self.cue_sheet:
@@ -124,13 +175,21 @@ class StateSongCueMixin:
         async with self.lock:
             if not self.cue_sheet:
                 return {"ok": False, "reason": "no_cue_sheet"}
+            current_entries = list(self.cue_sheet.entries)
             try:
                 entry = update_cue_entry(self.cue_sheet, index, payload)
             except IndexError as exc:
                 return {"ok": False, "reason": str(exc)}
+            except ValueError as exc:
+                return {"ok": False, "reason": str(exc)}
+            try:
+                self._validate_cue_entry(entry)
+            except ValueError as exc:
+                self.cue_sheet.entries = current_entries
+                return {"ok": False, "reason": str(exc)}
             await self.save_cue_sheet()
             self._refresh_canvas_after_cue_change()
-            return {"ok": True, "entry": entry.model_dump()}
+            return {"ok": True, "entry": entry.model_dump(exclude_none=True)}
 
     async def delete_cue_entry(self, index: int) -> Dict[str, Any]:
         async with self.lock:
@@ -142,7 +201,7 @@ class StateSongCueMixin:
                 return {"ok": False, "reason": str(exc)}
             await self.save_cue_sheet()
             self._refresh_canvas_after_cue_change()
-            return {"ok": True, "entry": entry.model_dump()}
+            return {"ok": True, "entry": entry.model_dump(exclude_none=True)}
 
     async def clear_cue_entries(
         self,

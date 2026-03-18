@@ -14,6 +14,7 @@ class ChaserEffect(BaseModel):
 
 
 class ChaserDefinition(BaseModel):
+    id: str
     name: str
     description: str
     effects: List[ChaserEffect] = Field(default_factory=list)

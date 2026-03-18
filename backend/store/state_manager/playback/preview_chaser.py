@@ -18,7 +18,7 @@ class StatePlaybackPreviewChaserMixin:
             song_filename=(getattr(self.current_song, "song_id", None) or "preview"),
             entries=[CueEntry(**entry) for entry in entries],
         )
-        cues = iter_cues_for_render(cue_sheet, FPS)
+        cues = iter_cues_for_render(cue_sheet, FPS, [], 0.0)
         total_frames = max(1, max((end for _, end, _ in cues), default=0) + 1)
         canvas = DMXCanvas.allocate(fps=FPS, total_frames=total_frames)
         active: List[tuple[int, int, CueEntry]] = []
@@ -32,7 +32,7 @@ class StatePlaybackPreviewChaserMixin:
                 active.extend(cues_by_start[frame_index])
             if active:
                 active = [item for item in active if item[1] >= frame_index]
-                for start_frame, end_frame, entry in sorted(active, key=lambda item: (item[2].time, item[2].fixture_id, item[2].effect)):
+                for start_frame, end_frame, entry in sorted(active, key=lambda item: (item[2].time, item[2].fixture_id or "", item[2].effect or "")):
                     render_entry_into_universe(
                         fixtures=self.fixtures,
                         universe=universe,
@@ -48,7 +48,7 @@ class StatePlaybackPreviewChaserMixin:
 
     async def start_preview_chaser(
         self,
-        chaser_name: str,
+        chaser_id: str,
         start_time_ms: float,
         repetitions: int,
         request_id: Optional[str] = None,
@@ -57,16 +57,14 @@ class StatePlaybackPreviewChaserMixin:
         async with self.lock:
             if self.is_playing:
                 return {"ok": False, "reason": "playback_active"}
-            if not self.chasers:
-                self.load_chasers()
-            chaser = next((item for item in self.chasers if item.name == chaser_name), None)
+            chaser = self.get_chaser_definition(chaser_id)
             if not chaser:
-                return {"ok": False, "reason": "unknown_chaser", "chaser_name": chaser_name}
+                return {"ok": False, "reason": "unknown_chaser", "chaser_id": chaser_id}
             bpm = self._current_bpm()
             if bpm <= 0.0:
                 return {"ok": False, "reason": "bpm_unavailable"}
 
-            entries = self._expand_chaser_entries(chaser, max(0.0, float(start_time_ms)), max(1, int(repetitions)), bpm)
+            entries = self.expand_chaser_entries(chaser.id, max(0.0, float(start_time_ms)), max(1, int(repetitions)), bpm)
             first_time = min((float(item["time"]) for item in entries), default=0.0)
             normalized = [{**item, "time": max(0.0, float(item["time"]) - first_time)} for item in entries]
 
@@ -76,7 +74,7 @@ class StatePlaybackPreviewChaserMixin:
 
             self.preview_chaser_canvas = self._render_preview_chaser_canvas(normalized, bytearray(self.editor_universe))
             self.preview_chaser_request_id = rid
-            self.preview_chaser_name = chaser.name
+            self.preview_chaser_name = chaser.id
             self.preview_chaser_active = True
             self.output_universe[:] = self.preview_chaser_canvas.frame_view(0)
             self.preview_chaser_task = asyncio.create_task(self._run_preview_chaser(rid))
@@ -86,7 +84,7 @@ class StatePlaybackPreviewChaserMixin:
             with contextlib.suppress(asyncio.CancelledError):
                 await cancel_task
 
-        return {"ok": True, "requestId": rid, "chaser_name": chaser_name, "entries": len(normalized)}
+        return {"ok": True, "requestId": rid, "chaser_id": chaser.id, "entries": len(normalized)}
 
     async def cancel_preview_chaser(self) -> bool:
         task: Optional[asyncio.Task] = None

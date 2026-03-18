@@ -4,9 +4,9 @@ from typing import Any, Dict
 
 
 async def start_chaser(manager, payload: Dict[str, Any]) -> bool:
-    chaser_name = str(payload.get("chaser_name") or "").strip()
-    if not chaser_name:
-        await manager.broadcast_event("error", "chaser_start_failed", {"reason": "missing_chaser_name"})
+    chaser_id = str(payload.get("chaser_id") or "").strip()
+    if not chaser_id:
+        await manager.broadcast_event("error", "chaser_start_failed", {"reason": "missing_chaser_id"})
         return False
 
     start_time_ms = payload.get("start_time_ms", 0)
@@ -18,7 +18,7 @@ async def start_chaser(manager, payload: Dict[str, Any]) -> bool:
         await manager.broadcast_event("error", "chaser_start_failed", {"reason": "invalid_payload"})
         return False
 
-    result = await manager.state_manager.start_chaser_instance(chaser_name, start_time_ms_f, repetitions_i)
+    result = await manager.state_manager.start_chaser_instance(chaser_id, start_time_ms_f, repetitions_i)
     if not result.get("ok"):
         await manager.broadcast_event("error", "chaser_start_failed", result)
         return False

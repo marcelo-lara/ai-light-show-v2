@@ -96,15 +96,28 @@ export type BackendState = {
   chasers?: ChaserDefinition[];
 };
 
-export type CueEntry = {
+export type CueEntryBase = {
   time: number;
-  fixture_id: string;
-  effect: string;
-  duration: number;
   data: Record<string, unknown>;
   name?: string;
   created_by?: string;
 };
+
+export type EffectCueEntry = CueEntryBase & {
+  fixture_id: string;
+  effect: string;
+  duration: number;
+  chaser_id?: never;
+};
+
+export type ChaserCueEntry = CueEntryBase & {
+  chaser_id: string;
+  fixture_id?: never;
+  effect?: never;
+  duration?: never;
+};
+
+export type CueEntry = EffectCueEntry | ChaserCueEntry;
 
 export type CueHelperDefinition = {
   id: string;
@@ -114,6 +127,7 @@ export type CueHelperDefinition = {
 };
 
 export type ChaserDefinition = {
+  id: string;
   name: string;
   description: string;
   effects: ChaserEffect[];

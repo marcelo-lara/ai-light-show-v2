@@ -3,10 +3,14 @@ import { Dropdown, type DropdownOption } from "../../../../shared/components/con
 import { Card } from "../../../../shared/components/layout/Card.ts";
 import { List } from "../../../../shared/components/layout/List.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
+import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
-import { applyChaser, previewChaser } from "../../cue_intents.ts";
+import { applyChaser, previewChaser, updateCue } from "../../cue_intents.ts";
+import { getChaserById, getCueRepetitions, isChaserCue } from "../../cue_utils.ts";
 import { formatTime, getChasers } from "../effect_picker/selectors.ts";
 import { time_position } from "../time_position.ts";
+
+type CueEditEvent = CustomEvent<{ index: number; cue: CueEntry }>;
 
 export function ChaserPicker(): HTMLElement {
 	const body = document.createElement("div");
@@ -15,6 +19,8 @@ export function ChaserPicker(): HTMLElement {
 	let selected = "";
 	let repetitions = "1";
 	let startTimeSeconds = 0;
+	let editingIndex: number | null = null;
+	let editingTimeSeconds: number | null = null;
 
 	const head = document.createElement("div");
 	head.className = "chaser-picker-head";
@@ -48,6 +54,12 @@ export function ChaserPicker(): HTMLElement {
 		icon: "addFile",
 		bindings: {
 			disabled: true,
+			onClick: () => {
+				editingIndex = null;
+				editingTimeSeconds = null;
+				refreshActionMode();
+				refresh();
+			},
 		},
 	});
 	const editBtn = Button({
@@ -91,6 +103,17 @@ export function ChaserPicker(): HTMLElement {
 		bindings: {
 			onClick: () => {
 				if (!selected) return;
+				if (editingIndex !== null) {
+					updateCue(editingIndex, {
+						time: editingTimeSeconds ?? startTimeSeconds,
+						chaser_id: selected,
+						data: { repetitions: Number(repetitions) },
+					});
+					editingIndex = null;
+					editingTimeSeconds = null;
+					refreshActionMode();
+					return;
+				}
 				applyChaser(selected, startTimeSeconds * 1000, Number(repetitions));
 			},
 		},
@@ -123,6 +146,13 @@ export function ChaserPicker(): HTMLElement {
 	empty.className = "chaser-picker-empty";
 	empty.textContent = "";
 
+	function refreshActionMode() {
+		const isEditing = editingIndex !== null;
+		addBtn.querySelector(".btn-caption")!.textContent = isEditing ? "Update" : "Add";
+		newBtn.disabled = !isEditing;
+		editBtn.disabled = true;
+	}
+
 	function getStartTimeForBeat(beat: number, bpm: number): number {
 		if (!Number.isFinite(bpm) || bpm <= 0) return 0;
 		return (beat * 60) / bpm;
@@ -130,7 +160,7 @@ export function ChaserPicker(): HTMLElement {
 
 	function renderEffects() {
 		list.innerHTML = "";
-		const chaser = getChasers().find((item) => item.name === selected);
+		const chaser = getChaserById(getChasers(), selected);
 		const bpm = Number(getBackendStore().state.playback?.bpm ?? getBackendStore().state.song?.bpm ?? 0);
 		if (!chaser || chaser.effects.length === 0) {
 			const emptyState = document.createElement("p");
@@ -159,13 +189,18 @@ export function ChaserPicker(): HTMLElement {
 
 			const duration = document.createElement("span");
 			duration.className = "u-cell u-cell-duration";
-			duration.textContent = String(effect.duration);
+			duration.textContent = `${getStartTimeForBeat(effect.duration, bpm).toFixed(3)}s`;
 
 			const preview = Button({
 				icon: "preview",
 				bindings: {
 					onClick: () => {
-						previewEffect(effect.fixture_id, effect.effect, effect.duration * 1000, effect.data);
+						previewEffect(
+							effect.fixture_id,
+							effect.effect,
+							getStartTimeForBeat(effect.duration, bpm) * 1000,
+							effect.data,
+						);
 					},
 				},
 			});
@@ -187,14 +222,29 @@ export function ChaserPicker(): HTMLElement {
 		}
 	}
 
+	function applyCueToPicker(index: number, cue: CueEntry) {
+		if (!isChaserCue(cue)) return;
+		selected = cue.chaser_id;
+		repetitions = String(getCueRepetitions(cue));
+		editingIndex = index;
+		editingTimeSeconds = cue.time;
+		startTimeSeconds = cue.time;
+		startTimeInput.value = formatTime(cue.time * 1000);
+		repsDropdown.setValue(repetitions);
+		refreshActionMode();
+		renderEffects();
+	}
+
 	function refresh() {
 		const playbackMs = Number(getBackendStore().state.playback?.time_ms ?? 0);
-		startTimeSeconds = Math.max(0, playbackMs / 1000);
-		startTimeInput.value = formatTime(playbackMs);
+		if (editingTimeSeconds === null) {
+			startTimeSeconds = Math.max(0, playbackMs / 1000);
+			startTimeInput.value = formatTime(playbackMs);
+		}
 
 		const chasers = getChasers();
 		const options: DropdownOption[] = chasers.map((chaser) => ({
-			value: chaser.name,
+			value: chaser.id,
 			label: chaser.name,
 		}));
 		const nextValue = options.some((option) => option.value === selected) ? selected : (options[0]?.value ?? "");
@@ -208,12 +258,24 @@ export function ChaserPicker(): HTMLElement {
 		previewBtn.disabled = disabled;
 		addBtn.disabled = disabled;
 		empty.style.display = disabled ? "block" : "none";
+		refreshActionMode();
 		renderEffects();
 	}
 
+	const onCueEdit = (event: Event) => {
+		const customEvent = event as CueEditEvent;
+		if (!customEvent.detail) return;
+		if (!isChaserCue(customEvent.detail.cue)) return;
+		applyCueToPicker(customEvent.detail.index, customEvent.detail.cue);
+	};
+	window.addEventListener("show-builder:cue-edit", onCueEdit as EventListener);
+
 	refresh();
 	const unsubscribe = subscribeBackendStore(refresh);
-	(body as unknown as { _cleanup: () => void })._cleanup = () => unsubscribe();
+	(body as unknown as { _cleanup: () => void })._cleanup = () => {
+		unsubscribe();
+		window.removeEventListener("show-builder:cue-edit", onCueEdit as EventListener);
+	};
 
 	body.append(head, list, divider, actions, empty);
 	return Card(body, {

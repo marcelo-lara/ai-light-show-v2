@@ -1,8 +1,9 @@
 import { Card } from "../../../../shared/components/layout/Card.ts";
-import type { CueEntry } from "../../../../shared/transport/protocol.ts";
+import type { CueEntry, EffectCueEntry } from "../../../../shared/transport/protocol.ts";
 import { subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { addCue, updateCue } from "../../cue_intents.ts";
+import { isEffectCue } from "../../cue_utils.ts";
 import { getDefaultParams } from "../effect_params/params_schema.ts";
 import { formatTime, getFixtures, getPlaybackTimeMs } from "./selectors.ts";
 import { buildActions, buildMiddle, buildTopRow, createDivider } from "./layout.ts";
@@ -41,7 +42,7 @@ export function EffectPicker(): HTMLElement {
 		refreshActionMode();
 	};
 
-	const applyCueToPicker = (index: number, cue: CueEntry) => {
+	const applyCueToPicker = (index: number, cue: EffectCueEntry) => {
 		state.editingIndex = index;
 		state.editingTime = cue.time;
 		state.fixtureId = cue.fixture_id;
@@ -97,6 +98,7 @@ export function EffectPicker(): HTMLElement {
 	const onCueEdit = (event: Event) => {
 		const customEvent = event as CueEditEvent;
 		if (!customEvent.detail) return;
+		if (!isEffectCue(customEvent.detail.cue)) return;
 		applyCueToPicker(customEvent.detail.index, customEvent.detail.cue);
 	};
 	window.addEventListener("show-builder:cue-edit", onCueEdit as EventListener);

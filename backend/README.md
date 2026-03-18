@@ -70,12 +70,15 @@ Patch behavior:
 - `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.
-- `chaser.apply` and `chaser.start` generate cue entries from `backend/fixtures/chasers.json`.
+- `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
-- Generated chaser entries persist to cue sheets with `created_by` set to `chaser:{name}`.
-- Chaser cue upsert prevents duplicates at the same `(time, fixture_id)` and replaces existing entries when needed.
+- Cue sheets store mixed entries:
+  - effect row: `time`, `fixture_id`, `effect`, `duration`, `data`, `name`, `created_by`
+  - chaser row: `time`, `chaser_id`, `data`, `name`, `created_by`
+- Chaser rows store `data.repetitions` and are expanded into effect renders only at canvas/preview time.
+- Persisted chaser rows use `created_by` set to `chaser:{id}`.
 
 ## Data and file contracts
 
@@ -95,7 +98,7 @@ Cue helpers payload under `state.cue_helpers`:
 - List of helper definitions (`id`, `label`, `description`, `mode`) for frontend helper UI.
 
 Chasers payload under `state.chasers`:
-- List of chaser definitions loaded from `backend/fixtures/chasers.json`.
+- List of chaser definitions loaded from `backend/fixtures/chasers.json`, including stable `id`, display `name`, `description`, and beat-based `effects`.
 
 Section payload normalization:
 - Backend accepts analyzer section records with either `start/end/label` or `start_s/end_s/name` keys.

@@ -34,7 +34,7 @@ def load_cue_sheet(cues_path: Path, song_filename: str) -> CueSheet:
 def save_cue_sheet(cues_path: Path, cue_sheet: CueSheet) -> None:
     cues_path.mkdir(parents=True, exist_ok=True)
     cue_file = cue_file_path(cues_path, cue_sheet.song_filename)
-    entries = [_round_floats_for_save(entry.model_dump()) for entry in cue_sheet.entries]
+    entries = [_round_floats_for_save(entry.model_dump(exclude_none=True)) for entry in cue_sheet.entries]
     with open(cue_file, "w") as f:
         json.dump(entries, f, indent=2)
 
@@ -83,24 +83,50 @@ def clear_cue_sheet(
         with open(cue_file, "w") as f:
             json.dump(_round_floats_for_save(remaining), f, indent=2)
 
-def create_cue_entry(cue_sheet: CueSheet, payload: Dict[str, Any]) -> CueEntry:
+
+def _cue_sort_key(entry: CueEntry) -> tuple[float, str, str]:
+    label = entry.chaser_id or entry.fixture_id or ""
+    effect = entry.effect or ""
+    return (entry.time, label, effect)
+
+
+def _clean_cue_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     entry = CueEntry(**payload)
+    return entry.model_dump(exclude_none=True)
+
+
+def _merge_cue_payload(current: Dict[str, Any], payload: Dict[str, Any]) -> Dict[str, Any]:
+    merged = {**current, **payload}
+    next_chaser_id = str(merged.get("chaser_id") or "").strip()
+    next_fixture_id = str(merged.get("fixture_id") or "").strip()
+    next_effect = str(merged.get("effect") or "").strip()
+    if next_chaser_id:
+        merged.pop("fixture_id", None)
+        merged.pop("effect", None)
+        merged.pop("duration", None)
+    elif next_fixture_id or next_effect or merged.get("duration") is not None:
+        merged.pop("chaser_id", None)
+    return _clean_cue_payload(merged)
+
+
+def create_cue_entry(cue_sheet: CueSheet, payload: Dict[str, Any]) -> CueEntry:
+    entry = CueEntry(**_clean_cue_payload(payload))
     cue_sheet.entries.append(entry)
-    cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
+    cue_sheet.entries.sort(key=_cue_sort_key)
     return entry
 
 
 def read_cue_entries(cue_sheet: CueSheet) -> List[Dict[str, Any]]:
-    return [entry.model_dump() for entry in cue_sheet.entries]
+    return [entry.model_dump(exclude_none=True) for entry in cue_sheet.entries]
 
 
 def update_cue_entry(cue_sheet: CueSheet, index: int, payload: Dict[str, Any]) -> CueEntry:
     if index < 0 or index >= len(cue_sheet.entries):
         raise IndexError("cue_index_out_of_range")
-    current = cue_sheet.entries[index].model_dump()
-    updated = CueEntry(**{**current, **payload})
+    current = cue_sheet.entries[index].model_dump(exclude_none=True)
+    updated = CueEntry(**_merge_cue_payload(current, payload))
     cue_sheet.entries[index] = updated
-    cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
+    cue_sheet.entries.sort(key=_cue_sort_key)
     return updated
 
 
@@ -117,9 +143,14 @@ def upsert_cue_entries(cue_sheet: CueSheet, new_entries: List[Dict[str, Any]]) -
     Returns counts of generated, replaced, and skipped entries.
     """
     # Create a lookup map for existing entries by (time, fixture_id)
-    existing_map: Dict[tuple[float, str], int] = {}
+    existing_map: Dict[tuple[Any, ...], int] = {}
     for i, entry in enumerate(cue_sheet.entries):
-        key = (round(entry.time, 6), entry.fixture_id)  # Normalize time to avoid float precision issues
+        key = (
+            round(entry.time, 6),
+            entry.chaser_id or "",
+            entry.fixture_id or "",
+            entry.effect or "",
+        )
         existing_map[key] = i
 
     generated = 0
@@ -127,8 +158,13 @@ def upsert_cue_entries(cue_sheet: CueSheet, new_entries: List[Dict[str, Any]]) -
     skipped = 0
 
     for new_payload in new_entries:
-        new_entry = CueEntry(**new_payload)
-        key = (round(new_entry.time, 6), new_entry.fixture_id)
+        new_entry = CueEntry(**_clean_cue_payload(new_payload))
+        key = (
+            round(new_entry.time, 6),
+            new_entry.chaser_id or "",
+            new_entry.fixture_id or "",
+            new_entry.effect or "",
+        )
 
         if key in existing_map:
             # Replace existing entry
@@ -141,7 +177,7 @@ def upsert_cue_entries(cue_sheet: CueSheet, new_entries: List[Dict[str, Any]]) -
             generated += 1
 
     # Re-sort all entries after modifications
-    cue_sheet.entries.sort(key=lambda e: (e.time, e.fixture_id, e.effect))
+    cue_sheet.entries.sort(key=_cue_sort_key)
 
     return {
         "generated": generated,
