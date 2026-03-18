@@ -1,6 +1,6 @@
-# Show Builder - Effect Playlist
+# Show Builder - Cue Sheet
 A list of plain effects stacked in rows.
-This Effect Playlist is stored in the cues list.
+This Cue Sheet is stored in the cues list.
 
 ## Row detail
 Each row is divided in three blocks

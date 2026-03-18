@@ -30,7 +30,7 @@ TO BE DEFINED (DO NOT IMPLEMENT YET)
 TO BE DEFINED (DO NOT IMPLEMENT YET)
 
 - The user click 'New'.
-  - The Effect Playlist is set to 'select mode' (checkboxes are shown)
+  - The Cue Sheet is set to 'select mode' (checkboxes are shown)
   - The chaser name turns into a text input to allow the user write a name.
   - The 'New' button is hidden.
   - The 'Save' and 'Cancel' buttons are shown.
