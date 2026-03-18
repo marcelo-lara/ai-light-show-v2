@@ -1,5 +1,6 @@
 import json
 import os
+import signal
 import socket
 import threading
 import time
@@ -19,6 +20,9 @@ frames = deque(maxlen=MAX_IN_MEMORY_FRAMES)
 frames_lock = threading.Lock()
 packet_count = 0
 started_at = time.time()
+shutdown_event = threading.Event()
+udp_socket: socket.socket | None = None
+http_server: ThreadingHTTPServer | None = None
 
 
 def ensure_dump_dir() -> None:
@@ -109,14 +113,21 @@ def reset_state() -> None:
 
 
 def udp_listener() -> None:
-    global packet_count
+    global packet_count, udp_socket
     ensure_dump_dir()
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_socket = sock
     sock.bind(("0.0.0.0", ARTNET_PORT))
+    sock.settimeout(1.0)
     print(f"[dmx-node] Listening for Art-Net UDP on 0.0.0.0:{ARTNET_PORT}", flush=True)
 
-    while True:
-        data, addr = sock.recvfrom(4096)
+    while not shutdown_event.is_set():
+        try:
+            data, addr = sock.recvfrom(4096)
+        except socket.timeout:
+            continue
+        except OSError:
+            break
         frame = parse_artnet_packet(data, addr[0])
         if frame is None:
             continue
@@ -127,6 +138,27 @@ def udp_listener() -> None:
 
         persist_frame(frame)
         persist_summary()
+
+    try:
+        sock.close()
+    except OSError:
+        pass
+
+
+def shutdown(signum: int | None = None, _frame: Any | None = None) -> None:
+    signal_name = signal.Signals(signum).name if signum is not None else "UNKNOWN"
+    print(f"[dmx-node] Shutdown requested via {signal_name}", flush=True)
+    shutdown_event.set()
+
+    if udp_socket is not None:
+        try:
+            udp_socket.close()
+        except OSError:
+            pass
+
+    if http_server is not None:
+        http_server.shutdown()
+        http_server.server_close()
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -187,6 +219,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     reset_state()
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
     threading.Thread(target=udp_listener, daemon=True).start()
     print(f"[dmx-node] HTTP API listening on 0.0.0.0:{HTTP_PORT}", flush=True)
-    ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), RequestHandler).serve_forever()
+    http_server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), RequestHandler)
+    try:
+        http_server.serve_forever()
+    finally:
+        shutdown()

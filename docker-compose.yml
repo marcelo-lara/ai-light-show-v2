@@ -18,6 +18,7 @@ services:
     profiles:
       - ci
       - regression
+    init: true
     ports:
       - "9010:9010"
     volumes:
@@ -26,7 +27,8 @@ services:
       - DMX_NODE_PORT=6454
       - DMX_NODE_HTTP_PORT=9010
       - DMX_NODE_DUMP_DIR=/app/tests/dmx-node/artifacts
-    restart: unless-stopped
+    stop_grace_period: 5s
+    restart: "no"
 
   # song-metadata-mcp:
   #   build: ./mcp/song_metadata
