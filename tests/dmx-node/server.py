@@ -15,6 +15,7 @@ ARTNET_PORT = int(os.getenv("DMX_NODE_PORT", "6454"))
 HTTP_PORT = int(os.getenv("DMX_NODE_HTTP_PORT", "9010"))
 MAX_IN_MEMORY_FRAMES = int(os.getenv("DMX_NODE_MAX_FRAMES", "500"))
 DUMP_DIR = Path(os.getenv("DMX_NODE_DUMP_DIR", "/app/tests/dmx-node/artifacts"))
+PERSIST_INTERVAL_SECS = float(os.getenv("DMX_NODE_PERSIST_INTERVAL", "1.0"))
 
 frames = deque(maxlen=MAX_IN_MEMORY_FRAMES)
 frames_lock = threading.Lock()
@@ -23,6 +24,8 @@ started_at = time.time()
 shutdown_event = threading.Event()
 udp_socket: socket.socket | None = None
 http_server: ThreadingHTTPServer | None = None
+_pending_frames: list[dict] = []
+_pending_lock = threading.Lock()
 
 
 def ensure_dump_dir() -> None:
@@ -80,12 +83,6 @@ def parse_artnet_packet(data: bytes, source_ip: str) -> dict[str, Any] | None:
     }
 
 
-def persist_frame(frame: dict[str, Any]) -> None:
-    ensure_dump_dir()
-    append_jsonl(DUMP_DIR / "packets.jsonl", frame)
-    write_json(DUMP_DIR / "latest.json", frame)
-
-
 def persist_summary() -> None:
     ensure_dump_dir()
     with frames_lock:
@@ -99,8 +96,30 @@ def persist_summary() -> None:
     write_json(DUMP_DIR / "summary.json", summary)
 
 
+def flush_to_disk() -> None:
+    """Flush buffered frames to disk. Called on an interval and on shutdown."""
+    with _pending_lock:
+        pending = _pending_frames.copy()
+        _pending_frames.clear()
+    if pending:
+        ensure_dump_dir()
+        for frame in pending:
+            append_jsonl(DUMP_DIR / "packets.jsonl", frame)
+        write_json(DUMP_DIR / "latest.json", pending[-1])
+        persist_summary()
+
+
+def disk_writer() -> None:
+    """Background thread: flushes buffered frames to disk at a fixed interval."""
+    while not shutdown_event.wait(timeout=PERSIST_INTERVAL_SECS):
+        flush_to_disk()
+    flush_to_disk()
+
+
 def reset_state() -> None:
     global packet_count
+    with _pending_lock:
+        _pending_frames.clear()
     with frames_lock:
         frames.clear()
         packet_count = 0
@@ -136,8 +155,8 @@ def udp_listener() -> None:
             frames.append(frame)
             packet_count += 1
 
-        persist_frame(frame)
-        persist_summary()
+        with _pending_lock:
+            _pending_frames.append(frame)
 
     try:
         sock.close()
@@ -155,6 +174,13 @@ def shutdown(signum: int | None = None, _frame: Any | None = None) -> None:
             udp_socket.close()
         except OSError:
             pass
+
+    if http_server is not None:
+        http_server.shutdown()
+        http_server.server_close()
+
+    flush_to_disk()
+    persist_summary()
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -226,6 +252,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
     threading.Thread(target=udp_listener, daemon=True).start()
+    threading.Thread(target=disk_writer, daemon=True).start()
     print(f"[dmx-node] HTTP API listening on 0.0.0.0:{HTTP_PORT}", flush=True)
     http_server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), RequestHandler)
     threading.Thread(target=_serve_http, daemon=True).start()
