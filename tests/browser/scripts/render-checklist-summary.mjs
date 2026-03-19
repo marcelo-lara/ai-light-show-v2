@@ -54,13 +54,14 @@ function collectSpecs(suite, collected) {
     if (!caseMatch) continue;
 
     const results = [];
-    let diagnosticsAttachment = null;
+    const diagnosticsAttachments = {};
     for (const test of spec.tests ?? []) {
       for (const result of test.results ?? []) {
         results.push(result.status);
-        const attachment = (result.attachments ?? []).find((entry) => entry.name === "show-builder-diagnostics");
-        if (!diagnosticsAttachment && attachment) {
-          diagnosticsAttachment = attachment;
+        for (const entry of result.attachments ?? []) {
+          if (entry.name === "show-builder-diagnostics" || entry.name === "dmx-diagnostics") {
+            diagnosticsAttachments[entry.name] ??= entry;
+          }
         }
       }
     }
@@ -77,7 +78,7 @@ function collectSpecs(suite, collected) {
       caseId: caseMatch[1],
       title: spec.title.replace(/^\[[A-Z0-9-]+\]\s*/, ""),
       status,
-      diagnosticsAttachment,
+      diagnosticsAttachments,
     });
   }
 }
@@ -121,7 +122,12 @@ function readPlaywrightStatuses() {
     statuses: new Map(collected.map((entry) => [entry.caseId, entry.status])),
     diagnostics: new Map(
       collected
-        .map((entry) => [entry.caseId, readDiagnosticsFromAttachment(entry.diagnosticsAttachment)])
+        .map((entry) => {
+          const showBuilder = readDiagnosticsFromAttachment(entry.diagnosticsAttachments["show-builder-diagnostics"]);
+          const dmx = readDiagnosticsFromAttachment(entry.diagnosticsAttachments["dmx-diagnostics"]);
+          const diagnostics = showBuilder || dmx ? { showBuilder, dmx } : null;
+          return [entry.caseId, diagnostics];
+        })
         .filter(([, diagnostics]) => diagnostics !== null),
     ),
   };
@@ -143,7 +149,12 @@ function buildSummary(entries, statuses, diagnostics) {
 
   const cueDiagnostics = evaluated
     .filter((entry) => entry.caseId.startsWith("SB-"))
-    .map((entry) => ({ caseId: entry.caseId, result: entry.result, diagnostics: diagnostics.get(entry.caseId) }))
+    .map((entry) => ({ caseId: entry.caseId, result: entry.result, diagnostics: diagnostics.get(entry.caseId)?.showBuilder }))
+    .filter((entry) => entry.diagnostics);
+
+  const dmxDiagnostics = evaluated
+    .filter((entry) => entry.caseId === "DMX-ROUTE-VIEW" || entry.caseId === "DMX-ARM-TOGGLE" || entry.caseId === "DMX-EFFECT-PREVIEW-ENTRY")
+    .map((entry) => ({ caseId: entry.caseId, result: entry.result, diagnostics: diagnostics.get(entry.caseId)?.dmx }))
     .filter((entry) => entry.diagnostics);
 
   const counts = {
@@ -181,6 +192,17 @@ function buildSummary(entries, statuses, diagnostics) {
       const cueSheetState = entry.diagnostics.cueSheetState ?? entry.diagnostics.cueSheet?.viewState;
       lines.push(
         `- ${entry.caseId} (${entry.result}): cue-sheet=${formatDiagnosticValue(cueSheetState)}, rows=${formatDiagnosticValue(entry.diagnostics.cueRowCount)}, snapshot cues=${formatDiagnosticValue(snapshotCueCount)}, ws=${formatDiagnosticValue(entry.diagnostics.wsState)}`,
+      );
+    }
+  }
+
+  if (dmxDiagnostics.length > 0) {
+    lines.push("");
+    lines.push("DMX fixture diagnostics:");
+    for (const entry of dmxDiagnostics) {
+      const snapshotFixtureCount = entry.diagnostics.snapshot?.fixtureCount;
+      lines.push(
+        `- ${entry.caseId} (${entry.result}): fixture-cards=${formatDiagnosticValue(entry.diagnostics.fixtureCardCount)}, target=${entry.diagnostics.targetFixturePresent ? "present" : "missing"}, snapshot fixtures=${formatDiagnosticValue(snapshotFixtureCount)}, ws=${formatDiagnosticValue(entry.diagnostics.wsState)}`,
       );
     }
   }

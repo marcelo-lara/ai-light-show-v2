@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { gotoApp, gotoRoute, region } from "./helpers";
+import { attachDmxDiagnostics, gotoApp, gotoRoute, region } from "./helpers";
 
 test("[PREP-START-UI] loads the app shell with primary navigation", async ({ page }) => {
   await gotoApp(page);
@@ -37,9 +37,13 @@ test("[SC-ROUTE-VIEW] opens Show Control with transport and control panels", asy
   await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
 });
 
-test("[DMX-ROUTE-VIEW] opens DMX Control with fixture cards", async ({ page }) => {
-  await gotoRoute(page, "DMX Control");
+test("[DMX-ROUTE-VIEW] opens DMX Control with fixture cards", async ({ page }, testInfo) => {
+  try {
+    await gotoRoute(page, "DMX Control");
 
-  await expect(region(page, "DMX Control view")).toBeVisible();
-  await expect(page.getByRole("article", { name: "Mini Beam Prism (L) fixture" })).toBeVisible();
+    await expect(region(page, "DMX Control view")).toBeVisible();
+    await expect(page.getByRole("article", { name: "Mini Beam Prism (L) fixture" })).toBeVisible();
+  } finally {
+    await attachDmxDiagnostics(page, testInfo);
+  }
 });

@@ -9,16 +9,78 @@ const SRC_ROOT = join(ROOT, "src");
 let bundleCache = "";
 let bundleBuiltAt = 0;
 
-function getWsUrl(req: Request): string {
+function getBackendHost(req: Request): string {
+  const url = new URL(req.url);
+  const configuredHost = Deno.env.get("BACKEND_WS_HOST")?.trim();
+  const useConfiguredHost = Boolean(configuredHost) && url.hostname === "frontend";
+  return useConfiguredHost ? configuredHost! : `${url.hostname}:5001`;
+}
+
+function getBackendHttpOrigin(req: Request): string {
+  const url = new URL(req.url);
+  const protocol = url.protocol === "https:" ? "https" : "http";
+  return `${protocol}://${getBackendHost(req)}`;
+}
+
+function getBackendWsUrl(req: Request): string {
   const url = new URL(req.url);
   const protocol = url.protocol === "https:" ? "wss" : "ws";
-  const configuredHost = Deno.env.get("BACKEND_WS_HOST")?.trim();
+  return `${protocol}://${getBackendHost(req)}/ws`;
+}
 
-  // When the frontend is requested from another Docker service, prefer the
-  // configured backend service host instead of swapping the request hostname.
-  const useConfiguredHost = Boolean(configuredHost) && url.hostname === "frontend";
-  const host = useConfiguredHost ? configuredHost! : `${url.hostname}:5001`;
-  return `${protocol}://${host}/ws`;
+function getFrontendWsUrl(req: Request): string {
+  const url = new URL(req.url);
+  const protocol = url.protocol === "https:" ? "wss" : "ws";
+  return `${protocol}://${url.host}/ws`;
+}
+
+function proxyWsMessage(target: WebSocket, data: string | ArrayBufferLike | Blob | ArrayBufferView) {
+  if (typeof data === "string" || data instanceof Blob || data instanceof ArrayBuffer) {
+    target.send(data);
+    return;
+  }
+  target.send(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
+}
+
+function proxyWebSocket(req: Request): Response {
+  const { socket: clientSocket, response } = Deno.upgradeWebSocket(req);
+  const upstream = new WebSocket(getBackendWsUrl(req));
+  const pendingMessages: Array<string | ArrayBufferLike | Blob | ArrayBufferView> = [];
+
+  const closeBoth = (code = 1011, reason = "proxy_closed") => {
+    if (clientSocket.readyState === WebSocket.OPEN) clientSocket.close(code, reason);
+    if (upstream.readyState === WebSocket.OPEN || upstream.readyState === WebSocket.CONNECTING) upstream.close(code, reason);
+  };
+
+  clientSocket.onmessage = (event) => {
+    if (upstream.readyState === WebSocket.OPEN) {
+      proxyWsMessage(upstream, event.data);
+      return;
+    }
+    pendingMessages.push(event.data);
+  };
+  clientSocket.onclose = () => closeBoth(1000, "client_closed");
+  clientSocket.onerror = () => closeBoth(1011, "client_error");
+
+  upstream.onopen = () => {
+    while (pendingMessages.length > 0) {
+      const message = pendingMessages.shift();
+      if (message !== undefined) proxyWsMessage(upstream, message);
+    }
+  };
+  upstream.onmessage = (event) => {
+    if (clientSocket.readyState === WebSocket.OPEN) {
+      proxyWsMessage(clientSocket, event.data);
+    }
+  };
+  upstream.onclose = (event) => {
+    if (clientSocket.readyState === WebSocket.OPEN || clientSocket.readyState === WebSocket.CONNECTING) {
+      clientSocket.close(event.code || 1000, event.reason || "upstream_closed");
+    }
+  };
+  upstream.onerror = () => closeBoth(1011, "upstream_error");
+
+  return response;
 }
 
 async function bundleClient(): Promise<string> {
@@ -74,6 +136,10 @@ async function serveStatic(pathname: string): Promise<Response | null> {
 Deno.serve({ port: 5173 }, async (req) => {
   const url = new URL(req.url);
 
+  if (url.pathname === "/ws") {
+    return proxyWebSocket(req);
+  }
+
   if (url.pathname === "/health") {
     return Response.json({ ok: true });
   }
@@ -94,7 +160,8 @@ Deno.serve({ port: 5173 }, async (req) => {
   const bootstrap = {
     seq: 0,
     state: {},
-    wsUrl: getWsUrl(req),
+    wsUrl: getFrontendWsUrl(req),
+    backendHttpOrigin: getBackendHttpOrigin(req),
   };
 
   const html = renderDocument({ bootstrap });

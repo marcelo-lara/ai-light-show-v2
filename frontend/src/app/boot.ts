@@ -13,17 +13,23 @@ declare global {
 
 export type BootContext = {
   wsUrl: string; // e.g., "ws://localhost:8000/ws"
+  backendHttpOrigin?: string;
 };
 
 export function boot(ctx: BootContext) {
   initTheme(); // apply theme ASAP to avoid FOUC
 
-  try {
-    const ws = new URL(ctx.wsUrl);
-    const protocol = ws.protocol === "wss:" ? "https:" : "http:";
-    (globalThis as any).__BACKEND_HTTP_ORIGIN__ = `${protocol}//${ws.host}`;
-  } catch {
-    // ignore invalid ws url
+  const configuredBackendHttpOrigin = String(ctx.backendHttpOrigin ?? "").trim();
+  if (configuredBackendHttpOrigin) {
+    (globalThis as any).__BACKEND_HTTP_ORIGIN__ = configuredBackendHttpOrigin;
+  } else {
+    try {
+      const ws = new URL(ctx.wsUrl);
+      const protocol = ws.protocol === "wss:" ? "https:" : "http:";
+      (globalThis as any).__BACKEND_HTTP_ORIGIN__ = `${protocol}//${ws.host}`;
+    } catch {
+      // ignore invalid ws url
+    }
   }
 
   // 1) hydration/bootstrap
