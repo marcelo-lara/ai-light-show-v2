@@ -12,6 +12,8 @@ Project-level Python tests for backend state/render behavior and related integra
 - `tests/test_jump_to_section_regression.py`: backend `transport.jump_to_section` index validation and seek behavior.
 - `tests/test_ws_transport_jump_to_section_e2e.py`: websocket intent flow for section jumps and playback time updates.
 - `tests/test_ws_poi_e2e.py`: websocket frontend-mimic integration test for POI persistence on real `backend/fixtures/pois.json` with auto-restore.
+- `tests/browser/`: Playwright-based browser regression suite with videos, screenshots, traces, and checklist reporting.
+- `tests/dmx-node/`: isolated Art-Net mock node service that captures UDP output from the backend for CI and local inspection.
 
 ## Test file location policy
 
@@ -36,6 +38,20 @@ Opt-in real-file e2e test:
 
 ```bash
 PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q -m e2e_real_file tests/test_ws_poi_e2e.py
+```
+
+Browser regression suite:
+
+```bash
+DMX_NODE_IP=dmx-node docker compose up -d dmx-node frontend backend
+docker compose run --rm browser-tests
+```
+
+DMX node mock:
+
+```bash
+DMX_NODE_IP=dmx-node docker compose up -d dmx-node backend
+curl http://127.0.0.1:9010/latest
 ```
 
 ## Expected workflow

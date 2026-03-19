@@ -35,6 +35,13 @@ export function initBackendState(initial?: BackendState, opts?: { stale?: boolea
 
 export function applySnapshot(msg: SnapshotMsg) {
   console.log("Applying Snapshot:", msg.seq, msg.state);
+  console.info("[BackendState] snapshot applied", {
+    seq: msg.seq,
+    song: msg.state.song?.filename ?? null,
+    cueCount: (msg.state.cues ?? []).length,
+    fixtureCount: Object.keys(msg.state.fixtures ?? {}).length,
+    chaserCount: (msg.state.chasers ?? []).length,
+  });
   console.debug("[CHORD_DEBUG] snapshot analysis sample", {
     seq: msg.seq,
     song: msg.state.song?.filename,

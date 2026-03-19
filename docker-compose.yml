@@ -6,10 +6,29 @@ services:
     volumes:
       - ./frontend:/app
     environment:
-      - BACKEND_WS_HOST=localhost:5001
+      - BACKEND_WS_HOST=backend:5001
     depends_on:
       - backend
     restart: unless-stopped
+
+  dmx-node:
+    build:
+      context: ./tests/dmx-node
+      dockerfile: Dockerfile
+    profiles:
+      - ci
+      - regression
+    init: true
+    ports:
+      - "9010:9010"
+    volumes:
+      - ./tests/dmx-node:/app/tests/dmx-node
+    environment:
+      - DMX_NODE_PORT=6454
+      - DMX_NODE_HTTP_PORT=9010
+      - DMX_NODE_DUMP_DIR=/app/tests/dmx-node/artifacts
+    stop_grace_period: 5s
+    restart: "no"
 
   # song-metadata-mcp:
   #   build: ./mcp/song_metadata
@@ -87,11 +106,32 @@ services:
       - ./backend/cues:/app/cues
       - ./analyzer/meta:/app/meta
     environment:
-      - DMX_NODE_IP=192.168.10.221
+      - DMX_NODE_IP=${DMX_NODE_IP-}
+      - DMX_NODE_PORT=${DMX_NODE_PORT:-6454}
       - FPS=60
       - ARTNET_DEBUG=${ARTNET_DEBUG:-0}
       - ARTNET_DEBUG_FILE=${ARTNET_DEBUG_FILE:-}
     restart: unless-stopped
+
+  browser-tests:
+    build:
+      context: ./tests/browser
+      dockerfile: Dockerfile
+    profiles:
+      - ci
+      - regression
+    depends_on:
+      - frontend
+      - backend
+      - dmx-node
+    environment:
+      - FRONTEND_URL=http://frontend:5173
+      - BACKEND_URL=http://backend:5001
+      - DMX_NODE_URL=http://dmx-node:9010
+      - GITHUB_ACTIONS=${GITHUB_ACTIONS:-}
+    volumes:
+      - ./tests/browser:/app/tests/browser
+    working_dir: /app/tests/browser
 
 volumes:
   analyzer_cache:

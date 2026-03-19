@@ -12,6 +12,7 @@ export function DmxControlView(): DmxControlViewHandle {
 	console.log("DmxControlView rendering...");
 	const wrap = document.createElement("section");
 	wrap.className = "view";
+	wrap.setAttribute("aria-label", "DMX Control view");
 
 	const fixtures = selectFixtureVms();
 	console.log("Fixtures in View:", fixtures.length);

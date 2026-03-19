@@ -16,7 +16,14 @@ async def send_snapshot(manager, websocket: WebSocket) -> None:
     state = await build_frontend_state(manager)
     manager._last_state_snapshot = state
     msg = {"type": "snapshot", "seq": manager._next_seq(), "state": state}
-    logger.info("[WS] Sending snapshot to client (seq=%s) with %s fixtures", msg["seq"], len(state.get("fixtures", {})))
+    logger.info(
+        "[WS] Sending snapshot to client (seq=%s, song=%s, cues=%s, fixtures=%s, chasers=%s)",
+        msg["seq"],
+        state.get("song", {}).get("filename"),
+        len(state.get("cues", [])),
+        len(state.get("fixtures", {})),
+        len(state.get("chasers", [])),
+    )
     for fid, fstate in state.get("fixtures", {}).items():
         logger.debug("[WS] Fixture %s: values=%s", fid, fstate.get("values"))
     await websocket.send_json(msg)

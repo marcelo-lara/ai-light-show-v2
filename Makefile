@@ -1,4 +1,4 @@
-.PHONY: up down test test-sweep test-live
+.PHONY: up down test test-sweep test-live test-browser
 
 up:
 	docker-compose up -d
@@ -15,3 +15,7 @@ test-sweep:
 test-live:
 	PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q
 	docker compose down && docker compose up --build -d
+
+test-browser:
+	docker compose --profile regression up -d dmx-node frontend backend
+	docker compose --profile regression run --rm browser-tests

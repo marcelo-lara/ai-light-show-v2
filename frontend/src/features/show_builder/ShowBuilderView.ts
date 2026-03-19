@@ -7,6 +7,7 @@ import { getSongStructureData } from "../../shared/state/song_data.ts";
 export function ShowBuilderView(): HTMLElement {
 	const wrap = document.createElement("section");
 	wrap.className = "view";
+	wrap.setAttribute("aria-label", "Show Builder view");
 	const song = getSongStructureData();
 
 	const main = document.createElement("div");

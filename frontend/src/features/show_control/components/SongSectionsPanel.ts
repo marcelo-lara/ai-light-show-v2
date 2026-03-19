@@ -84,5 +84,9 @@ export function SongSectionsPanel(): HTMLElement {
   }
 
   content.appendChild(list);
-  return Card(content, { variant: "outlined", className: "show-control-panel" });
+  return Card(content, {
+    ariaLabel: "Song Sections panel",
+    variant: "outlined",
+    className: "show-control-panel",
+  });
 }

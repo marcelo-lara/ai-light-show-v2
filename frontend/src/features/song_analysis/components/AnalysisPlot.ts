@@ -19,7 +19,7 @@ export function AnalysisPlot(props: AnalysisPlotProps): HTMLElement {
 		empty.className = "muted";
 		empty.textContent = "No analysis plots available for current song.";
 		content.appendChild(empty);
-		return Card(content, { variant: "outlined" });
+		return Card(content, { ariaLabel: "Analysis Plots panel", variant: "outlined" });
 	}
 
 	for (const plot of props.plots) {
@@ -41,5 +41,9 @@ export function AnalysisPlot(props: AnalysisPlotProps): HTMLElement {
 		content.appendChild(row);
 	}
 
-	return Card(content, { variant: "outlined", className: "analysis-plots-card" });
+	return Card(content, {
+		ariaLabel: "Analysis Plots panel",
+		variant: "outlined",
+		className: "analysis-plots-card",
+	});
 }

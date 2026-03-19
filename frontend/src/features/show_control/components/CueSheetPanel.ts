@@ -47,5 +47,9 @@ export function CueSheetPanel(): HTMLElement {
   }
   content.appendChild(list);
 
-  return Card(content, { variant: "outlined", className: "show-control-panel" });
+  return Card(content, {
+    ariaLabel: "Cue Sheet Summary panel",
+    variant: "outlined",
+    className: "show-control-panel",
+  });
 }

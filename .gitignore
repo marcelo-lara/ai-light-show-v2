@@ -191,3 +191,5 @@ pytest_debug.log
 .DS_Store
 
 test-results/
+tests/browser/artifacts/
+tests/dmx-node/artifacts/

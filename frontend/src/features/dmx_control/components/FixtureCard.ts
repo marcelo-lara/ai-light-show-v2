@@ -18,6 +18,7 @@ export function FixtureCard(_props: FixtureCardProps) {
   const props = _props;
   const root = document.createElement("article");
   root.className = "fixture-card";
+  root.setAttribute("aria-label", `${props.fixture.name} fixture`);
 
   const header = document.createElement("header");
   header.className = "fixture-card-header";

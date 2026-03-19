@@ -47,6 +47,17 @@ export function createEmptyCueSheetState(): HTMLElement {
 	return empty;
 }
 
+export function createLoadingCueSheetState(): HTMLElement {
+	const loading = document.createElement("section");
+	loading.className = "cue-sheet-empty";
+	loading.append(
+		createText("p", "cue-sheet-empty-eyebrow muted", "Cue Sheet"),
+		createText("h3", "cue-sheet-empty-title", "Loading cues"),
+		createText("p", "cue-sheet-empty-copy muted", "Waiting for the backend snapshot to populate the cue timeline."),
+	);
+	return loading;
+}
+
 export function createCueRow(cue: CueEntry, handlers: CueRowHandlers): HTMLElement {
 	const main = document.createElement("div");
 	const bpm = Number(getBackendStore().state.playback?.bpm ?? getBackendStore().state.song?.bpm ?? 0);

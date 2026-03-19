@@ -1,0 +1,13 @@
+{
+  "name": "ai-light-show-browser-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "wait": "node ./scripts/wait-for-services.mjs",
+    "report": "node ./scripts/render-checklist-summary.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.52.0"
+  }
+}

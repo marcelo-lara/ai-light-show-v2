@@ -1,0 +1,180 @@
+name: Browser Regression
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  browser-regression:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Build services
+        run: |
+          docker compose --profile ci build frontend backend browser-tests dmx-node
+
+      - name: Start application stack
+        run: |
+          docker compose --profile ci up -d dmx-node frontend backend
+
+      - name: Run browser regression suite
+        id: browser_tests
+        continue-on-error: true
+        run: |
+          docker compose --profile ci run --rm browser-tests
+
+      - name: Publish checklist summary
+        if: always()
+        run: |
+          if [ -f tests/browser/artifacts/checklist-summary.md ]; then
+            cat tests/browser/artifacts/checklist-summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "# Browser Regression Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No checklist summary was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Publish DMX node summary
+        if: always()
+        run: |
+          if [ -f tests/dmx-node/artifacts/summary.json ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "## DMX Node Summary" >> "$GITHUB_STEP_SUMMARY"
+            cat tests/dmx-node/artifacts/summary.json >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "## DMX Node Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "No DMX node summary was produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload browser regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: browser-regression-artifacts
+          path: tests/browser/artifacts/
+          if-no-files-found: warn
+
+      - name: Upload DMX node artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: dmx-node-artifacts
+          path: tests/dmx-node/artifacts/
+          if-no-files-found: warn
+
+      - name: Comment on PR when regression fails
+        if: always() && steps.browser_tests.outcome == 'failure'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require("fs");
+            const marker = "<!-- browser-regression-comment -->";
+            const summaryPath = "tests/browser/artifacts/checklist-summary.md";
+            const fallbackSummary = [
+              "# Browser Regression Summary",
+              "",
+              "The browser regression workflow failed before producing a checklist summary.",
+            ].join("\n");
+
+            const summary = fs.existsSync(summaryPath)
+              ? fs.readFileSync(summaryPath, "utf8").trim()
+              : fallbackSummary;
+
+            const body = [
+              marker,
+              "## Browser Regression Failed",
+              "",
+              "The advisory browser regression workflow reported a failure for this pull request.",
+              "Check the workflow run artifacts for the HTML report, videos, traces, screenshots, and DMX capture dumps.",
+              "",
+              "<details>",
+              "<summary>Checklist summary</summary>",
+              "",
+              summary,
+              "",
+              "</details>",
+            ].join("\n");
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) =>
+              comment.user?.type === "Bot" && comment.body?.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Approve PR when regression passes
+        if: always() && steps.browser_tests.outcome == 'success'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+            const commit_id = context.payload.pull_request.head.sha;
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            });
+
+            const alreadyApproved = reviews.some((review) =>
+              review.user?.login === "github-actions[bot]" &&
+              review.state === "APPROVED" &&
+              review.commit_id === commit_id
+            );
+
+            if (alreadyApproved) {
+              core.info("An approval for this commit already exists from github-actions[bot].");
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number,
+              commit_id,
+              event: "APPROVE",
+              body: "Browser Regression passed. Auto-approved by CI.",
+            });
+
+      - name: Fail workflow when browser regression fails
+        if: always() && steps.browser_tests.outcome == 'failure'
+        run: |
+          echo "Browser regression reported failures. Marking workflow as failed."
+          exit 1
+
+      - name: Stop application stack
+        if: always()
+        run: |
+          docker compose --profile ci down --remove-orphans

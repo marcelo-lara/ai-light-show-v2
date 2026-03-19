@@ -13,17 +13,23 @@ declare global {
 
 export type BootContext = {
   wsUrl: string; // e.g., "ws://localhost:8000/ws"
+  backendHttpOrigin?: string;
 };
 
 export function boot(ctx: BootContext) {
   initTheme(); // apply theme ASAP to avoid FOUC
 
-  try {
-    const ws = new URL(ctx.wsUrl);
-    const protocol = ws.protocol === "wss:" ? "https:" : "http:";
-    (globalThis as any).__BACKEND_HTTP_ORIGIN__ = `${protocol}//${ws.host}`;
-  } catch {
-    // ignore invalid ws url
+  const configuredBackendHttpOrigin = String(ctx.backendHttpOrigin ?? "").trim();
+  if (configuredBackendHttpOrigin) {
+    (globalThis as any).__BACKEND_HTTP_ORIGIN__ = configuredBackendHttpOrigin;
+  } else {
+    try {
+      const ws = new URL(ctx.wsUrl);
+      const protocol = ws.protocol === "wss:" ? "https:" : "http:";
+      (globalThis as any).__BACKEND_HTTP_ORIGIN__ = `${protocol}//${ws.host}`;
+    } catch {
+      // ignore invalid ws url
+    }
   }
 
   // 1) hydration/bootstrap
@@ -53,6 +59,15 @@ export function boot(ctx: BootContext) {
     onMessage: (m: WsInbound) => {
       console.log("WS Dispatching Message:", m.type, m);
       if (m.type === "snapshot") {
+        const snapshotDiagnostics = {
+          seq: m.seq,
+          song: m.state.song?.filename ?? null,
+          cueCount: (m.state.cues ?? []).length,
+          fixtureCount: Object.keys(m.state.fixtures ?? {}).length,
+          chaserCount: (m.state.chasers ?? []).length,
+        };
+        console.info("[WS] snapshot received", snapshotDiagnostics);
+        (globalThis as any).__LAST_SNAPSHOT_DIAGNOSTICS__ = snapshotDiagnostics;
         applySnapshot(m);
         try {
           localStorage.setItem("last_snapshot", JSON.stringify({ seq: m.seq, state: m.state }));
