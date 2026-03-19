@@ -54,9 +54,14 @@ function collectSpecs(suite, collected) {
     if (!caseMatch) continue;
 
     const results = [];
+    let diagnosticsAttachment = null;
     for (const test of spec.tests ?? []) {
       for (const result of test.results ?? []) {
         results.push(result.status);
+        const attachment = (result.attachments ?? []).find((entry) => entry.name === "show-builder-diagnostics");
+        if (!diagnosticsAttachment && attachment) {
+          diagnosticsAttachment = attachment;
+        }
       }
     }
 
@@ -72,12 +77,39 @@ function collectSpecs(suite, collected) {
       caseId: caseMatch[1],
       title: spec.title.replace(/^\[[A-Z0-9-]+\]\s*/, ""),
       status,
+      diagnosticsAttachment,
     });
   }
 }
 
+function readDiagnosticsFromAttachment(attachment) {
+  if (!attachment) return null;
+
+  try {
+    if (attachment.path && fs.existsSync(attachment.path)) {
+      return JSON.parse(fs.readFileSync(attachment.path, "utf8"));
+    }
+    if (attachment.body) {
+      const body = String(attachment.body);
+      if (body.trim().startsWith("{")) {
+        return JSON.parse(body);
+      }
+      return JSON.parse(Buffer.from(body, "base64").toString("utf8"));
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 function readPlaywrightStatuses() {
-  if (!fs.existsSync(resultsPath)) return new Map();
+  if (!fs.existsSync(resultsPath)) {
+    return {
+      statuses: new Map(),
+      diagnostics: new Map(),
+    };
+  }
 
   const json = JSON.parse(fs.readFileSync(resultsPath, "utf8"));
   const collected = [];
@@ -85,10 +117,22 @@ function readPlaywrightStatuses() {
     collectSpecs(suite, collected);
   }
 
-  return new Map(collected.map((entry) => [entry.caseId, entry.status]));
+  return {
+    statuses: new Map(collected.map((entry) => [entry.caseId, entry.status])),
+    diagnostics: new Map(
+      collected
+        .map((entry) => [entry.caseId, readDiagnosticsFromAttachment(entry.diagnosticsAttachment)])
+        .filter(([, diagnostics]) => diagnostics !== null),
+    ),
+  };
 }
 
-function buildSummary(entries, statuses) {
+function formatDiagnosticValue(value) {
+  if (value === null || value === undefined || value === "") return "unknown";
+  return String(value);
+}
+
+function buildSummary(entries, statuses, diagnostics) {
   const evaluated = entries.map((entry) => {
     const playwrightStatus = statuses.get(entry.caseId);
     const result = entry.automationStatus === "automated"
@@ -96,6 +140,11 @@ function buildSummary(entries, statuses) {
       : entry.automationStatus;
     return { ...entry, result };
   });
+
+  const cueDiagnostics = evaluated
+    .filter((entry) => entry.caseId.startsWith("SB-"))
+    .map((entry) => ({ caseId: entry.caseId, result: entry.result, diagnostics: diagnostics.get(entry.caseId) }))
+    .filter((entry) => entry.diagnostics);
 
   const counts = {
     automatedPassed: evaluated.filter((entry) => entry.result === "passed").length,
@@ -124,6 +173,18 @@ function buildSummary(entries, statuses) {
     lines.push(`| ${entry.caseId} | ${entry.featureArea} | ${entry.automationStatus} | ${entry.result} | ${entry.scenario} |`);
   }
 
+  if (cueDiagnostics.length > 0) {
+    lines.push("");
+    lines.push("Cue sheet diagnostics:");
+    for (const entry of cueDiagnostics) {
+      const snapshotCueCount = entry.diagnostics.snapshot?.cueCount;
+      const cueSheetState = entry.diagnostics.cueSheetState ?? entry.diagnostics.cueSheet?.viewState;
+      lines.push(
+        `- ${entry.caseId} (${entry.result}): cue-sheet=${formatDiagnosticValue(cueSheetState)}, rows=${formatDiagnosticValue(entry.diagnostics.cueRowCount)}, snapshot cues=${formatDiagnosticValue(snapshotCueCount)}, ws=${formatDiagnosticValue(entry.diagnostics.wsState)}`,
+      );
+    }
+  }
+
   lines.push("");
   lines.push("Artifacts:");
   lines.push("- HTML report: `tests/browser/artifacts/html-report/`");
@@ -146,8 +207,8 @@ function buildSummary(entries, statuses) {
 fs.mkdirSync(path.dirname(summaryPath), { recursive: true });
 
 const checklist = parseChecklist(fs.readFileSync(checklistPath, "utf8"));
-const statuses = readPlaywrightStatuses();
-const summary = buildSummary(checklist, statuses);
+const { statuses, diagnostics } = readPlaywrightStatuses();
+const summary = buildSummary(checklist, statuses, diagnostics);
 
 fs.writeFileSync(summaryPath, summary, "utf8");
 console.log(summary);

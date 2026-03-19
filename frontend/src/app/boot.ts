@@ -53,6 +53,15 @@ export function boot(ctx: BootContext) {
     onMessage: (m: WsInbound) => {
       console.log("WS Dispatching Message:", m.type, m);
       if (m.type === "snapshot") {
+        const snapshotDiagnostics = {
+          seq: m.seq,
+          song: m.state.song?.filename ?? null,
+          cueCount: (m.state.cues ?? []).length,
+          fixtureCount: Object.keys(m.state.fixtures ?? {}).length,
+          chaserCount: (m.state.chasers ?? []).length,
+        };
+        console.info("[WS] snapshot received", snapshotDiagnostics);
+        (globalThis as any).__LAST_SNAPSHOT_DIAGNOSTICS__ = snapshotDiagnostics;
         applySnapshot(m);
         try {
           localStorage.setItem("last_snapshot", JSON.stringify({ seq: m.seq, state: m.state }));

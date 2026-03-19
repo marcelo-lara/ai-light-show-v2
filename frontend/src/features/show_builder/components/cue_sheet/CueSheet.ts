@@ -13,7 +13,7 @@ import {
 	isEffectCue,
 } from "../../cue_utils.ts";
 import { cueSignature, findCurrentCueTime, formatCueTime } from "./format.ts";
-import { createCueRow, createEmptyCueSheetState } from "./row.ts";
+import { createCueRow, createEmptyCueSheetState, createLoadingCueSheetState } from "./row.ts";
 
 export function CueSheet(): HTMLElement {
 	const content = document.createElement("div");
@@ -36,8 +36,13 @@ export function CueSheet(): HTMLElement {
 	listContainer.className = "cue-sheet-list o-list";
 	listContainer.setAttribute("aria-label", "Cue Sheet list");
 	content.append(header, listContainer);
+	const card = Card(content, {
+		ariaLabel: "Cue Sheet panel",
+		variant: "outlined",
+		className: "show-builder-panel",
+	});
 
-	let lastCueSignature = "";
+	let lastRenderKey = "";
 	let lastCurrentTime: number | null = null;
 
 	function getCues(): CueEntry[] {
@@ -46,6 +51,14 @@ export function CueSheet(): HTMLElement {
 
 	function getTimeMs(): number {
 		return getBackendStore().state.playback?.time_ms ?? 0;
+	}
+
+	function getViewState(cues: CueEntry[]): "loading" | "ready" | "empty" {
+		const store = getBackendStore();
+		if (store.stale || !store.state.song?.filename) {
+			return "loading";
+		}
+		return cues.length > 0 ? "ready" : "empty";
 	}
 
 	function getDeletePromptMessage(cue: CueEntry): string {
@@ -73,13 +86,34 @@ export function CueSheet(): HTMLElement {
 	function renderList(): void {
 		const cues = getCues();
 		const currentTime = findCurrentCueTime(cues, getTimeMs());
-		const signature = cueSignature(cues);
-		count.textContent = `${cues.length} ${cues.length === 1 ? "cue" : "cues"}`;
+		const viewState = getViewState(cues);
+		const renderKey = `${viewState}:${cueSignature(cues)}`;
+		count.textContent = viewState === "loading"
+			? "Loading"
+			: `${cues.length} ${cues.length === 1 ? "cue" : "cues"}`;
+		card.dataset.cueSheetState = viewState;
+		card.setAttribute("aria-busy", viewState === "loading" ? "true" : "false");
+		listContainer.dataset.cueCount = String(cues.length);
+		(globalThis as typeof globalThis & { __CUE_SHEET_DIAGNOSTICS__?: unknown }).__CUE_SHEET_DIAGNOSTICS__ = {
+			viewState,
+			cueCount: cues.length,
+			stale: getBackendStore().stale,
+			song: getBackendStore().state.song?.filename ?? null,
+			busy: viewState === "loading",
+		};
 
-		if (signature !== lastCueSignature) {
-			lastCueSignature = signature;
+		if (renderKey !== lastRenderKey) {
+			lastRenderKey = renderKey;
+			console.info("[CueSheet] render", {
+				viewState,
+				stale: getBackendStore().stale,
+				song: getBackendStore().state.song?.filename ?? null,
+				cueCount: cues.length,
+			});
 			listContainer.querySelectorAll(".cue-sheet-row, .cue-sheet-empty").forEach((node) => node.remove());
-			if (cues.length === 0) {
+			if (viewState === "loading") {
+				listContainer.appendChild(createLoadingCueSheetState());
+			} else if (cues.length === 0) {
 				listContainer.appendChild(createEmptyCueSheetState());
 			} else {
 				for (const [index, cue] of cues.entries()) {
@@ -129,9 +163,5 @@ export function CueSheet(): HTMLElement {
 	renderList();
 	const unsubscribe = subscribeBackendStore(renderList);
 	(content as unknown as { _cleanup: () => void })._cleanup = unsubscribe;
-	return Card(content, {
-		ariaLabel: "Cue Sheet panel",
-		variant: "outlined",
-		className: "show-builder-panel",
-	});
+	return card;
 }
