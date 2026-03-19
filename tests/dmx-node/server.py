@@ -156,10 +156,6 @@ def shutdown(signum: int | None = None, _frame: Any | None = None) -> None:
         except OSError:
             pass
 
-    if http_server is not None:
-        http_server.shutdown()
-        http_server.server_close()
-
 
 class RequestHandler(BaseHTTPRequestHandler):
     def _send_json(self, payload: Any, status: int = HTTPStatus.OK) -> None:
@@ -217,6 +213,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         print(f"[dmx-node] {self.address_string()} - {format % args}", flush=True)
 
 
+def _serve_http() -> None:
+    try:
+        http_server.serve_forever()
+    except Exception as exc:
+        print(f"[dmx-node] HTTP server error: {exc}", flush=True)
+        shutdown_event.set()
+
+
 if __name__ == "__main__":
     reset_state()
     signal.signal(signal.SIGTERM, shutdown)
@@ -224,7 +228,7 @@ if __name__ == "__main__":
     threading.Thread(target=udp_listener, daemon=True).start()
     print(f"[dmx-node] HTTP API listening on 0.0.0.0:{HTTP_PORT}", flush=True)
     http_server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), RequestHandler)
-    try:
-        http_server.serve_forever()
-    finally:
-        shutdown()
+    threading.Thread(target=_serve_http, daemon=True).start()
+    shutdown_event.wait()
+    http_server.shutdown()
+    http_server.server_close()
