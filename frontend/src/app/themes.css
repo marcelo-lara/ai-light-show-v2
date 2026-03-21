@@ -221,6 +221,7 @@ button:disabled {
 label.toggle > span {
   display: inline-flex;
   align-items: center;
+  font-size: .8em;
 }
 
 .input-shell {
