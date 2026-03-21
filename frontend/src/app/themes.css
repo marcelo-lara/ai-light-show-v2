@@ -93,6 +93,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
+  font-size: 11pt;
   cursor: default;
 }
 
@@ -217,8 +218,9 @@ button:disabled {
   min-width: 0;
 }
 
-.input-control-label {
-  font-size: 0.85rem;
+label.toggle > span {
+  display: inline-flex;
+  align-items: center;
 }
 
 .input-shell {
@@ -310,26 +312,25 @@ button:disabled {
   align-items: center;
   gap: 6px;
   min-width: 0;
-  font-size: 11px;
 }
 
 .status-row > span {
   color: var(--muted);
-  font-size: 10px;
   letter-spacing: 0.03em;
+  font-size: 0.6em;
   text-transform: uppercase;
 }
 
 .badge {
   border: 1px solid var(--border-strong);
-  font-size: 12px;
+  font-size: 0.6em;
   padding: 3px 10px;
 }
 
 .status-card .badge {
-  font-size: 10px;
   line-height: 1.15;
   padding: 1px 6px;
+  font-size: 0.6em;
   white-space: nowrap;
 }
 
@@ -414,7 +415,6 @@ input[type="range"] {
 
 .confirm-cancel-prompt-title {
   margin: 0;
-  font-size: 1rem;
   font-weight: 600;
   color: var(--text);
 }
