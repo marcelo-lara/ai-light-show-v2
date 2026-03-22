@@ -87,8 +87,17 @@
 }
 
 .control-stack {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+}
+
+.control-stack select{
+  min-height: 1.5em;
+}
+
+.control-stack span {
+  min-width: 7em;
 }
 
 .fixture-two-col {
@@ -99,15 +108,22 @@
   align-items: start;
 }
 
-.fixture-two-col-left,
+.fixture-two-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .fixture-two-col-right {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
 .moving-head-spatial,
 .moving-head-channels {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -195,7 +211,8 @@
 }
 
 .enum-grid {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 

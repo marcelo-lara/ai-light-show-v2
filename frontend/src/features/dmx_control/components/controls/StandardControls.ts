@@ -1,6 +1,7 @@
 import { throttle } from "../../../../shared/utils/throttle.ts";
 import { setFixtureValues } from "../../fixture_intents.ts";
 import { Slider } from "../../../../shared/components/controls/Slider.ts";
+import { Dropdown } from "../../../../shared/components/controls/Dropdown.ts";
 import type { FixtureVM } from "../../adapters/fixture_vm.ts";
 import type { FixtureControlHandle, FixtureValues } from "./control_types.ts";
 import { EnumGrid } from "./EnumGrid.ts";
@@ -14,6 +15,11 @@ function mappingOptions(mapping: Record<string, number | string>): MappingOption
 
 function sortByNumericKey(options: MappingOption[]): MappingOption[] {
   return [...options].sort((a, b) => Number(a.key) - Number(b.key));
+}
+
+function isInlineWheelControl(fixture: FixtureVM, mcId: string): boolean {
+  if (!fixture.hasPanTilt) return false;
+  return mcId === "color" || mcId === "gobo" || mcId === "prism";
 }
 
 export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
@@ -31,6 +37,7 @@ export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
 
   const updaters: Record<string, ControlUpdater> = {};
   const disposers: Array<() => void> = [];
+  const inlineWheelControls: HTMLElement[] = [];
   const wheelControls: HTMLElement[] = [];
   const rangeControls: HTMLElement[] = [];
 
@@ -38,7 +45,26 @@ export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
     if (mc.hidden) continue;
     const currentValue = values[mcId] ?? (mc.kind === "u16" ? 0 : 0);
 
-    if (mc.kind === "enum" && mc.mapping) {
+    if (mc.kind === "enum" && mc.mapping && mc.step === true && isInlineWheelControl(fixture, mcId)) {
+      const mapping = mappings[mc.mapping] || {};
+      const options = sortByNumericKey(mappingOptions(mapping)).map((option) => ({
+        label: option.label,
+        value: option.label,
+      }));
+
+      const dropdown = Dropdown({
+        label: mc.label,
+        value: String(currentValue),
+        options,
+        onChange: (val) => {
+          send({ [mcId]: val });
+        },
+      });
+      updaters[mcId] = (value) => {
+        dropdown.setValue(String(value));
+      };
+      inlineWheelControls.push(dropdown.root);
+    } else if (mc.kind === "enum" && mc.mapping) {
       const mapping = mappings[mc.mapping] || {};
       const options = sortByNumericKey(mappingOptions(mapping)).map((option) => ({
         label: option.label,
@@ -100,7 +126,7 @@ export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
     }
   }
 
-  wrap.append(...wheelControls, ...rangeControls);
+  wrap.append(...inlineWheelControls, ...wheelControls, ...rangeControls);
 
   const updateValues = (newValues: FixtureValues) => {
     for (const [k, v] of Object.entries(newValues)) {

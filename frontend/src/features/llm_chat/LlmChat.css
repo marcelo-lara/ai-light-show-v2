@@ -94,6 +94,7 @@
   max-height: 140px;
   resize: none;
   border: 0;
+  font-family: var(--font);
   background: transparent;
   padding: 8px;
 }
