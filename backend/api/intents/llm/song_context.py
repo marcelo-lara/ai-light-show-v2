@@ -26,6 +26,25 @@ def build_song_context(manager) -> str:
     )
 
 
+def build_fixture_context(manager) -> str:
+    fixtures = list(getattr(manager.state_manager, "fixtures", []) or [])
+    if not fixtures:
+        return "Available fixtures: unavailable"
+
+    lines = ["Available fixtures in this show config:"]
+    for fixture in fixtures:
+        fixture_id = str(getattr(fixture, "id", "unknown"))
+        fixture_name = str(getattr(fixture, "name", fixture_id))
+        fixture_type = str(getattr(fixture, "type", "unknown"))
+        effects = getattr(fixture, "effects", None) or []
+        effects_text = ", ".join(str(effect) for effect in effects) if effects else "none"
+        lines.append(
+            f"- {fixture_id}: {fixture_name} [{fixture_type}] effects: {effects_text}"
+        )
+
+    return "\n".join(lines)
+
+
 def _format_number(value, suffix: str) -> str:
     if value is None:
         return f"unknown{suffix}"

@@ -22,7 +22,11 @@ def test_chat_request_enables_streaming():
             current_song=SimpleNamespace(
                 song_id="Test Song",
                 meta=SimpleNamespace(song_name="Test Song", bpm=128.5, duration=150.0, song_key="Am"),
-            )
+            ),
+            fixtures=[
+                SimpleNamespace(id="parcan_l", name="ParCan L", type="parcan", effects=["fade_in", "flash"]),
+                SimpleNamespace(id="head_el150", name="Head EL-150", type="moving_head", effects=["sweep", "seek"]),
+            ],
         )
     )
 
@@ -36,3 +40,6 @@ def test_chat_request_enables_streaming():
     assert "BPM: 128.5 BPM" in payload["messages"][1]["content"]
     assert "Duration: 150 seconds" in payload["messages"][1]["content"]
     assert "Song key: Am" in payload["messages"][1]["content"]
+    assert "Available fixtures in this show config:" in payload["messages"][1]["content"]
+    assert "parcan_l: ParCan L [parcan] effects: fade_in, flash" in payload["messages"][1]["content"]
+    assert "head_el150: Head EL-150 [moving_head] effects: sweep, seek" in payload["messages"][1]["content"]

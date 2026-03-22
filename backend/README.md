@@ -75,7 +75,8 @@ Patch behavior:
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
 - `llm.send_prompt` streams assistant text from the direct `llm-server` llama.cpp `/v1/chat/completions` endpoint using backend-owned prompt profiles in `backend/api/intents/llm/prompt_profiles/`.
 - The backend injects current-song context into the LLM request: song name, BPM, duration, and song key.
-- The default chat profile keeps responses short and limited to the loaded song; unrelated topics are refused.
+- The backend also injects the currently configured fixture inventory, including fixture ids, names, types, and supported effects.
+- The default chat profile keeps responses short and limited to the loaded song and available fixtures; unrelated topics and unavailable fixtures are refused.
 - `llm.send_prompt` is rejected while playback is active, and `llm.cancel` stops the active upstream stream when one exists.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
 - Moving-head `strobe` is dimmer-driven only. Dedicated fixture `strobe` and `shutter` channels are not modulated by the effect handler.
