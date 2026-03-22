@@ -289,12 +289,12 @@ Patch behavior during playback:
 | --- | --- | --- |
 | `move_to` | pan/tilt targets (`pan`/`tilt` u16 or axis byte variants/preset) | interpolates pan/tilt across cue duration |
 | `move_to_poi` | `target_POI` (also accepts `poi` or `POI`) | interpolates toward POI target for this fixture |
-| `seek` | same target parsing as `move_to` | instant pan/tilt set at start frame |
+| `seek` | required `subject_POI`, `start_POI`; optional `orbits`, `easing` | schedules dark pre-roll to `start_POI` from the last known pan/tilt using fixture-template `physical_movement` timing, then circles around `subject_POI` and spirals into the subject by cue end while limiting per-frame pan/tilt changes to the fixture's maximum physical travel; recommended easing is `late_focus`, with `balanced`, `linear`, and `early_focus` also supported |
 | `strobe` | optional `rate` (Hz) | toggles dimmer only; dedicated fixture `strobe`/`shutter` channels are left unchanged |
 | `full` | none | instant full-on dimmer (+ shutter if available) |
 | `flash` | none | fades dimmer from 255 to 0 over duration |
 | `fade_in` | optional `dim`/`dimmer`/`intensity` target | interpolates intensity from current value to target and opens shutter when present |
-| `sweep` | required `subject_POI`, `start_POI`; optional `end_POI`, `duration`, `easing`, `dimmer_easing`, `arc_strength`, `max_dim` | computes a dark pre-roll from the last known pan/tilt to `start_POI` using fixture-template `physical_movement` pan/tilt full-range timing plus an extra `100 ms` safety pre-roll, holds at `start_POI` for `100 ms`, then runs a two-leg arc sweep with cubic ease-out into the subject, cubic ease-in away from it, and mirrored dimmer timing that reaches `max_dim` at the subject POI |
+| `sweep` | required `subject_POI`, `start_POI`; optional `end_POI`, `duration`, `easing`, `dimmer_easing`, `arc_strength`, `max_dim` | computes a dark pre-roll from the last known pan/tilt to `start_POI` using fixture-template `physical_movement` pan/tilt full-range timing plus an extra `100 ms` safety pre-roll, holds at `start_POI` for `100 ms`, then runs a two-leg arc sweep with cubic ease-out into the subject, cubic ease-in away from it, mirrored dimmer timing, and per-frame pan/tilt clamping to the fixture's maximum physical travel; `max_dim` is reached when the actual pan/tilt land on the subject POI |
 
 ### Parcan effects
 

@@ -86,8 +86,10 @@ export const EFFECT_SCHEMAS: Record<string, EffectSchema | EffectSchema[]> = {
 		name: "seek",
 		label: "Seek",
 		params: [
-			{ name: "pan", label: "Pan", type: "range", default: 32768, min: 0, max: 65535, step: 256 },
-			{ name: "tilt", label: "Tilt", type: "range", default: 32768, min: 0, max: 65535, step: 256 },
+			{ name: "subject_POI", label: "Subject POI", type: "poi", default: "" },
+			{ name: "start_POI", label: "Start POI", type: "poi", default: "" },
+			{ name: "orbits", label: "Orbits", type: "range", default: 1, min: 0, max: 4, step: 0.25 },
+			{ name: "easing", label: "Spiral Easing", type: "select", default: "late_focus", options: ["late_focus", "balanced", "linear", "early_focus"] },
 		],
 		fixtureTypes: ["moving_head"],
 	},

@@ -3,12 +3,8 @@ from typing import Any, Dict, List, Tuple
 from models.chasers import ChaserDefinition, get_chaser_by_id, get_chaser_cycle_beats
 from models.cues import CueEntry, CueSheet
 from models.fixtures.fixture import Fixture
+from models.fixtures.moving_heads.travel_helpers import EFFECT_SAFETY_PREROLL_SECONDS, EFFECT_SETTLE_SECONDS, fixture_travel_profile_seconds
 from services.cue_helpers.timing import beatToTimeMs
-
-DEFAULT_PAN_FULL_TRAVEL_SECONDS = 2.0
-DEFAULT_TILT_FULL_TRAVEL_SECONDS = 0.9
-SWEEP_SETTLE_SECONDS = 0.1
-SWEEP_SAFETY_PREROLL_SECONDS = 0.1
 
 
 def _expand_entry_for_render(entry: CueEntry, chasers: List[ChaserDefinition], bpm: float) -> List[CueEntry]:
@@ -58,24 +54,6 @@ def _fixture_axis_position_from_current_values(fixture: Fixture) -> tuple[int, i
         return None
 
 
-def _fixture_travel_profile_seconds(fixture: Fixture) -> tuple[float, float]:
-    physical_movement = getattr(fixture.template, "physical_movement", None)
-    pan_seconds = getattr(physical_movement, "pan_full_travel_seconds", None)
-    tilt_seconds = getattr(physical_movement, "tilt_full_travel_seconds", None)
-
-    try:
-        pan_value = float(pan_seconds)
-    except (TypeError, ValueError):
-        pan_value = DEFAULT_PAN_FULL_TRAVEL_SECONDS
-
-    try:
-        tilt_value = float(tilt_seconds)
-    except (TypeError, ValueError):
-        tilt_value = DEFAULT_TILT_FULL_TRAVEL_SECONDS
-
-    return max(0.0, pan_value), max(0.0, tilt_value)
-
-
 def _estimate_sweep_end_position(fixture: Fixture, data: dict[str, Any]) -> tuple[int, int] | None:
     subject_poi = str(data.get("subject_POI") or "").strip()
     start_poi = str(data.get("start_POI") or "").strip()
@@ -99,14 +77,28 @@ def _estimate_sweep_end_position(fixture: Fixture, data: dict[str, Any]) -> tupl
     )
 
 
+def _estimate_seek_end_position(fixture: Fixture, data: dict[str, Any]) -> tuple[int, int] | None:
+    subject_poi = str(data.get("subject_POI") or "").strip()
+    start_poi = str(data.get("start_POI") or "").strip()
+    if not subject_poi or not start_poi:
+        return None
+
+    subject_pan, subject_tilt = fixture._resolve_poi_pan_tilt_u16(subject_poi)
+    if subject_pan is None or subject_tilt is None:
+        return None
+    return int(subject_pan), int(subject_tilt)
+
+
 def _estimate_entry_end_position(fixture: Fixture, entry: CueEntry) -> tuple[int, int] | None:
     data = entry.data or {}
     effect = str(entry.effect or "").strip().lower()
-    if effect in {"move_to", "seek"}:
+    if effect == "move_to":
         target = fixture._parse_pan_tilt_targets_u16(data)
         if target[0] is None or target[1] is None:
             return None
         return int(target[0]), int(target[1])
+    if effect == "seek":
+        return _estimate_seek_end_position(fixture, data)
     if effect == "move_to_poi":
         target_poi = str(data.get("target_POI") or data.get("poi") or data.get("POI") or "").strip()
         if not target_poi:
@@ -130,14 +122,34 @@ def _estimate_sweep_preroll_seconds(fixture: Fixture, data: dict[str, Any], last
         return 0.0
 
     last_pan, last_tilt = last_position
-    pan_full_travel_seconds, tilt_full_travel_seconds = _fixture_travel_profile_seconds(fixture)
+    pan_full_travel_seconds, tilt_full_travel_seconds = fixture_travel_profile_seconds(fixture)
     pan_seconds = (abs(int(start_pan) - int(last_pan)) / 65535.0) * pan_full_travel_seconds
     tilt_seconds = (abs(int(start_tilt) - int(last_tilt)) / 65535.0) * tilt_full_travel_seconds
-    return max(0.0, pan_seconds, tilt_seconds) + SWEEP_SAFETY_PREROLL_SECONDS + SWEEP_SETTLE_SECONDS
+    return max(0.0, pan_seconds, tilt_seconds) + EFFECT_SAFETY_PREROLL_SECONDS + EFFECT_SETTLE_SECONDS
+
+
+def _estimate_seek_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
+    start_poi = str(data.get("start_POI") or "").strip()
+    if not start_poi or last_position is None:
+        return 0.0
+
+    start_pan, start_tilt = fixture._resolve_poi_pan_tilt_u16(start_poi)
+    if start_pan is None or start_tilt is None:
+        return 0.0
+
+    last_pan, last_tilt = last_position
+    pan_full_travel_seconds, tilt_full_travel_seconds = fixture_travel_profile_seconds(fixture)
+    pan_seconds = (abs(int(start_pan) - int(last_pan)) / 65535.0) * pan_full_travel_seconds
+    tilt_seconds = (abs(int(start_tilt) - int(last_tilt)) / 65535.0) * tilt_full_travel_seconds
+    return max(0.0, pan_seconds, tilt_seconds) + EFFECT_SAFETY_PREROLL_SECONDS + EFFECT_SETTLE_SECONDS
 
 
 def estimate_sweep_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
     return _estimate_sweep_preroll_seconds(fixture, data, last_position)
+
+
+def estimate_seek_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
+    return _estimate_seek_preroll_seconds(fixture, data, last_position)
 
 
 def iter_cues_for_render(
@@ -159,12 +171,14 @@ def iter_cues_for_render(
             duration = max(0.0, float(render_entry.duration or 0.0))
             end = int(round((float(render_entry.time) + duration) * fps))
             fixture = fixture_map.get(render_entry.fixture_id or "")
-            if fixture and str(render_entry.effect or "").strip().lower() == "sweep":
+            if fixture and str(render_entry.effect or "").strip().lower() in {"sweep", "seek"}:
                 last_position = fixture_positions.get(fixture.id) or _fixture_axis_position_from_current_values(fixture)
-                preroll_seconds = _estimate_sweep_preroll_seconds(fixture, render_data, last_position)
+                effect_name = str(render_entry.effect or "").strip().lower()
+                preroll_seconds = _estimate_sweep_preroll_seconds(fixture, render_data, last_position) if effect_name == "sweep" else _estimate_seek_preroll_seconds(fixture, render_data, last_position)
                 preroll_frames = max(0, int(round(preroll_seconds * fps)))
                 if preroll_frames > 0:
-                    render_data["__sweep_preroll_frames"] = preroll_frames
+                    preroll_key = "__sweep_preroll_frames" if effect_name == "sweep" else "__seek_preroll_frames"
+                    render_data[preroll_key] = preroll_frames
                     start = max(0, start - preroll_frames)
                     render_entry = CueEntry(
                         time=render_entry.time,

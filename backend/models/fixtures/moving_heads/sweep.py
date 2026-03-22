@@ -9,8 +9,7 @@ from .sweep_helpers import (
     max_dim_to_byte,
     parse_float,
 )
-
-SETTLE_SECONDS = 0.1
+from .travel_helpers import EFFECT_SETTLE_SECONDS, limit_axis_step, max_axis_step_per_frame
 
 
 def handle(
@@ -51,7 +50,7 @@ def handle(
         duration_seconds = max(1.0 / max(1, fps), (end_frame - start_frame) / float(max(1, fps)))
 
     preroll_frames = max(0, int((payload.get("__sweep_preroll_frames") or 0)))
-    settle_frames = min(max(0, int(round(SETTLE_SECONDS * max(1, fps)))), preroll_frames)
+    settle_frames = min(max(0, int(round(EFFECT_SETTLE_SECONDS * max(1, fps)))), preroll_frames)
     move_frames = max(0, preroll_frames - settle_frames)
     visible_start_frame = start_frame + preroll_frames
     visible_duration_frames = max(1, end_frame - visible_start_frame)
@@ -67,14 +66,22 @@ def handle(
     if "sweep_initial_pan_u16" not in render_state or "sweep_initial_tilt_u16" not in render_state:
         render_state["sweep_initial_pan_u16"] = int(fixture._read_axis_u16_from_universe(universe, "pan") or 0)
         render_state["sweep_initial_tilt_u16"] = int(fixture._read_axis_u16_from_universe(universe, "tilt") or 0)
+    if "sweep_last_pan_u16" not in render_state or "sweep_last_tilt_u16" not in render_state:
+        render_state["sweep_last_pan_u16"] = int(render_state.get("sweep_initial_pan_u16", 0))
+        render_state["sweep_last_tilt_u16"] = int(render_state.get("sweep_initial_tilt_u16", 0))
 
     initial_pan = int(render_state.get("sweep_initial_pan_u16", 0))
     initial_tilt = int(render_state.get("sweep_initial_tilt_u16", 0))
+    last_pan = int(render_state.get("sweep_last_pan_u16", initial_pan))
+    last_tilt = int(render_state.get("sweep_last_tilt_u16", initial_tilt))
+    max_pan_step, max_tilt_step = max_axis_step_per_frame(fixture, fps)
 
     if frame_index < start_frame + move_frames:
         move_progress = (frame_index - start_frame) / float(max(1, move_frames))
-        pan_u16 = fixture._clamp_u16(round(initial_pan + ((int(start_pan) - initial_pan) * move_progress)))
-        tilt_u16 = fixture._clamp_u16(round(initial_tilt + ((int(start_tilt) - initial_tilt) * move_progress)))
+        target_pan = round(initial_pan + ((int(start_pan) - initial_pan) * move_progress))
+        target_tilt = round(initial_tilt + ((int(start_tilt) - initial_tilt) * move_progress))
+        pan_u16 = fixture._clamp_u16(limit_axis_step(last_pan, target_pan, max_pan_step))
+        tilt_u16 = fixture._clamp_u16(limit_axis_step(last_tilt, target_tilt, max_tilt_step))
         dim_factor = 0.0
     elif frame_index < visible_start_frame:
         pan_u16 = fixture._clamp_u16(start_pan)
@@ -90,8 +97,8 @@ def handle(
             t=leg_progress,
             arc_strength=arc_strength,
         )
-        pan_u16 = fixture._clamp_u16(pan_next)
-        tilt_u16 = fixture._clamp_u16(tilt_next)
+        pan_u16 = fixture._clamp_u16(limit_axis_step(last_pan, pan_next, max_pan_step))
+        tilt_u16 = fixture._clamp_u16(limit_axis_step(last_tilt, tilt_next, max_tilt_step))
         dim_factor = apply_dimmer_envelope(motion_progress, dimmer_easing)
     else:
         leg_progress = apply_leg_easing((motion_progress - 0.5) * 2.0, easing_seconds, leg_duration_seconds, ease_in=True)
@@ -103,8 +110,8 @@ def handle(
             t=leg_progress,
             arc_strength=arc_strength,
         )
-        pan_u16 = fixture._clamp_u16(pan_next)
-        tilt_u16 = fixture._clamp_u16(tilt_next)
+        pan_u16 = fixture._clamp_u16(limit_axis_step(last_pan, pan_next, max_pan_step))
+        tilt_u16 = fixture._clamp_u16(limit_axis_step(last_tilt, tilt_next, max_tilt_step))
         dim_factor = apply_dimmer_envelope(motion_progress, dimmer_easing)
 
     if pan_u16 == subject_pan and tilt_u16 == subject_tilt:
@@ -115,6 +122,8 @@ def handle(
 
     fixture._write_axis_u16_to_universe(universe, "pan", pan_u16)
     fixture._write_axis_u16_to_universe(universe, "tilt", tilt_u16)
+    render_state["sweep_last_pan_u16"] = int(pan_u16)
+    render_state["sweep_last_tilt_u16"] = int(tilt_u16)
 
     intensity_key = find_intensity_channel_key(fixture)
     if intensity_key:
