@@ -9,6 +9,7 @@ from store.services.canvas_rendering import (
     render_cue_sheet_to_canvas,
     render_preview_canvas,
 )
+from store.services.canvas_debug import dump_named_canvas_debug
 
 from ..constants import FPS
 
@@ -48,5 +49,13 @@ class StateCoreRenderMixin:
             backend_path=self.backend_path,
             song_filename=song_filename,
             canvas=self.canvas,
+            max_used_channel=self.max_used_channel,
+        )
+
+    def _dump_preview_canvas_debug(self, file_stem: str) -> None:
+        dump_named_canvas_debug(
+            backend_path=self.backend_path,
+            file_stem=file_stem,
+            canvas=self.preview_canvas,
             max_used_channel=self.max_used_channel,
         )

@@ -17,6 +17,14 @@ def parse_float(value: Any, default: float) -> float:
         return float(default)
 
 
+def clamp_unit(value: Any) -> float:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    return max(0.0, min(1.0, numeric))
+
+
 def find_intensity_channel_key(fixture) -> Optional[str]:
     for key in ("dim", "dimmer", "intensity"):
         if key in (fixture.channels or {}):
@@ -54,14 +62,20 @@ def circular_lerp_u16(
     )
 
 
-def smoothstep(value: float) -> float:
-    t = max(0.0, min(1.0, float(value)))
-    return t * t * (3.0 - 2.0 * t)
+def cubic_ease_in(value: float) -> float:
+    t = clamp_unit(value)
+    return t * t * t
 
 
-def apply_time_easing(progress: float, easing_seconds: float, duration_seconds: float) -> float:
-    p = max(0.0, min(1.0, float(progress)))
-    duration = max(0.0, float(duration_seconds))
+def cubic_ease_out(value: float) -> float:
+    t = clamp_unit(value)
+    inverse = 1.0 - t
+    return 1.0 - (inverse * inverse * inverse)
+
+
+def apply_leg_easing(progress: float, easing_seconds: float, leg_duration_seconds: float, *, ease_in: bool) -> float:
+    p = clamp_unit(progress)
+    duration = max(0.0, float(leg_duration_seconds))
     if duration <= 0.0:
         return p
 
@@ -69,8 +83,9 @@ def apply_time_easing(progress: float, easing_seconds: float, duration_seconds: 
     if easing <= 0.0:
         return p
 
-    blend = max(0.0, min(1.0, (2.0 * easing) / duration))
-    return ((1.0 - blend) * p) + (blend * smoothstep(p))
+    blend = clamp_unit(easing / duration)
+    curve = cubic_ease_in(p) if ease_in else cubic_ease_out(p)
+    return ((1.0 - blend) * p) + (blend * curve)
 
 
 def max_dim_to_byte(max_dim: Any) -> int:
@@ -78,47 +93,22 @@ def max_dim_to_byte(max_dim: Any) -> int:
     return clamp_byte(round(max(0.0, min(1.0, value)) * 255.0))
 
 
-def invert_easing_for_dimmer(easing_seconds: float, duration_seconds: float) -> float:
-    half_duration = max(0.0, float(duration_seconds) * 0.5)
-    eased = max(0.0, min(half_duration, float(easing_seconds)))
-    return half_duration - eased
+def apply_dimmer_envelope(progress: float, dimmer_easing: float) -> float:
+    p = clamp_unit(progress)
+    fade_start = clamp_unit(dimmer_easing)
+    fade_span = 1.0 - fade_start
 
+    if p <= 0.5:
+        approach_progress = p * 2.0
+        if approach_progress <= fade_start:
+            return 0.0
+        if fade_span <= 0.0:
+            return 0.0
+        return clamp_unit((approach_progress - fade_start) / fade_span)
 
-def subject_closeness_factor(
-    *,
-    current_pan: int,
-    current_tilt: int,
-    subject_pan: int,
-    subject_tilt: int,
-    approach_start_pan: int,
-    approach_start_tilt: int,
-    close_ratio: float,
-) -> float:
-    total_pan = abs(float(subject_pan - approach_start_pan))
-    total_tilt = abs(float(subject_tilt - approach_start_tilt))
-    if total_pan <= 0.0 and total_tilt <= 0.0:
+    depart_progress = (p - 0.5) * 2.0
+    if depart_progress <= 0.0:
         return 1.0
-
-    ratio = max(0.01, min(1.0, float(close_ratio)))
-    close_pan = max(6.0, total_pan * ratio)
-    close_tilt = max(6.0, total_tilt * ratio)
-
-    remaining_pan = abs(float(subject_pan - current_pan))
-    remaining_tilt = abs(float(subject_tilt - current_tilt))
-
-    pan_factor = max(0.0, min(1.0, (close_pan - remaining_pan) / close_pan))
-    tilt_factor = max(0.0, min(1.0, (close_tilt - remaining_tilt) / close_tilt))
-
-    if pan_factor <= 0.0 or tilt_factor <= 0.0:
+    if fade_span <= 0.0:
         return 0.0
-
-    closeness = min(pan_factor, tilt_factor)
-
-    very_close_pan = max(2.0, close_pan * 0.4)
-    very_close_tilt = max(2.0, close_tilt * 0.4)
-    if remaining_pan <= very_close_pan and remaining_tilt <= very_close_tilt:
-        very_close_mix = 1.0 - max(remaining_pan / very_close_pan, remaining_tilt / very_close_tilt)
-        boost = 1.0 + (0.35 * max(0.0, min(1.0, very_close_mix)))
-        closeness = min(1.0, closeness * boost)
-
-    return max(0.0, min(1.0, closeness))
+    return clamp_unit(1.0 - (depart_progress / fade_span))

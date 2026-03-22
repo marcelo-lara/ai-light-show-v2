@@ -116,6 +116,7 @@ export const EFFECT_SCHEMAS: Record<string, EffectSchema | EffectSchema[]> = {
 			{ name: "start_POI", label: "Start POI", type: "poi", default: "" },
 			{ name: "end_POI", label: "End POI (optional)", type: "poi", default: "" },
 			{ name: "easing", label: "Easing (s)", type: "range", default: 0, min: 0, max: 2, step: 0.1 },
+			{ name: "dimmer_easing", label: "Dimmer Easing", type: "range", default: 0, min: 0, max: 1, step: 0.05 },
 			{ name: "max_dim", label: "Max Dimmer", type: "range", default: 1, min: 0, max: 1, step: 0.1 },
 		],
 		fixtureTypes: ["moving_head"],

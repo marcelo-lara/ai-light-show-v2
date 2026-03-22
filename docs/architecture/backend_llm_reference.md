@@ -294,7 +294,7 @@ Patch behavior during playback:
 | `full` | none | instant full-on dimmer (+ shutter if available) |
 | `flash` | none | fades dimmer from 255 to 0 over duration |
 | `fade_in` | optional `dim`/`dimmer`/`intensity` target | interpolates intensity from current value to target and opens shutter when present |
-| `sweep` | required `subject_POI`, `start_POI`; optional `end_POI`, `duration`, `easing`, `arc_strength`, `subject_close_ratio`, `max_dim` | two-leg arc sweep with dimmer shaping around subject POI |
+| `sweep` | required `subject_POI`, `start_POI`; optional `end_POI`, `duration`, `easing`, `dimmer_easing`, `arc_strength`, `max_dim` | computes a dark pre-roll from the last known pan/tilt to `start_POI` using fixture-template `physical_movement` pan/tilt full-range timing plus an extra `100 ms` safety pre-roll, holds at `start_POI` for `100 ms`, then runs a two-leg arc sweep with cubic ease-out into the subject, cubic ease-in away from it, and mirrored dimmer timing that reaches `max_dim` at the subject POI |
 
 ### Parcan effects
 

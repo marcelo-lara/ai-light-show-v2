@@ -34,8 +34,13 @@ Template fields:
 - `type`: fixture category (for example `moving_head`, `parcan`).
 - `channels`: channel-name to zero-based offset mapping.
 - `effects`: effect ids that this model declares.
+- `physical_movement`: optional real travel-time metadata used for movement estimation.
 - `meta_channels`: high-level controls used by frontend/API.
 - `mappings`: enum/label mappings.
+
+`physical_movement` fields:
+- `pan_full_travel_seconds`: real time for a full-range pan move from `0` to `65535`.
+- `tilt_full_travel_seconds`: real time for a full-range tilt move from `0` to `65535`.
 
 `meta_channels` fields:
 - `label`

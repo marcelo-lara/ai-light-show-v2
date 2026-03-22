@@ -58,7 +58,7 @@ def effect_cases() -> list[dict]:
             "seek": {"duration": 0.25, "data": {"pan": 12000, "tilt": 22000}},
             "move_to": {"duration": 0.5, "data": {"pan": 40000, "tilt": 26000}},
             "move_to_poi": {"duration": 0.5, "data": {"target_POI": "target"}, "pois": POIS},
-            "sweep": {"duration": 0.5, "data": {"subject_POI": "subject", "start_POI": "start", "end_POI": "end", "duration": 0.5, "max_dim": 1.0}, "pois": POIS},
+            "sweep": {"duration": 0.5, "data": {"subject_POI": "subject", "start_POI": "start", "end_POI": "end", "duration": 0.5, "easing": 0.5, "dimmer_easing": 0.0, "max_dim": 1.0}, "pois": POIS},
         },
         "fixture.moving_head.head_el150": {
             "full": {"duration": 0.25, "data": {}},
@@ -68,7 +68,7 @@ def effect_cases() -> list[dict]:
             "seek": {"duration": 0.25, "data": {"pan": 12000, "tilt": 22000}},
             "move_to": {"duration": 0.5, "data": {"pan": 40000, "tilt": 26000}},
             "move_to_poi": {"duration": 0.5, "data": {"target_POI": "target"}, "pois": POIS},
-            "sweep": {"duration": 0.5, "data": {"subject_POI": "subject", "start_POI": "start", "end_POI": "end", "duration": 0.5, "max_dim": 1.0}, "pois": POIS},
+            "sweep": {"duration": 0.5, "data": {"subject_POI": "subject", "start_POI": "start", "end_POI": "end", "duration": 0.5, "easing": 0.5, "dimmer_easing": 0.0, "max_dim": 1.0}, "pois": POIS},
         },
     }
     cases: list[dict] = []

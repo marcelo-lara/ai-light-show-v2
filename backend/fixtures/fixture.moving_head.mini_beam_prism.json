@@ -25,6 +25,10 @@
 		"move_to_poi",
 		"sweep"
 	],
+	"physical_movement": {
+		"pan_full_travel_seconds": 2.0,
+		"tilt_full_travel_seconds": 0.9
+	},
 	"meta_channels": {
 		"pan": {
 			"label": "Pan",

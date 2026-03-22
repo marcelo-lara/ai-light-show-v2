@@ -48,7 +48,8 @@ class StatePlaybackPreviewStartMixin:
             self.preview_request_id = rid
             self.preview_fixture_id = fixture.id
             self.preview_effect = normalized_effect
-            self.preview_duration = preview_duration
+            self.preview_duration = self.preview_canvas.total_frames / float(self.preview_canvas.fps)
+            self._dump_preview_canvas_debug(f"preview.{fixture.id}.{normalized_effect}.{rid}")
             self.preview_active = True
             self.output_universe[:] = self.preview_canvas.frame_view(0)
             self.preview_task = asyncio.create_task(self._run_preview(rid))
@@ -63,5 +64,5 @@ class StatePlaybackPreviewStartMixin:
             "requestId": rid,
             "fixtureId": fixture_id,
             "effect": normalized_effect,
-            "duration": float(preview_duration),
+            "duration": float(self.preview_duration),
         }
