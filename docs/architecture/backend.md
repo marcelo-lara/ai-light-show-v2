@@ -125,6 +125,7 @@ See `backend/services/artnet.py`.
 - Sends ArtDMX packets to configured target.
 - Loop runs continuously.
 - If `continuous_send` is disabled, identical frames are suppressed.
+- `DEBUG_MODE` enables DMX payload debug output to stdout and to a file if `DEBUG_FILE` is set.
 
 ## Validation Commands
 
@@ -133,11 +134,28 @@ Use the `ai-light` environment for backend validation:
 ```bash
 PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
   tests/test_set_values_regression.py \
-  tests/test_preview_lifecycle_regression.py \
-  tests/test_metadata_sections_regression.py \
+  tests/test_song_sections_payload_schema.py \
+  tests/test_song_analysis_payload_chords.py \
+  tests/test_jump_to_section_regression.py \
+  tests/test_chaser_timing.py \
+  tests/test_chaser_preview_lifecycle.py \
+  tests/test_chaser_intents.py \
+  tests/test_fixture_effect_preview_matrix.py \
+  tests/test_fixture_effect_canvas_matrix.py \
   tests/test_dmx_canvas_render_new.py \
   tests/test_fixture_loading_new.py \
   tests/test_payload.py
+```
+
+For websocket/file-backed intent coverage, additionally run:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
+  tests/test_ws_transport_jump_to_section_e2e.py \
+  tests/test_ws_poi_e2e.py \
+  tests/test_ws_cue_e2e.py \
+  tests/test_ws_chaser_e2e.py \
+  tests/test_ws_chaser_preview_e2e.py
 ```
 
 ## LLM Change Matrix
@@ -146,13 +164,16 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 | --- | --- | --- |
 | State bootstrap fields or shared state flags | `backend/store/state_manager/core/bootstrap.py` | validation command above |
 | Fixture load/save, arm defaults, POI fixture target persistence | `backend/store/state_manager/core/fixture_store.py`, `backend/store/state_manager/core/fixture_effects.py` | validation command above |
-| Song metadata structure and loading paths | `backend/models/song/*` | validation command above + `tests/test_metadata_sections_regression.py` |
-| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | validation command above + `tests/test_metadata_sections_regression.py` |
+| Song metadata structure and loading paths | `backend/models/song/*` | validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
+| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
 | Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | validation command above |
+| Fixture effect contracts or preview support | `backend/models/fixtures/**/*`, `backend/store/state_manager/core/fixture_effects.py`, `backend/store/state_manager/playback/preview_start.py` | validation command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | validation command above |
-| Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | validation command above |
-| Preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_start.py`, `backend/store/state_manager/playback/preview_control.py`, `backend/store/state_manager/playback/preview_runner.py` | validation command above + `tests/test_preview_lifecycle_regression.py` |
+| Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | validation command above + `tests/test_ws_transport_jump_to_section_e2e.py` |
+| Chaser preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_chaser.py` | validation command above + `tests/test_chaser_preview_lifecycle.py` |
 | Fixture live value write behavior | `backend/api/intents/fixture/actions/set_values.py`, `backend/store/state_manager/playback/channels.py` | validation command above + `tests/test_set_values_regression.py` |
 | Snapshot or patch payload schema | `backend/api/state/*`, `backend/api/websocket_manager/broadcasting.py` | `tests/test_payload.py` |
-| Websocket intent/message behavior | `backend/api/websocket_manager/*`, `backend/api/intents/*` | `PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py` |
+| Chaser timing, lifecycle, or handler behavior | `backend/store/state_manager/playback/*`, `backend/api/intents/chaser/*`, `backend/services/cue_helpers/*` | validation command above + websocket/file-backed command above |
+| Cue intent or persistence behavior | `backend/api/intents/cue/*`, `backend/store/state_manager/song/cues.py` | validation command above + `tests/test_cue_add.py` + `tests/test_cue_clear.py` + `tests/test_cue_intents.py` + `tests/test_ws_cue_e2e.py` |
+| Websocket intent/message behavior | `backend/api/websocket_manager/*`, `backend/api/intents/*` | websocket/file-backed command above |
 | Import path or module composition for state manager | `backend/store/state.py`, `backend/store/state_manager/manager.py` | validation command above |

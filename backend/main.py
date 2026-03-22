@@ -30,11 +30,11 @@ async def lifespan(app: FastAPI):
     meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
 
-    artnet_debug = os.getenv("ARTNET_DEBUG", "0").strip().lower() in {"1", "true", "yes", "on"}
-    artnet_debug_file = os.getenv("ARTNET_DEBUG_FILE") or None
+    debug_mode = os.getenv("DEBUG_MODE", "0").strip().lower() in {"1", "true", "yes", "on"}
+    debug_file = os.getenv("DEBUG_FILE") or os.getenv("ARTNET_DEBUG_FILE") or None
     
     state_manager = StateManager(backend_path, songs_path, cues_path, meta_path)
-    artnet_service = ArtNetService(debug=artnet_debug, debug_file=artnet_debug_file)
+    artnet_service = ArtNetService(debug=debug_mode, debug_file=debug_file)
     song_service = SongService(songs_path, meta_path)
     ws_manager = WebSocketManager(state_manager, artnet_service, song_service)
 
