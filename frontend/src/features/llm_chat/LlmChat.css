@@ -13,6 +13,10 @@
   height: 100%;
 }
 
+.llm-card[aria-disabled="true"] {
+  opacity: 0.45;
+}
+
 .llm-card .llm-chat {
   min-height: 0;
   flex: 1;

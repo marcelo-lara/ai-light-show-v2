@@ -10,10 +10,17 @@ Local inference + tool-gateway stack used for metadata-aware cue planning.
 ## Runtime architecture
 
 1. `llm-server` (llama.cpp) serves model inference at `http://llm-server:8080`.
-2. `agent-gateway` accepts chat requests and forwards to llama.cpp.
-3. If model emits tool calls, gateway maps tools to MCP methods.
-4. Gateway uses persistent SSE MCP session and JSON-RPC over `/messages/?session_id=...`.
-5. Tool results are appended as `role=tool` messages before second model pass.
+2. Backend `llm.send_prompt` can call llama.cpp directly at `/v1/chat/completions` with `stream=true` for plain chat streaming.
+3. `agent-gateway` accepts chat requests and forwards to llama.cpp when MCP-aware tool use is needed.
+4. If model emits tool calls, gateway maps tools to MCP methods.
+5. Gateway uses persistent SSE MCP session and JSON-RPC over `/messages/?session_id=...`.
+6. Tool results are appended as `role=tool` messages before second model pass.
+
+## Direct backend chat path
+
+- Backend-owned prompt profiles live under `backend/api/intents/llm/prompt_profiles/`.
+- The default backend chat path sends composed `system` and `user` messages directly to llama.cpp.
+- Use the direct llama.cpp path for plain streamed chat responses; use `agent-gateway` when the request needs MCP tool-calling.
 
 ## Key files
 

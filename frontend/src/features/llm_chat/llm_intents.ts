@@ -1,5 +1,5 @@
 import type { IntentMsg } from "../../shared/transport/protocol.ts";
-import { addSystemMessage, addUserMessage, setLlmStatus } from "./llm_state.ts";
+import { addSystemMessage, addUserMessage, setLlmStatus, setLlmWaiting } from "./llm_state.ts";
 import { makeId } from "../../shared/utils/id.ts";
 
 function wsSend(msg: IntentMsg) {
@@ -15,7 +15,7 @@ function reqId() {
 export function sendPrompt(prompt: string) {
   if (!prompt.trim()) return;
   addUserMessage(prompt.trim());
-  setLlmStatus("streaming");
+  setLlmWaiting();
   if (!(globalThis as any).__WS_CLIENT__) {
     addSystemMessage("WebSocket is not connected.", "error");
     setLlmStatus("error", "not_connected");

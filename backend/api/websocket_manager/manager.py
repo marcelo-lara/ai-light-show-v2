@@ -30,6 +30,8 @@ class WebSocketManager:
         self._last_state_snapshot: Optional[Dict[str, Any]] = None
         self._playback_task: Optional[asyncio.Task] = None
         self._playback_task_running: bool = False
+        self._llm_task: Optional[asyncio.Task] = None
+        self._llm_request_id: Optional[str] = None
 
     async def start_playback_ticker(self) -> None:
         if self._playback_task and not self._playback_task.done():
@@ -47,6 +49,30 @@ class WebSocketManager:
         except asyncio.CancelledError:
             pass
         self._playback_task = None
+
+    def track_llm_task(self, task: asyncio.Task, request_id: str) -> None:
+        self._llm_task = task
+        self._llm_request_id = request_id
+        task.add_done_callback(lambda done_task, active_id=request_id: self._clear_llm_task(active_id, done_task))
+
+    async def cancel_llm_task(self) -> bool:
+        task = self._llm_task
+        self._llm_task = None
+        self._llm_request_id = None
+        if not task or task.done():
+            return False
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+        return True
+
+    def _clear_llm_task(self, request_id: str, task: asyncio.Task) -> None:
+        if self._llm_request_id != request_id:
+            return
+        self._llm_task = None
+        self._llm_request_id = None
 
     async def _playback_ticker_loop(self) -> None:
         target_fps = 60.0

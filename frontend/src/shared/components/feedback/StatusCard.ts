@@ -6,6 +6,7 @@ import { getBackendStore, subscribeBackendStore } from "../../state/backend_stat
 import { getThemeModel } from "./ThemeSelector.ts";
 import { subscribeTheme } from "../../state/theme_state.ts";
 import { getWsState, subscribeWsState } from "../../state/ws_state.ts";
+import { subscribeLlmState } from "../../../features/llm_chat/llm_state.ts";
 
 /**
  * Render-only module.
@@ -108,6 +109,7 @@ export function StatusCard(): HTMLElement {
   };
 
   const unsubscribeBackend = subscribeBackendStore(render);
+  const unsubscribeLlm = subscribeLlmState(render);
   const unsubscribeWs = subscribeWsState(render);
   const unsubscribeTheme = subscribeTheme(render);
   render();
@@ -115,6 +117,7 @@ export function StatusCard(): HTMLElement {
   const card = Card(content, { className: "status-card" });
   (card as unknown as { _cleanup: () => void })._cleanup = () => {
     unsubscribeBackend();
+    unsubscribeLlm();
     unsubscribeWs();
     unsubscribeTheme();
   };
@@ -182,6 +185,7 @@ function playbackTone(value: string) {
 
 function llmTone(value: string) {
   if (value === "streaming") return "ok";
+  if (value === "waiting") return "warn";
   if (value === "error") return "err";
   return "default";
 }

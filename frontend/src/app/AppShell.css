@@ -14,6 +14,16 @@
   padding: 0 12px;
 }
 
+.app-shell[data-llm-locked="true"] .sidebar,
+.app-shell[data-llm-locked="true"] .main-content,
+.app-shell[data-llm-locked="true"] .status-card {
+  opacity: 0.45;
+}
+
+.app-shell[data-show-locked="true"] .llm-card {
+  opacity: 0.45;
+}
+
 .view h1 {
   margin-top: 0;
 }

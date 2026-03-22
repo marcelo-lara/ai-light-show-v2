@@ -73,6 +73,8 @@ Patch behavior:
 - `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
+- `llm.send_prompt` streams assistant text from the direct `llm-server` llama.cpp `/v1/chat/completions` endpoint using backend-owned prompt profiles in `backend/api/intents/llm/prompt_profiles/`.
+- `llm.send_prompt` is rejected while playback is active, and `llm.cancel` stops the active upstream stream when one exists.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
 - Moving-head `strobe` is dimmer-driven only. Dedicated fixture `strobe` and `shutter` channels are not modulated by the effect handler.
 - Moving-head `seek` computes dark pre-roll from the previous pan/tilt position to `start_POI` using the fixture template `physical_movement` timing plus `100 ms` safety and `100 ms` settle time. During the visible effect it orbits around `subject_POI` from `start_POI`, spirals into the subject by cue end, and clamps per-frame pan/tilt moves to the fixture's maximum physical travel. `orbits` controls turn count, and `easing` controls how long the head stays wide before tightening: `late_focus` is the recommended default, `balanced` is neutral, `linear` is mechanical, and `early_focus` collapses quickly.

@@ -1,10 +1,12 @@
 import { cancelPrompt, sendPrompt } from "../llm_intents.ts";
-import { getLlmState } from "../llm_state.ts";
+import { getLlmState, isLlmActiveStatus } from "../llm_state.ts";
 import { Button } from "../../../shared/components/controls/Button.ts";
+import { selectEditLock } from "../../../shared/state/selectors.ts";
 
 export function PromptInput(): HTMLElement {
 	const state = getLlmState();
-	const isStreaming = state.status === "streaming";
+	const isShowLocked = selectEditLock() === true;
+	const isLlmActive = isLlmActiveStatus(state.status);
 
 	const row = document.createElement("div");
 	row.className = "prompt-row";
@@ -12,8 +14,9 @@ export function PromptInput(): HTMLElement {
 	const input = document.createElement("textarea");
 	input.className = "prompt-input";
 	input.rows = 1;
-	input.placeholder = "Ask the assistant…";
+	input.placeholder = isShowLocked ? "LLM unavailable while show is running." : "Ask the assistant…";
  	input.setAttribute("aria-label", "Message input");
+	input.disabled = isShowLocked || isLlmActive;
 
 	const actions = document.createElement("div");
 	actions.className = "prompt-actions";
@@ -23,7 +26,7 @@ export function PromptInput(): HTMLElement {
 		state: "primary",
 		bindings: {
 			title: "Send prompt",
-			disabled: isStreaming,
+			disabled: isShowLocked || isLlmActive,
 		},
 	});
 
@@ -32,11 +35,12 @@ export function PromptInput(): HTMLElement {
 		state: "default",
 		bindings: {
 			title: "Stop generating",
+			disabled: isShowLocked || !isLlmActive,
 		},
 	});
 
 	const updateSendState = () => {
-		send.disabled = isStreaming || input.value.trim().length === 0;
+		send.disabled = isShowLocked || isLlmActive || input.value.trim().length === 0;
 	};
 
 	const syncComposerHeight = () => {
@@ -46,9 +50,9 @@ export function PromptInput(): HTMLElement {
 	};
 
 	const submitPrompt = () => {
-		if (input.value.trim().length === 0) return;
+		if (isShowLocked || isLlmActive || input.value.trim().length === 0) return;
 		sendPrompt(input.value);
-		if (getLlmState().status === "streaming") {
+		if (isLlmActiveStatus(getLlmState().status)) {
 			input.value = "";
 			updateSendState();
 		}
@@ -62,7 +66,7 @@ export function PromptInput(): HTMLElement {
 	});
 
 	input.addEventListener("keydown", (ev) => {
-		if (isStreaming) return;
+		if (isShowLocked || isLlmActive) return;
 		if (ev.key === "Enter" && !ev.shiftKey && !ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.isComposing) {
 			ev.preventDefault();
 			submitPrompt();
@@ -71,7 +75,7 @@ export function PromptInput(): HTMLElement {
 
 	syncComposerHeight();
 	updateSendState();
-	if (isStreaming) actions.append(stop);
+	if (isLlmActive) actions.append(stop);
 	actions.append(send);
 	row.append(input, actions);
 	return row;

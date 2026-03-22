@@ -3,7 +3,7 @@ import { initTheme } from "../shared/state/theme_state.ts";
 import { setWsState } from "../shared/state/ws_state.ts";
 import { WsClient } from "../shared/transport/ws_client.ts";
 import type { ConnectionState, WsInbound } from "../shared/transport/protocol.ts";
-import { addAssistantMessage, addSystemMessage, appendStreamingChunk, finishStreaming } from "../features/llm_chat/llm_state.ts";
+import { addAssistantMessage, addSystemMessage, appendStreamingChunk, cancelLlm, failLlm, finishStreaming } from "../features/llm_chat/llm_state.ts";
 
 // If you inject bootstrap JSON in HTML, expose it as window.__BOOTSTRAP_STATE__
 declare global {
@@ -68,6 +68,21 @@ export function boot(ctx: BootContext) {
         if (data.domain === "llm" && typeof data.chunk === "string") {
           appendStreamingChunk(data.chunk);
           if (data.done === true) finishStreaming();
+          return;
+        }
+        if (m.message === "llm_cancelled" && data.domain === "llm") {
+          cancelLlm();
+          return;
+        }
+        if (m.message === "llm_failed" && data.domain === "llm") {
+          const error = typeof data.error === "string" ? data.error : "llm_request_failed";
+          failLlm(error);
+          addSystemMessage(`LLM request failed: ${error}`, "error");
+          return;
+        }
+        if (m.message === "llm_rejected" && data.domain === "llm") {
+          failLlm(typeof data.reason === "string" ? data.reason : "llm_rejected");
+          addSystemMessage("LLM is unavailable while the show is running.", "error");
           return;
         }
         if (data.domain === "llm" && typeof data.message === "string") {

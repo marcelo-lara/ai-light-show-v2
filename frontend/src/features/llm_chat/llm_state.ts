@@ -1,6 +1,6 @@
 import { makeId } from "../../shared/utils/id.ts";
 
-export type LlmStatus = "idle" | "streaming" | "error";
+export type LlmStatus = "idle" | "waiting" | "streaming" | "error";
 
 export type ChatRole = "user" | "assistant" | "system";
 
@@ -16,6 +16,7 @@ let state: { status: LlmStatus; lastError?: string; messages: ChatMessage[]; str
   messages: [],
   streamingText: "",
 };
+(globalThis as any).__LLM_STATE__ = state;
 const listeners = new Set<() => void>();
 
 export function getLlmState() {
@@ -28,61 +29,79 @@ export function subscribeLlmState(fn: () => void) {
 }
 
 function emit() {
+  (globalThis as any).__LLM_STATE__ = state;
   for (const fn of listeners) fn();
 }
 
-export function setLlmStatus(status: LlmStatus, lastError?: string) {
-  state = { ...state, status, lastError };
-  (globalThis as any).__LLM_STATE__ = state; // used by StatusCard model for now
+function commit(nextState: typeof state) {
+  state = nextState;
   emit();
+}
+
+export function setLlmStatus(status: LlmStatus, lastError?: string) {
+  commit({ ...state, status, lastError });
+}
+
+export function setLlmWaiting() {
+  commit({ ...state, status: "waiting", lastError: undefined, streamingText: "" });
 }
 
 export function addUserMessage(text: string) {
-  state = {
+  commit({
     ...state,
     messages: [...state.messages, { id: makeId(), role: "user", text }],
-  };
-  emit();
+  });
 }
 
 export function addAssistantMessage(text: string) {
-  state = {
+  commit({
     ...state,
     messages: [...state.messages, { id: makeId(), role: "assistant", text }],
     status: "idle",
+    lastError: undefined,
     streamingText: "",
-  };
-  emit();
+  });
 }
 
 export function addSystemMessage(text: string, kind: "info" | "error" = "info") {
-  state = {
+  commit({
     ...state,
     status: kind === "error" ? "error" : state.status,
     messages: [...state.messages, { id: makeId(), role: "system", text, kind }],
-  };
-  emit();
+  });
 }
 
 export function appendStreamingChunk(chunk: string) {
-  state = {
+  commit({
     ...state,
     status: "streaming",
+    lastError: undefined,
     streamingText: `${state.streamingText}${chunk}`,
-  };
-  emit();
+  });
 }
 
 export function finishStreaming() {
   if (state.streamingText.trim().length > 0) {
-    state = {
+    commit({
       ...state,
       messages: [...state.messages, { id: makeId(), role: "assistant", text: state.streamingText }],
       streamingText: "",
       status: "idle",
-    };
+      lastError: undefined,
+    });
   } else {
-    state = { ...state, status: "idle" };
+    commit({ ...state, status: "idle", lastError: undefined });
   }
-  emit();
+}
+
+export function failLlm(error: string) {
+  commit({ ...state, status: "error", lastError: error, streamingText: "" });
+}
+
+export function cancelLlm() {
+  commit({ ...state, status: "idle", lastError: undefined, streamingText: "" });
+}
+
+export function isLlmActiveStatus(status: LlmStatus) {
+  return status === "waiting" || status === "streaming";
 }

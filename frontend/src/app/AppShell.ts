@@ -6,9 +6,10 @@ import { ShowBuilderView } from "../features/show_builder/ShowBuilderView.ts";
 import { DmxControlView } from "../features/dmx_control/DmxControlView.ts";
 import { ShowControlView } from "../features/show_control/ShowControlView.ts";
 import { getBackendStore, subscribeBackendStore } from "../shared/state/backend_state.ts";
-import { getLlmState, subscribeLlmState } from "../features/llm_chat/llm_state.ts";
+import { getLlmState, isLlmActiveStatus, subscribeLlmState } from "../features/llm_chat/llm_state.ts";
 import { refreshSongPlayer } from "../shared/components/song_player/SongPlayer.ts";
 import { selectFixtureVms } from "../features/dmx_control/fixture_selectors.ts";
+import { selectEditLock } from "../shared/state/selectors.ts";
 
 type FixtureList = ReturnType<typeof selectFixtureVms>;
 
@@ -43,6 +44,7 @@ export function mountAppShell(root: HTMLElement) {
 	main.appendChild(currentMain.root);
 	let right = RightPanel();
 	let lastSongKey = getBackendStore().state.song?.filename ?? "";
+	let previousEditLock = selectEditLock();
 
 	layout.append(sidebar, main, right);
 	root.appendChild(layout);
@@ -66,6 +68,32 @@ export function mountAppShell(root: HTMLElement) {
 		(right as unknown as { _cleanup?: () => void })._cleanup?.();
 		layout.replaceChild(nextRight, right);
 		right = nextRight;
+		syncInteractionLocks();
+	};
+
+	const syncInteractionLocks = () => {
+		const llmActive = isLlmActiveStatus(getLlmState().status);
+		const showLocked = selectEditLock() === true;
+
+		layout.dataset.llmLocked = llmActive ? "true" : "false";
+		layout.dataset.showLocked = showLocked ? "true" : "false";
+		sidebar.inert = llmActive;
+		main.inert = llmActive;
+
+		const statusCard = right.querySelector<HTMLElement>(".status-card");
+		if (statusCard) {
+			statusCard.inert = llmActive;
+		}
+
+		const llmCard = right.querySelector<HTMLElement>(".llm-card");
+		if (llmCard) {
+			llmCard.inert = showLocked;
+			if (showLocked) {
+				llmCard.setAttribute("aria-disabled", "true");
+			} else {
+				llmCard.removeAttribute("aria-disabled");
+			}
+		}
 	};
 
 	subscribeUiState(() => {
@@ -77,6 +105,7 @@ export function mountAppShell(root: HTMLElement) {
 		const route = getUiState().route;
 		const songKey = getBackendStore().state.song?.filename ?? "";
 		const songChanged = songKey !== lastSongKey;
+		const nextEditLock = selectEditLock();
 		lastSongKey = songKey;
 
 		if (route === "dmx_control") {
@@ -90,12 +119,19 @@ export function mountAppShell(root: HTMLElement) {
 			replaceMain(renderMain());
 		}
 
+		if (nextEditLock !== previousEditLock) {
+			renderRight();
+		}
+
 		refreshSongPlayer();
+		syncInteractionLocks();
+		previousEditLock = nextEditLock;
 	});
 
 	let previousLlmStatus = getLlmState().status;
 	const focusPromptInput = () => {
 		requestAnimationFrame(() => {
+			if (selectEditLock() === true) return;
 			const input = right.querySelector<HTMLTextAreaElement>(".prompt-input");
 			if (!input) return;
 			input.focus({ preventScroll: true });
@@ -110,9 +146,10 @@ export function mountAppShell(root: HTMLElement) {
 			document.activeElement.classList.contains("prompt-input");
 		const nextLlmStatus = getLlmState().status;
 		const interactionFinished =
-			previousLlmStatus === "streaming" && (nextLlmStatus === "idle" || nextLlmStatus === "error");
+			isLlmActiveStatus(previousLlmStatus) && (nextLlmStatus === "idle" || nextLlmStatus === "error");
 
 		renderRight();
+		syncInteractionLocks();
 
 		if (hadPromptFocus || interactionFinished) {
 			focusPromptInput();
@@ -120,4 +157,6 @@ export function mountAppShell(root: HTMLElement) {
 
 		previousLlmStatus = nextLlmStatus;
 	});
+
+	syncInteractionLocks();
 }

@@ -1,0 +1,2 @@
+Answer directly and keep the response grounded in the current lighting workflow.
+If you suggest edits or cues, prefer concrete steps, timings, or fixture-oriented reasoning over general advice.

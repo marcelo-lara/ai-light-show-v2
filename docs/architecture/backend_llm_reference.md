@@ -161,8 +161,8 @@ Notes on `fixture.set_values`:
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `llm.send_prompt` | `prompt` | emits `llm_stream` chunks (`Echo: ` + prompt) | `False` (no patch broadcast) |
-| `llm.cancel` | none | emits `llm_cancelled` | `False` |
+| `llm.send_prompt` | `prompt` | rejects while playback is active; otherwise starts one background stream against direct llama.cpp and emits incremental `llm_stream` chunks from the upstream response | `False` (no patch broadcast) |
+| `llm.cancel` | none | cancels the active upstream LLM stream if one exists, then emits `llm_cancelled`; otherwise emits `llm_cancel_ignored` | `False` |
 
 ## Event message catalog
 
@@ -185,8 +185,11 @@ Notes on `fixture.set_values`:
 | `info` | `chaser_preview_stopped` | `{}` |
 | `warning` | `chaser_preview_stop_ignored` | `{reason:"preview_not_active"}` |
 | `error` | `prompt_required` | none |
+| `warning` | `llm_rejected` | `{domain:"llm", reason:"show_running"}` |
 | `info` | `llm_stream` | `{domain:"llm", chunk, done}` |
 | `info` | `llm_cancelled` | `{domain:"llm"}` |
+| `warning` | `llm_cancel_ignored` | `{domain:"llm", reason:"not_active"}` |
+| `error` | `llm_failed` | `{domain:"llm", error}` |
 | `error` | `cue_add_failed` | `{reason, fixture_id?, effect?, supported?}` |
 | `info` | `cue_added` | `{ok, entry}` |
 | `error` | `cue_update_failed` | `{reason}` |
