@@ -290,7 +290,7 @@ Patch behavior during playback:
 | `move_to` | pan/tilt targets (`pan`/`tilt` u16 or axis byte variants/preset) | interpolates pan/tilt across cue duration |
 | `move_to_poi` | `target_POI` (also accepts `poi` or `POI`) | interpolates toward POI target for this fixture |
 | `seek` | same target parsing as `move_to` | instant pan/tilt set at start frame |
-| `strobe` | optional `rate` (Hz) | toggles shutter/dimmer channel |
+| `strobe` | optional `rate` (Hz) | toggles dimmer only; dedicated fixture `strobe`/`shutter` channels are left unchanged |
 | `full` | none | instant full-on dimmer (+ shutter if available) |
 | `flash` | none | fades dimmer from 255 to 0 over duration |
 | `fade_in` | optional `dim`/`dimmer`/`intensity` target | interpolates intensity from current value to target and opens shutter when present |
