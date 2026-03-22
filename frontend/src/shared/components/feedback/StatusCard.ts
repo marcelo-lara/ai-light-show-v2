@@ -2,15 +2,17 @@ import { selectArmedCount, selectEditLock, selectPlayback, selectShowState } fro
 import { formatTimeMs } from "../../utils/format.ts";
 import { Card } from "../layout/Card.ts";
 import { Badge } from "./Badge.ts";
-import { getBackendStore } from "../../state/backend_state.ts";
+import { getBackendStore, subscribeBackendStore } from "../../state/backend_state.ts";
 import { getThemeModel } from "./ThemeSelector.ts";
+import { subscribeTheme } from "../../state/theme_state.ts";
+import { getWsState, subscribeWsState } from "../../state/ws_state.ts";
 
 /**
  * Render-only module.
  * Implement actual UIX view code where appropriate; for now this provides a stable model.
  */
 export function getStatusModel() {
-  const wsState = ((globalThis as any).__WS_STATE__ ?? "disconnected") as string;
+  const wsState = getWsState();
 
   const showState = selectShowState(); // verbatim from backend or "unknown"
   const playback = selectPlayback();
@@ -36,18 +38,32 @@ export function getStatusModel() {
 }
 
 export function StatusCard(): HTMLElement {
-  const model = getStatusModel();
-
   const content = document.createElement("div");
   content.className = "status-grid";
 
-  content.appendChild(row("Show", Badge(cap(model.show), showTone(model.show))));
-  content.appendChild(row("WS", Badge(model.ws, wsTone(model.ws))));
-  content.appendChild(row("Playback", Badge(`${cap(model.playback.state)} @ ${model.playback.time}`, playbackTone(model.playback.state))));
-  content.appendChild(row("Sync", Badge(model.stale ? "Stale" : "Connected", model.stale ? "warn" : "ok")));
-  content.appendChild(row("Edits", Badge(cap(model.edits), model.edits === "locked" ? "warn" : "ok")));
-  content.appendChild(row("LLM", Badge(cap(model.llm), llmTone(model.llm))));
-  content.appendChild(row("ARM", Badge(model.arm, "default")));
+  const showBadge = Badge("", "default");
+  const wsBadge = Badge("", "default");
+  const playbackBadge = Badge("", "default");
+  const syncBadge = Badge("", "default");
+  const editsBadge = Badge("", "default");
+  const llmBadge = Badge("", "default");
+  const armBadge = Badge("", "default");
+
+  const showRow = row("Show", showBadge);
+  const wsRow = row("WS", wsBadge);
+  const playbackRow = row("Playback", playbackBadge);
+  const syncRow = row("Sync", syncBadge);
+  const editsRow = row("Edits", editsBadge);
+  const llmRow = row("LLM", llmBadge);
+  const armRow = row("ARM", armBadge);
+
+  content.appendChild(showRow);
+  content.appendChild(wsRow);
+  content.appendChild(playbackRow);
+  content.appendChild(syncRow);
+  content.appendChild(editsRow);
+  content.appendChild(llmRow);
+  content.appendChild(armRow);
 
   const themeRow = document.createElement("label");
   themeRow.className = "status-row status-row-theme";
@@ -67,7 +83,42 @@ export function StatusCard(): HTMLElement {
   themeRow.append(themeText, themeSelect);
   content.appendChild(themeRow);
 
-  return Card(content, { className: "status-card" });
+  const render = () => {
+    const model = getStatusModel();
+    const show = getShowState(model.ws, model.show);
+    const playback = getPlaybackState(model.ws, model.playback.state, model.playback.time);
+    const sync = getSyncState(model.ws, model.stale);
+    const disconnected = model.ws === "disconnected";
+
+    showRow.hidden = disconnected;
+    playbackRow.hidden = disconnected;
+    syncRow.hidden = disconnected;
+    editsRow.hidden = disconnected;
+    llmRow.hidden = disconnected;
+    armRow.hidden = disconnected;
+
+    setBadge(showBadge, show.label, show.tone);
+    setBadge(wsBadge, model.ws, wsTone(model.ws));
+    setBadge(playbackBadge, playback.label, playback.tone);
+    setBadge(syncBadge, sync.label, sync.tone);
+    setBadge(editsBadge, cap(model.edits), model.edits === "locked" ? "warn" : "ok");
+    setBadge(llmBadge, cap(model.llm), llmTone(model.llm));
+    setBadge(armBadge, model.arm, "default");
+    themeSelect.value = getThemeModel().current;
+  };
+
+  const unsubscribeBackend = subscribeBackendStore(render);
+  const unsubscribeWs = subscribeWsState(render);
+  const unsubscribeTheme = subscribeTheme(render);
+  render();
+
+  const card = Card(content, { className: "status-card" });
+  (card as unknown as { _cleanup: () => void })._cleanup = () => {
+    unsubscribeBackend();
+    unsubscribeWs();
+    unsubscribeTheme();
+  };
+  return card;
 }
 
 function row(label: string, value: HTMLElement): HTMLElement {
@@ -77,6 +128,37 @@ function row(label: string, value: HTMLElement): HTMLElement {
   left.textContent = label;
   wrapper.append(left, value);
   return wrapper;
+}
+
+function setBadge(node: HTMLElement, label: string, tone: "default" | "ok" | "warn" | "err") {
+  node.className = `badge ${tone}`;
+  node.textContent = label;
+}
+
+function getSyncState(ws: string, stale: boolean): { label: string; tone: "default" | "ok" | "warn" | "err" } {
+  if (ws === "disconnected") return { label: "Disconnected", tone: "err" };
+  if (ws === "connecting" || ws === "reconnecting") return { label: "Connecting", tone: "warn" };
+  if (stale) return { label: "Stale", tone: "warn" };
+  return { label: "Connected", tone: "ok" };
+}
+
+function getShowState(ws: string, show: string): { label: string; tone: "default" | "ok" | "warn" | "err" } {
+  if (ws === "disconnected") return { label: "Offline", tone: "err" };
+  if (ws === "connecting" || ws === "reconnecting") return { label: "Pending", tone: "warn" };
+  return { label: cap(show), tone: showTone(show) };
+}
+
+function getPlaybackState(
+  ws: string,
+  playbackState: string,
+  playbackTime: string,
+): { label: string; tone: "default" | "ok" | "warn" | "err" } {
+  if (ws === "disconnected") return { label: "Offline", tone: "err" };
+  if (ws === "connecting" || ws === "reconnecting") return { label: "Pending", tone: "warn" };
+  return {
+    label: `${cap(playbackState)} @ ${playbackTime}`,
+    tone: playbackTone(playbackState),
+  };
 }
 
 function wsTone(value: string) {

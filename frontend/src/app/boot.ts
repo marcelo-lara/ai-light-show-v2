@@ -1,5 +1,6 @@
 import { initBackendState, applyPatch, applySnapshot } from "../shared/state/backend_state.ts";
 import { initTheme } from "../shared/state/theme_state.ts";
+import { setWsState } from "../shared/state/ws_state.ts";
 import { WsClient } from "../shared/transport/ws_client.ts";
 import type { ConnectionState, WsInbound } from "../shared/transport/protocol.ts";
 import { addAssistantMessage, addSystemMessage, appendStreamingChunk, finishStreaming } from "../features/llm_chat/llm_state.ts";
@@ -49,6 +50,7 @@ export function boot(ctx: BootContext) {
   const ws = new WsClient(ctx.wsUrl, {
     onConnectionState: (s: ConnectionState) => {
       (globalThis as any).__WS_STATE__ = s;
+      setWsState(s);
     },
     onMessage: (m: WsInbound) => {
       console.log("WS Dispatching Message:", m.type, m);

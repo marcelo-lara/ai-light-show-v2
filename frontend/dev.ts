@@ -79,7 +79,10 @@ Deno.serve({ port: 5173 }, async (req) => {
     const js = await bundleClient();
     return new Response(js, {
       status: 200,
-      headers: { "content-type": "application/javascript; charset=utf-8" },
+      headers: {
+        "content-type": "application/javascript; charset=utf-8",
+        "cache-control": "no-store",
+      },
     });
   }
 
@@ -97,7 +100,10 @@ Deno.serve({ port: 5173 }, async (req) => {
   const html = renderDocument({ bootstrap });
   return new Response(html, {
     status: 200,
-    headers: { "content-type": "text/html; charset=utf-8" },
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store",
+    },
   });
 });
 
