@@ -35,6 +35,9 @@ async def test_fixture_loading(state_manager, workspace_root):
     assert mh.base_channel == 42
     assert "pan" in mh.meta_channels
     assert mh.meta_channels["pan"].kind == "u16"
+    assert mh.template.physical_movement is not None
+    assert mh.template.physical_movement.pan_full_travel_seconds == 2.0
+    assert mh.template.physical_movement.tilt_full_travel_seconds == 0.9
     
     # Verify absolute channel calculation
     # dim is offset 5 for mini_beam_prism

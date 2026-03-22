@@ -6,7 +6,7 @@ from models.cues import CueEntry, CueSheet
 from models.fixtures.fixture import Fixture
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.services.canvas_debug import dump_canvas_debug
-from store.services.canvas_render_core import iter_cues_for_render, render_entry_into_universe
+from store.services.canvas_render_core import estimate_seek_preroll_seconds, estimate_sweep_preroll_seconds, iter_cues_for_render, render_entry_into_universe
 
 
 def render_cue_sheet_to_canvas(
@@ -25,7 +25,7 @@ def render_cue_sheet_to_canvas(
     base_universe = bytearray(DMX_CHANNELS)
     apply_arm(base_universe)
 
-    cues = iter_cues_for_render(cue_sheet, fps, chasers, bpm)
+    cues = iter_cues_for_render(cue_sheet, fixtures, fps, chasers, bpm)
     cues_by_start: Dict[int, List[Tuple[int, int, CueEntry]]] = {}
     for start, end, entry in cues:
         cues_by_start.setdefault(start, []).append((start, end, entry))
@@ -69,7 +69,22 @@ def render_preview_canvas(
     base_universe: bytearray,
     fps: int,
 ) -> DMXCanvas:
-    total_frames = max(1, int(math.ceil(float(duration) * fps)) + 1)
+    preview_data = dict(data or {})
+    preroll_frames = 0
+    if effect in {"sweep", "seek"}:
+        last_position = None
+        if hasattr(fixture, "_read_axis_u16_from_universe"):
+            last_pan = fixture._read_axis_u16_from_universe(base_universe, "pan")
+            last_tilt = fixture._read_axis_u16_from_universe(base_universe, "tilt")
+            if last_pan is not None and last_tilt is not None:
+                last_position = (int(last_pan), int(last_tilt))
+        preroll_seconds = estimate_sweep_preroll_seconds(fixture, preview_data, last_position) if effect == "sweep" else estimate_seek_preroll_seconds(fixture, preview_data, last_position)
+        preroll_frames = max(0, int(round(preroll_seconds * fps)))
+        if preroll_frames > 0:
+            preview_data["__sweep_preroll_frames" if effect == "sweep" else "__seek_preroll_frames"] = preroll_frames
+
+    visible_frames = max(1, int(math.ceil(float(duration) * fps)) + 1)
+    total_frames = preroll_frames + visible_frames
     canvas = DMXCanvas.allocate(fps=fps, total_frames=total_frames)
     universe = bytearray(base_universe)
     render_state: Dict[str, Any] = {}
@@ -83,7 +98,7 @@ def render_preview_canvas(
             start_frame=0,
             end_frame=end_frame,
             fps=fps,
-            data=data,
+            data=preview_data,
             render_state=render_state,
         )
         canvas.set_frame(frame_index, universe)

@@ -102,15 +102,14 @@ class ArtNetService:
         dmx_hex = '.'.join(f"{value:02X}" for value in universe_bytes)
         line = f"[{timestamp:.3f}] artnet dmx {dmx_hex}\n"
 
-        if self.debug_file_path is None:
-            print(line, end="")
-            return
+        print(line, end="")
 
-        try:
-            with self.debug_file_path.open("a", encoding="utf-8") as debug_file:
-                debug_file.write(line)
-        except Exception as e:
-            print(f"Art-Net debug write error: {e}")
+        if self.debug_file_path is not None:
+            try:
+                with self.debug_file_path.open("a", encoding="utf-8") as debug_file:
+                    debug_file.write(line)
+            except Exception as e:
+                print(f"Art-Net debug write error: {e}")
 
     async def set_channel(self, channel: int, value: int):
         if 1 <= channel <= DMX_CHANNELS and 0 <= value <= 255:

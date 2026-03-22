@@ -38,6 +38,7 @@ Code is the source of truth.
 - Maintains active DMX universe.
 - Sends Art-Net packets on loop.
 - Sends only on change unless `continuous_send=True`.
+- Prints DMX payload bytes to stdout and to a file if `DEBUG_FILE` is set when `DEBUG_MODE` is truthy.
 
 ## Behavior-critical modules and symbols
 
@@ -286,20 +287,19 @@ Patch behavior during playback:
 
 | Effect | Required/expected `data` keys | Behavior |
 | --- | --- | --- |
-| `set_channels` | `channels` object | instant write at start frame |
 | `move_to` | pan/tilt targets (`pan`/`tilt` u16 or axis byte variants/preset) | interpolates pan/tilt across cue duration |
 | `move_to_poi` | `target_POI` (also accepts `poi` or `POI`) | interpolates toward POI target for this fixture |
-| `seek` | same target parsing as `move_to` | instant pan/tilt set at start frame |
-| `strobe` | optional `rate` (Hz) | toggles shutter/dimmer channel |
+| `seek` | required `subject_POI`, `start_POI`; optional `orbits`, `easing` | schedules dark pre-roll to `start_POI` from the last known pan/tilt using fixture-template `physical_movement` timing, then circles around `subject_POI` and spirals into the subject by cue end while limiting per-frame pan/tilt changes to the fixture's maximum physical travel; recommended easing is `late_focus`, with `balanced`, `linear`, and `early_focus` also supported |
+| `strobe` | optional `rate` (Hz) | toggles dimmer only; dedicated fixture `strobe`/`shutter` channels are left unchanged |
 | `full` | none | instant full-on dimmer (+ shutter if available) |
 | `flash` | none | fades dimmer from 255 to 0 over duration |
-| `sweep` | required `subject_POI`, `start_POI`; optional `end_POI`, `duration`, `easing`, `arc_strength`, `subject_close_ratio`, `max_dim` | two-leg arc sweep with dimmer shaping around subject POI |
+| `fade_in` | optional `dim`/`dimmer`/`intensity` target | interpolates intensity from current value to target and opens shutter when present |
+| `sweep` | required `subject_POI`, `start_POI`; optional `end_POI`, `duration`, `easing`, `dimmer_easing`, `arc_strength`, `max_dim` | computes a dark pre-roll from the last known pan/tilt to `start_POI` using fixture-template `physical_movement` pan/tilt full-range timing plus an extra `100 ms` safety pre-roll, holds at `start_POI` for `100 ms`, then runs a two-leg arc sweep with cubic ease-out into the subject, cubic ease-in away from it, mirrored dimmer timing, and per-frame pan/tilt clamping to the fixture's maximum physical travel; `max_dim` is reached when the actual pan/tilt land on the subject POI |
 
 ### Parcan effects
 
 | Effect | Required/expected `data` keys | Behavior |
 | --- | --- | --- |
-| `set_channels` | `channels` object | instant write at start frame |
 | `flash` | optional `channels` list | fades selected channels (default RGB) |
 | `strobe` | optional `rate` or `speed` | toggles RGB between cached "on" color and off |
 | `fade_in` | any of `red`, `green`, `blue` | interpolates from current RGB to targets |
@@ -318,8 +318,14 @@ Use this exact command after state-manager edits:
 ```bash
 PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
   tests/test_set_values_regression.py \
-  tests/test_preview_lifecycle_regression.py \
-  tests/test_metadata_sections_regression.py \
+  tests/test_song_sections_payload_schema.py \
+  tests/test_song_analysis_payload_chords.py \
+  tests/test_jump_to_section_regression.py \
+  tests/test_chaser_timing.py \
+  tests/test_chaser_preview_lifecycle.py \
+  tests/test_chaser_intents.py \
+  tests/test_fixture_effect_preview_matrix.py \
+  tests/test_fixture_effect_canvas_matrix.py \
   tests/test_dmx_canvas_render_new.py \
   tests/test_fixture_loading_new.py \
   tests/test_payload.py
@@ -328,7 +334,12 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 If you changed websocket behavior, additionally run:
 
 ```bash
-PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
+  tests/test_ws_transport_jump_to_section_e2e.py \
+  tests/test_ws_poi_e2e.py \
+  tests/test_ws_cue_e2e.py \
+  tests/test_ws_chaser_e2e.py \
+  tests/test_ws_chaser_preview_e2e.py
 ```
 
 ## LLM Change Matrix
@@ -337,12 +348,15 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tes
 | --- | --- | --- |
 | State bootstrap fields or shared state flags | `backend/store/state_manager/core/bootstrap.py` | state-manager validation command above |
 | Fixture load/save, arm defaults, POI fixture target persistence | `backend/store/state_manager/core/fixture_store.py`, `backend/store/state_manager/core/fixture_effects.py` | state-manager validation command above |
-| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | state-manager validation command above + `tests/test_metadata_sections_regression.py` |
+| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | state-manager validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
 | Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | state-manager validation command above |
+| Fixture effect contracts or preview support | `backend/models/fixtures/**/*`, `backend/store/state_manager/core/fixture_effects.py`, `backend/store/state_manager/playback/preview_start.py` | state-manager validation command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | state-manager validation command above |
-| Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | state-manager validation command above |
-| Preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_start.py`, `backend/store/state_manager/playback/preview_control.py`, `backend/store/state_manager/playback/preview_runner.py` | state-manager validation command above + `tests/test_preview_lifecycle_regression.py` |
+| Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | state-manager validation command above + `tests/test_ws_transport_jump_to_section_e2e.py` |
+| Chaser preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_chaser.py` | state-manager validation command above + `tests/test_chaser_preview_lifecycle.py` |
 | Fixture live value write behavior | `backend/api/intents/fixture/actions/set_values.py`, `backend/store/state_manager/playback/channels.py` | state-manager validation command above + `tests/test_set_values_regression.py` |
 | Snapshot or patch payload schema | `backend/api/state/*`, `backend/api/websocket_manager/broadcasting.py` | `tests/test_payload.py` |
-| Websocket intent/message behavior | `backend/api/websocket_manager/*`, `backend/api/intents/*` | `PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py` |
+| Chaser timing, lifecycle, or handler behavior | `backend/store/state_manager/playback/*`, `backend/api/intents/chaser/*`, `backend/services/cue_helpers/*` | state-manager validation command above + websocket validation command above |
+| Cue intent or persistence behavior | `backend/api/intents/cue/*`, `backend/store/state_manager/song/cues.py` | state-manager validation command above + `tests/test_cue_add.py` + `tests/test_cue_clear.py` + `tests/test_cue_intents.py` + `tests/test_ws_cue_e2e.py` |
+| Websocket intent/message behavior | `backend/api/websocket_manager/*`, `backend/api/intents/*` | websocket validation command above |
 | Import path or module composition for state manager | `backend/store/state.py`, `backend/store/state_manager/manager.py` | state-manager validation command above |

@@ -1,0 +1,189 @@
+import math
+from types import SimpleNamespace
+
+import pytest
+
+from backend.models.cues import CueSheet
+from backend.models.fixtures.moving_heads.seek_helpers import spiral_seek_position
+from tests.fixture_effect_matrix import EFFECT_START_S, FIXTURES_PATH, POIS, build_state_manager
+
+SETTLE_FRAMES = 6
+
+
+async def _render_seek(data: dict, *, fixture_id: str = "head_el150"):
+    state_manager = build_state_manager()
+    await state_manager.load_fixtures(FIXTURES_PATH)
+    state_manager.current_song = SimpleNamespace(song_id="seek_effect", meta=SimpleNamespace(bpm=120.0))
+    state_manager.poi_db.pois = POIS
+    fixture = next(item for item in state_manager.fixtures if item.id == fixture_id)
+    initial_pan = data.pop("__initial_pan", None)
+    initial_tilt = data.pop("__initial_tilt", None)
+    initial_dim = data.pop("__initial_dim", None)
+    setup_full = bool(data.pop("__setup_full", False))
+    if initial_pan is not None and initial_tilt is not None:
+        fixture.current_values["pan"] = int(initial_pan)
+        fixture.current_values["tilt"] = int(initial_tilt)
+    if initial_dim is not None and "dim" in fixture.absolute_channels:
+        state_manager.editor_universe[fixture.absolute_channels["dim"] - 1] = int(initial_dim)
+    entries = []
+    if setup_full:
+        entries.append({"time": 0.0, "fixture_id": fixture_id, "effect": "full", "duration": 0.25, "data": {}})
+    entries.append({"time": EFFECT_START_S, "fixture_id": fixture_id, "effect": "seek", "duration": 1.0, "data": data})
+    state_manager.cue_sheet = CueSheet(
+        song_filename="seek_effect",
+        entries=entries,
+    )
+    state_manager.song_length_seconds = EFFECT_START_S + 1.5
+    canvas = state_manager._render_cue_sheet_to_canvas()
+    return canvas, fixture, int(EFFECT_START_S * canvas.fps)
+
+
+def _u16(frame, fixture, axis: str) -> int:
+    msb_index = fixture.absolute_channels[f"{axis}_msb"] - 1
+    lsb_index = fixture.absolute_channels[f"{axis}_lsb"] - 1
+    return (frame[msb_index] << 8) | frame[lsb_index]
+
+
+def _u8(frame, fixture, channel: str) -> int:
+    return int(frame[fixture.absolute_channels[channel] - 1])
+
+
+@pytest.mark.asyncio
+async def test_seek_orbits_around_subject_then_lands_on_it():
+    canvas, fixture, start_frame = await _render_seek({"subject_POI": "subject", "start_POI": "start", "orbits": 1.0, "easing": "linear"})
+    start = canvas.frame_view(start_frame)
+    quarter = canvas.frame_view(start_frame + 15)
+    end = canvas.frame_view(start_frame + 60)
+    quarter_linear_pan = round(6000 + ((30000 - 6000) * 0.25))
+    quarter_linear_tilt = round(10000 + ((36000 - 10000) * 0.25))
+
+    assert _u16(start, fixture, "pan") == 6000
+    assert _u16(start, fixture, "tilt") == 10000
+    assert _u16(end, fixture, "pan") == 30000
+    assert _u16(end, fixture, "tilt") == 36000
+    assert _u16(quarter, fixture, "pan") != quarter_linear_pan
+    assert _u16(quarter, fixture, "tilt") != quarter_linear_tilt
+
+
+def test_seek_easing_controls_how_late_the_spiral_tightens():
+    def radius(pan: int, tilt: int) -> float:
+        return math.hypot(pan - 30000, tilt - 36000)
+
+    late_pan, late_tilt = spiral_seek_position(
+        start_pan=6000,
+        start_tilt=10000,
+        subject_pan=30000,
+        subject_tilt=36000,
+        progress=0.5,
+        orbits=1.0,
+        easing="late_focus",
+    )
+    linear_pan, linear_tilt = spiral_seek_position(
+        start_pan=6000,
+        start_tilt=10000,
+        subject_pan=30000,
+        subject_tilt=36000,
+        progress=0.5,
+        orbits=1.0,
+        easing="linear",
+    )
+    early_pan, early_tilt = spiral_seek_position(
+        start_pan=6000,
+        start_tilt=10000,
+        subject_pan=30000,
+        subject_tilt=36000,
+        progress=0.5,
+        orbits=1.0,
+        easing="early_focus",
+    )
+
+    assert radius(late_pan, late_tilt) > radius(linear_pan, linear_tilt) > radius(early_pan, early_tilt)
+
+
+@pytest.mark.asyncio
+async def test_seek_prerolls_dark_to_start_poi_before_visible_motion():
+    canvas, fixture, start_frame = await _render_seek(
+        {
+            "subject_POI": "subject",
+            "start_POI": "start",
+            "orbits": 1.0,
+            "easing": "late_focus",
+            "__initial_pan": 0,
+            "__initial_tilt": 0,
+            "__setup_full": True,
+        },
+        fixture_id="mini_beam_prism_l",
+    )
+
+    for frame_index in range(start_frame - SETTLE_FRAMES, start_frame):
+        frame = canvas.frame_view(frame_index)
+        assert _u16(frame, fixture, "pan") == 4000
+        assert _u16(frame, fixture, "tilt") == 8000
+        assert _u8(frame, fixture, "dim") == 0
+
+    visible_start = canvas.frame_view(start_frame)
+    assert _u8(visible_start, fixture, "dim") == 255
+
+
+@pytest.mark.asyncio
+async def test_seek_respects_max_travel_per_frame_for_physical_profile():
+    canvas, fixture, start_frame = await _render_seek(
+        {
+            "subject_POI": "subject",
+            "start_POI": "start",
+            "orbits": 2.0,
+            "easing": "late_focus",
+            "__initial_pan": 0,
+            "__initial_tilt": 0,
+        },
+        fixture_id="mini_beam_prism_l",
+    )
+
+    max_pan_step = math.ceil(65535.0 / (2.0 * canvas.fps))
+    max_tilt_step = math.ceil(65535.0 / (0.9 * canvas.fps))
+    previous = canvas.frame_view(start_frame)
+    for frame_index in range(start_frame + 1, start_frame + 61):
+        current = canvas.frame_view(frame_index)
+        assert abs(_u16(current, fixture, "pan") - _u16(previous, fixture, "pan")) <= max_pan_step
+        assert abs(_u16(current, fixture, "tilt") - _u16(previous, fixture, "tilt")) <= max_tilt_step
+        previous = current
+
+
+@pytest.mark.asyncio
+async def test_seek_preview_prerolls_from_last_position():
+    state_manager = build_state_manager()
+    await state_manager.load_fixtures(FIXTURES_PATH)
+    state_manager.current_song = SimpleNamespace(song_id="seek_preview", meta=SimpleNamespace(bpm=120.0))
+    state_manager.poi_db.pois = POIS
+    fixture = next(item for item in state_manager.fixtures if item.id == "mini_beam_prism_l")
+    fixture.current_values["pan"] = 0
+    fixture.current_values["tilt"] = 0
+    fixture._write_axis_u16_to_universe(state_manager.editor_universe, "pan", 0)
+    fixture._write_axis_u16_to_universe(state_manager.editor_universe, "tilt", 0)
+    state_manager.editor_universe[fixture.absolute_channels["dim"] - 1] = 180
+
+    started = await state_manager.start_preview_effect(
+        fixture_id="mini_beam_prism_l",
+        effect="seek",
+        duration=1.0,
+        data={"subject_POI": "subject", "start_POI": "start", "orbits": 1.0, "easing": "late_focus"},
+        request_id="seek-preview-preroll",
+    )
+
+    assert started["ok"] is True
+    assert state_manager.preview_canvas is not None
+    assert state_manager.preview_canvas.total_frames > 61
+    visible_start_frame = state_manager.preview_canvas.total_frames - 61
+
+    for frame_index in range(visible_start_frame - SETTLE_FRAMES, visible_start_frame):
+        frame = state_manager.preview_canvas.frame_view(frame_index)
+        assert _u16(frame, fixture, "pan") == 4000
+        assert _u16(frame, fixture, "tilt") == 8000
+        assert _u8(frame, fixture, "dim") == 0
+
+    visible_start = state_manager.preview_canvas.frame_view(visible_start_frame)
+    subject_end = state_manager.preview_canvas.frame_view(state_manager.preview_canvas.total_frames - 1)
+    assert _u8(visible_start, fixture, "dim") == 180
+    assert math.hypot(_u16(subject_end, fixture, "pan") - 30000, _u16(subject_end, fixture, "tilt") - 36000) < math.hypot(4000 - 30000, 8000 - 36000)
+
+    await state_manager.wait_for_preview_end(started["requestId"])

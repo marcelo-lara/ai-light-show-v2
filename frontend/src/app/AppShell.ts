@@ -63,6 +63,7 @@ export function mountAppShell(root: HTMLElement) {
 
 	const renderRight = () => {
 		const nextRight = RightPanel();
+		(right as unknown as { _cleanup?: () => void })._cleanup?.();
 		layout.replaceChild(nextRight, right);
 		right = nextRight;
 	};

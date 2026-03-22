@@ -18,6 +18,11 @@ class MetaChannel(BaseModel):
     hidden: Optional[bool] = False
 
 
+class PhysicalMovementProfile(BaseModel):
+    pan_full_travel_seconds: Optional[float] = None
+    tilt_full_travel_seconds: Optional[float] = None
+
+
 class FixtureTemplate(BaseModel):
     id: str
     type: str
@@ -25,3 +30,4 @@ class FixtureTemplate(BaseModel):
     effects: List[str] = []
     meta_channels: Dict[str, MetaChannel]
     mappings: Dict[str, Dict[str, Union[int, str]]] = {}
+    physical_movement: Optional[PhysicalMovementProfile] = None

@@ -1,15 +1,15 @@
 from typing import Any, Dict
 
 from .sweep_helpers import (
-    apply_time_easing,
+    apply_dimmer_envelope,
+    apply_leg_easing,
     circular_lerp_u16,
     clamp_byte,
     find_intensity_channel_key,
-    invert_easing_for_dimmer,
     max_dim_to_byte,
     parse_float,
-    subject_closeness_factor,
 )
+from .travel_helpers import EFFECT_SETTLE_SECONDS, limit_axis_step, max_axis_step_per_frame
 
 
 def handle(
@@ -49,19 +49,46 @@ def handle(
     if duration_seconds <= 0.0:
         duration_seconds = max(1.0 / max(1, fps), (end_frame - start_frame) / float(max(1, fps)))
 
-    total_frames = max(1, int(round(duration_seconds * max(1, fps))))
-    progress = (frame_index - start_frame) / float(total_frames)
-    progress = max(0.0, min(1.0, progress))
+    preroll_frames = max(0, int((payload.get("__sweep_preroll_frames") or 0)))
+    settle_frames = min(max(0, int(round(EFFECT_SETTLE_SECONDS * max(1, fps)))), preroll_frames)
+    move_frames = max(0, preroll_frames - settle_frames)
+    visible_start_frame = start_frame + preroll_frames
+    visible_duration_frames = max(1, end_frame - visible_start_frame)
+    motion_progress = (frame_index - visible_start_frame) / float(visible_duration_frames)
+    motion_progress = max(0.0, min(1.0, motion_progress))
 
     easing_seconds = parse_float(payload.get("easing"), 0.0)
     arc_strength = parse_float(payload.get("arc_strength"), 0.015)
-    subject_close_ratio = parse_float(payload.get("subject_close_ratio"), 0.1)
-    eased_progress = apply_time_easing(progress, easing_seconds, duration_seconds)
-    dimmer_easing_seconds = invert_easing_for_dimmer(easing_seconds, duration_seconds)
-    dimmer_progress = apply_time_easing(progress, dimmer_easing_seconds, duration_seconds)
+    dimmer_easing = parse_float(payload.get("dimmer_easing"), 0.0)
+    visible_duration_seconds = max(1.0 / max(1, fps), visible_duration_frames / float(max(1, fps)))
+    leg_duration_seconds = visible_duration_seconds * 0.5
 
-    if eased_progress <= 0.5:
-        leg_progress = eased_progress * 2.0
+    if "sweep_initial_pan_u16" not in render_state or "sweep_initial_tilt_u16" not in render_state:
+        render_state["sweep_initial_pan_u16"] = int(fixture._read_axis_u16_from_universe(universe, "pan") or 0)
+        render_state["sweep_initial_tilt_u16"] = int(fixture._read_axis_u16_from_universe(universe, "tilt") or 0)
+    if "sweep_last_pan_u16" not in render_state or "sweep_last_tilt_u16" not in render_state:
+        render_state["sweep_last_pan_u16"] = int(render_state.get("sweep_initial_pan_u16", 0))
+        render_state["sweep_last_tilt_u16"] = int(render_state.get("sweep_initial_tilt_u16", 0))
+
+    initial_pan = int(render_state.get("sweep_initial_pan_u16", 0))
+    initial_tilt = int(render_state.get("sweep_initial_tilt_u16", 0))
+    last_pan = int(render_state.get("sweep_last_pan_u16", initial_pan))
+    last_tilt = int(render_state.get("sweep_last_tilt_u16", initial_tilt))
+    max_pan_step, max_tilt_step = max_axis_step_per_frame(fixture, fps)
+
+    if frame_index < start_frame + move_frames:
+        move_progress = (frame_index - start_frame) / float(max(1, move_frames))
+        target_pan = round(initial_pan + ((int(start_pan) - initial_pan) * move_progress))
+        target_tilt = round(initial_tilt + ((int(start_tilt) - initial_tilt) * move_progress))
+        pan_u16 = fixture._clamp_u16(limit_axis_step(last_pan, target_pan, max_pan_step))
+        tilt_u16 = fixture._clamp_u16(limit_axis_step(last_tilt, target_tilt, max_tilt_step))
+        dim_factor = 0.0
+    elif frame_index < visible_start_frame:
+        pan_u16 = fixture._clamp_u16(start_pan)
+        tilt_u16 = fixture._clamp_u16(start_tilt)
+        dim_factor = 0.0
+    elif motion_progress <= 0.5:
+        leg_progress = apply_leg_easing(motion_progress * 2.0, easing_seconds, leg_duration_seconds, ease_in=False)
         pan_next, tilt_next = circular_lerp_u16(
             start_pan=start_pan,
             start_tilt=start_tilt,
@@ -70,10 +97,11 @@ def handle(
             t=leg_progress,
             arc_strength=arc_strength,
         )
-        pan_u16 = fixture._clamp_u16(pan_next)
-        tilt_u16 = fixture._clamp_u16(tilt_next)
+        pan_u16 = fixture._clamp_u16(limit_axis_step(last_pan, pan_next, max_pan_step))
+        tilt_u16 = fixture._clamp_u16(limit_axis_step(last_tilt, tilt_next, max_tilt_step))
+        dim_factor = apply_dimmer_envelope(motion_progress, dimmer_easing)
     else:
-        leg_progress = (eased_progress - 0.5) * 2.0
+        leg_progress = apply_leg_easing((motion_progress - 0.5) * 2.0, easing_seconds, leg_duration_seconds, ease_in=True)
         pan_next, tilt_next = circular_lerp_u16(
             start_pan=subject_pan,
             start_tilt=subject_tilt,
@@ -82,30 +110,20 @@ def handle(
             t=leg_progress,
             arc_strength=arc_strength,
         )
-        pan_u16 = fixture._clamp_u16(pan_next)
-        tilt_u16 = fixture._clamp_u16(tilt_next)
+        pan_u16 = fixture._clamp_u16(limit_axis_step(last_pan, pan_next, max_pan_step))
+        tilt_u16 = fixture._clamp_u16(limit_axis_step(last_tilt, tilt_next, max_tilt_step))
+        dim_factor = apply_dimmer_envelope(motion_progress, dimmer_easing)
 
-    if dimmer_progress <= 0.5:
-        dim_factor = dimmer_progress * 2.0
-    else:
-        dim_factor = 1.0 - ((dimmer_progress - 0.5) * 2.0)
-
-    closeness = subject_closeness_factor(
-        current_pan=pan_u16,
-        current_tilt=tilt_u16,
-        subject_pan=subject_pan,
-        subject_tilt=subject_tilt,
-        approach_start_pan=start_pan,
-        approach_start_tilt=start_tilt,
-        close_ratio=subject_close_ratio,
-    )
-    dim_factor = dim_factor * closeness
+    if pan_u16 == subject_pan and tilt_u16 == subject_tilt:
+        dim_factor = 1.0
 
     max_dim_byte = max_dim_to_byte(payload.get("max_dim", 1.0))
     intensity = clamp_byte(round(max_dim_byte * max(0.0, min(1.0, dim_factor))))
 
     fixture._write_axis_u16_to_universe(universe, "pan", pan_u16)
     fixture._write_axis_u16_to_universe(universe, "tilt", tilt_u16)
+    render_state["sweep_last_pan_u16"] = int(pan_u16)
+    render_state["sweep_last_tilt_u16"] = int(tilt_u16)
 
     intensity_key = find_intensity_channel_key(fixture)
     if intensity_key:

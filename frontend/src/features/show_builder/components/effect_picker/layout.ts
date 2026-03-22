@@ -1,6 +1,6 @@
 import { Button } from "../../../../shared/components/controls/Button.ts";
 import { Dropdown, type DropdownControl } from "../../../../shared/components/controls/Dropdown.ts";
-import { Slider, type SliderControl } from "../../../../shared/components/controls/Slider.ts";
+import { Input, type InputControl } from "../../../../shared/components/controls/Input.ts";
 import { time_position } from "../time_position.ts";
 
 export type TopRowRefs = {
@@ -12,7 +12,7 @@ export type TopRowRefs = {
 
 export type MiddleRefs = {
 	root: HTMLElement;
-	durationSlider: SliderControl;
+	durationInput: InputControl;
 	paramFormContainer: HTMLElement;
 };
 
@@ -64,27 +64,31 @@ export function buildMiddle(initialDuration: number): MiddleRefs {
 	root.className = "effect-picker-middle";
 	const stack = document.createElement("div");
 	stack.className = "effect-picker-param-stack";
-	const durationSlider = Slider({
-		label: "Duration",
-		min: 0,
-		max: 20,
-		step: 0.1,
-		value: initialDuration,
-		className: "effect-picker-duration-input",
-		onInput: () => {},
+	const durationInput = Input({
+		caption: "Duration",
+		bindings: {
+			type: "number",
+			value: String(initialDuration),
+			min: 0,
+			max: 20,
+			step: 0.1,
+			inputMode: "decimal",
+			className: "effect-picker-duration-input",
+			attributes: { "aria-label": "Effect duration in seconds" },
+		},
 	});
 	const durationRow = document.createElement("div");
 	durationRow.className = "effect-picker-duration";
 	const durationLabel = document.createElement("span");
 	durationLabel.className = "effect-picker-param-name";
 	durationLabel.textContent = "duration";
-	durationRow.append(durationSlider.root, durationLabel);
+	durationRow.append(durationInput.root, durationLabel);
 	stack.appendChild(durationRow);
 	const paramFormContainer = document.createElement("div");
 	paramFormContainer.className = "effect-picker-params";
 	stack.appendChild(paramFormContainer);
 	root.appendChild(stack);
-	return { root, durationSlider, paramFormContainer };
+	return { root, durationInput, paramFormContainer };
 }
 
 export function buildActions(): ActionRefs {

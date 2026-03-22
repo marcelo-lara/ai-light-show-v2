@@ -92,12 +92,10 @@ docker compose down && docker compose up --build -d
 
 ## Art-Net debug mode
 
-- `ARTNET_DEBUG=1` enables frame logging.
-- `ARTNET_DEBUG_FILE=/path/to/artnet.log` writes logs to file.
+- `DEBUG_MODE=1` enables DMX frame logging to stdout when packets are sent.
 
 ```bash
-ARTNET_DEBUG=1 python backend/main.py
-ARTNET_DEBUG=1 ARTNET_DEBUG_FILE=./artnet-debug.log python backend/main.py
+DEBUG_MODE=1 python backend/main.py
 ```
 
 ## Cross-module change rule

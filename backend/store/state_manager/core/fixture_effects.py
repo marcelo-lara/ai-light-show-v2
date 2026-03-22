@@ -11,27 +11,9 @@ class StateCoreFixtureEffectsMixin:
         return next((fixture for fixture in self.fixtures if fixture.id == fixture_id), None)
 
     def _fixture_supported_effects(self, fixture: Fixture) -> set[str]:
-        runtime_effects = {
-            "moving_head": {
-                "set_channels",
-                "move_to",
-                "move_to_poi",
-                "seek",
-                "strobe",
-                "full",
-                "flash",
-                "sweep",
-            },
-            "parcan": {"set_channels", "flash", "strobe", "fade_in", "full"},
-            "rgb": {"set_channels", "flash", "strobe", "fade_in", "full"},
-        }.get((fixture.type or "").lower(), {"set_channels"})
-
-        declared = {
+        return {
             str(effect).strip().lower() for effect in (fixture.effects or []) if str(effect).strip()
         }
-        if not declared:
-            return runtime_effects
-        return runtime_effects.intersection(declared)
 
     def _set_channel(self, universe: bytearray, channel_1_based: int, value: int) -> None:
         if 1 <= channel_1_based <= DMX_CHANNELS:

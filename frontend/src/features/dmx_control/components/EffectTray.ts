@@ -1,10 +1,14 @@
 import { previewEffect } from "../fixture_intents.ts";
 import type { FixtureVM } from "../adapters/fixture_vm.ts";
+import { getBackendStore } from "../../../shared/state/backend_state.ts";
 import { Button } from "../../../shared/components/controls/Button.ts";
 import { Dropdown } from "../../../shared/components/controls/Dropdown.ts";
-import { Slider } from "../../../shared/components/controls/Slider.ts";
+import { Input } from "../../../shared/components/controls/Input.ts";
+import { ParamForm } from "../../show_builder/components/effect_params/ParamForm.ts";
+import { getDefaultParams } from "../../show_builder/components/effect_params/params_schema.ts";
 
 function effectOptions(fixture: FixtureVM): string[] {
+  if (fixture.supportedEffects.length > 0) return fixture.supportedEffects;
   if (fixture.hasPanTilt) return ["flash", "strobe", "full", "move_to", "move_to_poi", "seek", "sweep"];
   if (fixture.hasRgb) return ["flash", "strobe", "full", "fade_in"];
   return ["flash", "strobe", "full"];
@@ -18,46 +22,50 @@ export function EffectTray(fixture: FixtureVM): HTMLElement {
   topRow.className = "effect-tray-top";
 
   const effects = effectOptions(fixture);
+  let selectedEffect = effects[0] ?? "";
+  let params = getDefaultParams(selectedEffect, fixture.type);
   const effectControl = Dropdown({
-    value: effects[0] ?? "",
+    value: selectedEffect,
     options: effects.map((effect) => ({ value: effect, label: effect })),
     attributes: { "aria-label": "Preview effect" },
+    onChange: (value) => {
+      selectedEffect = value;
+      params = getDefaultParams(value, fixture.type);
+      renderParams();
+    },
   });
-  const durationControl = Slider({
-    label: "Duration",
-    min: 50,
-    max: 5000,
-    step: 50,
-    value: 1000,
-    className: "effect-duration",
-    onInput: () => {},
+  const durationControl = Input({
+    caption: "Duration",
+    bindings: {
+      type: "number",
+      value: "1000",
+      min: 50,
+      max: 5000,
+      step: 50,
+      inputMode: "numeric",
+      className: "effect-duration",
+      attributes: { "aria-label": "Effect duration in milliseconds" },
+    },
   });
 
   topRow.append(effectControl.root, durationControl.root);
 
   const paramsRow = document.createElement("div");
   paramsRow.className = "effect-params";
-  const fromControl = Slider({
-    label: "From",
-    min: 0,
-    max: 255,
-    step: 1,
-    value: 1,
-    className: "effect-param",
-    onInput: () => {},
-  });
 
-  const toControl = Slider({
-    label: "To",
-    min: 0,
-    max: 255,
-    step: 1,
-    value: 0,
-    className: "effect-param",
-    onInput: () => {},
-  });
+  const renderParams = () => {
+    paramsRow.replaceChildren(ParamForm({
+      effectName: selectedEffect,
+      fixtureType: fixture.type,
+      values: params,
+      pois: getBackendStore().state.pois ?? [],
+      onChange: (name, value) => {
+        params[name] = value;
+      },
+    }));
+  };
 
-  paramsRow.append(fromControl.root, toControl.root);
+  renderParams();
 
   const preview = Button({
     caption: "Preview",
@@ -65,13 +73,8 @@ export function EffectTray(fixture: FixtureVM): HTMLElement {
     bindings: {
       title: "Preview effect",
       onClick: () => {
-    const payload: Record<string, number> = {};
-    const from = Number(fromControl.input.value);
-    const to = Number(toControl.input.value);
-    if (Number.isFinite(from)) payload.from = from;
-    if (Number.isFinite(to)) payload.to = to;
-    const durationMs = Math.max(50, Number(durationControl.input.value) || 1000);
-    previewEffect(fixture.id, effectControl.select.value, durationMs, payload);
+        const durationMs = Math.max(50, Number(durationControl.input.value) || 1000);
+        previewEffect(fixture.id, selectedEffect, durationMs, params);
       },
     },
   });

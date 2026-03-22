@@ -214,25 +214,23 @@ button:disabled {
 .input-control {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: .5em;
   min-width: 0;
+  font-size: .8em;
 }
 
 label.toggle > span {
   display: inline-flex;
   align-items: center;
-  font-size: .8em;
 }
 
 .input-shell {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   min-width: 0;
-  border: 1px solid var(--border-strong);
   background: var(--card-2);
   color: var(--text);
-  padding: 8px 10px;
+  padding: .2em;
 }
 
 .is-input-active {

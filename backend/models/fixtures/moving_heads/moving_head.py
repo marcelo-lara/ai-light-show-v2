@@ -7,6 +7,7 @@ from .seek import handle as handle_seek
 from .strobe import handle as handle_strobe
 from .full import handle as handle_full
 from .flash import handle as handle_flash
+from .fade_in import handle as handle_fade_in
 from .sweep import handle as handle_sweep
 
 
@@ -219,6 +220,7 @@ class MovingHead(Fixture):
             "strobe": handle_strobe,
             "full": handle_full,
             "flash": handle_flash,
+            "fade_in": handle_fade_in,
             "sweep": handle_sweep,
         }
         handler = effect_handlers.get(effect)

@@ -74,6 +74,9 @@ Patch behavior:
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
+- Moving-head `strobe` is dimmer-driven only. Dedicated fixture `strobe` and `shutter` channels are not modulated by the effect handler.
+- Moving-head `seek` computes dark pre-roll from the previous pan/tilt position to `start_POI` using the fixture template `physical_movement` timing plus `100 ms` safety and `100 ms` settle time. During the visible effect it orbits around `subject_POI` from `start_POI`, spirals into the subject by cue end, and clamps per-frame pan/tilt moves to the fixture's maximum physical travel. `orbits` controls turn count, and `easing` controls how long the head stays wide before tightening: `late_focus` is the recommended default, `balanced` is neutral, `linear` is mechanical, and `early_focus` collapses quickly.
+- `sweep` schedules a dark pre-roll based on the fixture's previous pan/tilt position and the template's `physical_movement.pan_full_travel_seconds` / `physical_movement.tilt_full_travel_seconds` metadata, plus an extra `100 ms` safety pre-roll. During that pre-roll the head moves to `start_POI`, holds there dark for `100 ms`, then runs cubic ease-out into `subject_POI`, cubic ease-in away from the subject, and an independent mirrored dimmer envelope. Visible pan/tilt motion is also clamped per frame to the fixture's maximum physical travel, so short sweep durations can lag the ideal geometric path on slower fixtures. `dimmer_easing` is a normalized `0..1` control for how late fade-in begins before the subject, and `max_dim` is guaranteed when pan/tilt land on the subject POI.
 - Cue sheets store mixed entries:
   - effect row: `time`, `fixture_id`, `effect`, `duration`, `data`, `name`, `created_by`
   - chaser row: `time`, `chaser_id`, `data`, `name`, `created_by`
@@ -123,6 +126,12 @@ python main.py
 
 Default local URL: `http://localhost:5001`.
 
+## Runtime Environment
+
+- `DEBUG`: sets backend logger level (`DEBUG` when truthy, otherwise `INFO`).
+- `DEBUG_MODE`: when truthy, `ArtNetService` prints sent DMX channel payloads to stdout and to a file if `DEBUG_FILE` is set.
+- `DEBUG_FILE`: optional path to write Art-Net debug output to a file in addition to stdout.
+
 ## LLM Fast Map
 
 Use this map before editing backend runtime state:
@@ -137,11 +146,28 @@ Validation after editing `StateManager` paths:
 ```bash
 PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 	tests/test_set_values_regression.py \
-	tests/test_preview_lifecycle_regression.py \
-	tests/test_metadata_sections_regression.py \
+	tests/test_song_sections_payload_schema.py \
+	tests/test_song_analysis_payload_chords.py \
+	tests/test_jump_to_section_regression.py \
+	tests/test_chaser_timing.py \
+	tests/test_chaser_preview_lifecycle.py \
+	tests/test_chaser_intents.py \
+	tests/test_fixture_effect_preview_matrix.py \
+	tests/test_fixture_effect_canvas_matrix.py \
 	tests/test_dmx_canvas_render_new.py \
 	tests/test_fixture_loading_new.py \
 	tests/test_payload.py
+```
+
+For websocket/file-backed intent coverage, additionally run:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
+	tests/test_ws_transport_jump_to_section_e2e.py \
+	tests/test_ws_poi_e2e.py \
+	tests/test_ws_cue_e2e.py \
+	tests/test_ws_chaser_e2e.py \
+	tests/test_ws_chaser_preview_e2e.py
 ```
 
 ## LLM Change Matrix
@@ -152,14 +178,17 @@ Use this matrix to pick edit targets and minimum tests quickly:
 | --- | --- | --- |
 | State bootstrap fields or shared state flags | `store/state_manager/core/bootstrap.py` | state-manager regression command above |
 | Fixture load/save, arm defaults, POI fixture target persistence | `store/state_manager/core/fixture_store.py`, `store/state_manager/core/fixture_effects.py` | state-manager regression command above |
-| Song metadata length inference or metadata path resolution | `store/state_manager/core/metadata.py`, `store/services/song_metadata_loader.py` | state-manager regression command above + `tests/test_metadata_sections_regression.py` |
+| Song metadata length inference or metadata path resolution | `store/state_manager/core/metadata.py`, `store/services/song_metadata_loader.py` | state-manager regression command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
 | Cue-sheet-to-canvas render wiring or preview render wiring | `store/state_manager/core/render.py`, `store/services/canvas_rendering.py` | state-manager regression command above |
+| Fixture effect contracts or preview support | `models/fixtures/**/*`, `store/state_manager/core/fixture_effects.py`, `store/state_manager/playback/preview_start.py` | state-manager regression command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `store/state_manager/song/loading.py`, `store/state_manager/song/cues.py`, `store/state_manager/song/sections.py` | state-manager regression command above |
-| Playback transport or timecode/frame application | `store/state_manager/playback/transport.py` | state-manager regression command above |
-| Preview start/stop/runner behavior | `store/state_manager/playback/preview_start.py`, `store/state_manager/playback/preview_control.py`, `store/state_manager/playback/preview_runner.py` | state-manager regression command above + `tests/test_preview_lifecycle_regression.py` |
+| Playback transport or timecode/frame application | `store/state_manager/playback/transport.py` | state-manager regression command above + `tests/test_ws_transport_jump_to_section_e2e.py` |
+| Chaser preview start/stop/runner behavior | `store/state_manager/playback/preview_chaser.py` | state-manager regression command above + `tests/test_chaser_preview_lifecycle.py` |
 | Fixture live value write behavior | `api/intents/fixture/actions/set_values.py`, `store/state_manager/playback/channels.py` | state-manager regression command above + `tests/test_set_values_regression.py` |
 | Snapshot or patch payload schema | `api/state/*`, `api/websocket_manager/broadcasting.py` | `tests/test_payload.py` |
-| Websocket intent/message behavior | `api/websocket_manager/*`, `api/intents/*` | `PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q tests/test_ws_poi_e2e.py` |
+| Chaser timing, lifecycle, or handler behavior | `store/state_manager/playback/*`, `api/intents/chaser/*`, `services/cue_helpers/*` | state-manager regression command above + websocket/file-backed command above |
+| Cue intent or persistence behavior | `api/intents/cue/*`, `store/state_manager/song/cues.py` | state-manager regression command above + `tests/test_cue_add.py` + `tests/test_cue_clear.py` + `tests/test_cue_intents.py` + `tests/test_ws_cue_e2e.py` |
+| Websocket intent/message behavior | `api/websocket_manager/*`, `api/intents/*` | websocket/file-backed command above |
 | Import path or module composition for state manager | `store/state.py`, `store/state_manager/manager.py` | state-manager regression command above |
 
 ## LLM contributor checklist
