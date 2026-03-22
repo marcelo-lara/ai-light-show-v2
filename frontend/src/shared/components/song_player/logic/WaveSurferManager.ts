@@ -26,8 +26,8 @@ export class WaveSurferManager {
   private init() {
     this.waveSurfer = WaveSurfer.create({
       container: this.opts.container,
-      waveColor: "var(--accent)",
-      progressColor: "var(--accent-2)",
+      waveColor: "#999",//"var(--accent)",
+      progressColor: "#ddd",
       cursorColor: "var(--text)",
       height: 110,
       hideScrollbar: false,
