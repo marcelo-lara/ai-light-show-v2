@@ -32,9 +32,35 @@
   align-items: center;
 }
 
+.effect-tray-top .dropdown,
+.effect-tray-top .slider-row {
+  flex: 1 1 0;
+}
+
 .effect-params {
   display: flex;
+}
+
+.effect-params .param-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+}
+
+.effect-params .param-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.effect-params .param-field-range {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.effect-params .param-range {
+  flex: 1;
 }
 
 .rgb-preview {

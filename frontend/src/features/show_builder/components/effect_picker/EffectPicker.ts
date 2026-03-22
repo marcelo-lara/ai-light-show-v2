@@ -5,7 +5,7 @@ import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { addCue, updateCue } from "../../cue_intents.ts";
 import { isEffectCue } from "../../cue_utils.ts";
 import { getDefaultParams } from "../effect_params/params_schema.ts";
-import { formatTime, getFixtures, getPlaybackTimeMs } from "./selectors.ts";
+import { formatTime, getFixtureType, getFixtures, getPlaybackTimeMs } from "./selectors.ts";
 import { buildActions, buildMiddle, buildTopRow, createDivider } from "./layout.ts";
 import { applyEffectOptions, applyFixtureOptions, renderParamForm } from "./updates.ts";
 import type { PickerState } from "./types.ts";
@@ -26,7 +26,7 @@ export function EffectPicker(): HTMLElement {
 	};
 
 	const { root: topRoot, timeInput, fixtureDropdown, effectDropdown } = buildTopRow(formatTime(getPlaybackTimeMs()));
-	const { root: middleRoot, durationSlider, paramFormContainer } = buildMiddle(state.duration);
+	const { root: middleRoot, durationInput, paramFormContainer } = buildMiddle(state.duration);
 	const { root: actionsRoot, commitBtn, cancelBtn, previewBtn } = buildActions();
 
 	const refreshActionMode = () => {
@@ -51,7 +51,7 @@ export function EffectPicker(): HTMLElement {
 		state.effect = cue.effect;
 		effectDropdown.setValue(cue.effect);
 		state.duration = Number(cue.duration) || 0;
-		durationSlider.setValue(state.duration);
+		durationInput.setValue(String(state.duration));
 		state.params = { ...(cue.data ?? {}) };
 		renderParamForm(state, paramFormContainer);
 		refreshActionMode();
@@ -66,11 +66,11 @@ export function EffectPicker(): HTMLElement {
 	});
 	effectDropdown.select.addEventListener("change", () => {
 		state.effect = effectDropdown.select.value;
-		state.params = getDefaultParams(state.effect);
+		state.params = getDefaultParams(state.effect, getFixtureType(state.fixtureId));
 		renderParamForm(state, paramFormContainer);
 	});
-	durationSlider.input.addEventListener("input", () => {
-		state.duration = Math.max(0, Number(durationSlider.input.value));
+	durationInput.input.addEventListener("input", () => {
+		state.duration = Math.max(0, Number(durationInput.input.value));
 	});
 	commitBtn.addEventListener("click", () => {
 		if (!state.fixtureId || !state.effect) return;

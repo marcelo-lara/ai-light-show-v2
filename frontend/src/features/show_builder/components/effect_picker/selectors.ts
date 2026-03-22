@@ -9,6 +9,11 @@ export function getFixtures() {
 	return Object.values(getBackendStore().state.fixtures ?? {});
 }
 
+export function getFixtureType(fixtureId: string): string | undefined {
+	const fixtures = getBackendStore().state.fixtures ?? {};
+	return fixtures[fixtureId]?.type;
+}
+
 export function getPois() {
 	return getBackendStore().state.pois ?? [];
 }

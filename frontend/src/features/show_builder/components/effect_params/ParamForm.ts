@@ -6,6 +6,7 @@ import { getEffectSchema } from "./params_schema.ts";
 
 export type ParamFormProps = {
 	effectName: string;
+	fixtureType?: string;
 	values: Record<string, unknown>;
 	pois: Poi[];
 	onChange: (name: string, value: unknown) => void;
@@ -81,11 +82,11 @@ function createSelectInput(param: ParamDef, value: unknown, onChange: (v: string
 }
 
 export function ParamForm(props: ParamFormProps): HTMLElement {
-	const { effectName, values, pois, onChange } = props;
+	const { effectName, fixtureType, values, pois, onChange } = props;
 	const container = document.createElement("div");
 	container.className = "param-form";
 
-	const schema = getEffectSchema(effectName);
+	const schema = getEffectSchema(effectName, fixtureType);
 	if (!schema || schema.params.length === 0) {
 		const empty = document.createElement("p");
 		empty.className = "muted";

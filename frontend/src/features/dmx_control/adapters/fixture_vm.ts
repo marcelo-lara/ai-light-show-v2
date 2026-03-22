@@ -10,6 +10,7 @@ export type FixtureVM = {
   values: Record<string, number | string>;
   metaChannels: Record<string, MetaChannel>;
   mappings: Record<string, Record<string, number | string>>;
+  supportedEffects: string[];
 };
 
 export function toFixtureVM(fx: FixtureState): FixtureVM {
@@ -19,11 +20,12 @@ export function toFixtureVM(fx: FixtureState): FixtureVM {
   const values = fx.values ?? {};
   const metaChannels = fx.meta_channels ?? {};
   const mappings = fx.mappings ?? {};
+  const supportedEffects = fx.supported_effects ?? [];
 
   // Presentation mapping (not business logic). Prefer backend-provided capabilities.
   const caps = fx.capabilities ?? {};
   const hasRgb = Boolean(caps.rgb) || type === "rgb";
   const hasPanTilt = Boolean(caps.pan_tilt) || type === "moving_head";
 
-  return { id: fx.id, name, type, armed, hasRgb, hasPanTilt, values, metaChannels, mappings };
+  return { id: fx.id, name, type, armed, hasRgb, hasPanTilt, values, metaChannels, mappings, supportedEffects };
 }

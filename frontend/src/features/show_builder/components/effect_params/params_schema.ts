@@ -27,7 +27,7 @@ export type EffectSchema = {
  * Effect schemas by effect name.
  * Keys are lowercase effect names as returned by backend.
  */
-export const EFFECT_SCHEMAS: Record<string, EffectSchema> = {
+export const EFFECT_SCHEMAS: Record<string, EffectSchema | EffectSchema[]> = {
 	// Parcan effects
 	flash: {
 		name: "flash",
@@ -43,26 +43,44 @@ export const EFFECT_SCHEMAS: Record<string, EffectSchema> = {
 		],
 		fixtureTypes: ["parcan", "rgb", "moving_head"],
 	},
-	fade_in: {
-		name: "fade_in",
-		label: "Fade In",
-		params: [
-			{ name: "red", label: "Red", type: "range", default: 255, min: 0, max: 255, step: 1 },
-			{ name: "green", label: "Green", type: "range", default: 255, min: 0, max: 255, step: 1 },
-			{ name: "blue", label: "Blue", type: "range", default: 255, min: 0, max: 255, step: 1 },
-		],
-		fixtureTypes: ["parcan", "rgb"],
-	},
-	full: {
-		name: "full",
-		label: "Full",
-		params: [
-			{ name: "red", label: "Red", type: "range", default: 255, min: 0, max: 255, step: 1 },
-			{ name: "green", label: "Green", type: "range", default: 255, min: 0, max: 255, step: 1 },
-			{ name: "blue", label: "Blue", type: "range", default: 255, min: 0, max: 255, step: 1 },
-		],
-		fixtureTypes: ["parcan", "rgb"],
-	},
+	fade_in: [
+		{
+			name: "fade_in",
+			label: "Fade In",
+			params: [
+				{ name: "red", label: "Red", type: "range", default: 255, min: 0, max: 255, step: 1 },
+				{ name: "green", label: "Green", type: "range", default: 255, min: 0, max: 255, step: 1 },
+				{ name: "blue", label: "Blue", type: "range", default: 255, min: 0, max: 255, step: 1 },
+			],
+			fixtureTypes: ["parcan", "rgb"],
+		},
+		{
+			name: "fade_in",
+			label: "Fade In",
+			params: [
+				{ name: "dim", label: "Dimmer", type: "range", default: 255, min: 0, max: 255, step: 1 },
+			],
+			fixtureTypes: ["moving_head"],
+		},
+	],
+	full: [
+		{
+			name: "full",
+			label: "Full",
+			params: [
+				{ name: "red", label: "Red", type: "range", default: 255, min: 0, max: 255, step: 1 },
+				{ name: "green", label: "Green", type: "range", default: 255, min: 0, max: 255, step: 1 },
+				{ name: "blue", label: "Blue", type: "range", default: 255, min: 0, max: 255, step: 1 },
+			],
+			fixtureTypes: ["parcan", "rgb"],
+		},
+		{
+			name: "full",
+			label: "Full",
+			params: [],
+			fixtureTypes: ["moving_head"],
+		},
+	],
 	// Moving head effects
 	seek: {
 		name: "seek",
@@ -109,12 +127,19 @@ export const EFFECT_SCHEMAS: Record<string, EffectSchema> = {
 	},
 };
 
-export function getEffectSchema(effectName: string): EffectSchema | undefined {
-	return EFFECT_SCHEMAS[effectName.toLowerCase()];
+export function getEffectSchema(effectName: string, fixtureType?: string): EffectSchema | undefined {
+	const entry = EFFECT_SCHEMAS[effectName.toLowerCase()];
+	if (!entry) return undefined;
+	if (!Array.isArray(entry)) return entry;
+	if (fixtureType) {
+		const exact = entry.find((schema) => schema.fixtureTypes?.includes(fixtureType));
+		if (exact) return exact;
+	}
+	return entry[0];
 }
 
-export function getDefaultParams(effectName: string): Record<string, unknown> {
-	const schema = getEffectSchema(effectName);
+export function getDefaultParams(effectName: string, fixtureType?: string): Record<string, unknown> {
+	const schema = getEffectSchema(effectName, fixtureType);
 	if (!schema) return {};
 	const defaults: Record<string, unknown> = {};
 	for (const param of schema.params) {
