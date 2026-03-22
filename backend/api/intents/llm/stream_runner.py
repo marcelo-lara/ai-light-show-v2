@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 import httpx
 
@@ -11,7 +12,7 @@ from api.intents.llm.stream_parser import parse_stream_line
 
 async def stream_prompt(manager, prompt: str) -> None:
     config = load_llm_config()
-    payload = build_chat_request(prompt, config.model, config.temperature)
+    payload = build_chat_request(manager, prompt, config.model, config.temperature)
     timeout = httpx.Timeout(config.timeout_seconds, connect=min(config.timeout_seconds, 10.0))
     finished = False
 
@@ -32,7 +33,7 @@ async def stream_prompt(manager, prompt: str) -> None:
     except httpx.HTTPStatusError as error:
         await _broadcast_failure(manager, f"llm_http_{error.response.status_code}")
         return
-    except (httpx.HTTPError, ValueError) as error:
+    except (httpx.HTTPError, ValueError, json.JSONDecodeError) as error:
         await _broadcast_failure(manager, str(error) or "llm_request_failed")
         return
 

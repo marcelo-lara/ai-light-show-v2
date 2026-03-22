@@ -161,7 +161,7 @@ Notes on `fixture.set_values`:
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `llm.send_prompt` | `prompt` | rejects while playback is active; otherwise starts one background stream against direct llama.cpp and emits incremental `llm_stream` chunks from the upstream response | `False` (no patch broadcast) |
+| `llm.send_prompt` | `prompt` | rejects while playback is active; otherwise starts one background stream against direct llama.cpp, injects current-song metadata (song name, BPM, duration, song key) into the prompt, and emits incremental `llm_stream` chunks from the upstream response | `False` (no patch broadcast) |
 | `llm.cancel` | none | cancels the active upstream LLM stream if one exists, then emits `llm_cancelled`; otherwise emits `llm_cancel_ignored` | `False` |
 
 ## Event message catalog

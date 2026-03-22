@@ -26,12 +26,15 @@ def load_prompt_profile(name: str = "default_chat") -> PromptProfile:
     )
 
 
-def build_messages(profile: PromptProfile, user_request: str) -> list[dict[str, str]]:
+def build_messages(profile: PromptProfile, user_request: str, song_context: str | None = None) -> list[dict[str, str]]:
     if USER_REQUEST_PLACEHOLDER not in profile.user_template:
         raise ValueError(f"Prompt profile '{profile.name}' is missing {USER_REQUEST_PLACEHOLDER}")
+    instruction_parts = [profile.instructions_text.strip()]
+    if song_context:
+        instruction_parts.append(song_context.strip())
     return [
         {"role": "system", "content": profile.system_text.strip()},
-        {"role": "system", "content": profile.instructions_text.strip()},
+        {"role": "system", "content": "\n\n".join(instruction_parts)},
         {
             "role": "user",
             "content": profile.user_template.replace(USER_REQUEST_PLACEHOLDER, user_request).strip(),
