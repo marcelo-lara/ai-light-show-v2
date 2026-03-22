@@ -2,6 +2,7 @@ import { getBackendStore, subscribeBackendStore } from "../../../../shared/state
 import { setFixtureValues, updatePoiFixtureTarget } from "../../fixture_intents.ts";
 import { Dropdown } from "../../../../shared/components/controls/Dropdown.ts";
 import { Button } from "../../../../shared/components/controls/Button.ts";
+import { ConfirmCancelPrompt } from "../../../../shared/components/feedback/ConfirmCancelPrompt.ts";
 import type { DisposableElementHandle } from "./control_types.ts";
 import type { FixturePoiTarget } from "./poi_helpers.ts";
 import { hasFixtureTargetDiff, normalizePois } from "./poi_helpers.ts";
@@ -61,6 +62,11 @@ export function PoiLocationController(
       };
     };
 
+    const resolvePoiName = (poiId: string): string => {
+      const poi = pois.find((entry) => entry.id === poiId);
+      return poi?.name ?? poiId;
+    };
+
     selectedPoiTarget = currentSelectedPoiId ? resolveTarget(currentSelectedPoiId) : null;
     onSelectedPoiTargetChange?.(selectedPoiTarget);
 
@@ -114,10 +120,23 @@ export function PoiLocationController(
         state: "default",
         bindings: {
           onClick: () => {
-            updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, currentPan, currentTilt);
-            selectedPoiTarget = { pan: currentPan, tilt: currentTilt };
-            optimisticSetVisibility = "hide_once";
-            render();
+            void (async () => {
+              const shouldConfirmOverwrite = selectedPoiTarget !== null;
+              if (shouldConfirmOverwrite) {
+                const confirmed = await ConfirmCancelPrompt({
+                  title: "Overwrite POI target",
+                  message: `Overwrite the saved target for '${resolvePoiName(currentSelectedPoiId)}' on fixture '${fixtureId}' with the current pan/tilt values?`,
+                  confirmLabel: "Overwrite",
+                  cancelLabel: "Cancel",
+                });
+                if (!confirmed) return;
+              }
+
+              updatePoiFixtureTarget(currentSelectedPoiId, fixtureId, currentPan, currentTilt);
+              selectedPoiTarget = { pan: currentPan, tilt: currentTilt };
+              optimisticSetVisibility = "hide_once";
+              render();
+            })();
           },
         },
       });
