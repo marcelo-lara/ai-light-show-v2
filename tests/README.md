@@ -71,6 +71,12 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q -m 
 	tests/test_ws_chaser_preview_e2e.py
 ```
 
+Opt-in live-stack websocket checks against the running Docker services:
+
+```bash
+PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q -m live_stack tests/test_ws_llm_live_stack.py
+```
+
 ## Expected workflow
 
 1. Run targeted tests for touched modules.
@@ -88,3 +94,4 @@ docker compose down && docker compose up --build -d
 3. If protocol/data contracts change, update tests in the same change.
 4. Keep fixtures deterministic and avoid flaky timing assumptions.
 5. `e2e_real_file` tests mutate repo-tracked cue and POI files, restore them afterward, and are non-parallel-safe by design.
+6. `live_stack` tests require the Docker stack to already be running on localhost and validate real network behavior rather than in-process mocks.

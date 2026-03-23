@@ -3,6 +3,7 @@
 ## Development policy
 - **NEVER keep deprecated code.** Remove deprecated helpers and dead code; do not retain compatibility shims.
 - **NEVER prioritize backward compatibility over correctness.** Breaking changes are acceptable when they improve clarity and behavior.
+- **NEVER add hardcoded logic or fallback behavior to hide failures.** If required runtime data, retrieval, or model/tool execution fails, surface the failure explicitly instead of synthesizing an answer.
 - **ALWAYS use the `ai-light` Python environment** for local Python development.
 
 ## LLM code size and quality rules
@@ -15,6 +16,7 @@
 - Add minimal comments only when intent is not obvious from code.
 - Include basic validation and error handling at I/O and integration boundaries.
 - Do not keep deprecated code or compatibility shims.
+- Fail fast at integration boundaries; do not fabricate success paths or substitute hardcoded outputs when upstream data or tools fail.
 - If a rule conflicts with correctness, prioritize correctness and document the tradeoff in the PR/commit message.
 
 Activate environment before Python work:

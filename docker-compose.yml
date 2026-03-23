@@ -61,8 +61,11 @@ services:
     environment:
       - LLM_BASE_URL=http://llm-server:8080
       - MCP_BASE_URL=http://song-metadata-mcp:8089
+      - BACKEND_BASE_URL=http://backend:5001
     depends_on:
       - song-metadata-mcp
+      - llm-server
+      - backend
 
   analyzer:
     build: ./analyzer

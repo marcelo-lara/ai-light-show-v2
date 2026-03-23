@@ -73,10 +73,18 @@ Patch behavior:
 - `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
-- `llm.send_prompt` streams assistant text from the direct `llm-server` llama.cpp `/v1/chat/completions` endpoint using backend-owned prompt profiles in `backend/api/intents/llm/prompt_profiles/`.
+- `llm.send_prompt` calls `agent-gateway` for tool-using retrieval mode, relays lookup-status updates through `llm_status`, forwards streamed assistant chunks through `llm_stream`, and includes recent user/assistant chat turns so follow-up replies like `yes` or `no` stay grounded in the same chat.
 - The backend injects current-song context into the LLM request: song name, BPM, duration, and song key.
+- The backend also injects a concise summary of the current cue sheet so the assistant can review the loaded song's programmed entries before suggesting edits.
+- The `llm.send_prompt` payload accepts `prompt` and optional `history`, where `history` is a recent list of `{ role, text }` user/assistant chat turns used to preserve same-chat confirmation context.
+- The backend exposes current playback position at `/llm/context/playback`, normalized song sections at `/llm/context/sections`, named-section lookups at `/llm/context/sections/by-name/{section_name}`, and cursor-time section lookups at `/llm/context/sections/at-time`.
 - The backend also injects the currently configured fixture inventory, including fixture ids, names, types, and supported effects.
-- The default chat profile keeps responses short and limited to the loaded song and available fixtures; unrelated topics and unavailable fixtures are refused.
+- The backend also exposes cue lookup endpoints for retrieval tools: `/llm/context/cues/current` for the full current cue sheet, `/llm/context/cues/window` for time-window summaries, and `/llm/context/cues/section/{section_name}` for section-scoped cue summaries.
+- The backend exposes `/llm/context/intents` as the canonical catalog of supported intent names, payload shapes, and editing behaviors available to LLM chat.
+- The backend exposes cue edit routes for LLM-driven mutations: `/llm/actions/cues/add`, `/llm/actions/cues/update`, `/llm/actions/cues/delete`, `/llm/actions/cues/clear`, and `/llm/actions/cues/apply-helper`.
+- The backend and gateway fail fast for LLM retrieval/generation errors; they do not synthesize hardcoded answers or fallback outputs when retrieval or generation fails.
+- The gateway chooses among backend retrieval tools at generation time; it does not precompute or synthesize timing answers outside the model/tool loop.
+- The default chat profile keeps responses short, prioritizes reviewing and editing the current cue sheet, and limits responses to the loaded song and available fixtures; unrelated topics and unavailable fixtures are refused.
 - `llm.send_prompt` is rejected while playback is active, and `llm.cancel` stops the active upstream stream when one exists.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
 - Moving-head `strobe` is dimmer-driven only. Dedicated fixture `strobe` and `shutter` channels are not modulated by the effect handler.
@@ -97,6 +105,8 @@ Patch behavior:
 - Songs: `backend/songs/*.mp3`
 - Metadata root in Docker: `/app/meta` (fallback local: `backend/meta`)
 - Static routes: `/songs/*` for audio and `/meta/*` for analyzer artifacts (SVG/JSON).
+- LLM context routes: `/llm/context/song`, `/llm/context/playback`, `/llm/context/intents`, `/llm/context/sections`, `/llm/context/sections/by-name/{section_name}`, `/llm/context/sections/at-time`, `/llm/context/cues/current`, `/llm/context/cues/window`, `/llm/context/cues/section/{section_name}`, `/llm/context/fixtures`, `/llm/context/fixtures/{fixture_id}`.
+- LLM cue edit routes: `/llm/actions/cues/add`, `/llm/actions/cues/update`, `/llm/actions/cues/delete`, `/llm/actions/cues/clear`, `/llm/actions/cues/apply-helper`.
 
 Song payload fields under `state.song`:
 - Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`.

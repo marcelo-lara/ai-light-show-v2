@@ -9,6 +9,7 @@ export type ChatMessage = {
   role: ChatRole;
   text: string;
   kind?: "info" | "error";
+  source?: "llm-status";
 };
 
 let state: { status: LlmStatus; lastError?: string; messages: ChatMessage[]; streamingText: string } = {
@@ -69,6 +70,42 @@ export function addSystemMessage(text: string, kind: "info" | "error" = "info") 
     status: kind === "error" ? "error" : state.status,
     messages: [...state.messages, { id: makeId(), role: "system", text, kind }],
   });
+}
+
+const LOW_VALUE_LOOKUP_MESSAGES = new Set(["Looking up song and fixture details"]);
+
+export function addLlmLookupMessage(text: string) {
+  const nextText = text.trim();
+  if (!nextText) return;
+
+  const messages = [...state.messages];
+  const lastMessage = messages.at(-1);
+  const nextIsLowValue = LOW_VALUE_LOOKUP_MESSAGES.has(nextText);
+
+  if (lastMessage?.source === "llm-status") {
+    if (lastMessage.text === nextText) {
+      return;
+    }
+    const lastWasLowValue = LOW_VALUE_LOOKUP_MESSAGES.has(lastMessage.text);
+    if (lastWasLowValue && !nextIsLowValue) {
+      messages[messages.length - 1] = { ...lastMessage, text: nextText };
+      commit({ ...state, messages });
+      return;
+    }
+  }
+
+  if (nextIsLowValue && messages.some((message) => message.source === "llm-status")) {
+    return;
+  }
+
+  messages.push({
+    id: makeId(),
+    role: "system",
+    text: nextText,
+    kind: "info",
+    source: "llm-status",
+  });
+  commit({ ...state, messages });
 }
 
 export function appendStreamingChunk(chunk: string) {

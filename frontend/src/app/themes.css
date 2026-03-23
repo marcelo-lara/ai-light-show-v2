@@ -81,8 +81,8 @@
 
 * {
   box-sizing: border-box;
-  user-select: none;
-  -webkit-user-select: none;
+  /* user-select: none;
+  -webkit-user-select: none; */
 }
 
 html,

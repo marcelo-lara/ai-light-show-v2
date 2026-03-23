@@ -12,6 +12,22 @@ from services.artnet import ArtNetService
 from services.song_service import SongService
 from services.startup_animation import run_startup_blue_wipe
 from api.websocket import WebSocketManager, websocket_endpoint
+from api.intents.llm.song_context import (
+    build_fixture_detail_payload,
+    build_fixture_inventory_payload,
+    build_song_context_payload,
+    build_song_sections_payload,
+)
+from api.intents.llm.cue_sheet_context import build_cue_sheet_payload
+from api.intents.llm.cue_edit_api import router as llm_cue_edit_router
+from api.intents.llm.intent_catalog import build_intent_catalog_payload
+from api.intents.llm.playback_context import build_playback_position_payload
+from api.intents.llm.show_context import (
+    build_cue_section_payload,
+    build_cue_window_payload,
+    build_section_at_time_payload,
+    build_section_by_name_payload,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -81,6 +97,7 @@ async def lifespan(app: FastAPI):
     await artnet_service.stop()
 
 app = FastAPI(lifespan=lifespan, title="AI Light Show v2 Backend")
+app.include_router(llm_cue_edit_router)
 
 # Serve audio files - use absolute path for Docker, relative for local development
 songs_directory = Path("/app/songs") if Path("/app/songs").exists() else Path(__file__).parent / "songs"
@@ -102,6 +119,73 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "AI Light Show v2 Backend"}
+
+
+@app.get("/llm/context/song")
+async def llm_song_context():
+    return {"ok": True, "data": build_song_context_payload(app.state.ws_manager)}
+
+
+@app.get("/llm/context/playback")
+async def llm_playback_context():
+    return {"ok": True, "data": await build_playback_position_payload(app.state.ws_manager)}
+
+
+@app.get("/llm/context/fixtures")
+async def llm_fixtures_context():
+    return {"ok": True, "data": {"fixtures": build_fixture_inventory_payload(app.state.ws_manager)}}
+
+
+@app.get("/llm/context/fixtures/{fixture_id}")
+async def llm_fixture_detail_context(fixture_id: str):
+    detail = build_fixture_detail_payload(app.state.ws_manager, fixture_id)
+    if detail is None:
+        return {"ok": False, "error": {"reason": "fixture_not_found", "fixture_id": fixture_id}}
+    return {"ok": True, "data": detail}
+
+
+@app.get("/llm/context/sections")
+async def llm_sections_context():
+    return {"ok": True, "data": build_song_sections_payload(app.state.ws_manager)}
+
+
+@app.get("/llm/context/intents")
+async def llm_intents_context():
+    return {"ok": True, "data": build_intent_catalog_payload()}
+
+
+@app.get("/llm/context/cues/current")
+async def llm_current_cues_context():
+    return {"ok": True, "data": build_cue_sheet_payload(app.state.ws_manager)}
+
+
+@app.get("/llm/context/sections/by-name/{section_name}")
+async def llm_section_by_name_context(section_name: str):
+    detail = build_section_by_name_payload(app.state.ws_manager, section_name)
+    if detail is None:
+        return {"ok": False, "error": {"reason": "section_not_found", "section_name": section_name}}
+    return {"ok": True, "data": detail}
+
+
+@app.get("/llm/context/sections/at-time")
+async def llm_section_at_time_context(time_s: float):
+    detail = build_section_at_time_payload(app.state.ws_manager, time_s)
+    if detail is None:
+        return {"ok": False, "error": {"reason": "section_not_found", "time_s": time_s}}
+    return {"ok": True, "data": detail}
+
+
+@app.get("/llm/context/cues/window")
+async def llm_cue_window_context(start_s: float, end_s: float):
+    return {"ok": True, "data": build_cue_window_payload(app.state.ws_manager, start_s, end_s)}
+
+
+@app.get("/llm/context/cues/section/{section_name}")
+async def llm_cue_section_context(section_name: str):
+    detail = build_cue_section_payload(app.state.ws_manager, section_name)
+    if detail is None:
+        return {"ok": False, "error": {"reason": "section_not_found", "section_name": section_name}}
+    return {"ok": True, "data": detail}
 
 @app.websocket("/ws")
 async def websocket_route(websocket: WebSocket):

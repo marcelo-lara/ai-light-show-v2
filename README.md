@@ -20,7 +20,7 @@ AI Light Show is split into six primary modules:
 3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
 4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata; backend consumes it from `/app/meta` in Docker.
-6. MCP server exposes metadata tools; agent-gateway forwards LLM tool calls to MCP.
+6. MCP server exposes metadata tools; agent-gateway resolves LLM tool calls against MCP and backend context routes, then streams lookup status and assistant text back through the backend websocket path.
 
 ### Important behavior constraints
 

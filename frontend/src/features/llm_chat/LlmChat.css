@@ -55,8 +55,8 @@
 }
 
 .chat-msg.system {
-  align-self: center;
   max-width: 100%;
+  color: var(--muted);  
   background: transparent;
 }
 
@@ -102,3 +102,4 @@
   background: transparent;
   padding: 8px;
 }
+

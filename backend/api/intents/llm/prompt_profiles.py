@@ -32,14 +32,17 @@ def build_messages(profile: PromptProfile, user_request: str, song_context: str 
     instruction_parts = [profile.instructions_text.strip()]
     if song_context:
         instruction_parts.append(song_context.strip())
-    return [
+    messages = [
         {"role": "system", "content": profile.system_text.strip()},
         {"role": "system", "content": "\n\n".join(instruction_parts)},
+    ]
+    messages.append(
         {
             "role": "user",
             "content": profile.user_template.replace(USER_REQUEST_PLACEHOLDER, user_request).strip(),
-        },
-    ]
+        }
+    )
+    return messages
 
 
 def _read_required_text(path: Path) -> str:

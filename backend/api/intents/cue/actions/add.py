@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from api.intents.cue.mutate_rows import execute_add_cue
+
 
 async def add_cue(manager, payload: Dict[str, Any]) -> bool:
     """Add a single effect cue entry at the specified time.
@@ -13,67 +15,6 @@ async def add_cue(manager, payload: Dict[str, Any]) -> bool:
         duration: float — effect duration in seconds
         data: dict — effect parameters
     """
-    time = payload.get("time")
-    fixture_id = str(payload.get("fixture_id") or "")
-    effect = str(payload.get("effect") or "")
-    chaser_id = str(payload.get("chaser_id") or "")
-    duration = payload.get("duration", 0.0)
-    data = payload.get("data") or {}
-
-    if time is None:
-        await manager.broadcast_event("error", "cue_add_failed", {"reason": "missing_time"})
-        return False
-
-    try:
-        time_f = float(time)
-    except (TypeError, ValueError):
-        await manager.broadcast_event("error", "cue_add_failed", {"reason": "invalid_time"})
-        return False
-
-    if bool(chaser_id) == bool(effect or fixture_id):
-        await manager.broadcast_event("error", "cue_add_failed", {"reason": "invalid_cue_shape"})
-        return False
-
-    if chaser_id:
-        result = await manager.state_manager.add_chaser_cue_entry(
-            time=time_f,
-            chaser_id=chaser_id,
-            data=data if isinstance(data, dict) else {},
-        )
-        if not result.get("ok"):
-            await manager.broadcast_event("error", "cue_add_failed", result)
-            return False
-
-        await manager.broadcast_event("info", "cue_added", result)
-        return True
-
-    if not fixture_id:
-        await manager.broadcast_event("error", "cue_add_failed", {"reason": "missing_fixture_id"})
-        return False
-
-    if not effect:
-        await manager.broadcast_event("error", "cue_add_failed", {"reason": "missing_effect"})
-        return False
-
-    try:
-        duration_f = max(0.0, float(duration))
-    except (TypeError, ValueError):
-        duration_f = 0.0
-
-    if not isinstance(data, dict):
-        data = {}
-
-    result = await manager.state_manager.add_effect_cue_entry(
-        time=time_f,
-        fixture_id=fixture_id,
-        effect=effect,
-        duration=duration_f,
-        data=data,
-    )
-
-    if not result.get("ok"):
-        await manager.broadcast_event("error", "cue_add_failed", result)
-        return False
-
-    await manager.broadcast_event("info", "cue_added", result)
-    return True
+    result = await execute_add_cue(manager, payload)
+    await manager.broadcast_event(result["level"], result["message"], result["data"])
+    return result["ok"]

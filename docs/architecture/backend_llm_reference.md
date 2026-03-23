@@ -161,8 +161,34 @@ Notes on `fixture.set_values`:
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `llm.send_prompt` | `prompt` | rejects while playback is active; otherwise starts one background stream against direct llama.cpp, injects current-song metadata (song name, BPM, duration, song key) and the configured fixture inventory into the prompt, and emits incremental `llm_stream` chunks from the upstream response | `False` (no patch broadcast) |
+| `llm.send_prompt` | `prompt`, `history?` | rejects while playback is active; otherwise starts one background request against `agent-gateway`, injects current-song metadata (song name, BPM, duration, song key), a concise summary of the current cue sheet, the configured fixture inventory, and recent user/assistant chat turns into the request, lets the gateway choose retrieval tools for intent, song, section, cue, and fixture lookups, emits retrieval progress through `llm_status`, relays incremental assistant chunks through `llm_stream`, and surfaces upstream retrieval/generation failures without hardcoded fallback answers | `False` (no patch broadcast) |
 | `llm.cancel` | none | cancels the active upstream LLM stream if one exists, then emits `llm_cancelled`; otherwise emits `llm_cancel_ignored` | `False` |
+
+## LLM retrieval context routes
+
+| Route | Purpose |
+| --- | --- |
+| `/llm/context/song` | Loaded-song metadata used for grounded song-aware responses |
+| `/llm/context/playback` | Current song position, playback state, and current section |
+| `/llm/context/intents` | Canonical catalog of supported backend intents, payload shapes, and editing behaviors |
+| `/llm/context/sections` | Normalized section list for the loaded song |
+| `/llm/context/sections/by-name/{section_name}` | Named section lookup |
+| `/llm/context/sections/at-time?time_s=...` | Section lookup by song cursor time |
+| `/llm/context/cues/current` | Full current cue sheet with indexed entries |
+| `/llm/context/cues/window?start_s=...&end_s=...` | Cue summary for a time window |
+| `/llm/context/cues/section/{section_name}` | Cue summary scoped to a named section |
+| `/llm/context/fixtures` | Current fixture inventory and supported effects |
+| `/llm/context/fixtures/{fixture_id}` | Detailed fixture contract lookup |
+
+## LLM cue edit routes
+
+| Route | Intent shape |
+| --- | --- |
+| `/llm/actions/cues/add` | `cue.add` payload in `{"payload": {...}}` |
+| `/llm/actions/cues/update` | `cue.update` payload in `{"payload": {...}}` |
+| `/llm/actions/cues/delete` | `cue.delete` payload in `{"payload": {...}}` |
+| `/llm/actions/cues/clear` | `cue.clear` payload in `{"payload": {...}}` |
+| `/llm/actions/cues/apply-helper` | `cue.apply_helper` payload in `{"payload": {...}}` |
 
 ## Event message catalog
 
@@ -186,7 +212,8 @@ Notes on `fixture.set_values`:
 | `warning` | `chaser_preview_stop_ignored` | `{reason:"preview_not_active"}` |
 | `error` | `prompt_required` | none |
 | `warning` | `llm_rejected` | `{domain:"llm", reason:"show_running"}` |
-| `info` | `llm_stream` | `{domain:"llm", chunk, done}` |
+| `info` | `llm_status` | `{domain:"llm", status}` emitted as retrieval steps arrive from `agent-gateway` |
+| `info` | `llm_stream` | `{domain:"llm", chunk, done}` incremental assistant chunks relayed from the gateway stream |
 | `info` | `llm_cancelled` | `{domain:"llm"}` |
 | `warning` | `llm_cancel_ignored` | `{domain:"llm", reason:"not_active"}` |
 | `error` | `llm_failed` | `{domain:"llm", error}` |
