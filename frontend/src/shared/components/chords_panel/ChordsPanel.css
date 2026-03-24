@@ -42,6 +42,7 @@
   font-size: 0.8rem;
   background-color: var(--card);
   cursor: pointer;
+  border: 1px solid var(--card);
 }
 
 @media (max-width: 960px) {

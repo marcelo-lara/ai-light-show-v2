@@ -76,6 +76,9 @@ Behavior:
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, and `cue.apply_helper`.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
+- `llm.send_prompt` builds a cue-edit-oriented request for `agent-gateway` using only minimal initial context: song id, BPM, current cursor position, and recent chat history. Song metadata, cue-sheet contents, section timing, and fixture inventory are retrieved on demand.
+- Named-section boundary questions can restrict the upstream tool list to named-section timing lookup through `allowed_tools` so direct timing answers stay precise.
+- LLM timing support endpoints include section lookup by name, section lookup by time, nth beat within a named section, and chord-transition timing. These endpoints are used to place cue edits instead of treating timing as the final product.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
 - Chaser intents are `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, and `chaser.list`.

@@ -5,7 +5,16 @@ import pytest
 import websockets
 
 
+MAX_LLM_IDLE_SECONDS = 180
+
+
 PROMPT_CASES = [
+    (
+        "where does the intro ends?",
+        "Looking up section timing",
+        "Looking up song timing",
+        ["intro", "35.82"],
+    ),
     (
         "What fixtures are used in the Verse?",
         "Looking up section cues",
@@ -54,7 +63,7 @@ async def _run_prompt(prompt: str) -> tuple[list[str], str]:
         statuses: list[str] = []
         chunks: list[str] = []
         for _ in range(240):
-            message = json.loads(await asyncio.wait_for(ws.recv(), timeout=30))
+            message = json.loads(await asyncio.wait_for(ws.recv(), timeout=MAX_LLM_IDLE_SECONDS))
             if message.get("type") != "event":
                 continue
             if message.get("message") == "llm_status":

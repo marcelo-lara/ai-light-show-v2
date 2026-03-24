@@ -161,7 +161,7 @@ Notes on `fixture.set_values`:
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `llm.send_prompt` | `prompt`, `history?` | rejects while playback is active; otherwise starts one background request against `agent-gateway`, injects current-song metadata (song name, BPM, duration, song key), a concise summary of the current cue sheet, the configured fixture inventory, and recent user/assistant chat turns into the request, lets the gateway choose retrieval tools for intent, song, section, cue, and fixture lookups, emits retrieval progress through `llm_status`, relays incremental assistant chunks through `llm_stream`, and surfaces upstream retrieval/generation failures without hardcoded fallback answers | `False` (no patch broadcast) |
+| `llm.send_prompt` | `prompt`, `history?` | rejects while playback is active; otherwise starts one background request against `agent-gateway`, injects only minimal bootstrap context (song id, BPM, current cursor position) plus recent user/assistant chat turns, requests song metadata, cue-sheet contents, section timing, fixture inventory, fixture positions, and POI inventory on demand, can narrow the upstream tool set with `allowed_tools` for direct named-section timing questions, known edit-placement prompt classes, and ambiguous fixture references that require clarification, lets the gateway continue through multiple bounded retrieval/mutation rounds, emits retrieval progress through `llm_status`, relays incremental assistant chunks through `llm_stream`, and surfaces upstream retrieval/generation failures without hardcoded fallback answers | `False` (no patch broadcast) |
 | `llm.cancel` | none | cancels the active upstream LLM stream if one exists, then emits `llm_cancelled`; otherwise emits `llm_cancel_ignored` | `False` |
 
 ## LLM retrieval context routes
@@ -172,13 +172,17 @@ Notes on `fixture.set_values`:
 | `/llm/context/playback` | Current song position, playback state, and current section |
 | `/llm/context/intents` | Canonical catalog of supported backend intents, payload shapes, and editing behaviors |
 | `/llm/context/sections` | Normalized section list for the loaded song |
-| `/llm/context/sections/by-name/{section_name}` | Named section lookup |
+| `/llm/context/sections/by-name/{section_name}` | Named section lookup with optional `occurrence` query param |
 | `/llm/context/sections/at-time?time_s=...` | Section lookup by song cursor time |
+| `/llm/context/sections/beat?section_name=...&beat_ordinal=...&occurrence=...` | Exact beat timing inside a named section |
+| `/llm/context/chords/transition?from_chord=...&to_chord=...&occurrence=...` | Exact timing for a chord transition |
 | `/llm/context/cues/current` | Full current cue sheet with indexed entries |
 | `/llm/context/cues/window?start_s=...&end_s=...` | Cue summary for a time window |
 | `/llm/context/cues/section/{section_name}` | Cue summary scoped to a named section |
 | `/llm/context/fixtures` | Current fixture inventory and supported effects |
 | `/llm/context/fixtures/{fixture_id}` | Detailed fixture contract lookup |
+| `/llm/context/fixture-positions` | Current fixture coordinates, directional labels, and selector terms |
+| `/llm/context/pois` | Current POI inventory with saved fixture coverage per POI |
 
 ## LLM cue edit routes
 

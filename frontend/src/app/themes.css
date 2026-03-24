@@ -176,8 +176,8 @@ button:hover:not(:disabled) {
 
 .is-active,
 .is-selected {
-  border-color: var(--accent);
-  background: var(--btn-state-bg-soft);
+  border-color: var(--accent) !important;
+  background: var(--btn-state-bg-soft) !important;
 }
 
 .is-active .muted,

@@ -74,16 +74,18 @@ Patch behavior:
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
 - `llm.send_prompt` calls `agent-gateway` for tool-using retrieval mode, relays lookup-status updates through `llm_status`, forwards streamed assistant chunks through `llm_stream`, and includes recent user/assistant chat turns so follow-up replies like `yes` or `no` stay grounded in the same chat.
-- The backend injects current-song context into the LLM request: song name, BPM, duration, and song key.
-- The backend also injects a concise summary of the current cue sheet so the assistant can review the loaded song's programmed entries before suggesting edits.
+- For direct named-section boundary questions, the backend narrows the allowed retrieval tools to named-section timing lookup before sending the request upstream.
+- The backend injects only minimal initial LLM context: song id, BPM, and current cursor position.
+- The assistant retrieves richer song metadata, cue-sheet contents, section timing, and fixture details on demand through backend or MCP tools.
 - The `llm.send_prompt` payload accepts `prompt` and optional `history`, where `history` is a recent list of `{ role, text }` user/assistant chat turns used to preserve same-chat confirmation context.
-- The backend exposes current playback position at `/llm/context/playback`, normalized song sections at `/llm/context/sections`, named-section lookups at `/llm/context/sections/by-name/{section_name}`, and cursor-time section lookups at `/llm/context/sections/at-time`.
-- The backend also injects the currently configured fixture inventory, including fixture ids, names, types, and supported effects.
+- The backend exposes current playback position at `/llm/context/playback`, normalized song sections at `/llm/context/sections`, named-section lookups at `/llm/context/sections/by-name/{section_name}`, cursor-time section lookups at `/llm/context/sections/at-time`, section-beat lookups at `/llm/context/sections/beat`, chord-transition lookups at `/llm/context/chords/transition`, POI inventory at `/llm/context/pois`, and fixture positions at `/llm/context/fixture-positions`.
+- Named-section, cursor-time, section-beat, and chord-transition lookup payloads include an `answer` field so upstream chat can relay authoritative timing text directly when the request is informational.
+- Fixture inventory is not injected into the initial LLM prompt context. The assistant fetches fixture inventory or per-fixture details only when the request depends on fixtures, fixture groups, or effect support.
 - The backend also exposes cue lookup endpoints for retrieval tools: `/llm/context/cues/current` for the full current cue sheet, `/llm/context/cues/window` for time-window summaries, and `/llm/context/cues/section/{section_name}` for section-scoped cue summaries.
 - The backend exposes `/llm/context/intents` as the canonical catalog of supported intent names, payload shapes, and editing behaviors available to LLM chat.
 - The backend exposes cue edit routes for LLM-driven mutations: `/llm/actions/cues/add`, `/llm/actions/cues/update`, `/llm/actions/cues/delete`, `/llm/actions/cues/clear`, and `/llm/actions/cues/apply-helper`.
 - The backend and gateway fail fast for LLM retrieval/generation errors; they do not synthesize hardcoded answers or fallback outputs when retrieval or generation fails.
-- The gateway chooses among backend retrieval tools at generation time; it does not precompute or synthesize timing answers outside the model/tool loop.
+- The gateway chooses among backend retrieval tools at generation time and may continue across multiple bounded tool rounds before returning a final answer or edit result.
 - The default chat profile keeps responses short, prioritizes reviewing and editing the current cue sheet, and limits responses to the loaded song and available fixtures; unrelated topics and unavailable fixtures are refused.
 - `llm.send_prompt` is rejected while playback is active, and `llm.cancel` stops the active upstream stream when one exists.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
@@ -105,7 +107,7 @@ Patch behavior:
 - Songs: `backend/songs/*.mp3`
 - Metadata root in Docker: `/app/meta` (fallback local: `backend/meta`)
 - Static routes: `/songs/*` for audio and `/meta/*` for analyzer artifacts (SVG/JSON).
-- LLM context routes: `/llm/context/song`, `/llm/context/playback`, `/llm/context/intents`, `/llm/context/sections`, `/llm/context/sections/by-name/{section_name}`, `/llm/context/sections/at-time`, `/llm/context/cues/current`, `/llm/context/cues/window`, `/llm/context/cues/section/{section_name}`, `/llm/context/fixtures`, `/llm/context/fixtures/{fixture_id}`.
+- LLM context routes: `/llm/context/song`, `/llm/context/playback`, `/llm/context/intents`, `/llm/context/sections`, `/llm/context/sections/by-name/{section_name}`, `/llm/context/sections/at-time`, `/llm/context/sections/beat`, `/llm/context/chords/transition`, `/llm/context/cues/current`, `/llm/context/cues/window`, `/llm/context/cues/section/{section_name}`, `/llm/context/fixtures`, `/llm/context/fixtures/{fixture_id}`, `/llm/context/fixture-positions`, `/llm/context/pois`.
 - LLM cue edit routes: `/llm/actions/cues/add`, `/llm/actions/cues/update`, `/llm/actions/cues/delete`, `/llm/actions/cues/clear`, `/llm/actions/cues/apply-helper`.
 
 Song payload fields under `state.song`:

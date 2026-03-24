@@ -15,11 +15,13 @@ FastAPI OpenAI-compatible wrapper for local llama.cpp with MCP tool-calling supp
 3. If tool calls exist:
    - normalize arguments,
    - map LLM tool name to MCP tool name,
-   - execute MCP `tools/call` via persistent SSE session,
-   - append tool results as `role=tool` messages,
-   - call model again and return final output.
+   - execute MCP or backend retrieval/mutation calls,
+   - continue through bounded follow-up tool rounds when the model needs more context,
+   - if a tool result includes an authoritative `answer` field for a non-edit request, return that answer directly,
+   - otherwise append tool results as `role=tool` messages and continue until the model produces a final answer.
 
 The gateway relies on the backend-provided chat history already present in `messages`, so later user replies like `yes` or `no` can be interpreted in the same conversation when deciding whether destructive cue edits are confirmed.
+The gateway also honors optional `allowed_tools` from the backend request payload so narrow question classes can restrict the available retrieval tool set without synthesizing an answer.
 
 ## Failure policy
 
@@ -51,6 +53,8 @@ Implemented in `mcp_client.py`:
 - `backend_get_song_sections` → backend `/llm/context/sections`
 - `backend_get_section_by_name` → backend `/llm/context/sections/by-name/{section_name}`
 - `backend_get_section_at_time` → backend `/llm/context/sections/at-time?time_s=...`
+- `backend_get_section_beat` → backend `/llm/context/sections/beat?section_name=...&beat_ordinal=...&occurrence=...`
+- `backend_get_chord_transition` → backend `/llm/context/chords/transition?from_chord=...&to_chord=...&occurrence=...`
 - `backend_get_current_cue_sheet` → backend `/llm/context/cues/current`
 - `backend_add_cue_row` → backend `/llm/actions/cues/add`
 - `backend_update_cue_row_by_index` → backend `/llm/actions/cues/update`

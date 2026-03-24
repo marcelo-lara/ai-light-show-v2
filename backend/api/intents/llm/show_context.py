@@ -2,29 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from api.intents.llm.song_context import build_song_sections_payload
+from api.intents.llm.timing_context import build_section_by_name_payload
 from store.services.canvas_render_core import _expand_entry_for_render
-
-
-def build_section_by_name_payload(manager, section_name: str) -> Dict[str, Any] | None:
-    lookup = str(section_name or "").strip().lower()
-    if not lookup:
-        return None
-    for section in build_song_sections_payload(manager).get("sections", []):
-        if str(section.get("name") or "").strip().lower() == lookup:
-            return section
-    return None
-
-
-def build_section_at_time_payload(manager, time_s: float) -> Dict[str, Any] | None:
-    sections = build_song_sections_payload(manager).get("sections", [])
-    for index, section in enumerate(sections):
-        start_s = float(section.get("start_s", 0.0))
-        end_s = float(section.get("end_s", 0.0))
-        is_last = index == len(sections) - 1
-        if start_s <= time_s < end_s or (is_last and start_s <= time_s <= end_s):
-            return section
-    return None
 
 
 def build_cue_window_payload(manager, start_s: float, end_s: float) -> Dict[str, Any]:
@@ -67,6 +46,11 @@ def build_cue_window_payload(manager, start_s: float, end_s: float) -> Dict[str,
 
     fixtures_used = sorted({str(entry.get("fixture_id") or "") for entry in expanded_entries if entry.get("fixture_id")})
     effects_used = sorted({str(entry.get("effect") or "") for entry in expanded_entries if entry.get("effect")})
+    if effects_used:
+        effect_text = ", ".join(effects_used)
+        answer = f"The effects rendered from {start_s:g} to {end_s:g} seconds are: {effect_text}."
+    else:
+        answer = f"No effects are rendered from {start_s:g} to {end_s:g} seconds."
     return {
         "start_s": start_s,
         "end_s": end_s,
@@ -74,6 +58,7 @@ def build_cue_window_payload(manager, start_s: float, end_s: float) -> Dict[str,
         "expanded_entries": expanded_entries,
         "fixtures_used": fixtures_used,
         "effects_used": effects_used,
+        "answer": answer,
     }
 
 
@@ -81,7 +66,14 @@ def build_cue_section_payload(manager, section_name: str) -> Dict[str, Any] | No
     section = build_section_by_name_payload(manager, section_name)
     if section is None:
         return None
-    return {
+    payload = {
         "section": section,
         **build_cue_window_payload(manager, float(section["start_s"]), float(section["end_s"])),
     }
+    fixtures_used = payload.get("fixtures_used") or []
+    if fixtures_used:
+        fixture_text = ", ".join(str(fixture_id) for fixture_id in fixtures_used)
+        payload["answer"] = f"The fixtures used in the {section['name']} section are: {fixture_text}."
+    else:
+        payload["answer"] = f"No fixtures are used in the {section['name']} section."
+    return payload

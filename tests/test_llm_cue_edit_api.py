@@ -25,6 +25,11 @@ class _FakeStateManager:
     def get_cue_entries(self):
         return list(self.entries)
 
+    async def clear_cue_entries(self, from_time=0.0, to_time=None):
+        removed = len(self.entries)
+        self.entries = []
+        return {"ok": True, "removed": removed, "remaining": 0}
+
 
 class _FakeManager:
     def __init__(self, is_playing: bool = False):
@@ -59,8 +64,7 @@ def test_llm_add_cue_route_returns_updated_cue_sheet():
     assert body["ok"] is True
     assert body["data"]["intent"] == "cue.add"
     assert body["data"]["event"]["message"] == "cue_added"
-    assert body["data"]["cue_sheet"]["entry_count"] == 1
-    assert body["data"]["cue_sheet"]["entries"][0]["index"] == 0
+    assert body["data"]["answer"] == "Cue row added successfully."
     assert manager.events[-1][1] == "cue_added"
     assert manager.broadcasts == 1
 
@@ -77,3 +81,17 @@ def test_llm_add_cue_route_rejects_when_show_running():
     assert body["error"]["data"]["reason"] == "show_running"
     assert manager.events[-1][1] == "llm_cue_edit_rejected"
     assert manager.broadcasts == 0
+
+
+def test_llm_clear_cue_route_returns_success_answer():
+    manager = _FakeManager()
+    manager.state_manager.entries = [{"time": 1.0}, {"time": 2.0}]
+    with _build_client(manager) as client:
+        response = client.post("/llm/actions/cues/clear", json={"payload": {"from_time": 0.0, "to_time": 10.0}})
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["ok"] is True
+    assert body["data"]["intent"] == "cue.clear"
+    assert body["data"]["event"]["message"] == "cue_cleared"
+    assert body["data"]["answer"] == "Cleared 2 cue rows. 0 cue rows remain."

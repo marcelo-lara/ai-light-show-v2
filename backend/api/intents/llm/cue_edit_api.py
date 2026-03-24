@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 
 from api.intents.cue.mutate_rows import execute_add_cue, execute_delete_cue, execute_update_cue
 from api.intents.cue.mutate_sheet import execute_apply_helper, execute_clear_cue
-from api.intents.llm.cue_sheet_context import build_cue_sheet_payload
 
 
 router = APIRouter()
@@ -19,6 +18,26 @@ class CueEditRequest(BaseModel):
 
 def _event_from_result(result: Dict[str, Any]) -> Dict[str, Any]:
     return {"level": result["level"], "message": result["message"], "data": result["data"]}
+
+
+def _success_answer(intent_name: str, event: Dict[str, Any]) -> str:
+    data = event.get("data") or {}
+    if intent_name == "cue.clear":
+        removed = int(data.get("removed") or 0)
+        remaining = int(data.get("remaining") or 0)
+        return f"Cleared {removed} cue rows. {remaining} cue rows remain."
+    if intent_name == "cue.add":
+        return "Cue row added successfully."
+    if intent_name == "cue.update":
+        return "Cue row updated successfully."
+    if intent_name == "cue.delete":
+        return "Cue row deleted successfully."
+    if intent_name == "cue.apply_helper":
+        generated = int(data.get("generated") or 0)
+        replaced = int(data.get("replaced") or 0)
+        skipped = int(data.get("skipped") or 0)
+        return f"Applied cue helper. Generated {generated}, replaced {replaced}, skipped {skipped}."
+    return "Cue edit completed successfully."
 
 
 async def _run_cue_edit(request: Request, intent_name: str, payload: Dict[str, Any], executor) -> Dict[str, Any]:
@@ -33,7 +52,14 @@ async def _run_cue_edit(request: Request, intent_name: str, payload: Dict[str, A
     if not result["ok"]:
         return {"ok": False, "error": {"intent": intent_name, "event": event}}
     await manager._schedule_broadcast()
-    return {"ok": True, "data": {"intent": intent_name, "event": event, "cue_sheet": build_cue_sheet_payload(manager)}}
+    return {
+        "ok": True,
+        "data": {
+            "intent": intent_name,
+            "event": event,
+            "answer": _success_answer(intent_name, event),
+        },
+    }
 
 
 @router.post("/llm/actions/cues/add")

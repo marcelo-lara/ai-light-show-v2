@@ -149,6 +149,11 @@ class _FakeLlamaClient:
                 {},
                 "The cursor is at 60.0 seconds in the Verse section.",
             ),
+            "where does the intro ends?": (
+                "backend_get_section_by_name",
+                {"section_name": "Intro"},
+                "The intro ends at 35.82 seconds.",
+            ),
             "what fixtures are used in the verse?": (
                 "backend_get_cue_section",
                 {"section_name": "Verse"},
@@ -247,6 +252,22 @@ def json_dumps(value):
                 },
             },
             "The cursor is at 60.0 seconds in the Verse section.",
+        ),
+        (
+            "where does the intro ends?",
+            "backend_get_section_by_name",
+            {"section_name": "Intro"},
+            "Looking up section timing",
+            {
+                "ok": True,
+                "data": {
+                    "name": "Intro",
+                    "start_s": 1.36,
+                    "end_s": 35.82,
+                    "answer": "The intro ends at 35.82 seconds.",
+                },
+            },
+            "The intro ends at 35.82 seconds.",
         ),
         (
             "What fixtures are used in the Verse?",
@@ -355,7 +376,7 @@ def test_ws_llm_retrieval_uses_expected_gateway_tool_for_prompt(
             )
 
             status_event = _read_until_event(ws, "llm_status")
-            assert status_event["data"]["status"] == "Looking up song and fixture details"
+            assert status_event["data"]["status"] == "Preparing request context"
 
             status_event = _read_until_event(ws, "llm_status")
             assert status_event["data"]["status"] == expected_status
