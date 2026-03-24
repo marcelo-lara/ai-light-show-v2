@@ -39,6 +39,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - `intent`: `{ type:"intent", req_id, name, payload }`
 
 Supported intent names:
+- Song: `song.list`, `song.load`.
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
@@ -62,6 +63,8 @@ Patch behavior:
 
 - Browser audio timeline periodically aligns backend timecode (default 10s sync).
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
+- `song.list` emits the currently loadable backend song names without mutating state.
+- `song.load` validates `payload.filename`, loads the selected song into backend state, resets playback to stopped, updates the output universe, and schedules a snapshot/patch broadcast.
 - Clients can send `transport.jump_to_section` with `payload.section_index` to seek to the matching section start.
 - Section boundaries and labels are resolved from normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
 - `fixture.preview_effect` is rejected while playback is active. Preview runs to completion and final effect values persist to `editor_universe` (and `output_universe`).
@@ -182,6 +185,7 @@ Use this matrix to pick edit targets and minimum tests quickly:
 | Cue-sheet-to-canvas render wiring or preview render wiring | `store/state_manager/core/render.py`, `store/services/canvas_rendering.py` | state-manager regression command above |
 | Fixture effect contracts or preview support | `models/fixtures/**/*`, `store/state_manager/core/fixture_effects.py`, `store/state_manager/playback/preview_start.py` | state-manager regression command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `store/state_manager/song/loading.py`, `store/state_manager/song/cues.py`, `store/state_manager/song/sections.py` | state-manager regression command above |
+| Song enumeration and load intents | `api/intents/song/*`, `services/song_service.py` | websocket/file-backed command above + `tests/test_song_intents.py` + `tests/test_ws_song_e2e.py` |
 | Playback transport or timecode/frame application | `store/state_manager/playback/transport.py` | state-manager regression command above + `tests/test_ws_transport_jump_to_section_e2e.py` |
 | Chaser preview start/stop/runner behavior | `store/state_manager/playback/preview_chaser.py` | state-manager regression command above + `tests/test_chaser_preview_lifecycle.py` |
 | Fixture live value write behavior | `api/intents/fixture/actions/set_values.py`, `store/state_manager/playback/channels.py` | state-manager regression command above + `tests/test_set_values_regression.py` |

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 from models.song import Song
 
+
 class SongService:
     def __init__(self, songs_path: Path, meta_path: Path):
         self.songs_path = songs_path
@@ -11,6 +12,7 @@ class SongService:
         songs = []
         for file in self.songs_path.glob("*.mp3"):
             songs.append(file.stem)
+        songs.sort()
         return songs
 
     def load_metadata(self, filename: str) -> Song:

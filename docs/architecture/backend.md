@@ -8,7 +8,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 - `backend/api/websocket_manager/endpoint.py`: websocket accept/read loop.
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
-- `backend/api/intents/*`: intent registry + action handlers (`transport`, `fixture`, `cue`, `chaser`, `poi`, `llm` domains).
+- `backend/api/intents/*`: intent registry + action handlers (`song`, `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm` domains).
 - `backend/store/state.py`: compatibility export for `StateManager`, `FPS`, and `MAX_SONG_SECONDS`.
 - `backend/store/state_manager/manager.py`: `StateManager` mixin composition root.
 - `backend/store/state_manager/core/*`: bootstrap, fixture/POI store operations, metadata helpers, render wrappers.
@@ -59,6 +59,7 @@ Behavior:
 ### Playback and time sync
 
 - Browser timeline provides periodic alignment (for example every 10s), while backend advances playback timecode continuously during `playing`.
+- Song intents: `song.list|load`.
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
 - `jump_to_time` seeks and applies nearest precomputed frame.
 - `jump_to_section` resolves `payload.section_index` against sections sorted by normalized start time (`start_s|start`), seeks to the section start time, and applies the nearest precomputed frame.
@@ -74,6 +75,8 @@ Behavior:
 
 - `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`; for `kind="rgb"` meta-channels, payload must use `values.rgb` as `#RRGGBB` (or mapped color name), and backend converts it to RGB channel writes.
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
+- `song.list` emits an event with the available backend song names and does not broadcast state.
+- `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, and `cue.apply_helper`.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
@@ -172,6 +175,7 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 | Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | validation command above |
 | Fixture effect contracts or preview support | `backend/models/fixtures/**/*`, `backend/store/state_manager/core/fixture_effects.py`, `backend/store/state_manager/playback/preview_start.py` | validation command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | validation command above |
+| Song enumeration and load intents | `backend/api/intents/song/*`, `backend/services/song_service.py` | websocket/file-backed command above + `tests/test_song_intents.py` + `tests/test_ws_song_e2e.py` |
 | Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | validation command above + `tests/test_ws_transport_jump_to_section_e2e.py` |
 | Chaser preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_chaser.py` | validation command above + `tests/test_chaser_preview_lifecycle.py` |
 | Fixture live value write behavior | `backend/api/intents/fixture/actions/set_values.py`, `backend/store/state_manager/playback/channels.py` | validation command above + `tests/test_set_values_regression.py` |

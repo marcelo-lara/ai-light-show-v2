@@ -20,7 +20,7 @@ Code is the source of truth.
 
 3. Intent routing: `backend/api/intents/*`
 - `apply_intent.py` dispatches by domain via `INTENT_HANDLERS`.
-- Domains: `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm`.
+- Domains: `song`, `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm`.
 
 4. State authority: `backend/store/state.py`
 - Holds fixtures, POIs, song/cue state, playback flags, preview lifecycle.
@@ -100,6 +100,13 @@ Code is the source of truth.
 
 ## Intent catalog (current implementation)
 
+### Song intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `song.list` | none | emits `song_list` with backend-discoverable song names from `SongService.list_songs()` | `False` |
+| `song.load` | `filename` | validates the song id, loads the selected song into `StateManager`, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and emits `song_loaded` | `True` on success; else event `song_load_failed` and `False` |
+
 ### Transport intents
 
 | Intent | Payload keys | Behavior | Returns |
@@ -171,6 +178,9 @@ Notes on `fixture.set_values`:
 | `error` | `invalid_json` | none |
 | `warning` | `unsupported_message_type` | `{type: <received type>}` |
 | `warning` | `unknown_intent` | `{name}` |
+| `info` | `song_list` | `{songs:[...]}` |
+| `info` | `song_loaded` | `{filename}` |
+| `error` | `song_load_failed` | `{reason, filename?, songs?, error?}` |
 | `error` | `invalid_time_ms` | none |
 | `error` | `song_not_loaded` | none |
 | `error` | `no_sections_available` | none |
