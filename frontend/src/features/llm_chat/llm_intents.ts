@@ -1,5 +1,5 @@
 import type { IntentMsg } from "../../shared/transport/protocol.ts";
-import { addSystemMessage, addUserMessage, beginLlmRequest, resolveActionProposal, setLlmStatus } from "./llm_state.ts";
+import { addSystemMessage, addUserMessage, beginLlmRequest, clearConversationState, resolveActionProposal, setLlmStatus } from "./llm_state.ts";
 import { makeId } from "../../shared/utils/id.ts";
 
 function wsSend(msg: IntentMsg) {
@@ -36,6 +36,19 @@ export function cancelPrompt() {
     type: "intent",
     req_id: reqId(),
     name: "llm.cancel",
+    payload: {},
+  });
+}
+
+export function clearConversation() {
+  if (!(globalThis as any).__WS_CLIENT__) {
+    clearConversationState();
+    return;
+  }
+  wsSend({
+    type: "intent",
+    req_id: reqId(),
+    name: "llm.clear_conversation",
     payload: {},
   });
 }

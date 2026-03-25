@@ -69,6 +69,18 @@ class AssistantService:
             self._active_by_client.pop(context.client_id, None)
             await self._emit_client_event(context.client_id, manager, "info", "llm_cancelled", {"domain": "llm", "request_id": request_id})
 
+    async def clear_conversation(self, manager, payload: Dict[str, Any]) -> None:
+        client_id = str(payload.get("_client_id") or "")
+        if not client_id:
+            return
+        await self.cancel(manager, {"_client_id": client_id})
+        self._conversation_history.pop(client_id, None)
+        pending_keys = [key for key, pending in self._pending_actions.items() if pending.client_id == client_id]
+        for key in pending_keys:
+            self._pending_actions.pop(key, None)
+        await self._interaction_log.write("conversation_cleared", client_id=client_id)
+        await self._emit_client_event(client_id, manager, "info", "llm_conversation_cleared", {"domain": "llm", "cleared": True})
+
     async def confirm_action(self, manager, payload: Dict[str, Any]) -> None:
         request_id = str(payload.get("request_id") or "")
         action_id = str(payload.get("action_id") or "")

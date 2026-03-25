@@ -18,6 +18,11 @@ def register_transport_tools(mcp, runtime) -> None:
                 nearest = beat
             else:
                 break
+        next_beat = None
+        for beat in beats:
+            if float(beat.time) > float(timecode):
+                next_beat = beat
+                break
         section_name = None
         for section in getattr(getattr(current_song, "sections", None), "sections", []) or []:
             start_s = float(section.get("start_s", section.get("start", 0.0)) or 0.0)
@@ -25,4 +30,15 @@ def register_transport_tools(mcp, runtime) -> None:
             if start_s <= float(timecode) <= end_s:
                 section_name = str(section.get("name") or section.get("label") or "")
                 break
-        return ok({"time_s": round(float(timecode), 3), "bar": getattr(nearest, "bar", None), "beat": getattr(nearest, "beat", None), "section_name": section_name})
+        return ok(
+            {
+                "time_s": round(float(timecode), 3),
+                "bar": getattr(nearest, "bar", None),
+                "beat": getattr(nearest, "beat", None),
+                "beat_time_s": round(float(getattr(nearest, "time", timecode) or timecode), 3) if nearest is not None else None,
+                "next_bar": getattr(next_beat, "bar", None),
+                "next_beat": getattr(next_beat, "beat", None),
+                "next_beat_time_s": round(float(getattr(next_beat, "time", 0.0)), 3) if next_beat is not None else None,
+                "section_name": section_name,
+            }
+        )

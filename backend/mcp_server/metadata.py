@@ -24,6 +24,43 @@ def _slice_by_time(rows: list[dict], start_time: float | None, end_time: float |
     return sliced
 
 
+def _slice_by_bar_beat(
+    rows: list[dict],
+    start_bar: int | None,
+    start_beat: int | None,
+    end_bar: int | None,
+    end_beat: int | None,
+) -> list[dict]:
+    if start_bar is None and start_beat is None and end_bar is None and end_beat is None:
+        return rows
+    start_position = (int(start_bar or 0), int(start_beat or 1))
+    end_position = (int(end_bar), int(end_beat or 4)) if end_bar is not None else None
+    sliced = []
+    for row in rows:
+        bar = row.get("bar")
+        beat = row.get("beat")
+        if not isinstance(bar, int) or not isinstance(beat, int):
+            continue
+        position = (bar, beat)
+        if position < start_position:
+            continue
+        if end_position is not None and position > end_position:
+            continue
+        sliced.append(row)
+    return sliced
+
+
+def _find_bar_beat(rows: list[dict], bar: int, beat: int) -> dict | None:
+    return next(
+        (
+            row
+            for row in rows
+            if int(row.get("bar", -1)) == int(bar) and int(row.get("beat", -1)) == int(beat)
+        ),
+        None,
+    )
+
+
 SECTION_QUERY_STOPWORDS = {
     "a",
     "an",
@@ -137,7 +174,49 @@ def register_metadata_tools(mcp, runtime) -> None:
         return ok({"song": details["filename"], "beats": beats, "count": len(beats)})
 
     @mcp.tool()
-    def metadata_get_chords(song: str | None = None, start_time: float | None = None, end_time: float | None = None):
+    def metadata_get_bar_beats(
+        song: str | None = None,
+        start_bar: int | None = None,
+        start_beat: int | None = None,
+        end_bar: int | None = None,
+        end_beat: int | None = None,
+    ):
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
+        if current_song is None:
+            return fail("song_not_loaded", "No song is currently loaded")
+        details = build_song_details(current_song, ws_manager.state_manager.meta_path)
+        beats = _slice_by_bar_beat(details["beats"], start_bar, start_beat, end_bar, end_beat)
+        return ok({"song": details["filename"], "beats": beats, "count": len(beats)})
+
+    @mcp.tool()
+    def metadata_find_bar_beat(bar: int, beat: int, song: str | None = None):
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
+        if current_song is None:
+            return fail("song_not_loaded", "No song is currently loaded")
+        details = build_song_details(current_song, ws_manager.state_manager.meta_path)
+        match = _find_bar_beat(details["beats"], bar, beat)
+        if match is None:
+            return fail(
+                "bar_beat_not_found",
+                f"Bar {int(bar)} beat {int(beat)} not found",
+                {"bar": int(bar), "beat": int(beat)},
+            )
+        return ok({"song": details["filename"], "position": match})
+
+    @mcp.tool()
+    def metadata_get_chords(
+        song: str | None = None,
+        start_time: float | None = None,
+        end_time: float | None = None,
+        start_bar: int | None = None,
+        start_beat: int | None = None,
+        end_bar: int | None = None,
+        end_beat: int | None = None,
+    ):
         ws_manager, current_song, error = _load_song(song)
         if error is not None:
             return error
@@ -145,6 +224,7 @@ def register_metadata_tools(mcp, runtime) -> None:
             return fail("song_not_loaded", "No song is currently loaded")
         details = build_song_details(current_song, ws_manager.state_manager.meta_path)
         chords = _slice_by_time((details.get("analysis") or {}).get("chords") or [], start_time, end_time, "time_s")
+        chords = _slice_by_bar_beat(chords, start_bar, start_beat, end_bar, end_beat)
         return ok({"song": details["filename"], "chords": chords, "count": len(chords)})
 
     @mcp.tool()

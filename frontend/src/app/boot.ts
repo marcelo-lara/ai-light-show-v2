@@ -7,6 +7,7 @@ import {
   addActionProposal,
   addSystemMessage,
   appendStreamingChunk,
+  clearConversationState,
   failStreaming,
   finishStreaming,
   resolveActionProposal,
@@ -126,6 +127,10 @@ export function boot(ctx: BootContext) {
           }
           if (m.message === "llm_cancelled") {
             finishStreaming();
+            return;
+          }
+          if (m.message === "llm_conversation_cleared") {
+            clearConversationState();
             return;
           }
         }

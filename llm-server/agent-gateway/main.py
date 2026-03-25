@@ -22,7 +22,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "mcp_read_sections",
-            "description": "Read the song sections with exact names and time ranges.",
+            "description": "Read the song sections with exact names, time ranges, and resolved start/end bars and beats.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -59,6 +59,40 @@ TOOLS = [
                     "end_time": {"type": "number"}
                 },
                 "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_read_bar_beats",
+            "description": "Read beat entries by musical position using start/end bars and beats instead of seconds.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "song_id": {"type": "string"},
+                    "start_bar": {"type": "integer"},
+                    "start_beat": {"type": "integer"},
+                    "end_bar": {"type": "integer"},
+                    "end_beat": {"type": "integer"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_find_bar_beat",
+            "description": "Find one exact beat row for a specific bar and beat and return its exact time and chord context.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "song_id": {"type": "string"},
+                    "bar": {"type": "integer"},
+                    "beat": {"type": "integer"}
+                },
+                "required": ["bar", "beat"]
             }
         }
     },
@@ -194,6 +228,8 @@ MCP_TOOL_MAP = {
     "mcp_read_sections": "metadata_get_sections",
     "mcp_find_section": "metadata_find_section",
     "mcp_read_beats": "metadata_get_beats",
+    "mcp_read_bar_beats": "metadata_get_bar_beats",
+    "mcp_find_bar_beat": "metadata_find_bar_beat",
     "mcp_read_chords": "metadata_get_chords",
     "mcp_read_cue_window": "cues_get_window",
     "mcp_read_fixtures": "fixtures_list",
@@ -255,9 +291,20 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
     if tool_name == "mcp_find_section":
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"section_name": str(args.get("section_name") or "")})
 
-    if tool_name in {"mcp_read_beats", "mcp_read_chords", "mcp_read_loudness"}:
+    if tool_name == "mcp_find_bar_beat":
         song = str(args.get("song") or args.get("song_id") or "")
-        payload = {key: value for key, value in args.items() if key in {"start_time", "end_time", "section"}}
+        payload = {"bar": int(args.get("bar", 0)), "beat": int(args.get("beat", 0))}
+        if song:
+            payload["song"] = song
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
+
+    if tool_name in {"mcp_read_beats", "mcp_read_chords", "mcp_read_loudness", "mcp_read_bar_beats"}:
+        song = str(args.get("song") or args.get("song_id") or "")
+        payload = {
+            key: value
+            for key, value in args.items()
+            if key in {"start_time", "end_time", "section", "start_bar", "start_beat", "end_bar", "end_beat"}
+        }
         if song:
             payload["song"] = song
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
@@ -279,7 +326,13 @@ def _format_sections(result: Dict[str, Any]) -> str:
         name = section.get("name") or "Unnamed"
         start_time = float(section.get("start_s", 0.0))
         end_time = float(section.get("end_s", 0.0))
-        lines.append(f"- {name}: start={start_time:.3f}s end={end_time:.3f}s")
+        start_bar = section.get("start_bar")
+        start_beat = section.get("start_beat")
+        end_bar = section.get("end_bar")
+        end_beat = section.get("end_beat")
+        lines.append(
+            f"- {name}: start={start_time:.3f}s ({start_bar}.{start_beat}) end={end_time:.3f}s ({end_bar}.{end_beat})"
+        )
     return "\n".join(lines)
 
 
@@ -316,6 +369,18 @@ def _format_beats(result: Dict[str, Any]) -> str:
     for beat in beats[:32]:
         lines.append(f"- time={float(beat.get('time', 0.0)):.3f}s bar={int(beat.get('bar', 0))} beat={int(beat.get('beat', 0))}")
     return "\n".join(lines)
+
+
+def _format_bar_beat_match(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    position = payload.get("position") or {}
+    if not position:
+        return _format_generic_result(result)
+    return (
+        f"Song: {payload.get('song', 'unknown')}\n"
+        "Position:\n"
+        f"- time={float(position.get('time', 0.0)):.3f}s bar={int(position.get('bar', 0))} beat={int(position.get('beat', 0))} chord={position.get('chord', 'unknown')}"
+    )
 
 
 def _format_chords(result: Dict[str, Any]) -> str:
@@ -357,6 +422,10 @@ def _render_tool_result(tool_name: str, result: Any) -> str:
         return _format_section_match(result)
     if tool_name == "mcp_read_beats":
         return _format_beats(result)
+    if tool_name == "mcp_read_bar_beats":
+        return _format_beats(result)
+    if tool_name == "mcp_find_bar_beat":
+        return _format_bar_beat_match(result)
     if tool_name == "mcp_read_chords":
         return _format_chords(result)
     if tool_name == "mcp_read_loudness":

@@ -178,3 +178,60 @@ def test_llm_prompt_includes_recent_chat_history(monkeypatch, tmp_path):
             assert second_done["data"]["done"] is True
 
     assert len(seen_messages) == 2
+
+
+def test_llm_clear_conversation_resets_history(monkeypatch, tmp_path):
+    seen_messages = []
+    fresh_backend_main = _fresh_backend_main()
+    monkeypatch.setenv("ASSISTANT_LOG_DIR", str(tmp_path / "assistant-logs"))
+
+    async def _noop_async(*_args, **_kwargs):
+        return None
+
+    async def _fake_load_song(self, song_name: str):
+        self.current_song = _fake_song(song_name)
+        self.song_length_seconds = 158.53
+        self.timecode = 37.62
+        self.is_playing = False
+        self.output_universe = bytearray(512)
+        self.editor_universe = bytearray(512)
+        self.cue_sheet = CueSheet(song_filename=song_name, entries=[])
+
+    async def _fake_gateway_stream(self, messages, assistant_id):
+        del assistant_id
+        seen_messages.append(messages)
+        if len(seen_messages) == 1:
+            yield {"type": "delta", "delta": "The instrumental starts at 35.820 seconds."}
+            yield {"type": "done", "finish_reason": "stop"}
+            return
+        assert not any(message["role"] == "user" and message["content"] == "what about the second instrumental part?" for message in messages)
+        assert not any(message["role"] == "assistant" and message["content"] == "The instrumental starts at 35.820 seconds." for message in messages)
+        yield {"type": "delta", "delta": "No previous conversation is available."}
+        yield {"type": "done", "finish_reason": "stop"}
+
+    monkeypatch.setattr(fresh_backend_main, "run_startup_blue_wipe", _noop_async)
+    monkeypatch.setattr(SongService, "list_songs", lambda self: ["Yonaka - Seize the Power"])
+    monkeypatch.setattr(StateManager, "load_song", _fake_load_song)
+    monkeypatch.setattr(StateManager, "_dump_canvas_debug", lambda self, _song_name: None)
+    monkeypatch.setattr(ArtNetService, "start", _noop_async)
+    monkeypatch.setattr(ArtNetService, "stop", _noop_async)
+    monkeypatch.setattr(ArtNetService, "blackout", _noop_async)
+    monkeypatch.setattr(ArtNetService, "update_universe", _noop_async)
+    monkeypatch.setattr(ArtNetService, "arm_fixture", _noop_async)
+    monkeypatch.setattr(AssistantGatewayClient, "stream", _fake_gateway_stream)
+
+    with TestClient(fresh_backend_main.app) as client:
+        with client.websocket_connect("/ws") as ws:
+            _read_until(ws, lambda message: message.get("type") == "snapshot")
+
+            ws.send_json({"type": "intent", "req_id": "llm-1", "name": "llm.send_prompt", "payload": {"prompt": "what about the second instrumental part?"}})
+            _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_done")
+
+            ws.send_json({"type": "intent", "req_id": "llm-clear", "name": "llm.clear_conversation", "payload": {}})
+            cleared = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_conversation_cleared")
+            assert cleared["data"]["cleared"] is True
+
+            ws.send_json({"type": "intent", "req_id": "llm-2", "name": "llm.send_prompt", "payload": {"prompt": "repeat the last command"}})
+            _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_done")
+
+    assert len(seen_messages) == 2

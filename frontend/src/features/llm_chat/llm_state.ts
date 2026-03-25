@@ -184,3 +184,12 @@ export function failStreaming(requestId: string | undefined, code: string, detai
   };
   emit();
 }
+
+export function clearConversationState() {
+  state = {
+    status: "idle",
+    messages: [],
+    streamingText: "",
+  };
+  emit();
+}

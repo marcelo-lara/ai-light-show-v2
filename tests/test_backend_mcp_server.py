@@ -91,11 +91,16 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         sections = await client.call_tool("metadata_get_sections", {"song": "Yonaka - Seize the Power"})
         assert sections.data["ok"] is True
         assert sections.data["data"]["count"] > 0
+        first_section = sections.data["data"]["sections"][0]
+        assert "start_bar" in first_section
+        assert "start_beat" in first_section
 
         verse = await client.call_tool("metadata_find_section", {"song": "Yonaka - Seize the Power", "section_name": "Verse"})
         assert verse.data["ok"] is True
         assert verse.data["data"]["section"]["name"] == "Verse"
         assert verse.data["data"]["section"]["start_s"] == 57.32
+        assert isinstance(verse.data["data"]["section"]["start_bar"], int)
+        assert isinstance(verse.data["data"]["section"]["start_beat"], int)
 
         fallback_verse = await client.call_tool("metadata_find_section", {"song": "unique_song_identifier", "section_name": "Verse"})
         assert fallback_verse.data["ok"] is True
@@ -110,11 +115,23 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         assert chords.data["ok"] is True
         assert chords.data["data"]["count"] > 0
 
+        bar_window = await client.call_tool("metadata_get_bar_beats", {"start_bar": 21, "end_bar": 21})
+        assert bar_window.data["ok"] is True
+        assert bar_window.data["data"]["count"] > 0
+        assert all(item["bar"] == 21 for item in bar_window.data["data"]["beats"])
+
+        bar_beat = await client.call_tool("metadata_find_bar_beat", {"bar": 21, "beat": 1})
+        assert bar_beat.data["ok"] is True
+        assert bar_beat.data["data"]["position"]["time"] == 37.62
+        assert bar_beat.data["data"]["position"]["bar"] == 21
+        assert bar_beat.data["data"]["position"]["beat"] == 1
+
         cursor = await client.call_tool("transport_get_cursor", {})
         assert cursor.data["ok"] is True
         assert cursor.data["data"]["time_s"] == 37.62
         assert cursor.data["data"]["bar"] == 21
         assert cursor.data["data"]["beat"] == 1
+        assert cursor.data["data"]["beat_time_s"] == 37.62
 
         loudness = await client.call_tool("metadata_get_loudness", {"song": "Yonaka - Seize the Power", "section": "Verse"})
         assert loudness.data["ok"] is True

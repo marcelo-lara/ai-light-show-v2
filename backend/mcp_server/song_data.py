@@ -23,6 +23,37 @@ def _normalize_sections(raw_sections: List[Dict[str, Any]]) -> List[Dict[str, An
     return normalized
 
 
+def _find_last_beat_at_or_before(beats: List[Dict[str, Any]], time_s: float) -> Optional[Dict[str, Any]]:
+    match: Optional[Dict[str, Any]] = None
+    for beat in beats:
+        if float(beat.get("time", 0.0)) <= float(time_s):
+            match = beat
+            continue
+        break
+    if match is not None:
+        return match
+    return beats[0] if beats else None
+
+
+def _attach_section_positions(sections: List[Dict[str, Any]], beats: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    if not beats:
+        return sections
+
+    positioned: List[Dict[str, Any]] = []
+    for section in sections:
+        entry = dict(section)
+        start_match = _find_last_beat_at_or_before(beats, float(section.get("start_s", 0.0)))
+        end_match = _find_last_beat_at_or_before(beats, float(section.get("end_s", 0.0)))
+        if start_match is not None:
+            entry["start_bar"] = int(start_match.get("bar", 0))
+            entry["start_beat"] = int(start_match.get("beat", 0))
+        if end_match is not None:
+            entry["end_bar"] = int(end_match.get("bar", 0))
+            entry["end_beat"] = int(end_match.get("beat", 0))
+        positioned.append(entry)
+    return positioned
+
+
 def _parse_chords(beats_path: Path) -> List[Dict[str, Any]]:
     if not beats_path.exists():
         return []
@@ -70,7 +101,7 @@ def _build_plots(song, meta_root: Path) -> List[Dict[str, Any]]:
 
 def build_song_details(song, meta_root: Path) -> Dict[str, Any]:
     beats = [beat.model_dump() for beat in song.beats.beats]
-    sections = _normalize_sections(song.sections.sections)
+    sections = _attach_section_positions(_normalize_sections(song.sections.sections), beats)
     chords = _parse_chords(meta_root / song.song_id / "beats.json")
     analysis: Optional[Dict[str, Any]] = None
     plots = _build_plots(song, meta_root)

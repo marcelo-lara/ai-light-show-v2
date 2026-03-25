@@ -1,4 +1,4 @@
-import { cancelPrompt, sendPrompt } from "../llm_intents.ts";
+import { cancelPrompt, clearConversation, sendPrompt } from "../llm_intents.ts";
 import { getLlmState } from "../llm_state.ts";
 import { Button } from "../../../shared/components/controls/Button.ts";
 
@@ -35,6 +35,15 @@ export function PromptInput(): HTMLElement {
 		},
 	});
 
+	const clear = Button({
+		caption: "Clear",
+		state: "default",
+		bindings: {
+			title: "Clear conversation",
+			disabled: isStreaming,
+		},
+	});
+
 	const updateSendState = () => {
 		send.disabled = isStreaming || input.value.trim().length === 0;
 	};
@@ -56,6 +65,7 @@ export function PromptInput(): HTMLElement {
 
 	send.addEventListener("click", submitPrompt);
 	stop.addEventListener("click", () => cancelPrompt());
+	clear.addEventListener("click", () => clearConversation());
 	input.addEventListener("input", () => {
 		updateSendState();
 		syncComposerHeight();
@@ -71,6 +81,7 @@ export function PromptInput(): HTMLElement {
 
 	syncComposerHeight();
 	updateSendState();
+	actions.append(clear);
 	if (isStreaming) actions.append(stop);
 	actions.append(send);
 	row.append(input, actions);
