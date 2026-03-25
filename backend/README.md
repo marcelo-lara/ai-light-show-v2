@@ -63,7 +63,7 @@ Current MCP tools:
 - Songs: `songs_list`, `songs_get_details`, `songs_load`
 - Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`
 - Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_beats`, `metadata_get_chords`, `metadata_get_loudness`
+- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_chords`, `metadata_get_loudness`
 - Transport: `transport_get_cursor`
 
 Behavior notes:
@@ -80,6 +80,7 @@ Behavior notes:
 
 Assistant event behavior:
 - Assistant replies are session-scoped websocket events and are not broadcast globally to other clients.
+- Assistant requests include recent per-client user and assistant turns from the current websocket session so follow-up prompts can reference the prior exchange.
 - `llm_status` carries operational system messages such as `Thinking`, `Calling local model`, or `Executing metadata_get_sections`.
 - `llm_delta` carries streamed assistant text chunks.
 - `llm_done` closes the active streamed assistant response.
@@ -105,7 +106,7 @@ Patch behavior:
 - `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings. For `kind="rgb"` meta-channels, send `values.rgb` as `#RRGGBB` (or mapped color name); backend converts it to channel bytes.
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
 - `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
-- `llm.send_prompt` starts an assistant request through the backend-owned assistant service. The assistant service loads a named prompt profile, forwards the request to the agent gateway, relays streamed model output to the requesting websocket client, and pauses write-capable tool calls at the proposal stage.
+- `llm.send_prompt` starts an assistant request through the backend-owned assistant service. The assistant service loads a named prompt profile, includes recent per-client chat history from the current websocket session, forwards the request to the agent gateway, relays streamed model output to the requesting websocket client, and pauses write-capable tool calls at the proposal stage.
 - `llm.confirm_action` applies a proposed cue or chaser mutation after explicit user confirmation, schedules a broadcast for the resulting state change, and then requests a model-authored follow-up summary.
 - `llm.reject_action` dismisses a pending proposal without mutating cues.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.

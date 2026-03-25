@@ -92,6 +92,20 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         assert sections.data["ok"] is True
         assert sections.data["data"]["count"] > 0
 
+        verse = await client.call_tool("metadata_find_section", {"song": "Yonaka - Seize the Power", "section_name": "Verse"})
+        assert verse.data["ok"] is True
+        assert verse.data["data"]["section"]["name"] == "Verse"
+        assert verse.data["data"]["section"]["start_s"] == 57.32
+
+        fallback_verse = await client.call_tool("metadata_find_section", {"song": "unique_song_identifier", "section_name": "Verse"})
+        assert fallback_verse.data["ok"] is True
+        assert fallback_verse.data["data"]["song"] == "Yonaka - Seize the Power"
+        assert fallback_verse.data["data"]["section"]["name"] == "Verse"
+
+        fuzzy_verse = await client.call_tool("metadata_find_section", {"section_name": "verse start"})
+        assert fuzzy_verse.data["ok"] is True
+        assert fuzzy_verse.data["data"]["section"]["name"] == "Verse"
+
         chords = await client.call_tool("metadata_get_chords", {"song": "Yonaka - Seize the Power"})
         assert chords.data["ok"] is True
         assert chords.data["data"]["count"] > 0

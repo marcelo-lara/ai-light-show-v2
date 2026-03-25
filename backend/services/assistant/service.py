@@ -8,8 +8,11 @@ from typing import Any, Dict
 
 from .gateway import AssistantGatewayClient
 from .interaction_log import AssistantInteractionLog
-from .models import ActiveRequest, PendingAction
+from .models import ActiveRequest, ConversationTurn, PendingAction
 from .prompts import load_prompt
+
+
+MAX_HISTORY_MESSAGES = 12
 
 
 class AssistantService:
@@ -22,6 +25,7 @@ class AssistantService:
         self._active_by_client: Dict[str, str] = {}
         self._pending_actions: Dict[tuple[str, str], PendingAction] = {}
         self._request_context: Dict[str, ActiveRequest] = {}
+        self._conversation_history: Dict[str, list[ConversationTurn]] = {}
 
     async def submit(self, manager, payload: Dict[str, Any]) -> bool:
         prompt = str(payload.get("prompt") or "").strip()
@@ -106,9 +110,12 @@ class AssistantService:
             if task is not None:
                 task.cancel()
             self._request_context.pop(request_id, None)
+        self._conversation_history.pop(client_id, None)
 
     async def _run_prompt(self, manager, context: ActiveRequest) -> None:
-        messages = [{"role": "system", "content": load_prompt(self._assistant_root, context.assistant_id)}, {"role": "user", "content": context.prompt}]
+        messages = self._build_request_messages(manager, context.client_id, context.assistant_id, context.prompt)
+        response_chunks: list[str] = []
+        proposal_emitted = False
         await self._interaction_log.write(
             "gateway_request_started",
             request_id=context.request_id,
@@ -119,7 +126,28 @@ class AssistantService:
         try:
             async for event in self._gateway.stream(messages, context.assistant_id):
                 await self._interaction_log.write("gateway_event", request_id=context.request_id, client_id=context.client_id, payload=event)
+                if str(event.get("type") or "") == "delta":
+                    response_chunks.append(str(event.get("delta") or ""))
+                if str(event.get("type") or "") == "proposal":
+                    proposal_emitted = True
                 await self._forward_event(manager, context.client_id, context.request_id, context.assistant_id, event, context.prompt)
+            assistant_text = "".join(response_chunks).strip()
+            if assistant_text:
+                self._append_conversation_turns(context.client_id, context.prompt, assistant_text)
+                await self._interaction_log.write(
+                    "conversation_history_appended",
+                    request_id=context.request_id,
+                    client_id=context.client_id,
+                    user_prompt=context.prompt,
+                    assistant_response=assistant_text,
+                )
+            elif not proposal_emitted:
+                await self._interaction_log.write(
+                    "conversation_history_skipped",
+                    request_id=context.request_id,
+                    client_id=context.client_id,
+                    reason="empty_assistant_response",
+                )
         except asyncio.CancelledError:
             await self._interaction_log.write("request_cancelled", request_id=context.request_id, client_id=context.client_id)
             await self._emit_client_event(context.client_id, manager, "info", "llm_cancelled", {"domain": "llm", "request_id": context.request_id})
@@ -133,6 +161,7 @@ class AssistantService:
             self._request_context.pop(context.request_id, None)
 
     async def _run_confirmed_action(self, manager, pending: PendingAction) -> None:
+        response_chunks: list[str] = []
         try:
             await self._emit_client_event(pending.client_id, manager, "info", "llm_status", {"domain": "llm", "request_id": pending.request_id, "phase": "applying_action", "label": f"Applying {pending.tool_name}", "assistant_id": pending.assistant_id})
             result = await self._apply_pending_action(manager, pending)
@@ -148,7 +177,7 @@ class AssistantService:
                 await self._emit_client_event(pending.client_id, manager, "error", "llm_error", {"domain": "llm", "request_id": pending.request_id, "code": "action_failed", "detail": str(result.get("reason") or result), "retryable": False})
                 return
             await self._emit_client_event(pending.client_id, manager, "info", "llm_action_applied", {"domain": "llm", "request_id": pending.request_id, "action_id": pending.action_id, "tool_name": pending.tool_name})
-            follow_up = self._build_follow_up_messages(pending, result)
+            follow_up = self._build_follow_up_messages(manager, pending, result)
             await self._interaction_log.write(
                 "gateway_follow_up_started",
                 request_id=pending.request_id,
@@ -158,7 +187,19 @@ class AssistantService:
             )
             async for event in self._gateway.stream(follow_up, pending.assistant_id):
                 await self._interaction_log.write("gateway_event", request_id=pending.request_id, client_id=pending.client_id, payload=event)
+                if str(event.get("type") or "") == "delta":
+                    response_chunks.append(str(event.get("delta") or ""))
                 await self._forward_event(manager, pending.client_id, pending.request_id, pending.assistant_id, event)
+            assistant_text = "".join(response_chunks).strip()
+            if assistant_text:
+                self._append_conversation_turns(pending.client_id, pending.prompt, assistant_text)
+                await self._interaction_log.write(
+                    "conversation_history_appended",
+                    request_id=pending.request_id,
+                    client_id=pending.client_id,
+                    user_prompt=pending.prompt,
+                    assistant_response=assistant_text,
+                )
         except asyncio.CancelledError:
             await self._interaction_log.write("request_cancelled", request_id=pending.request_id, client_id=pending.client_id)
             await self._emit_client_event(pending.client_id, manager, "info", "llm_cancelled", {"domain": "llm", "request_id": pending.request_id})
@@ -213,10 +254,42 @@ class AssistantService:
             return result
         return {"ok": False, "reason": "unsupported_action"}
 
-    def _build_follow_up_messages(self, pending: PendingAction, result: Dict[str, Any]) -> list[Dict[str, Any]]:
+    def _build_follow_up_messages(self, manager, pending: PendingAction, result: Dict[str, Any]) -> list[Dict[str, Any]]:
         prompt = load_prompt(self._assistant_root, pending.assistant_id)
+        current_song = self._current_song_name(manager)
         result_text = json.dumps({"tool_name": pending.tool_name, "arguments": pending.arguments, "result": result}, ensure_ascii=True)
-        return [{"role": "system", "content": prompt}, {"role": "user", "content": pending.prompt}, {"role": "user", "content": f"The confirmed action has been executed. Tool result: {result_text}"}]
+        messages = [{"role": "system", "content": prompt}]
+        if current_song:
+            messages.append({"role": "system", "content": f"Current loaded song: {current_song}"})
+        messages.append({"role": "user", "content": pending.prompt})
+        messages.append({"role": "user", "content": f"The confirmed action has been executed. Tool result: {result_text}"})
+        return messages
+
+    def _build_request_messages(self, manager, client_id: str, assistant_id: str, prompt: str) -> list[Dict[str, Any]]:
+        messages = [{"role": "system", "content": load_prompt(self._assistant_root, assistant_id)}]
+        current_song = self._current_song_name(manager)
+        if current_song:
+            messages.append({"role": "system", "content": f"Current loaded song: {current_song}"})
+        for turn in self._conversation_history.get(client_id, []):
+            messages.append({"role": turn.role, "content": turn.content})
+        messages.append({"role": "user", "content": prompt})
+        return messages
+
+    def _append_conversation_turns(self, client_id: str, user_prompt: str, assistant_response: str) -> None:
+        history = list(self._conversation_history.get(client_id, []))
+        history.append(ConversationTurn(role="user", content=user_prompt))
+        history.append(ConversationTurn(role="assistant", content=assistant_response))
+        self._conversation_history[client_id] = history[-MAX_HISTORY_MESSAGES:]
+
+    def _current_song_name(self, manager) -> str | None:
+        if manager is None:
+            return None
+        current_song = getattr(getattr(manager, "state_manager", None), "current_song", None)
+        song_id = getattr(current_song, "song_id", None)
+        if song_id is None:
+            return None
+        text = str(song_id).strip()
+        return text or None
 
     async def _emit_client_event(self, client_id: str, manager, level: str, message: str, data: Dict[str, Any]) -> None:
         await self._interaction_log.write(

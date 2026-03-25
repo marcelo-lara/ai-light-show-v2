@@ -94,21 +94,23 @@ export function addSystemMessage(text: string, kind: "info" | "error" = "info") 
 }
 
 export function upsertSystemStatus(requestId: string, text: string) {
-  const existingIndex = state.messages.findIndex(
-    (message) => message.role === "system" && message.kind === "status" && message.requestId === requestId,
-  );
-  if (existingIndex >= 0) {
-    const nextMessages = [...state.messages];
-    nextMessages[existingIndex] = { ...nextMessages[existingIndex], text };
-    state = { ...state, messages: nextMessages, status: "streaming", activeRequestId: requestId };
-  } else {
-    state = {
-      ...state,
-      status: "streaming",
-      activeRequestId: requestId,
-      messages: [...state.messages, { id: makeId(), role: "system", text, kind: "status", requestId }],
-    };
+  const lastMessage = state.messages.at(-1);
+  if (
+    lastMessage?.role === "system" &&
+    lastMessage.kind === "status" &&
+    lastMessage.requestId === requestId &&
+    lastMessage.text === text
+  ) {
+    state = { ...state, status: "streaming", activeRequestId: requestId };
+    emit();
+    return;
   }
+  state = {
+    ...state,
+    status: "streaming",
+    activeRequestId: requestId,
+    messages: [...state.messages, { id: makeId(), role: "system", text, kind: "status", requestId }],
+  };
   emit();
 }
 

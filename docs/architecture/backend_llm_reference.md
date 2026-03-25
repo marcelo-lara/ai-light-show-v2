@@ -148,6 +148,7 @@ Code is the source of truth.
 | --- | --- | --- |
 | `metadata_get_overview` | `song?` | returns song length/BPM and counts for sections, beats, chords |
 | `metadata_get_sections` | `song?` | returns normalized section rows |
+| `metadata_find_section` | `section_name`, `song?` | returns one exact section row by section name |
 | `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered |
 | `metadata_get_chords` | `song?`, `start_time?`, `end_time?` | returns chord-change rows parsed from `beats.json`, optionally time-filtered |
 | `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads analyzer `essentia/loudness_envelope.json` and returns averaged window statistics |
@@ -157,6 +158,12 @@ Code is the source of truth.
 | Tool | Arguments | Behavior |
 | --- | --- | --- |
 | `transport_get_cursor` | none | returns current timecode plus nearest resolved `bar`, `beat`, and active `section_name` |
+
+## Assistant request context
+
+- Each `llm.send_prompt` request includes the assistant system prompt, the current loaded song context, and recent user/assistant turns from the same websocket client session.
+- Conversation history is session-scoped in backend memory and is cleared when the websocket client disconnects.
+- Proposal-only turns are not committed to history until a model-authored assistant reply is completed.
 
 ## Intent catalog (current implementation)
 

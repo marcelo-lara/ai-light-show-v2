@@ -23,3 +23,8 @@ class PendingAction:
     arguments: Dict[str, Any]
     title: str
     summary: str
+
+@dataclass
+class ConversationTurn:
+    role: str
+    content: str

@@ -1,3 +1,4 @@
+import importlib
 import json
 from types import SimpleNamespace
 
@@ -30,8 +31,13 @@ def _read_until(ws, predicate, max_reads: int = 16):
     raise AssertionError("did not receive expected websocket message")
 
 
+def _fresh_backend_main():
+    return importlib.reload(backend_main)
+
+
 def test_llm_prompt_proposal_and_confirm(monkeypatch, tmp_path):
     calls = []
+    fresh_backend_main = _fresh_backend_main()
     monkeypatch.setenv("ASSISTANT_LOG_DIR", str(tmp_path / "assistant-logs"))
 
     async def _noop_async(*_args, **_kwargs):
@@ -52,6 +58,7 @@ def test_llm_prompt_proposal_and_confirm(monkeypatch, tmp_path):
 
     async def _fake_gateway_stream(self, messages, assistant_id):
         del assistant_id
+        assert any(message["role"] == "system" and message["content"] == "Current loaded song: Yonaka - Seize the Power" for message in messages)
         if str(messages[-1]["content"]).startswith("The confirmed action has been executed."):
             yield {"type": "status", "phase": "calling_model", "label": "Calling local model"}
             yield {"type": "delta", "delta": "Cleared chorus cues from 84.18s to 100.28s."}
@@ -69,7 +76,7 @@ def test_llm_prompt_proposal_and_confirm(monkeypatch, tmp_path):
             "summary": "Remove cue items from 84.180s to 100.280s.",
         }
 
-    monkeypatch.setattr(backend_main, "run_startup_blue_wipe", _noop_async)
+    monkeypatch.setattr(fresh_backend_main, "run_startup_blue_wipe", _noop_async)
     monkeypatch.setattr(SongService, "list_songs", lambda self: ["Yonaka - Seize the Power"])
     monkeypatch.setattr(StateManager, "load_song", _fake_load_song)
     monkeypatch.setattr(StateManager, "clear_cue_entries", _fake_clear_cues)
@@ -81,7 +88,7 @@ def test_llm_prompt_proposal_and_confirm(monkeypatch, tmp_path):
     monkeypatch.setattr(ArtNetService, "arm_fixture", _noop_async)
     monkeypatch.setattr(AssistantGatewayClient, "stream", _fake_gateway_stream)
 
-    with TestClient(backend_main.app) as client:
+    with TestClient(fresh_backend_main.app) as client:
         with client.websocket_connect("/ws") as ws:
             _read_until(ws, lambda message: message.get("type") == "snapshot")
 
@@ -113,3 +120,61 @@ def test_llm_prompt_proposal_and_confirm(monkeypatch, tmp_path):
     assert any(record["event"] == "request_received" and record["prompt"] == "clear the chorus cue sheet" for record in records)
     assert any(record["event"] == "action_proposed" and record["tool_name"] == "propose_cue_clear_range" for record in records)
     assert any(record["event"] == "action_result" and record["tool_name"] == "propose_cue_clear_range" for record in records)
+
+
+def test_llm_prompt_includes_recent_chat_history(monkeypatch, tmp_path):
+    seen_messages = []
+    fresh_backend_main = _fresh_backend_main()
+    monkeypatch.setenv("ASSISTANT_LOG_DIR", str(tmp_path / "assistant-logs"))
+
+    async def _noop_async(*_args, **_kwargs):
+        return None
+
+    async def _fake_load_song(self, song_name: str):
+        self.current_song = _fake_song(song_name)
+        self.song_length_seconds = 158.53
+        self.timecode = 37.62
+        self.is_playing = False
+        self.output_universe = bytearray(512)
+        self.editor_universe = bytearray(512)
+        self.cue_sheet = CueSheet(song_filename=song_name, entries=[])
+
+    async def _fake_gateway_stream(self, messages, assistant_id):
+        del assistant_id
+        seen_messages.append(messages)
+        if len(seen_messages) == 1:
+            yield {"type": "status", "phase": "calling_model", "label": "Calling local model"}
+            yield {"type": "delta", "delta": "The instrumental starts at 35.820 seconds."}
+            yield {"type": "done", "finish_reason": "stop"}
+            return
+
+        assert any(message["role"] == "user" and message["content"] == "what about the second instrumental part?" for message in messages)
+        assert any(message["role"] == "assistant" and message["content"] == "The instrumental starts at 35.820 seconds." for message in messages)
+        yield {"type": "status", "phase": "calling_model", "label": "Calling local model"}
+        yield {"type": "delta", "delta": "Repeating the previous command result."}
+        yield {"type": "done", "finish_reason": "stop"}
+
+    monkeypatch.setattr(fresh_backend_main, "run_startup_blue_wipe", _noop_async)
+    monkeypatch.setattr(SongService, "list_songs", lambda self: ["Yonaka - Seize the Power"])
+    monkeypatch.setattr(StateManager, "load_song", _fake_load_song)
+    monkeypatch.setattr(StateManager, "_dump_canvas_debug", lambda self, _song_name: None)
+    monkeypatch.setattr(ArtNetService, "start", _noop_async)
+    monkeypatch.setattr(ArtNetService, "stop", _noop_async)
+    monkeypatch.setattr(ArtNetService, "blackout", _noop_async)
+    monkeypatch.setattr(ArtNetService, "update_universe", _noop_async)
+    monkeypatch.setattr(ArtNetService, "arm_fixture", _noop_async)
+    monkeypatch.setattr(AssistantGatewayClient, "stream", _fake_gateway_stream)
+
+    with TestClient(fresh_backend_main.app) as client:
+        with client.websocket_connect("/ws") as ws:
+            _read_until(ws, lambda message: message.get("type") == "snapshot")
+
+            ws.send_json({"type": "intent", "req_id": "llm-1", "name": "llm.send_prompt", "payload": {"prompt": "what about the second instrumental part?"}})
+            first_done = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_done")
+            assert first_done["data"]["done"] is True
+
+            ws.send_json({"type": "intent", "req_id": "llm-2", "name": "llm.send_prompt", "payload": {"prompt": "repeat the last command"}})
+            second_done = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_done")
+            assert second_done["data"]["done"] is True
+
+    assert len(seen_messages) == 2

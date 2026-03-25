@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 
 from .responses import fail, ok
 from .song_data import build_song_details
@@ -23,18 +24,63 @@ def _slice_by_time(rows: list[dict], start_time: float | None, end_time: float |
     return sliced
 
 
+SECTION_QUERY_STOPWORDS = {
+    "a",
+    "an",
+    "at",
+    "begin",
+    "begins",
+    "beginning",
+    "does",
+    "end",
+    "ends",
+    "ending",
+    "for",
+    "is",
+    "of",
+    "section",
+    "start",
+    "starts",
+    "starting",
+    "the",
+    "when",
+    "where",
+}
+
+
+def _normalize_section_query(value: str) -> str:
+    words = re.findall(r"[a-z0-9]+", str(value).lower())
+    filtered = [word for word in words if word not in SECTION_QUERY_STOPWORDS]
+    return " ".join(filtered or words)
+
+
 def register_metadata_tools(mcp, runtime) -> None:
     def _load_song(song: str | None):
         ws_manager = runtime.require_ws_manager()
         song_service = runtime.require_song_service()
         current_song = ws_manager.state_manager.current_song
-        if song:
-            current_song = song_service.load_metadata(song)
-        return ws_manager, current_song
+        requested_song = str(song or "").strip()
+        if not requested_song:
+            return ws_manager, current_song, None
+        if current_song is not None and requested_song == str(current_song.song_id):
+            return ws_manager, current_song, None
+        available_songs = song_service.list_songs()
+        if requested_song not in available_songs:
+            if current_song is not None:
+                return ws_manager, current_song, None
+            return ws_manager, None, fail("song_not_found", f"Song '{requested_song}' not found", {"songs": available_songs})
+        try:
+            return ws_manager, song_service.load_metadata(requested_song), None
+        except FileNotFoundError as exc:
+            if current_song is not None:
+                return ws_manager, current_song, None
+            return ws_manager, None, fail("song_metadata_unavailable", str(exc))
 
     @mcp.tool()
     def metadata_get_overview(song: str | None = None):
-        ws_manager, current_song = _load_song(song)
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
         if current_song is None:
             return fail("song_not_loaded", "No song is currently loaded")
         details = build_song_details(current_song, ws_manager.state_manager.meta_path)
@@ -42,15 +88,48 @@ def register_metadata_tools(mcp, runtime) -> None:
 
     @mcp.tool()
     def metadata_get_sections(song: str | None = None):
-        ws_manager, current_song = _load_song(song)
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
         if current_song is None:
             return fail("song_not_loaded", "No song is currently loaded")
         details = build_song_details(current_song, ws_manager.state_manager.meta_path)
         return ok({"song": details["filename"], "sections": details["sections"], "count": len(details["sections"])})
 
     @mcp.tool()
+    def metadata_find_section(section_name: str, song: str | None = None):
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
+        if current_song is None:
+            return fail("song_not_loaded", "No song is currently loaded")
+        query = str(section_name or "").strip().lower()
+        if not query:
+            return fail("section_name_required", "section_name is required")
+        details = build_song_details(current_song, ws_manager.state_manager.meta_path)
+        normalized_query = _normalize_section_query(query)
+        match = next((section for section in details["sections"] if query == str(section.get("name") or "").strip().lower()), None)
+        if match is None:
+            match = next((section for section in details["sections"] if normalized_query == _normalize_section_query(str(section.get("name") or ""))), None)
+        if match is None:
+            query_words = set(normalized_query.split())
+            match = next(
+                (
+                    section
+                    for section in details["sections"]
+                    if query_words and set(_normalize_section_query(str(section.get("name") or "")).split()).issubset(query_words)
+                ),
+                None,
+            )
+        if match is None:
+            return fail("section_not_found", f"Section '{section_name}' not found", {"section_name": section_name, "available_sections": [section.get("name") for section in details["sections"]]})
+        return ok({"song": details["filename"], "section": match})
+
+    @mcp.tool()
     def metadata_get_beats(song: str | None = None, start_time: float | None = None, end_time: float | None = None):
-        ws_manager, current_song = _load_song(song)
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
         if current_song is None:
             return fail("song_not_loaded", "No song is currently loaded")
         details = build_song_details(current_song, ws_manager.state_manager.meta_path)
@@ -59,7 +138,9 @@ def register_metadata_tools(mcp, runtime) -> None:
 
     @mcp.tool()
     def metadata_get_chords(song: str | None = None, start_time: float | None = None, end_time: float | None = None):
-        ws_manager, current_song = _load_song(song)
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
         if current_song is None:
             return fail("song_not_loaded", "No song is currently loaded")
         details = build_song_details(current_song, ws_manager.state_manager.meta_path)
@@ -68,7 +149,9 @@ def register_metadata_tools(mcp, runtime) -> None:
 
     @mcp.tool()
     def metadata_get_loudness(song: str | None = None, start_time: float | None = None, end_time: float | None = None, section: str | None = None):
-        ws_manager, current_song = _load_song(song)
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
         if current_song is None:
             return fail("song_not_loaded", "No song is currently loaded")
         details = build_song_details(current_song, ws_manager.state_manager.meta_path)

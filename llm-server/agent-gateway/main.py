@@ -35,6 +35,20 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "mcp_find_section",
+            "description": "Find one exact section by name for the current song. Use this for questions like 'where does the verse start?' or 'when does the chorus end?'.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "section_name": {"type": "string"}
+                },
+                "required": ["section_name"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "mcp_read_beats",
             "description": "Read beat entries with time, bar, and beat values for an optional time window.",
             "parameters": {
@@ -178,6 +192,7 @@ app = FastAPI()
 # ---- MCP tool wrapper ----
 MCP_TOOL_MAP = {
     "mcp_read_sections": "metadata_get_sections",
+    "mcp_find_section": "metadata_find_section",
     "mcp_read_beats": "metadata_get_beats",
     "mcp_read_chords": "metadata_get_chords",
     "mcp_read_cue_window": "cues_get_window",
@@ -237,6 +252,9 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
         song = str(args.get("song") or args.get("song_id") or "")
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"song": song} if song else {})
 
+    if tool_name == "mcp_find_section":
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"section_name": str(args.get("section_name") or "")})
+
     if tool_name in {"mcp_read_beats", "mcp_read_chords", "mcp_read_loudness"}:
         song = str(args.get("song") or args.get("song_id") or "")
         payload = {key: value for key, value in args.items() if key in {"start_time", "end_time", "section"}}
@@ -248,6 +266,148 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"start_time": float(args.get("start_time", 0.0)), "end_time": float(args.get("end_time", 0.0))})
 
     return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], args)
+
+
+def _format_sections(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    sections = payload.get("sections") or []
+    song = payload.get("song") or "unknown"
+    if not sections:
+        return f"Song: {song}\nSections: unavailable"
+    lines = [f"Song: {song}", "Sections:"]
+    for section in sections:
+        name = section.get("name") or "Unnamed"
+        start_time = float(section.get("start_s", 0.0))
+        end_time = float(section.get("end_s", 0.0))
+        lines.append(f"- {name}: start={start_time:.3f}s end={end_time:.3f}s")
+    return "\n".join(lines)
+
+
+def _format_section_match(result: Dict[str, Any]) -> str:
+    if not isinstance(result, dict):
+        return _format_generic_result(result)
+    if not result.get("ok"):
+        error = result.get("error") or {}
+        return (
+            "SECTION_LOOKUP_RESULT\n"
+            "section_found=false\n"
+            f"error_code={error.get('code', 'unknown')}\n"
+            f"error_message={error.get('message', 'unknown')}"
+        )
+    payload = result.get("data") or {}
+    section = payload.get("section") or {}
+    return (
+        "SECTION_LOOKUP_RESULT\n"
+        "section_found=true\n"
+        f"song={payload.get('song', 'unknown')}\n"
+        f"section_name={section.get('name', 'Unnamed')}\n"
+        f"section_start_seconds={float(section.get('start_s', 0.0)):.3f}\n"
+        f"section_end_seconds={float(section.get('end_s', 0.0)):.3f}"
+    )
+
+
+def _format_beats(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    beats = payload.get("beats") or []
+    song = payload.get("song") or "unknown"
+    if not beats:
+        return f"Song: {song}\nBeats: unavailable"
+    lines = [f"Song: {song}", "Beats:"]
+    for beat in beats[:32]:
+        lines.append(f"- time={float(beat.get('time', 0.0)):.3f}s bar={int(beat.get('bar', 0))} beat={int(beat.get('beat', 0))}")
+    return "\n".join(lines)
+
+
+def _format_chords(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    chords = payload.get("chords") or []
+    song = payload.get("song") or "unknown"
+    if not chords:
+        return f"Song: {song}\nChords: unavailable"
+    lines = [f"Song: {song}", "Chords:"]
+    for chord in chords[:32]:
+        lines.append(f"- time={float(chord.get('time_s', 0.0)):.3f}s chord={chord.get('chord', 'unknown')}")
+    return "\n".join(lines)
+
+
+def _format_loudness(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    if not payload:
+        return orjson.dumps(result).decode("utf-8")
+    return (
+        f"Song: {payload.get('song', 'unknown')}\n"
+        f"Window: start={float(payload.get('start_time', 0.0)):.3f}s end={float(payload.get('end_time', 0.0) or 0.0):.3f}s\n"
+        f"Loudness: avg={float(payload.get('average', 0.0)):.6f} min={float(payload.get('minimum', 0.0)):.6f} "
+        f"max={float(payload.get('maximum', 0.0)):.6f} samples={int(payload.get('samples', 0))}"
+    )
+
+
+def _format_generic_result(result: Any) -> str:
+    return orjson.dumps(result).decode("utf-8")
+
+
+def _render_tool_result(tool_name: str, result: Any) -> str:
+    if not isinstance(result, dict):
+        return _format_generic_result(result)
+    if not result.get("ok"):
+        return _format_generic_result(result)
+    if tool_name == "mcp_read_sections":
+        return _format_sections(result)
+    if tool_name == "mcp_find_section":
+        return _format_section_match(result)
+    if tool_name == "mcp_read_beats":
+        return _format_beats(result)
+    if tool_name == "mcp_read_chords":
+        return _format_chords(result)
+    if tool_name == "mcp_read_loudness":
+        return _format_loudness(result)
+    return _format_generic_result(result)
+
+
+def _build_section_answer_messages(messages: List[Dict[str, Any]], result: Dict[str, Any]) -> List[Dict[str, str]]:
+    original_question = ""
+    for message in reversed(messages):
+        if message.get("role") == "user":
+            original_question = str(message.get("content") or "")
+            break
+
+    if isinstance(result, dict) and result.get("ok"):
+        payload = result.get("data") or {}
+        section = payload.get("section") or {}
+        section_block = (
+            "section_found=true\n"
+            f"song={payload.get('song', 'unknown')}\n"
+            f"section_name={section.get('name', 'Unnamed')}\n"
+            f"section_start_seconds={float(section.get('start_s', 0.0)):.3f}\n"
+            f"section_end_seconds={float(section.get('end_s', 0.0)):.3f}"
+        )
+    else:
+        error = (result.get("error") or {}) if isinstance(result, dict) else {}
+        section_block = (
+            "section_found=false\n"
+            f"error_code={error.get('code', 'unknown')}\n"
+            f"error_message={error.get('message', 'unknown')}"
+        )
+
+    return [
+        {
+            "role": "system",
+            "content": (
+                "Answer only from the resolved section facts provided by the user. "
+                "If section_found=true, never say the data is missing. "
+                "Answer the original question directly with the exact numeric time and 's' suffix. "
+                "Keep the answer to one sentence."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                f"Original question: {original_question}\n"
+                f"Resolved section facts:\n{section_block}\n"
+                "Answer the original question directly."
+            ),
+        },
+    ]
 
 
 def _proposal_for_tool(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -310,6 +470,7 @@ async def _event_stream(req: ChatRequest):
             messages = messages + [msg]
             yield f"data: {orjson.dumps({'type': 'status', 'phase': 'awaiting_tool_calls', 'label': 'Resolving tool calls'}).decode('utf-8')}\n\n"
             tool_messages = []
+            section_lookup_result = None
             write_proposal = None
             for tc in tool_calls:
                 tool_name = tc["function"]["name"]
@@ -320,11 +481,27 @@ async def _event_stream(req: ChatRequest):
                     break
                 yield f"data: {orjson.dumps({'type': 'status', 'phase': 'executing_tool', 'label': f'Executing {MCP_TOOL_MAP.get(tool_name, tool_name)}', 'tool_name': tool_name}).decode('utf-8')}\n\n"
                 result = await call_mcp(tool_name, args)
-                tool_messages.append({"role": "tool", "tool_call_id": tc["id"], "content": orjson.dumps(result).decode("utf-8")})
+                if tool_name == "mcp_find_section":
+                    section_lookup_result = result
+                tool_messages.append({"role": "tool", "tool_call_id": tc["id"], "content": _render_tool_result(tool_name, result)})
             if write_proposal is not None:
                 yield f"data: {orjson.dumps(write_proposal).decode('utf-8')}\n\n"
                 break
-            messages = messages + tool_messages
+            if section_lookup_result is not None:
+                messages = _build_section_answer_messages(messages, section_lookup_result)
+                continue
+            messages = messages + tool_messages + [{
+                "role": "system",
+                "content": (
+                    "Answer strictly from the tool outputs already provided in this conversation. "
+                    "Do not say that you lack access to databases, metadata, websites, or external tools. "
+                    "If a tool output contains SECTION_LOOKUP_RESULT with section_found=true, you must answer with the exact "
+                    "section_start_seconds or section_end_seconds value from that tool output. "
+                    "Do not ask for more context when that exact section value is already present. "
+                    "If the requested section name appears in the tool outputs, report its exact start or end time directly. "
+                    "If it does not appear, say that the current loaded song data does not contain that section name."
+                ),
+            }]
 
     yield "data: [DONE]\n\n"
 
@@ -374,6 +551,7 @@ async def chat_completions(req: ChatRequest):
             return data1
 
         tool_messages = []
+        section_lookup_result = None
         for tc in tool_calls:
             tool_name = tc["function"]["name"]
             tool_call_id = tc["id"]
@@ -385,14 +563,36 @@ async def chat_completions(req: ChatRequest):
                 raise HTTPException(400, f"Tool arguments invalid JSON for {tool_name}: {raw_args}")
 
             result = await call_mcp(tool_name, args)
+            if tool_name == "mcp_find_section":
+                section_lookup_result = result
 
             tool_messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call_id,
-                "content": orjson.dumps(result).decode("utf-8")
+                "content": _render_tool_result(tool_name, result)
             })
 
-        payload2 = {**payload, "messages": req.messages + [msg1] + tool_messages}
+        if section_lookup_result is not None:
+            payload2 = {**payload, "messages": _build_section_answer_messages(req.messages, section_lookup_result), "tools": [], "tool_choice": "none"}
+            r2 = await client.post(f"{LLM_BASE_URL}/v1/chat/completions", json=payload2)
+            r2.raise_for_status()
+            return r2.json()
+
+        payload2 = {
+            **payload,
+            "messages": req.messages + [msg1] + tool_messages + [{
+                "role": "system",
+                "content": (
+                    "Answer strictly from the tool outputs already provided in this conversation. "
+                    "Do not say that you lack access to databases, metadata, websites, or external tools. "
+                    "If a tool output contains SECTION_LOOKUP_RESULT with section_found=true, you must answer with the exact "
+                    "section_start_seconds or section_end_seconds value from that tool output. "
+                    "Do not ask for more context when that exact section value is already present. "
+                    "If the requested section name appears in the tool outputs, report its exact start or end time directly. "
+                    "If it does not appear, say that the current loaded song data does not contain that section name."
+                ),
+            }],
+        }
         r2 = await client.post(f"{LLM_BASE_URL}/v1/chat/completions", json=payload2)
         r2.raise_for_status()
         return r2.json()
