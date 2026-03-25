@@ -40,7 +40,7 @@ export function PromptInput(): HTMLElement {
 		state: "default",
 		bindings: {
 			title: "Clear conversation",
-			disabled: isStreaming,
+			disabled: false,
 		},
 	});
 

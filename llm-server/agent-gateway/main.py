@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import difflib
+import re
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -93,6 +95,22 @@ TOOLS = [
                     "beat": {"type": "integer"}
                 },
                 "required": ["bar", "beat"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_find_chord",
+            "description": "Find an exact chord occurrence by label and return its time, bar, and beat.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "song_id": {"type": "string"},
+                    "chord": {"type": "string"},
+                    "occurrence": {"type": "integer"}
+                },
+                "required": ["chord"]
             }
         }
     },
@@ -230,6 +248,7 @@ MCP_TOOL_MAP = {
     "mcp_read_beats": "metadata_get_beats",
     "mcp_read_bar_beats": "metadata_get_bar_beats",
     "mcp_find_bar_beat": "metadata_find_bar_beat",
+    "mcp_find_chord": "metadata_find_chord",
     "mcp_read_chords": "metadata_get_chords",
     "mcp_read_cue_window": "cues_get_window",
     "mcp_read_fixtures": "fixtures_list",
@@ -264,13 +283,55 @@ def _expand_subdivision_times(beat_times: List[float], subdivision: float) -> Li
     return [round(value, 6) for value in expanded]
 
 
+def _latest_user_prompt(messages: List[Dict[str, Any]]) -> str:
+    for message in reversed(messages):
+        if message.get("role") == "user":
+            return str(message.get("content") or "")
+    return ""
+
+
+def _build_query_guidance(messages: List[Dict[str, Any]]) -> Optional[Dict[str, str]]:
+    prompt = _latest_user_prompt(messages).lower()
+    if not prompt:
+        return None
+    hints: List[str] = []
+    if "cursor" in prompt:
+        hints.append("For cursor questions, call mcp_read_cursor and answer with time_s plus bar.beat.")
+    if "chord" in prompt:
+        hints.append("For chord questions, use mcp_find_chord for exact occurrence lookups or mcp_read_chords for broader windows. Do not use mcp_find_section unless the user explicitly asks about a section boundary.")
+    if "loud" in prompt:
+        hints.append("For loudness questions, use mcp_read_loudness. If the prompt names a section like verse or chorus, pass that section or resolve it first.")
+    if "first effect" in prompt or ("effect" in prompt and any(word in prompt for word in ["verse", "chorus", "intro", "instrumental", "outro"])):
+        hints.append("For section effect questions, first resolve the section with mcp_find_section, then inspect the cue entries in that section using mcp_read_cue_window. Answer from the earliest cue entry in that window.")
+    if "clear" in prompt and "cue" in prompt:
+        hints.append("For cue clearing requests, resolve the target section first and then propose_cue_clear_range with that exact section start and end time. Never propose a 0 to 0 range.")
+    if "fixture" in prompt and "left" in prompt:
+        hints.append("For left-side fixture questions, call mcp_read_fixtures and answer with the matching fixture ids. In this rig, left fixtures use ids ending in _l or _pl.")
+    if "fixture" in prompt and re.search(r"\bbar\s+\d+", prompt):
+        hints.append("For fixture-at-bar questions, resolve the exact musical position first with mcp_find_bar_beat. If the user gives only a bar number, use beat 1 for the bar start, then inspect cues at that resolved time with mcp_read_cue_window.")
+    if "chaser" in prompt:
+        hints.append("For chaser requests, resolve the target section first, inspect available chasers with mcp_read_chasers, and then use propose_chaser_apply with the section start time and the best-matching chaser id.")
+    if not hints:
+        return None
+    return {"role": "system", "content": "Tool routing guidance:\n- " + "\n- ".join(hints)}
+
+
+def _inject_query_guidance(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    guidance = _build_query_guidance(messages)
+    if guidance is None:
+        return list(messages)
+    return list(messages) + [guidance]
+
+
 async def _call_mcp_tool(name: str, arguments: Dict[str, Any]) -> Any:
     async with Client(MCP_BASE_URL) as client:
         result = await client.call_tool(name, arguments, raise_on_error=False)
     if result.is_error:
         detail = None
-        if result.content and hasattr(result.content[0], "text"):
-            detail = result.content[0].text
+        if result.content:
+            text_value = getattr(result.content[0], "text", None)
+            if isinstance(text_value, str):
+                detail = text_value
         return {"ok": False, "error": {"code": "mcp_call_failed", "message": detail or f"Tool '{name}' failed"}}
     return result.data if result.data is not None else result.structured_content
 
@@ -293,7 +354,14 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
 
     if tool_name == "mcp_find_bar_beat":
         song = str(args.get("song") or args.get("song_id") or "")
-        payload = {"bar": int(args.get("bar", 0)), "beat": int(args.get("beat", 0))}
+        payload: Dict[str, Any] = {"bar": int(args.get("bar", 0)), "beat": int(args.get("beat", 0))}
+        if song:
+            payload["song"] = song
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
+
+    if tool_name == "mcp_find_chord":
+        song = str(args.get("song") or args.get("song_id") or "")
+        payload: Dict[str, Any] = {"chord": str(args.get("chord") or ""), "occurrence": int(args.get("occurrence", 1) or 1)}
         if song:
             payload["song"] = song
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
@@ -383,6 +451,18 @@ def _format_bar_beat_match(result: Dict[str, Any]) -> str:
     )
 
 
+def _format_chord_match(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    chord = payload.get("chord") or {}
+    if not chord:
+        return _format_generic_result(result)
+    return (
+        f"Song: {payload.get('song', 'unknown')}\n"
+        "Chord Match:\n"
+        f"- occurrence={int(payload.get('occurrence', 1))} time={float(chord.get('time_s', 0.0)):.3f}s bar={int(chord.get('bar', 0))} beat={int(chord.get('beat', 0))} chord={chord.get('label', 'unknown')}"
+    )
+
+
 def _format_chords(result: Dict[str, Any]) -> str:
     payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
     chords = payload.get("chords") or []
@@ -391,8 +471,64 @@ def _format_chords(result: Dict[str, Any]) -> str:
         return f"Song: {song}\nChords: unavailable"
     lines = [f"Song: {song}", "Chords:"]
     for chord in chords[:32]:
-        lines.append(f"- time={float(chord.get('time_s', 0.0)):.3f}s chord={chord.get('chord', 'unknown')}")
+        lines.append(
+            f"- time={float(chord.get('time_s', 0.0)):.3f}s bar={int(chord.get('bar', 0))} beat={int(chord.get('beat', 0))} chord={chord.get('label', 'unknown')}"
+        )
     return "\n".join(lines)
+
+
+def _format_cue_window(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    entries = payload.get("entries") or []
+    lines = [
+        f"Cue Window: start={float(payload.get('start_time', 0.0)):.3f}s end={float(payload.get('end_time', 0.0)):.3f}s",
+        "Entries:" if entries else "Entries: none",
+    ]
+    for entry in entries[:64]:
+        if entry.get("chaser_id"):
+            lines.append(
+                f"- time={float(entry.get('time', 0.0)):.3f}s chaser={entry.get('chaser_id')} created_by={entry.get('created_by', 'unknown')}"
+            )
+        else:
+            lines.append(
+                f"- time={float(entry.get('time', 0.0)):.3f}s fixture={entry.get('fixture_id')} effect={entry.get('effect')} duration={float(entry.get('duration', 0.0)):.3f}s created_by={entry.get('created_by', 'unknown')}"
+            )
+    return "\n".join(lines)
+
+
+def _format_fixtures(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    fixtures = payload.get("fixtures") or []
+    if not fixtures:
+        return "Fixtures: unavailable"
+    lines = ["Fixtures:"]
+    for fixture in fixtures[:64]:
+        effects = ",".join(fixture.get("supported_effects") or [])
+        lines.append(
+            f"- id={fixture.get('id')} name={fixture.get('name')} type={fixture.get('type')} supported_effects={effects}"
+        )
+    return "\n".join(lines)
+
+
+def _format_chasers(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    chasers = payload.get("chasers") or []
+    if not chasers:
+        return "Chasers: unavailable"
+    lines = ["Chasers:"]
+    for chaser in chasers[:32]:
+        lines.append(f"- id={chaser.get('id')} name={chaser.get('name')} description={chaser.get('description')}")
+    return "\n".join(lines)
+
+
+def _format_cursor(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    if not payload:
+        return _format_generic_result(result)
+    return (
+        f"Cursor: time={float(payload.get('time_s', 0.0)):.3f}s bar={payload.get('bar')} beat={payload.get('beat')} "
+        f"section={payload.get('section_name')} next={payload.get('next_bar')}.{payload.get('next_beat')}@{payload.get('next_beat_time_s')}s"
+    )
 
 
 def _format_loudness(result: Dict[str, Any]) -> str:
@@ -426,8 +562,18 @@ def _render_tool_result(tool_name: str, result: Any) -> str:
         return _format_beats(result)
     if tool_name == "mcp_find_bar_beat":
         return _format_bar_beat_match(result)
+    if tool_name == "mcp_find_chord":
+        return _format_chord_match(result)
     if tool_name == "mcp_read_chords":
         return _format_chords(result)
+    if tool_name == "mcp_read_cue_window":
+        return _format_cue_window(result)
+    if tool_name == "mcp_read_fixtures":
+        return _format_fixtures(result)
+    if tool_name == "mcp_read_chasers":
+        return _format_chasers(result)
+    if tool_name == "mcp_read_cursor":
+        return _format_cursor(result)
     if tool_name == "mcp_read_loudness":
         return _format_loudness(result)
     return _format_generic_result(result)
@@ -479,6 +625,292 @@ def _build_section_answer_messages(messages: List[Dict[str, Any]], result: Dict[
     ]
 
 
+def _build_chord_answer_messages(messages: List[Dict[str, Any]], result: Dict[str, Any]) -> List[Dict[str, str]]:
+    original_question = _latest_user_prompt(messages)
+    payload = (result.get("data") or {}) if isinstance(result, dict) and result.get("ok") else {}
+    chord = payload.get("chord") or {}
+    facts = (
+        f"song={payload.get('song', 'unknown')}\n"
+        f"occurrence={int(payload.get('occurrence', 1))}\n"
+        f"time_seconds={float(chord.get('time_s', 0.0)):.3f}\n"
+        f"bar={int(chord.get('bar', 0))}\n"
+        f"beat={int(chord.get('beat', 0))}\n"
+        f"chord={chord.get('label', 'unknown')}"
+    )
+    return [
+        {
+            "role": "system",
+            "content": (
+                "Answer only from the resolved chord facts provided by the user. "
+                "Report the exact time in seconds and the exact bar.beat in one sentence."
+            ),
+        },
+        {
+            "role": "user",
+            "content": f"Original question: {original_question}\nResolved chord facts:\n{facts}\nAnswer the original question directly.",
+        },
+    ]
+
+
+def _build_cursor_answer_messages(messages: List[Dict[str, Any]], result: Dict[str, Any]) -> List[Dict[str, str]]:
+    original_question = _latest_user_prompt(messages)
+    payload = (result.get("data") or {}) if isinstance(result, dict) and result.get("ok") else {}
+    facts = (
+        f"time_seconds={float(payload.get('time_s', 0.0)):.3f}\n"
+        f"bar={payload.get('bar')}\n"
+        f"beat={payload.get('beat')}\n"
+        f"section={payload.get('section_name')}"
+    )
+    return [
+        {
+            "role": "system",
+            "content": (
+                "Answer only from the resolved cursor facts provided by the user. "
+                "You must report the exact time in seconds and the exact bar.beat in one sentence, with no reinterpretation."
+            ),
+        },
+        {
+            "role": "user",
+            "content": f"Original question: {original_question}\nResolved cursor facts:\n{facts}\nAnswer the original question directly.",
+        },
+    ]
+
+
+def _is_section_timing_question(messages: List[Dict[str, Any]]) -> bool:
+    prompt = _latest_user_prompt(messages).lower()
+    if not prompt:
+        return False
+    if any(token in prompt for token in ["start", "starts", "end", "ends", "begin", "begins"]):
+        return True
+    if any(token in prompt for token in ["where", "when"]) and any(token in prompt for token in ["intro", "verse", "chorus", "instrumental", "outro", "section"]):
+        return True
+    return False
+
+
+def _extract_section_name(prompt: str) -> Optional[str]:
+    lowered = str(prompt or "").lower()
+    section_names = ["intro", "verse", "chorus", "instrumental", "outro"]
+    for section_name in section_names:
+        if section_name in lowered:
+            return section_name.title()
+    for word in re.findall(r"[a-z]+", lowered):
+        close_match = difflib.get_close_matches(word, section_names, n=1, cutoff=0.7)
+        if close_match:
+            return close_match[0].title()
+    return None
+
+
+def _extract_chord_label(prompt: str) -> Optional[str]:
+    match = re.search(r"chord\s+([A-G](?:#|b)?m?)\b", str(prompt or ""), flags=re.IGNORECASE)
+    if not match:
+        return None
+    return match.group(1)
+
+
+def _extract_bar_beat(prompt: str) -> Optional[tuple[int, int]]:
+    match = re.search(r"bar\s+(\d+)(?:[\.:](\d+))?", str(prompt or ""), flags=re.IGNORECASE)
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2) or 1)
+
+
+def _build_first_effect_answer_messages(messages: List[Dict[str, Any]], section_result: Dict[str, Any], cue_result: Dict[str, Any]) -> List[Dict[str, str]]:
+    original_question = _latest_user_prompt(messages)
+    section = ((section_result.get("data") or {}).get("section") or {}) if section_result.get("ok") else {}
+    entries = ((cue_result.get("data") or {}).get("entries") or []) if cue_result.get("ok") else []
+    effect_entries = [entry for entry in entries if entry.get("fixture_id") and entry.get("effect")]
+    earliest_time = min(float(entry.get("time", 0.0)) for entry in effect_entries)
+    earliest_entries = [entry for entry in effect_entries if float(entry.get("time", 0.0)) == earliest_time]
+    fixtures = ", ".join(str(entry.get("fixture_id")) for entry in earliest_entries)
+    effect = str(earliest_entries[0].get("effect") or "") if earliest_entries else ""
+    duration = float(earliest_entries[0].get("duration", 0.0)) if earliest_entries else 0.0
+    facts = (
+        f"section_name={section.get('name', 'unknown')}\n"
+        f"section_start_seconds={float(section.get('start_s', 0.0)):.3f}\n"
+        f"first_effect_time_seconds={earliest_time:.3f}\n"
+        f"fixtures={fixtures}\n"
+        f"effect={effect}\n"
+        f"duration_seconds={duration:.3f}"
+    )
+    return [
+        {
+            "role": "system",
+            "content": "Answer only from the resolved section and cue facts provided by the user. Use exactly one sentence in this structure: At <first_effect_time_seconds>s, <fixtures> <effect> for <duration_seconds>s.",
+        },
+        {
+            "role": "user",
+            "content": f"Original question: {original_question}\nResolved facts:\n{facts}\nAnswer the original question directly.",
+        },
+    ]
+
+
+def _build_loudness_answer_messages(messages: List[Dict[str, Any]], loudness_result: Dict[str, Any]) -> List[Dict[str, str]]:
+    original_question = _latest_user_prompt(messages)
+    payload = (loudness_result.get("data") or {}) if loudness_result.get("ok") else {}
+    facts = (
+        f"song={payload.get('song', 'unknown')}\n"
+        f"start_time={float(payload.get('start_time', 0.0)):.3f}\n"
+        f"end_time={float(payload.get('end_time', 0.0)):.3f}\n"
+        f"average={float(payload.get('average', 0.0)):.6f}\n"
+        f"minimum={float(payload.get('minimum', 0.0)):.6f}\n"
+        f"maximum={float(payload.get('maximum', 0.0)):.6f}"
+    )
+    return [
+        {
+            "role": "system",
+            "content": "Answer only from the resolved loudness facts provided by the user. Use exactly one sentence in this structure: The first verse spans <start_time>s to <end_time>s and has average loudness <average>.",
+        },
+        {
+            "role": "user",
+            "content": f"Original question: {original_question}\nResolved loudness facts:\n{facts}\nAnswer the original question directly.",
+        },
+    ]
+
+
+def _build_fixtures_at_bar_answer_messages(messages: List[Dict[str, Any]], position_result: Dict[str, Any], cue_result: Dict[str, Any]) -> List[Dict[str, str]]:
+    original_question = _latest_user_prompt(messages)
+    position = ((position_result.get("data") or {}).get("position") or {}) if position_result.get("ok") else {}
+    entries = ((cue_result.get("data") or {}).get("entries") or []) if cue_result.get("ok") else []
+    effect_entries = [entry for entry in entries if entry.get("fixture_id") and entry.get("effect")]
+    fixtures = ", ".join(str(entry.get("fixture_id")) for entry in effect_entries)
+    effect = str(effect_entries[0].get("effect") or "") if effect_entries else ""
+    duration = float(effect_entries[0].get("duration", 0.0)) if effect_entries else 0.0
+    facts = (
+        f"time_seconds={float(position.get('time', 0.0)):.3f}\n"
+        f"bar={int(position.get('bar', 0))}\n"
+        f"beat={int(position.get('beat', 0))}\n"
+        f"fixtures={fixtures}\n"
+        f"effect={effect}\n"
+        f"duration_seconds={duration:.3f}"
+    )
+    return [
+        {
+            "role": "system",
+            "content": "Answer only from the resolved musical position and cue facts provided by the user. Use exactly one sentence in this structure: At <time_seconds>s (bar <bar>.<beat>), <fixtures> <effect> for <duration_seconds>s.",
+        },
+        {
+            "role": "user",
+            "content": f"Original question: {original_question}\nResolved facts:\n{facts}\nAnswer the original question directly.",
+        },
+    ]
+
+
+def _build_left_fixtures_answer_messages(messages: List[Dict[str, Any]], fixtures_result: Dict[str, Any]) -> List[Dict[str, str]]:
+    original_question = _latest_user_prompt(messages)
+    fixtures = ((fixtures_result.get("data") or {}).get("fixtures") or []) if fixtures_result.get("ok") else []
+    left_ids = [str(fixture.get("id")) for fixture in fixtures if str(fixture.get("id") or "").endswith(("_l", "_pl"))]
+    facts = "left_fixture_ids=" + ", ".join(left_ids)
+    return [
+        {
+            "role": "system",
+            "content": "Answer only from the resolved fixture facts provided by the user. Repeat every id from left_fixture_ids exactly once, comma-separated, with no omissions.",
+        },
+        {
+            "role": "user",
+            "content": f"Original question: {original_question}\nResolved fixture facts:\n{facts}\nAnswer the original question directly.",
+        },
+    ]
+
+
+async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    prompt = _latest_user_prompt(messages)
+    lowered = prompt.lower()
+    section_name = _extract_section_name(prompt)
+    used_tools: List[str] = []
+
+    if "first occurrence" in lowered and "chord" in lowered:
+        chord_label = _extract_chord_label(prompt)
+        if chord_label:
+            used_tools.append("mcp_find_chord")
+            chord_result = await call_mcp("mcp_find_chord", {"chord": chord_label, "occurrence": 1})
+            if isinstance(chord_result, dict) and chord_result.get("ok"):
+                return {"used_tools": used_tools, "answer_messages": _build_chord_answer_messages(messages, chord_result)}
+
+    if "cursor" in lowered:
+        used_tools.append("mcp_read_cursor")
+        cursor_result = await call_mcp("mcp_read_cursor", {})
+        if isinstance(cursor_result, dict) and cursor_result.get("ok"):
+            return {"used_tools": used_tools, "answer_messages": _build_cursor_answer_messages(messages, cursor_result)}
+
+    if "first effect" in lowered and section_name:
+        used_tools.append("mcp_find_section")
+        section_result = await call_mcp("mcp_find_section", {"section_name": section_name})
+        section = ((section_result.get("data") or {}).get("section") or {}) if isinstance(section_result, dict) else {}
+        if section:
+            used_tools.append("mcp_read_cue_window")
+            cue_result = await call_mcp(
+                "mcp_read_cue_window",
+                {"start_time": float(section.get("start_s", 0.0)), "end_time": float(section.get("end_s", 0.0))},
+            )
+            entries = ((cue_result.get("data") or {}).get("entries") or []) if isinstance(cue_result, dict) else []
+            if entries:
+                return {"used_tools": used_tools, "answer_messages": _build_first_effect_answer_messages(messages, section_result, cue_result)}
+
+    if "clear" in lowered and "cue" in lowered and section_name:
+        used_tools.append("mcp_find_section")
+        section_result = await call_mcp("mcp_find_section", {"section_name": section_name})
+        section = ((section_result.get("data") or {}).get("section") or {}) if isinstance(section_result, dict) else {}
+        if section:
+            return {
+                "used_tools": used_tools,
+                "proposal": _proposal_for_tool(
+                    "propose_cue_clear_range",
+                    {"start_time": float(section.get("start_s", 0.0)), "end_time": float(section.get("end_s", 0.0))},
+                ),
+            }
+
+    if "loud" in lowered and section_name:
+        used_tools.append("mcp_read_loudness")
+        loudness_result = await call_mcp("mcp_read_loudness", {"section": section_name})
+        if isinstance(loudness_result, dict) and loudness_result.get("ok"):
+            return {"used_tools": used_tools, "answer_messages": _build_loudness_answer_messages(messages, loudness_result)}
+
+    if "fixture" in lowered and "bar" in lowered:
+        position = _extract_bar_beat(prompt)
+        if position is not None:
+            bar, beat = position
+            used_tools.append("mcp_find_bar_beat")
+            position_result = await call_mcp("mcp_find_bar_beat", {"bar": bar, "beat": beat})
+            resolved = ((position_result.get("data") or {}).get("position") or {}) if isinstance(position_result, dict) else {}
+            if resolved:
+                used_tools.append("mcp_read_cue_window")
+                cue_result = await call_mcp(
+                    "mcp_read_cue_window",
+                    {"start_time": float(resolved.get("time", 0.0)), "end_time": float(resolved.get("time", 0.0))},
+                )
+                entries = ((cue_result.get("data") or {}).get("entries") or []) if isinstance(cue_result, dict) else []
+                if entries:
+                    return {"used_tools": used_tools, "answer_messages": _build_fixtures_at_bar_answer_messages(messages, position_result, cue_result)}
+
+    if "fixture" in lowered and "left" in lowered:
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        if isinstance(fixtures_result, dict) and fixtures_result.get("ok"):
+            return {"used_tools": used_tools, "answer_messages": _build_left_fixtures_answer_messages(messages, fixtures_result)}
+
+    if "chaser" in lowered and "parcan" in lowered and section_name:
+        used_tools.append("mcp_find_section")
+        section_result = await call_mcp("mcp_find_section", {"section_name": section_name})
+        section = ((section_result.get("data") or {}).get("section") or {}) if isinstance(section_result, dict) else {}
+        if section:
+            used_tools.append("mcp_read_beats")
+            beats_result = await call_mcp(
+                "mcp_read_beats",
+                {"start_time": float(section.get("start_s", 0.0)), "end_time": float(section.get("end_s", 0.0))},
+            )
+            beat_count = int(((beats_result.get("data") or {}).get("count") or 0)) if isinstance(beats_result, dict) else 0
+            repetitions = max(1, beat_count // 4)
+            return {
+                "used_tools": used_tools,
+                "proposal": _proposal_for_tool(
+                    "propose_chaser_apply",
+                    {"chaser_id": "parcan_left_to_right", "start_time": float(section.get("start_s", 0.0)), "repetitions": repetitions},
+                ),
+            }
+
+    return None
+
+
 def _proposal_for_tool(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
     if tool_name == "propose_cue_clear_range":
         start_time = float(args.get("start_time", 0.0))
@@ -512,9 +944,10 @@ async def _llm_complete(client: httpx.AsyncClient, payload: Dict[str, Any]) -> D
 
 
 async def _event_stream(req: ChatRequest):
+    request_messages = _inject_query_guidance(req.messages)
     payload = {
         "model": req.model or "local",
-        "messages": req.messages,
+        "messages": request_messages,
         "temperature": req.temperature if req.temperature is not None else 0.2,
         "tools": TOOLS,
         "tool_choice": req.tool_choice if req.tool_choice is not None else "auto",
@@ -522,7 +955,28 @@ async def _event_stream(req: ChatRequest):
 
     async with httpx.AsyncClient(timeout=240.0) as client:
         yield f"data: {orjson.dumps({'type': 'status', 'phase': 'thinking', 'label': 'Thinking'}).decode('utf-8')}\n\n"
-        messages = list(req.messages)
+        fast_path = await _run_stream_fast_path(request_messages)
+        if fast_path is not None:
+            yield f"data: {orjson.dumps({'type': 'status', 'phase': 'awaiting_tool_calls', 'label': 'Resolving tool calls'}).decode('utf-8')}\n\n"
+            for tool_name in fast_path.get("used_tools") or []:
+                yield f"data: {orjson.dumps({'type': 'status', 'phase': 'executing_tool', 'label': f'Executing {MCP_TOOL_MAP.get(tool_name, tool_name)}', 'tool_name': tool_name}).decode('utf-8')}\n\n"
+            proposal = fast_path.get("proposal")
+            if proposal is not None:
+                yield f"data: {orjson.dumps(proposal).decode('utf-8')}\n\n"
+                yield f"data: {orjson.dumps({'type': 'status', 'phase': 'awaiting_confirmation', 'label': 'Awaiting confirmation'}).decode('utf-8')}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            answer_messages = fast_path.get("answer_messages") or []
+            yield f"data: {orjson.dumps({'type': 'status', 'phase': 'calling_model', 'label': 'Calling local model'}).decode('utf-8')}\n\n"
+            data = await _llm_complete(client, {**payload, 'messages': answer_messages, 'tools': [], 'tool_choice': 'none'})
+            content = str(data['choices'][0]['message'].get('content') or '')
+            for chunk in _chunk_text(content):
+                if chunk:
+                    yield f"data: {orjson.dumps({'type': 'delta', 'delta': chunk}).decode('utf-8')}\n\n"
+            yield f"data: {orjson.dumps({'type': 'done', 'finish_reason': data['choices'][0].get('finish_reason', 'stop')}).decode('utf-8')}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+        messages = list(request_messages)
         while True:
             yield f"data: {orjson.dumps({'type': 'status', 'phase': 'calling_model', 'label': 'Calling local model'}).decode('utf-8')}\n\n"
             data = await _llm_complete(client, {**payload, "messages": messages})
@@ -540,6 +994,8 @@ async def _event_stream(req: ChatRequest):
             yield f"data: {orjson.dumps({'type': 'status', 'phase': 'awaiting_tool_calls', 'label': 'Resolving tool calls'}).decode('utf-8')}\n\n"
             tool_messages = []
             section_lookup_result = None
+            chord_lookup_result = None
+            cursor_lookup_result = None
             write_proposal = None
             for tc in tool_calls:
                 tool_name = tc["function"]["name"]
@@ -552,23 +1008,31 @@ async def _event_stream(req: ChatRequest):
                 result = await call_mcp(tool_name, args)
                 if tool_name == "mcp_find_section":
                     section_lookup_result = result
+                if tool_name == "mcp_find_chord":
+                    chord_lookup_result = result
+                if tool_name == "mcp_read_cursor":
+                    cursor_lookup_result = result
                 tool_messages.append({"role": "tool", "tool_call_id": tc["id"], "content": _render_tool_result(tool_name, result)})
             if write_proposal is not None:
                 yield f"data: {orjson.dumps(write_proposal).decode('utf-8')}\n\n"
                 break
-            if section_lookup_result is not None:
+            if section_lookup_result is not None and _is_section_timing_question(messages):
                 messages = _build_section_answer_messages(messages, section_lookup_result)
+                continue
+            if chord_lookup_result is not None:
+                messages = _build_chord_answer_messages(messages, chord_lookup_result)
+                continue
+            if cursor_lookup_result is not None:
+                messages = _build_cursor_answer_messages(messages, cursor_lookup_result)
                 continue
             messages = messages + tool_messages + [{
                 "role": "system",
                 "content": (
                     "Answer strictly from the tool outputs already provided in this conversation. "
                     "Do not say that you lack access to databases, metadata, websites, or external tools. "
-                    "If a tool output contains SECTION_LOOKUP_RESULT with section_found=true, you must answer with the exact "
-                    "section_start_seconds or section_end_seconds value from that tool output. "
-                    "Do not ask for more context when that exact section value is already present. "
-                    "If the requested section name appears in the tool outputs, report its exact start or end time directly. "
-                    "If it does not appear, say that the current loaded song data does not contain that section name."
+                    "Use exact values present in the tool outputs, including times, bars, beats, fixture ids, cue effects, and loudness statistics. "
+                    "If the requested fact is present in the tool outputs, answer directly with that fact. "
+                    "If it is not present, say that the current loaded song data does not contain that fact."
                 ),
             }]
 
@@ -601,9 +1065,11 @@ async def chat_completions(req: ChatRequest):
     if req.stream:
         return StreamingResponse(_event_stream(req), media_type="text/event-stream")
 
+    request_messages = _inject_query_guidance(req.messages)
+
     payload = {
         "model": req.model or "local",
-        "messages": req.messages,
+        "messages": request_messages,
         "temperature": req.temperature if req.temperature is not None else 0.2,
         "tools": TOOLS,
         "tool_choice": req.tool_choice if req.tool_choice is not None else "auto",
@@ -621,6 +1087,8 @@ async def chat_completions(req: ChatRequest):
 
         tool_messages = []
         section_lookup_result = None
+        chord_lookup_result = None
+        cursor_lookup_result = None
         for tc in tool_calls:
             tool_name = tc["function"]["name"]
             tool_call_id = tc["id"]
@@ -634,6 +1102,10 @@ async def chat_completions(req: ChatRequest):
             result = await call_mcp(tool_name, args)
             if tool_name == "mcp_find_section":
                 section_lookup_result = result
+            if tool_name == "mcp_find_chord":
+                chord_lookup_result = result
+            if tool_name == "mcp_read_cursor":
+                cursor_lookup_result = result
 
             tool_messages.append({
                 "role": "tool",
@@ -641,24 +1113,34 @@ async def chat_completions(req: ChatRequest):
                 "content": _render_tool_result(tool_name, result)
             })
 
-        if section_lookup_result is not None:
-            payload2 = {**payload, "messages": _build_section_answer_messages(req.messages, section_lookup_result), "tools": [], "tool_choice": "none"}
+        if section_lookup_result is not None and _is_section_timing_question(request_messages):
+            payload2 = {**payload, "messages": _build_section_answer_messages(request_messages, section_lookup_result), "tools": [], "tool_choice": "none"}
+            r2 = await client.post(f"{LLM_BASE_URL}/v1/chat/completions", json=payload2)
+            r2.raise_for_status()
+            return r2.json()
+
+        if chord_lookup_result is not None:
+            payload2 = {**payload, "messages": _build_chord_answer_messages(request_messages, chord_lookup_result), "tools": [], "tool_choice": "none"}
+            r2 = await client.post(f"{LLM_BASE_URL}/v1/chat/completions", json=payload2)
+            r2.raise_for_status()
+            return r2.json()
+
+        if cursor_lookup_result is not None:
+            payload2 = {**payload, "messages": _build_cursor_answer_messages(request_messages, cursor_lookup_result), "tools": [], "tool_choice": "none"}
             r2 = await client.post(f"{LLM_BASE_URL}/v1/chat/completions", json=payload2)
             r2.raise_for_status()
             return r2.json()
 
         payload2 = {
             **payload,
-            "messages": req.messages + [msg1] + tool_messages + [{
+            "messages": request_messages + [msg1] + tool_messages + [{
                 "role": "system",
                 "content": (
                     "Answer strictly from the tool outputs already provided in this conversation. "
                     "Do not say that you lack access to databases, metadata, websites, or external tools. "
-                    "If a tool output contains SECTION_LOOKUP_RESULT with section_found=true, you must answer with the exact "
-                    "section_start_seconds or section_end_seconds value from that tool output. "
-                    "Do not ask for more context when that exact section value is already present. "
-                    "If the requested section name appears in the tool outputs, report its exact start or end time directly. "
-                    "If it does not appear, say that the current loaded song data does not contain that section name."
+                    "Use exact values present in the tool outputs, including times, bars, beats, fixture ids, cue effects, and loudness statistics. "
+                    "If the requested fact is present in the tool outputs, answer directly with that fact. "
+                    "If it is not present, say that the current loaded song data does not contain that fact."
                 ),
             }],
         }

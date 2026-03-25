@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import difflib
 import json
 from pathlib import Path
 import re
@@ -91,6 +92,35 @@ def _normalize_section_query(value: str) -> str:
     return " ".join(filtered or words)
 
 
+def _find_section_match(sections: list[dict], query: str) -> dict | None:
+    raw_query = str(query or "").strip().lower()
+    if not raw_query:
+        return None
+    normalized_query = _normalize_section_query(raw_query)
+    match = next((section for section in sections if raw_query == str(section.get("name") or "").strip().lower()), None)
+    if match is not None:
+        return match
+    match = next((section for section in sections if normalized_query == _normalize_section_query(str(section.get("name") or ""))), None)
+    if match is not None:
+        return match
+    query_words = set(normalized_query.split())
+    match = next(
+        (
+            section
+            for section in sections
+            if query_words and set(_normalize_section_query(str(section.get("name") or "")).split()).issubset(query_words)
+        ),
+        None,
+    )
+    if match is not None:
+        return match
+    normalized_names = {_normalize_section_query(str(section.get("name") or "")): section for section in sections}
+    close_matches = difflib.get_close_matches(normalized_query, list(normalized_names.keys()), n=1, cutoff=0.6)
+    if close_matches:
+        return normalized_names[close_matches[0]]
+    return None
+
+
 def register_metadata_tools(mcp, runtime) -> None:
     def _load_song(song: str | None):
         ws_manager = runtime.require_ws_manager()
@@ -144,20 +174,7 @@ def register_metadata_tools(mcp, runtime) -> None:
         if not query:
             return fail("section_name_required", "section_name is required")
         details = build_song_details(current_song, ws_manager.state_manager.meta_path)
-        normalized_query = _normalize_section_query(query)
-        match = next((section for section in details["sections"] if query == str(section.get("name") or "").strip().lower()), None)
-        if match is None:
-            match = next((section for section in details["sections"] if normalized_query == _normalize_section_query(str(section.get("name") or ""))), None)
-        if match is None:
-            query_words = set(normalized_query.split())
-            match = next(
-                (
-                    section
-                    for section in details["sections"]
-                    if query_words and set(_normalize_section_query(str(section.get("name") or "")).split()).issubset(query_words)
-                ),
-                None,
-            )
+        match = _find_section_match(details["sections"], query)
         if match is None:
             return fail("section_not_found", f"Section '{section_name}' not found", {"section_name": section_name, "available_sections": [section.get("name") for section in details["sections"]]})
         return ok({"song": details["filename"], "section": match})
@@ -226,6 +243,27 @@ def register_metadata_tools(mcp, runtime) -> None:
         chords = _slice_by_time((details.get("analysis") or {}).get("chords") or [], start_time, end_time, "time_s")
         chords = _slice_by_bar_beat(chords, start_bar, start_beat, end_bar, end_beat)
         return ok({"song": details["filename"], "chords": chords, "count": len(chords)})
+
+    @mcp.tool()
+    def metadata_find_chord(chord: str, song: str | None = None, occurrence: int = 1):
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
+        if current_song is None:
+            return fail("song_not_loaded", "No song is currently loaded")
+        requested = str(chord or "").strip().lower()
+        if not requested:
+            return fail("chord_required", "chord is required")
+        details = build_song_details(current_song, ws_manager.state_manager.meta_path)
+        matches = [entry for entry in (details.get("analysis") or {}).get("chords") or [] if str(entry.get("label") or "").strip().lower() == requested]
+        index = max(0, int(occurrence or 1) - 1)
+        if index >= len(matches):
+            return fail(
+                "chord_not_found",
+                f"Chord '{chord}' occurrence {int(occurrence or 1)} not found",
+                {"chord": chord, "occurrence": int(occurrence or 1), "available": len(matches)},
+            )
+        return ok({"song": details["filename"], "chord": matches[index], "occurrence": index + 1})
 
     @mcp.tool()
     def metadata_get_loudness(song: str | None = None, start_time: float | None = None, end_time: float | None = None, section: str | None = None):

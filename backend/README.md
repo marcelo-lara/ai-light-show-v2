@@ -63,7 +63,7 @@ Current MCP tools:
 - Songs: `songs_list`, `songs_get_details`, `songs_load`
 - Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`
 - Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_get_loudness`
+- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - Transport: `transport_get_cursor`
 
 Behavior notes:

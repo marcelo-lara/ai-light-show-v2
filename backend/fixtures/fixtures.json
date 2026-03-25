@@ -46,7 +46,7 @@
 	{
 		"id": "parcan_r",
 		"name": "ParCan R",
-		"fixture": "fixture.parcan.rgb_proton",
+		"fixture": "fixture.parcan.rgb_gen",
 		"base_channel": 22,
 		"location": {
 			"x": 0.75,
