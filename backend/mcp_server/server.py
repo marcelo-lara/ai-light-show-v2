@@ -9,6 +9,7 @@ from .cues import register_cue_tools
 from .fixtures import register_fixtures_tools
 from .metadata import register_metadata_tools
 from .songs import register_songs_tools
+from .transport import register_transport_tools
 
 
 def create_backend_mcp(runtime) -> FastMCP:
@@ -17,4 +18,5 @@ def create_backend_mcp(runtime) -> FastMCP:
     register_fixtures_tools(mcp, runtime)
     register_cue_tools(mcp, runtime)
     register_metadata_tools(mcp, runtime)
+    register_transport_tools(mcp, runtime)
     return mcp

@@ -11,9 +11,10 @@ Local inference + tool-gateway stack used for metadata-aware cue planning.
 
 1. `llm-server` (llama.cpp) serves model inference at `http://llm-server:8080`.
 2. `agent-gateway` accepts chat requests and forwards to llama.cpp.
-3. If model emits tool calls, gateway maps tools to MCP methods.
-4. Gateway connects to the backend-mounted MCP endpoint at `/mcp` over Streamable HTTP.
-5. Tool results are appended as `role=tool` messages before second model pass.
+3. If model emits read tool calls, gateway maps them to backend MCP methods and loops until the model produces a final answer.
+4. If model emits write proposal tools, gateway stops before mutation and streams a structured proposal event back to the backend assistant service.
+5. Gateway connects to the backend-mounted MCP endpoint at `/mcp` over Streamable HTTP.
+6. Backend confirmation applies the proposed action and then requests a model-authored follow-up response.
 
 ## Key files
 
@@ -28,8 +29,19 @@ Local inference + tool-gateway stack used for metadata-aware cue planning.
 
 ## Tool mapping (current)
 
-- `mcp_get_sections` → `metadata_get_sections`
-- `mcp_get_onsets` → `metadata_get_beats`
+- `mcp_read_sections` → `metadata_get_sections`
+- `mcp_read_beats` → `metadata_get_beats`
+- `mcp_read_chords` → `metadata_get_chords`
+- `mcp_read_cue_window` → `cues_get_window`
+- `mcp_read_fixtures` → `fixtures_list`
+- `mcp_read_chasers` → `chasers_list`
+- `mcp_read_cursor` → `transport_get_cursor`
+- `mcp_read_loudness` → `metadata_get_loudness`
+
+Write proposal tools handled by the gateway without direct mutation:
+
+- `propose_cue_clear_range`
+- `propose_chaser_apply`
 
 ## Development
 
@@ -44,6 +56,7 @@ Host endpoints:
 - llama.cpp: `http://localhost:8080`
 - gateway: `http://localhost:8090`
 - gateway debug MCP tools: `GET /debug/mcp/tools`
+- gateway streamed chat: `POST /v1/chat/completions` with `stream=true` returns server-sent JSON events (`status`, `delta`, `done`, `proposal`, `error`)
 
 ## LLM contributor checklist
 

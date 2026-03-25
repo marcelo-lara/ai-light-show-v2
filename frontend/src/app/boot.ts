@@ -3,7 +3,15 @@ import { initTheme } from "../shared/state/theme_state.ts";
 import { setWsState } from "../shared/state/ws_state.ts";
 import { WsClient } from "../shared/transport/ws_client.ts";
 import type { ConnectionState, WsInbound } from "../shared/transport/protocol.ts";
-import { addAssistantMessage, addSystemMessage, appendStreamingChunk, finishStreaming } from "../features/llm_chat/llm_state.ts";
+import {
+  addActionProposal,
+  addSystemMessage,
+  appendStreamingChunk,
+  failStreaming,
+  finishStreaming,
+  resolveActionProposal,
+  upsertSystemStatus,
+} from "../features/llm_chat/llm_state.ts";
 
 // If you inject bootstrap JSON in HTML, expose it as window.__BOOTSTRAP_STATE__
 declare global {
@@ -65,15 +73,61 @@ export function boot(ctx: BootContext) {
         applyPatch(m);
       } else if (m.type === "event") {
         const data = (m.data ?? {}) as Record<string, unknown>;
-        if (data.domain === "llm" && typeof data.chunk === "string") {
-          appendStreamingChunk(data.chunk);
-          if (data.done === true) finishStreaming();
-          return;
-        }
-        if (data.domain === "llm" && typeof data.message === "string") {
-          addAssistantMessage(data.message);
-          finishStreaming();
-          return;
+        if (data.domain === "llm") {
+          if (m.message === "llm_status" && typeof data.request_id === "string" && typeof data.label === "string") {
+            upsertSystemStatus(data.request_id, data.label);
+            return;
+          }
+          if (m.message === "llm_delta" && typeof data.delta === "string") {
+            appendStreamingChunk(data.delta);
+            return;
+          }
+          if (m.message === "llm_done") {
+            finishStreaming();
+            return;
+          }
+          if (
+            m.message === "llm_action_proposed" &&
+            typeof data.request_id === "string" &&
+            typeof data.action_id === "string" &&
+            typeof data.title === "string" &&
+            typeof data.summary === "string"
+          ) {
+            addActionProposal({
+              requestId: data.request_id,
+              actionId: data.action_id,
+              title: data.title,
+              summary: data.summary,
+              toolName: typeof data.tool_name === "string" ? data.tool_name : undefined,
+              arguments: typeof data.arguments === "object" && data.arguments ? (data.arguments as Record<string, unknown>) : undefined,
+            });
+            return;
+          }
+          if (
+            (m.message === "llm_action_rejected" || m.message === "llm_action_applied") &&
+            typeof data.request_id === "string" &&
+            typeof data.action_id === "string"
+          ) {
+            resolveActionProposal(
+              data.request_id,
+              data.action_id,
+              m.message === "llm_action_applied" ? "Action applied." : "Action rejected.",
+              "info",
+            );
+            return;
+          }
+          if (m.message === "llm_error") {
+            failStreaming(
+              typeof data.request_id === "string" ? data.request_id : undefined,
+              typeof data.code === "string" ? data.code : "llm_error",
+              typeof data.detail === "string" ? data.detail : "The assistant request failed.",
+            );
+            return;
+          }
+          if (m.message === "llm_cancelled") {
+            finishStreaming();
+            return;
+          }
         }
         if (m.level === "error") {
           addSystemMessage(m.message, "error");

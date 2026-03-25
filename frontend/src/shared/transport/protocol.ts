@@ -71,6 +71,8 @@ export type IntentName =
   | "chaser.list"
   | "llm.send_prompt"
   | "llm.cancel"
+  | "llm.confirm_action"
+  | "llm.reject_action"
   | "poi.create"
   | "poi.update"
   | "poi.delete"

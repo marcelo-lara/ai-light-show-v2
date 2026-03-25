@@ -7,6 +7,7 @@ import httpx
 import orjson
 from fastmcp import Client
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 log = logging.getLogger("agent-gateway")
@@ -20,28 +21,145 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "mcp_get_onsets",
-            "description": "Get beat-aligned onset timestamps (or beat positions) for a song section and subdivision.",
+            "name": "mcp_read_sections",
+            "description": "Read the song sections with exact names and time ranges.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "song_id": {"type": "string"},
-                    "section": {"type": "string"},
-                    "subdivision": {"type": "number", "description": "1=beats, 0.5=8ths, 0.25=16ths"}
+                    "song_id": {"type": "string"}
                 },
-                "required": ["song_id", "section", "subdivision"]
+                "required": []
             }
         }
     },
     {
         "type": "function",
         "function": {
-            "name": "mcp_get_sections",
-            "description": "Get list of song sections with start/end (beats or seconds).",
+            "name": "mcp_read_beats",
+            "description": "Read beat entries with time, bar, and beat values for an optional time window.",
             "parameters": {
                 "type": "object",
-                "properties": {"song_id": {"type": "string"}},
-                "required": ["song_id"]
+                "properties": {
+                    "song_id": {"type": "string"},
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_read_chords",
+            "description": "Read chord changes for the current song or a time window.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "song_id": {"type": "string"},
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_read_cue_window",
+            "description": "Read cue entries in a specific time window.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"}
+                },
+                "required": ["start_time", "end_time"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_read_fixtures",
+            "description": "Read the fixture list including ids, names, and positions.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_read_chasers",
+            "description": "Read the available chaser definitions.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_read_cursor",
+            "description": "Read the current transport cursor time, section, and nearest bar.beat.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_read_loudness",
+            "description": "Read loudness statistics for a time window or section.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "song_id": {"type": "string"},
+                    "section": {"type": "string"},
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "propose_cue_clear_range",
+            "description": "Propose clearing cue entries in a specific time range. Use for destructive cue sheet edits that need confirmation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"}
+                },
+                "required": ["start_time", "end_time"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "propose_chaser_apply",
+            "description": "Propose adding a chaser cue entry starting at a time with repetitions. Use for cue changes that need confirmation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "chaser_id": {"type": "string"},
+                    "start_time": {"type": "number"},
+                    "repetitions": {"type": "integer"}
+                },
+                "required": ["chaser_id", "start_time", "repetitions"]
             }
         }
     },
@@ -52,13 +170,21 @@ class ChatRequest(BaseModel):
     model: Optional[str] = "local"
     temperature: Optional[float] = 0.2
     tool_choice: Optional[Any] = "auto"
+    stream: Optional[bool] = False
+    assistant_id: Optional[str] = "generic"
 
 app = FastAPI()
 
 # ---- MCP tool wrapper ----
 MCP_TOOL_MAP = {
-    "mcp_get_onsets": "metadata_get_beats",
-    "mcp_get_sections": "metadata_get_sections",
+    "mcp_read_sections": "metadata_get_sections",
+    "mcp_read_beats": "metadata_get_beats",
+    "mcp_read_chords": "metadata_get_chords",
+    "mcp_read_cue_window": "cues_get_window",
+    "mcp_read_fixtures": "fixtures_list",
+    "mcp_read_chasers": "chasers_list",
+    "mcp_read_cursor": "transport_get_cursor",
+    "mcp_read_loudness": "metadata_get_loudness",
 }
 
 
@@ -107,60 +233,100 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
             "hint": "Call /debug/mcp/tools and map MCP_TOOL_MAP to real tool names."
         }
 
-    if tool_name == "mcp_get_sections":
-        song = _require_song_arg(tool_name, args)
-        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"song": song})
+    if tool_name == "mcp_read_sections":
+        song = str(args.get("song") or args.get("song_id") or "")
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"song": song} if song else {})
 
-    if tool_name == "mcp_get_onsets":
-        song = _require_song_arg(tool_name, args)
-        section_name = str(args.get("section") or "").strip()
-        subdivision = float(args.get("subdivision", 1.0) or 1.0)
-        beat_args: Dict[str, Any] = {"song": song}
+    if tool_name in {"mcp_read_beats", "mcp_read_chords", "mcp_read_loudness"}:
+        song = str(args.get("song") or args.get("song_id") or "")
+        payload = {key: value for key, value in args.items() if key in {"start_time", "end_time", "section"}}
+        if song:
+            payload["song"] = song
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
 
-        if "start_time" in args:
-            beat_args["start_time"] = args["start_time"]
-        if "end_time" in args:
-            beat_args["end_time"] = args["end_time"]
-
-        if section_name and "start_time" not in beat_args and "end_time" not in beat_args:
-            sections_result = await _call_mcp_tool("metadata_get_sections", {"song": song})
-            if not isinstance(sections_result, dict) or not sections_result.get("ok"):
-                return sections_result
-            sections = sections_result.get("data", {}).get("sections", [])
-            match = next(
-                (section for section in sections if str(section.get("name") or "").lower() == section_name.lower()),
-                None,
-            )
-            if match is None:
-                return {
-                    "ok": False,
-                    "error": {
-                        "code": "section_not_found",
-                        "message": f"Section '{section_name}' not found",
-                        "details": {"song": song},
-                    },
-                }
-            beat_args["start_time"] = match.get("start_s")
-            beat_args["end_time"] = match.get("end_s")
-
-        beats_result = await _call_mcp_tool(MCP_TOOL_MAP[tool_name], beat_args)
-        if not isinstance(beats_result, dict) or not beats_result.get("ok"):
-            return beats_result
-
-        beats = beats_result.get("data", {}).get("beats", [])
-        beat_times = [float(beat.get("time", 0.0)) for beat in beats if isinstance(beat, dict)]
-        return {
-            "ok": True,
-            "data": {
-                "song": song,
-                "section": section_name or None,
-                "subdivision": subdivision,
-                "onsets": _expand_subdivision_times(beat_times, subdivision),
-                "beat_count": len(beat_times),
-            },
-        }
+    if tool_name == "mcp_read_cue_window":
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"start_time": float(args.get("start_time", 0.0)), "end_time": float(args.get("end_time", 0.0))})
 
     return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], args)
+
+
+def _proposal_for_tool(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    if tool_name == "propose_cue_clear_range":
+        start_time = float(args.get("start_time", 0.0))
+        end_time = float(args.get("end_time", 0.0))
+        return {
+            "type": "proposal",
+            "action_id": f"proposal-{abs(hash(orjson.dumps(args).decode('utf-8'))) % 1000000}",
+            "tool_name": tool_name,
+            "arguments": args,
+            "title": "Confirm cue clear",
+            "summary": f"Remove cue items from {start_time:.3f}s to {end_time:.3f}s.",
+        }
+    return {
+        "type": "proposal",
+        "action_id": f"proposal-{abs(hash(orjson.dumps(args).decode('utf-8'))) % 1000000}",
+        "tool_name": tool_name,
+        "arguments": args,
+        "title": "Confirm chaser apply",
+        "summary": f"Apply chaser {args.get('chaser_id')} at {float(args.get('start_time', 0.0)):.3f}s for {int(args.get('repetitions', 1))} repetitions.",
+    }
+
+
+def _chunk_text(content: str, chunk_size: int = 48) -> List[str]:
+    return [content[index:index + chunk_size] for index in range(0, len(content), chunk_size)] or [""]
+
+
+async def _llm_complete(client: httpx.AsyncClient, payload: Dict[str, Any]) -> Dict[str, Any]:
+    response = await client.post(f"{LLM_BASE_URL}/v1/chat/completions", json=payload)
+    response.raise_for_status()
+    return response.json()
+
+
+async def _event_stream(req: ChatRequest):
+    payload = {
+        "model": req.model or "local",
+        "messages": req.messages,
+        "temperature": req.temperature if req.temperature is not None else 0.2,
+        "tools": TOOLS,
+        "tool_choice": req.tool_choice if req.tool_choice is not None else "auto",
+    }
+
+    async with httpx.AsyncClient(timeout=240.0) as client:
+        yield f"data: {orjson.dumps({'type': 'status', 'phase': 'thinking', 'label': 'Thinking'}).decode('utf-8')}\n\n"
+        messages = list(req.messages)
+        while True:
+            yield f"data: {orjson.dumps({'type': 'status', 'phase': 'calling_model', 'label': 'Calling local model'}).decode('utf-8')}\n\n"
+            data = await _llm_complete(client, {**payload, "messages": messages})
+            msg = data["choices"][0]["message"]
+            tool_calls = msg.get("tool_calls") or []
+            if not tool_calls:
+                content = str(msg.get("content") or "")
+                for chunk in _chunk_text(content):
+                    if chunk:
+                        yield f"data: {orjson.dumps({'type': 'delta', 'delta': chunk}).decode('utf-8')}\n\n"
+                yield f"data: {orjson.dumps({'type': 'done', 'finish_reason': data['choices'][0].get('finish_reason', 'stop')}).decode('utf-8')}\n\n"
+                break
+
+            messages = messages + [msg]
+            yield f"data: {orjson.dumps({'type': 'status', 'phase': 'awaiting_tool_calls', 'label': 'Resolving tool calls'}).decode('utf-8')}\n\n"
+            tool_messages = []
+            write_proposal = None
+            for tc in tool_calls:
+                tool_name = tc["function"]["name"]
+                raw_args = tc["function"].get("arguments", "{}")
+                args = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+                if tool_name.startswith("propose_"):
+                    write_proposal = _proposal_for_tool(tool_name, args)
+                    break
+                yield f"data: {orjson.dumps({'type': 'status', 'phase': 'executing_tool', 'label': f'Executing {MCP_TOOL_MAP.get(tool_name, tool_name)}', 'tool_name': tool_name}).decode('utf-8')}\n\n"
+                result = await call_mcp(tool_name, args)
+                tool_messages.append({"role": "tool", "tool_call_id": tc["id"], "content": orjson.dumps(result).decode("utf-8")})
+            if write_proposal is not None:
+                yield f"data: {orjson.dumps(write_proposal).decode('utf-8')}\n\n"
+                break
+            messages = messages + tool_messages
+
+    yield "data: [DONE]\n\n"
 
 @app.get("/health")
 async def health():
@@ -186,6 +352,9 @@ async def debug_mcp_tools():
 
 @app.post("/v1/chat/completions")
 async def chat_completions(req: ChatRequest):
+    if req.stream:
+        return StreamingResponse(_event_stream(req), media_type="text/event-stream")
+
     payload = {
         "model": req.model or "local",
         "messages": req.messages,

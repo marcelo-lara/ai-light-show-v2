@@ -129,6 +129,7 @@ Code is the source of truth.
 | --- | --- | --- |
 | `fixtures_list` | none | returns serialized fixture payloads using current output universe values |
 | `fixtures_get` | `fixture_id` | returns one serialized fixture payload |
+| `chasers_list` | none | returns the currently loaded chaser definitions from `backend/fixtures/chasers.json` |
 
 #### Cues
 
@@ -149,6 +150,13 @@ Code is the source of truth.
 | `metadata_get_sections` | `song?` | returns normalized section rows |
 | `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered |
 | `metadata_get_chords` | `song?`, `start_time?`, `end_time?` | returns chord-change rows parsed from `beats.json`, optionally time-filtered |
+| `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads analyzer `essentia/loudness_envelope.json` and returns averaged window statistics |
+
+#### Transport
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `transport_get_cursor` | none | returns current timecode plus nearest resolved `bar`, `beat`, and active `section_name` |
 
 ## Intent catalog (current implementation)
 
@@ -220,8 +228,10 @@ Notes on `fixture.set_values`:
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `llm.send_prompt` | `prompt` | emits `llm_stream` chunks (`Echo: ` + prompt) | `False` (no patch broadcast) |
-| `llm.cancel` | none | emits `llm_cancelled` | `False` |
+| `llm.send_prompt` | `prompt`, `assistant_id?` | starts a session-scoped assistant request, emits `llm_status`, `llm_delta`, `llm_done`, and optionally `llm_action_proposed` | `False` |
+| `llm.cancel` | `request_id?` | cancels the active assistant request for the websocket session or the specified request | `False` |
+| `llm.confirm_action` | `request_id`, `action_id` | applies a pending assistant action, emits `llm_action_applied`, then resumes model-authored response streaming | `False` |
+| `llm.reject_action` | `request_id`, `action_id` | dismisses a pending assistant action and emits `llm_action_rejected` | `False` |
 
 ## Event message catalog
 
@@ -247,8 +257,14 @@ Notes on `fixture.set_values`:
 | `info` | `chaser_preview_stopped` | `{}` |
 | `warning` | `chaser_preview_stop_ignored` | `{reason:"preview_not_active"}` |
 | `error` | `prompt_required` | none |
-| `info` | `llm_stream` | `{domain:"llm", chunk, done}` |
-| `info` | `llm_cancelled` | `{domain:"llm"}` |
+| `info` | `llm_status` | `{domain:"llm", request_id, phase, label, assistant_id?}` |
+| `info` | `llm_delta` | `{domain:"llm", request_id, delta, done:false}` |
+| `info` | `llm_done` | `{domain:"llm", request_id, finish_reason, done:true}` |
+| `info` | `llm_action_proposed` | `{domain:"llm", request_id, action_id, title, summary, tool_name, arguments, requires_confirmation:true}` |
+| `info` | `llm_action_applied` | `{domain:"llm", request_id, action_id, tool_name}` |
+| `info` | `llm_action_rejected` | `{domain:"llm", request_id, action_id}` |
+| `info` | `llm_cancelled` | `{domain:"llm", request_id}` |
+| `error` | `llm_error` | `{domain:"llm", request_id, code, detail, retryable}` |
 | `error` | `cue_add_failed` | `{reason, fixture_id?, effect?, supported?}` |
 | `info` | `cue_added` | `{ok, entry}` |
 | `error` | `cue_update_failed` | `{reason}` |

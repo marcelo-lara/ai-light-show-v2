@@ -22,3 +22,8 @@ def register_fixtures_tools(mcp, runtime) -> None:
         if fixture is None:
             return fail("fixture_not_found", f"Fixture '{fixture_id}' not found")
         return ok(fixture)
+
+    @mcp.tool()
+    async def chasers_list():
+        ws_manager = runtime.require_ws_manager()
+        return ok({"chasers": ws_manager.state_manager.get_chasers(), "count": len(ws_manager.state_manager.get_chasers())})

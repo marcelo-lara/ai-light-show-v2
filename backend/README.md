@@ -24,6 +24,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - `store/pois.py`: POI CRUD + persistence.
 - `store/dmx_canvas.py`: packed DMX frame buffer.
 - `services/artnet.py`: UDP Art-Net sender.
+- `services/assistant/*`: assistant profile storage, gateway client, request lifecycle, and confirmation-gated LLM orchestration.
 
 ## Runtime model
 
@@ -50,6 +51,7 @@ Supported intent names:
 - Chaser: `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, `chaser.list`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
+- LLM confirmation: `llm.confirm_action`, `llm.reject_action`.
 
 ## MCP protocol essentials
 
@@ -59,20 +61,31 @@ Supported intent names:
 
 Current MCP tools:
 - Songs: `songs_list`, `songs_get_details`, `songs_load`
-- Fixtures: `fixtures_list`, `fixtures_get`
+- Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`
 - Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_beats`, `metadata_get_chords`
+- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_beats`, `metadata_get_chords`, `metadata_get_loudness`
+- Transport: `transport_get_cursor`
 
 Behavior notes:
 - MCP song and cue mutation tools operate on the same `StateManager` used by websocket clients.
 - MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
 - Metadata tools currently cover sections, beats, and chords from backend-loaded analyzer metadata.
+- Loudness summaries are read from analyzer `essentia/loudness_envelope.json` artifacts and returned as averaged window statistics.
 
 ### Backend → Client
 
 - `snapshot`: `{ type:"snapshot", seq, state }`
 - `patch`: `{ type:"patch", seq, changes }`
 - `event`: `{ type:"event", level, message, data? }`
+
+Assistant event behavior:
+- Assistant replies are session-scoped websocket events and are not broadcast globally to other clients.
+- `llm_status` carries operational system messages such as `Thinking`, `Calling local model`, or `Executing metadata_get_sections`.
+- `llm_delta` carries streamed assistant text chunks.
+- `llm_done` closes the active streamed assistant response.
+- `llm_action_proposed` carries confirmation-gated write proposals for cue or chaser mutations.
+- `llm_action_applied`, `llm_action_rejected`, `llm_cancelled`, and `llm_error` report assistant request lifecycle outcomes.
+- Assistant interactions are appended to JSONL logs under `ASSISTANT_LOG_DIR` (Docker default `/app/logs/assistant`, host path `backend/logs/assistant`) so failed manual runs can be replayed from the prompt, streamed gateway events, proposals, confirmations, and emitted client events.
 
 Patch behavior:
 - Diffs are currently top-level replacements only.
@@ -92,6 +105,9 @@ Patch behavior:
 - `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings. For `kind="rgb"` meta-channels, send `values.rgb` as `#RRGGBB` (or mapped color name); backend converts it to channel bytes.
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
 - `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
+- `llm.send_prompt` starts an assistant request through the backend-owned assistant service. The assistant service loads a named prompt profile, forwards the request to the agent gateway, relays streamed model output to the requesting websocket client, and pauses write-capable tool calls at the proposal stage.
+- `llm.confirm_action` applies a proposed cue or chaser mutation after explicit user confirmation, schedules a broadcast for the resulting state change, and then requests a model-authored follow-up summary.
+- `llm.reject_action` dismisses a pending proposal without mutating cues.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.
 - `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
@@ -160,6 +176,7 @@ Default local URL: `http://localhost:5001`.
 - `DEBUG`: sets backend logger level (`DEBUG` when truthy, otherwise `INFO`).
 - `DEBUG_MODE`: when truthy, `ArtNetService` prints sent DMX channel payloads to stdout and to a file if `DEBUG_FILE` is set.
 - `DEBUG_FILE`: optional path to write Art-Net debug output to a file in addition to stdout.
+- `ASSISTANT_LOG_DIR`: directory for assistant interaction JSONL logs. In Docker Compose this is `/app/logs/assistant`, persisted to `backend/logs/assistant` on the host.
 
 ## LLM Fast Map
 

@@ -30,6 +30,7 @@ class FakeStateManager:
     def __init__(self, meta_path: Path) -> None:
         self.meta_path = meta_path
         self.current_song = Song(song_id="Yonaka - Seize the Power", base_dir=str(meta_path))
+        self.timecode = 37.62
         self._cue_entries = [
             {"time": 0.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}},
             {"time": 16.0, "fixture_id": "parcan_r", "effect": "flash", "duration": 0.5, "data": {}},
@@ -41,6 +42,9 @@ class FakeStateManager:
     async def get_output_universe(self) -> bytearray:
         return bytearray(512)
 
+    async def get_timecode(self) -> float:
+        return self.timecode
+
     def get_cue_entries(self):
         return list(self._cue_entries)
 
@@ -50,6 +54,9 @@ class FakeStateManager:
     async def replace_cue_sheet_entries(self, entries):
         self._cue_entries = list(entries)
         return {"ok": True, "count": len(self._cue_entries), "entries": list(self._cue_entries)}
+
+    def get_chasers(self):
+        return [{"id": "parcan_left_to_right", "name": "Parcans left to right", "description": "Test chaser", "effects": []}]
 
 
 class FakeWsManager:
@@ -88,6 +95,22 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         chords = await client.call_tool("metadata_get_chords", {"song": "Yonaka - Seize the Power"})
         assert chords.data["ok"] is True
         assert chords.data["data"]["count"] > 0
+
+        cursor = await client.call_tool("transport_get_cursor", {})
+        assert cursor.data["ok"] is True
+        assert cursor.data["data"]["time_s"] == 37.62
+        assert cursor.data["data"]["bar"] == 21
+        assert cursor.data["data"]["beat"] == 1
+
+        loudness = await client.call_tool("metadata_get_loudness", {"song": "Yonaka - Seize the Power", "section": "Verse"})
+        assert loudness.data["ok"] is True
+        assert loudness.data["data"]["start_time"] == 57.32
+        assert loudness.data["data"]["end_time"] == 84.18
+        assert loudness.data["data"]["average"] > 0.0
+
+        chasers = await client.call_tool("chasers_list", {})
+        assert chasers.data["ok"] is True
+        assert chasers.data["data"]["count"] == 1
 
         window = await client.call_tool("cues_get_window", {"start_time": 0.0, "end_time": 8.0})
         assert window.data["ok"] is True
