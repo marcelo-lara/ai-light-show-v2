@@ -1,17 +1,19 @@
-import os, json, asyncio, logging
-import httpx, orjson
-from contextlib import asynccontextmanager
+import json
+import logging
+import os
+from typing import Any, Dict, List, Optional
+
+import httpx
+import orjson
+from fastmcp import Client
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Any, Dict, List, Optional, Tuple
-
-from mcp_client import McpSseConnection
 
 log = logging.getLogger("agent-gateway")
 logging.basicConfig(level=logging.INFO)
 
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://llm-server:8080")
-MCP_BASE_URL = os.getenv("MCP_BASE_URL", "http://song-metadata-mcp:8089")
+MCP_BASE_URL = os.getenv("MCP_BASE_URL", "http://backend:5001/mcp")
 
 # ---- OpenAI-style tools exposed to the model ----
 TOOLS = [
@@ -51,75 +53,53 @@ class ChatRequest(BaseModel):
     temperature: Optional[float] = 0.2
     tool_choice: Optional[Any] = "auto"
 
-# ---- Persistent MCP connection ----
-mcp = McpSseConnection(MCP_BASE_URL)
-
-async def ensure_mcp_started():
-    # keep retrying in case MCP is still starting
-    for attempt in range(1, 61):
-        try:
-            await mcp.start()
-            log.info("MCP connected.")
-            return
-        except Exception as e:
-            log.warning("MCP not ready (attempt %s): %s", attempt, e)
-            await asyncio.sleep(1)
-    log.error("MCP did not become ready in time.")
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    task = asyncio.create_task(ensure_mcp_started())
-    yield
-    task.cancel()
-    await mcp.close()
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 # ---- MCP tool wrapper ----
 MCP_TOOL_MAP = {
-    "mcp_get_onsets": "query_feature",
-    "mcp_get_sections": "get_song_overview",
+    "mcp_get_onsets": "metadata_get_beats",
+    "mcp_get_sections": "metadata_get_sections",
 }
 
 
-def normalize_mcp_tool_call(tool_name: str, args: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-    real_tool = MCP_TOOL_MAP[tool_name]
+def _require_song_arg(tool_name: str, args: Dict[str, Any]) -> str:
+    song = args.get("song") or args.get("song_id")
+    if not song:
+        raise HTTPException(400, f"{tool_name} requires 'song' or 'song_id'")
+    return str(song)
 
-    if tool_name == "mcp_get_sections":
-        song = args.get("song") or args.get("song_id")
-        if not song:
-            raise HTTPException(400, "mcp_get_sections requires 'song' or 'song_id'")
-        return real_tool, {"song": song}
 
-    if tool_name == "mcp_get_onsets":
-        song = args.get("song") or args.get("song_id")
-        if not song:
-            raise HTTPException(400, "mcp_get_onsets requires 'song' or 'song_id'")
+def _expand_subdivision_times(beat_times: List[float], subdivision: float) -> List[float]:
+    if not beat_times:
+        return []
+    if subdivision >= 1.0:
+        stride = max(1, int(round(subdivision)))
+        return beat_times[::stride]
 
-        feature = args.get("feature", "analyzer.beats")
-        normalized = {
-            "song": song,
-            "feature": feature,
-            "mode": args.get("mode", "summary"),
-            "include_raw": args.get("include_raw", False),
-        }
+    steps = max(1, int(round(1.0 / subdivision)))
+    expanded: List[float] = []
+    for index in range(len(beat_times) - 1):
+        start_time = beat_times[index]
+        end_time = beat_times[index + 1]
+        for offset in range(steps):
+            expanded.append(start_time + ((end_time - start_time) * (offset / steps)))
+    expanded.append(beat_times[-1])
+    return [round(value, 6) for value in expanded]
 
-        if "start_time" in args:
-            normalized["start_time"] = args["start_time"]
-        if "end_time" in args:
-            normalized["end_time"] = args["end_time"]
-        if "max_points" in args:
-            normalized["max_points"] = args["max_points"]
-        if "time_tolerance_ms" in args:
-            normalized["time_tolerance_ms"] = args["time_tolerance_ms"]
 
-        return real_tool, normalized
+async def _call_mcp_tool(name: str, arguments: Dict[str, Any]) -> Any:
+    async with Client(MCP_BASE_URL) as client:
+        result = await client.call_tool(name, arguments, raise_on_error=False)
+    if result.is_error:
+        detail = None
+        if result.content and hasattr(result.content[0], "text"):
+            detail = result.content[0].text
+        return {"ok": False, "error": {"code": "mcp_call_failed", "message": detail or f"Tool '{name}' failed"}}
+    return result.data if result.data is not None else result.structured_content
 
-    return real_tool, args
 
 async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
     if tool_name not in MCP_TOOL_MAP:
-        # return a structured error so the LLM can react
         return {
             "error": "MCP_TOOL_NOT_MAPPED",
             "tool_name": tool_name,
@@ -127,19 +107,60 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
             "hint": "Call /debug/mcp/tools and map MCP_TOOL_MAP to real tool names."
         }
 
-    real_tool, normalized_args = normalize_mcp_tool_call(tool_name, args)
-    # MCP JSON-RPC tools/call
-    req = {
-        "jsonrpc": "2.0",
-        "id": int(asyncio.get_event_loop().time() * 1000) % 1000000000,
-        "method": "tools/call",
-        "params": {"name": real_tool, "arguments": normalized_args}
-    }
-    try:
-        resp = await mcp.request(req, timeout=15)
-        return resp
-    except Exception as e:
-        return {"error": "MCP_CALL_FAILED", "detail": str(e), "tool": tool_name, "args": normalized_args}
+    if tool_name == "mcp_get_sections":
+        song = _require_song_arg(tool_name, args)
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"song": song})
+
+    if tool_name == "mcp_get_onsets":
+        song = _require_song_arg(tool_name, args)
+        section_name = str(args.get("section") or "").strip()
+        subdivision = float(args.get("subdivision", 1.0) or 1.0)
+        beat_args: Dict[str, Any] = {"song": song}
+
+        if "start_time" in args:
+            beat_args["start_time"] = args["start_time"]
+        if "end_time" in args:
+            beat_args["end_time"] = args["end_time"]
+
+        if section_name and "start_time" not in beat_args and "end_time" not in beat_args:
+            sections_result = await _call_mcp_tool("metadata_get_sections", {"song": song})
+            if not isinstance(sections_result, dict) or not sections_result.get("ok"):
+                return sections_result
+            sections = sections_result.get("data", {}).get("sections", [])
+            match = next(
+                (section for section in sections if str(section.get("name") or "").lower() == section_name.lower()),
+                None,
+            )
+            if match is None:
+                return {
+                    "ok": False,
+                    "error": {
+                        "code": "section_not_found",
+                        "message": f"Section '{section_name}' not found",
+                        "details": {"song": song},
+                    },
+                }
+            beat_args["start_time"] = match.get("start_s")
+            beat_args["end_time"] = match.get("end_s")
+
+        beats_result = await _call_mcp_tool(MCP_TOOL_MAP[tool_name], beat_args)
+        if not isinstance(beats_result, dict) or not beats_result.get("ok"):
+            return beats_result
+
+        beats = beats_result.get("data", {}).get("beats", [])
+        beat_times = [float(beat.get("time", 0.0)) for beat in beats if isinstance(beat, dict)]
+        return {
+            "ok": True,
+            "data": {
+                "song": song,
+                "section": section_name or None,
+                "subdivision": subdivision,
+                "onsets": _expand_subdivision_times(beat_times, subdivision),
+                "beat_count": len(beat_times),
+            },
+        }
+
+    return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], args)
 
 @app.get("/health")
 async def health():
@@ -147,10 +168,19 @@ async def health():
 
 @app.get("/debug/mcp/tools")
 async def debug_mcp_tools():
-    # List MCP tools so you can fill MCP_TOOL_MAP
-    req = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
     try:
-        return await mcp.request(req, timeout=10)
+        async with Client(MCP_BASE_URL) as client:
+            tools = await client.list_tools()
+        return {
+            "tools": [
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "inputSchema": getattr(tool, "inputSchema", None),
+                }
+                for tool in tools
+            ]
+        }
     except Exception as error:
         raise HTTPException(503, f"MCP unavailable: {error}") from error
 

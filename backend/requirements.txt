@@ -3,3 +3,4 @@ starlette==0.50.0
 uvicorn[standard]
 pydantic
 redis
+fastmcp>=2.4.0

@@ -6,7 +6,7 @@ FastAPI OpenAI-compatible wrapper for local llama.cpp with MCP tool-calling supp
 
 - `POST /v1/chat/completions`: OpenAI-style completion endpoint.
 - `GET /health`: liveness.
-- `GET /debug/mcp/tools`: MCP tools discovery via JSON-RPC `tools/list`.
+- `GET /debug/mcp/tools`: MCP tools discovery via FastMCP HTTP client.
 
 ## Core flow
 
@@ -15,33 +15,31 @@ FastAPI OpenAI-compatible wrapper for local llama.cpp with MCP tool-calling supp
 3. If tool calls exist:
    - normalize arguments,
    - map LLM tool name to MCP tool name,
-   - execute MCP `tools/call` via persistent SSE session,
+   - execute MCP tool calls via Streamable HTTP,
    - append tool results as `role=tool` messages,
    - call model again and return final output.
 
 ## MCP transport behavior
 
-Implemented in `mcp_client.py`:
+Implemented directly in `main.py` via `fastmcp.Client` against a Streamable HTTP MCP endpoint.
 
-- Open `/sse` and parse `event: endpoint`.
-- Keep stream open for the same session.
-- Auto-initialize MCP session (`initialize` + `notifications/initialized`).
-- POST JSON-RPC to `/messages/?session_id=...`.
-- Resolve responses by JSON-RPC `id` from SSE `data:` events.
+- Connect to backend MCP URL with automatic initialization.
+- Call tools through the typed client API.
+- Keep gateway transport stateless and simple.
 
 ## Environment variables
 
 - `LLM_BASE_URL` (default: `http://llm-server:8080`)
-- `MCP_BASE_URL` (default: `http://song-metadata-mcp:8089`)
+- `MCP_BASE_URL` (default: `http://backend:5001/mcp`)
 
 ## Current tool mapping
 
-- `mcp_get_sections` → `get_song_overview`
-- `mcp_get_onsets` → `query_feature`
+- `mcp_get_sections` → `metadata_get_sections`
+- `mcp_get_onsets` → `metadata_get_beats` with optional section windowing and subdivision expansion in the gateway
 
 ## LLM contributor checklist
 
 1. Keep mappings explicit and easy to audit.
 2. Fail with structured errors when mapping/args are invalid.
-3. Preserve persistent-session MCP semantics.
-4. Avoid startup hard-fail loops; keep retry behavior bounded.
+3. Keep the backend MCP URL pointed at the mounted backend endpoint.
+4. Preserve deterministic tool result shapes back to the LLM.

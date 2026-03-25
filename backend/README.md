@@ -5,12 +5,14 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 ## Purpose
 
 - Expose the websocket control plane at `/ws`.
+- Expose a backend-owned MCP tool surface at `/mcp`.
 - Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
 
 - `main.py`: lifecycle wiring, startup loading, route setup.
+- `mcp_server/*`: mounted MCP tools for songs, fixtures, cues, and song metadata.
 - `api/websocket_manager/*`: websocket endpoint, message parsing, broadcasts, sequencing.
 - `api/intents/*`: intent handlers and registry.
 - `api/state/*`: snapshot/patch payload builders.
@@ -30,6 +32,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net frames continuously.
 4. Clients send websocket `intent` messages.
 5. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
+6. MCP clients call backend-owned tools over Streamable HTTP and share the same live runtime state.
 
 ## WebSocket protocol essentials
 
@@ -48,6 +51,23 @@ Supported intent names:
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
 
+## MCP protocol essentials
+
+- Mounted endpoint: `/mcp`
+- Transport: Streamable HTTP
+- Mode: stateless HTTP with JSON responses
+
+Current MCP tools:
+- Songs: `songs_list`, `songs_get_details`, `songs_load`
+- Fixtures: `fixtures_list`, `fixtures_get`
+- Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
+- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_beats`, `metadata_get_chords`
+
+Behavior notes:
+- MCP song and cue mutation tools operate on the same `StateManager` used by websocket clients.
+- MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
+- Metadata tools currently cover sections, beats, and chords from backend-loaded analyzer metadata.
+
 ### Backend → Client
 
 - `snapshot`: `{ type:"snapshot", seq, state }`
@@ -65,6 +85,7 @@ Patch behavior:
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
 - `song.list` emits the currently loadable backend song names without mutating state.
 - `song.load` validates `payload.filename`, loads the selected song into backend state, resets playback to stopped, updates the output universe, and schedules a snapshot/patch broadcast.
+- `songs_load` on the MCP surface applies the same load side effects: load state, stop playback ticker, disable continuous send, push the output universe, then schedule websocket broadcasts.
 - Clients can send `transport.jump_to_section` with `payload.section_index` to seek to the matching section start.
 - Section boundaries and labels are resolved from normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
 - `fixture.preview_effect` is rejected while playback is active. Preview runs to completion and final effect values persist to `editor_universe` (and `output_universe`).
@@ -102,6 +123,11 @@ Song payload fields under `state.song`:
 
 Cue helpers payload under `state.cue_helpers`:
 - List of helper definitions (`id`, `label`, `description`, `mode`) for frontend helper UI.
+
+MCP cue payloads:
+- `cues_get_sheet` returns the full persisted cue sheet for the current song.
+- `cues_get_window` returns entries in an inclusive `[start_time, end_time]` window.
+- `cues_replace_sheet` validates and replaces the full cue sheet, persists it, and re-renders the DMX canvas.
 
 Chasers payload under `state.chasers`:
 - List of chaser definitions loaded from `backend/fixtures/chasers.json`, including stable `id`, display `name`, `description`, and beat-based `effects`.

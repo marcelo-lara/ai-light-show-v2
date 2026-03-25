@@ -18,7 +18,7 @@ class StatePlaybackPreviewChaserMixin:
             song_filename=(getattr(self.current_song, "song_id", None) or "preview"),
             entries=[CueEntry(**entry) for entry in entries],
         )
-        cues = iter_cues_for_render(cue_sheet, FPS, [], 0.0)
+        cues = iter_cues_for_render(cue_sheet, self.fixtures, FPS, [], self._current_bpm())
         total_frames = max(1, max((end for _, end, _ in cues), default=0) + 1)
         canvas = DMXCanvas.allocate(fps=FPS, total_frames=total_frames)
         active: List[tuple[int, int, CueEntry]] = []

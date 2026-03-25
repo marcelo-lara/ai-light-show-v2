@@ -7,6 +7,7 @@ Code is the source of truth.
 
 1. App bootstrap: `backend/main.py`
 - Creates `StateManager`, `ArtNetService`, `SongService`, `WebSocketManager`.
+- Creates and mounts the backend MCP server at `/mcp`.
 - Loads POIs and fixtures.
 - Arms fixtures and starts Art-Net send loop.
 - Loads default song (`Yonaka - Seize the Power` if present, else first available).
@@ -21,6 +22,11 @@ Code is the source of truth.
 3. Intent routing: `backend/api/intents/*`
 - `apply_intent.py` dispatches by domain via `INTENT_HANDLERS`.
 - Domains: `song`, `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm`.
+
+3a. MCP routing: `backend/mcp_server/*`
+- `server.py` registers the mounted MCP tools.
+- `runtime.py` binds the MCP server to the live backend `WebSocketManager` and `SongService` instances.
+- Tool groups are split across `songs.py`, `fixtures.py`, `cues.py`, and `metadata.py`.
 
 4. State authority: `backend/store/state.py`
 - Holds fixtures, POIs, song/cue state, playback flags, preview lifecycle.
@@ -45,6 +51,9 @@ Code is the source of truth.
 | Module | Key symbols | Runtime responsibility |
 | --- | --- | --- |
 | `backend/main.py` | `lifespan`, `websocket_route` | Startup/shutdown wiring and route exposure |
+| `backend/mcp_server/server.py` | `create_backend_mcp` | Mounted MCP server composition |
+| `backend/mcp_server/runtime.py` | `BackendMcpRuntime` | Holds runtime references for MCP tool handlers |
+| `backend/mcp_server/song_data.py` | `build_song_details` | Shared song/analysis serialization for MCP tools |
 | `backend/api/websocket_manager/manager.py` | `WebSocketManager` | Connection registry, sequencing, orchestration |
 | `backend/api/websocket_manager/messaging.py` | `handle_message`, `send_snapshot`, `broadcast_event` | Protocol handling and message emission |
 | `backend/api/websocket_manager/broadcasting.py` | `schedule_broadcast`, `broadcast_patch` | Throttled state-diff broadcasting |
@@ -97,6 +106,49 @@ Code is the source of truth.
 
 3. `event`
 - Shape: `{"type":"event","level":"info|warning|error","message":string,"data"?:object}`
+
+## MCP contract
+
+- Endpoint: `/mcp`
+- Transport: Streamable HTTP
+- Configuration: mounted with stateless HTTP and JSON responses
+
+### Current MCP tools
+
+#### Songs
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `songs_list` | none | returns backend song ids from `SongService.list_songs()` |
+| `songs_get_details` | `song?` | returns normalized song payload for the requested song or the currently loaded song |
+| `songs_load` | `song` | loads the song into live backend state, stops playback ticker activity, disables continuous Art-Net send, reapplies output universe, schedules websocket broadcast |
+
+#### Fixtures
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `fixtures_list` | none | returns serialized fixture payloads using current output universe values |
+| `fixtures_get` | `fixture_id` | returns one serialized fixture payload |
+
+#### Cues
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `cues_get_sheet` | none | returns full cue sheet for current song |
+| `cues_get_window` | `start_time`, `end_time` | returns entries whose `time` falls in the inclusive window |
+| `cues_add_entry` | `entry` | adds one effect or chaser row, persists, re-renders canvas, schedules websocket broadcast |
+| `cues_update_entry` | `index`, `patch` | updates one cue row by index, persists, schedules websocket broadcast |
+| `cues_delete_entry` | `index` | deletes one cue row by index, persists, schedules websocket broadcast |
+| `cues_replace_sheet` | `entries` | replaces the entire cue sheet after validation, persists, re-renders canvas, schedules websocket broadcast |
+
+#### Metadata
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `metadata_get_overview` | `song?` | returns song length/BPM and counts for sections, beats, chords |
+| `metadata_get_sections` | `song?` | returns normalized section rows |
+| `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered |
+| `metadata_get_chords` | `song?`, `start_time?`, `end_time?` | returns chord-change rows parsed from `beats.json`, optionally time-filtered |
 
 ## Intent catalog (current implementation)
 
@@ -212,6 +264,10 @@ Notes on `fixture.set_values`:
 | `error` | `chaser_stop_failed` | `{reason, instance_id?}` |
 | `info` | `chaser_stopped` | `{instance_id}` |
 | `info` | `chaser_list` | `{chasers:[...]}` |
+
+MCP tools return structured envelopes instead of websocket events:
+- success: `{ "ok": true, "data": { ... } }`
+- error: `{ "ok": false, "error": { "code", "message", "details?" } }`
 
 ## Snapshot state schema
 

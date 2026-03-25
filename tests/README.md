@@ -24,6 +24,7 @@ Project-level Python tests for backend state/render behavior, websocket intent f
 	- `tests/test_ws_chaser_e2e.py`: real-file websocket chaser apply/start/stop flows with restore.
 	- `tests/test_ws_chaser_preview_e2e.py`: non-persistent websocket chaser preview flow.
 - Song analysis and transport behavior:
+	- `tests/test_backend_mcp_server.py`: backend-mounted MCP tool coverage for songs, metadata, and cue window/replace flows.
 	- `tests/test_song_sections_payload_schema.py`: section payload normalization (`start/end/label` -> `{name,start_s,end_s}`).
 	- `tests/test_song_analysis_payload_chords.py`: chord payload parsing, `N` retention, and de-duplication behavior.
 	- `tests/test_jump_to_section_regression.py`: backend `transport.jump_to_section` validation and seek behavior.

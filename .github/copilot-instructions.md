@@ -39,8 +39,6 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Analyzer module guide: [analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [llm-server/README.md](../llm-server/README.md)
 - Agent gateway guide: [llm-server/agent-gateway/README.md](../llm-server/agent-gateway/README.md)
-- MCP module guide: [mcp/README.md](../mcp/README.md)
-- Song metadata MCP guide: [mcp/song_metadata/README.md](../mcp/song_metadata/README.md)
 - Test module guide: [tests/README.md](../tests/README.md)
 
 ## Big-picture architecture
@@ -50,7 +48,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - The UI frontend is strictly a backend client. DMX logic is backend-owned.
 - Active frontend routes are `show_control`, `song_analysis`, `show_builder`, and `dmx_control` (see [frontend/src/app/routes.ts](../frontend/src/app/routes.ts)).
 - Analyzer scripts produce metadata under `analyzer/meta/<song>/...`; backend reads from `/app/meta` in Docker.
-- LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + MCP song metadata service.
+- LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + backend-mounted MCP surface.
 
 ## Playback model (DMX canvas)
 - Cue sheets use a mixed schema:

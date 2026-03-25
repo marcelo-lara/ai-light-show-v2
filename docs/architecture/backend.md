@@ -5,6 +5,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 ## Key modules
 
 - `backend/main.py`: application lifecycle, startup loading, route wiring.
+- `backend/mcp_server/*`: backend-mounted MCP tool registration and runtime adapters.
 - `backend/api/websocket_manager/endpoint.py`: websocket accept/read loop.
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
@@ -55,6 +56,7 @@ Behavior:
 4. Start Art-Net send loop.
 5. Load default song and pre-render canvas.
 6. Sync initial output universe.
+7. Serve the mounted MCP endpoint from the same process so MCP clients share live backend state.
 
 ### Playback and time sync
 
@@ -78,6 +80,7 @@ Behavior:
 - `song.list` emits an event with the available backend song names and does not broadcast state.
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, and `cue.apply_helper`.
+- The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, and full-sheet replace.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
@@ -111,6 +114,20 @@ See `docs/architecture/backend_llm_reference.md` for exact payloads and event ca
 Message types:
 - Client → backend: `hello`, `intent`.
 - Backend → client: `snapshot`, `patch`, `event`.
+
+## MCP surface
+
+- Mounted endpoint: `/mcp`
+- Transport: Streamable HTTP
+- Runtime ownership: the mounted MCP app uses the same `WebSocketManager`, `SongService`, and `StateManager` instances initialized in `backend/main.py`.
+
+Current mounted MCP tools:
+- `songs_list`, `songs_get_details`, `songs_load`
+- `fixtures_list`, `fixtures_get`
+- `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
+- `metadata_get_overview`, `metadata_get_sections`, `metadata_get_beats`, `metadata_get_chords`
+
+Mutation tools schedule websocket patch broadcasts after state changes so browser clients remain synchronized with MCP-originated edits.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.

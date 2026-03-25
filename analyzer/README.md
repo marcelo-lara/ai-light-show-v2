@@ -1,12 +1,12 @@
 # Analyzer Module (LLM Guide)
 
-Offline song analysis pipeline that generates metadata consumed by backend playback and MCP query services.
+Offline song analysis pipeline that generates metadata consumed by backend playback and the backend-mounted MCP query surface.
 
 ## Purpose
 
 - Generate beat/downbeat timing and musical descriptors.
 - Produce per-song metadata under `analyzer/meta/<song>/`.
-- Feed timing/feature truth to backend and `mcp/song_metadata`.
+- Feed timing/feature truth to backend and its mounted MCP tools.
 
 ## Entry points
 
@@ -63,8 +63,8 @@ docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.m
 ## Contract with other modules
 
 - `backend/` loads metadata from `/app/meta` (mounted from `analyzer/meta`).
-- `mcp/song_metadata/` indexes analyzer outputs for tool queries.
-- Do not emit schema-breaking changes in `info.json` or feature files without updating backend + MCP consumers in the same change.
+- The backend-mounted MCP tools read the same analyzer outputs for LLM-facing timing and structure queries.
+- Do not emit schema-breaking changes in `info.json` or feature files without updating backend and MCP consumers in the same change.
 
 ## LLM contributor checklist
 
