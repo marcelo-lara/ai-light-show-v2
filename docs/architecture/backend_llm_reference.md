@@ -167,6 +167,8 @@ Code is the source of truth.
 - Each `llm.send_prompt` request includes the assistant system prompt, the current loaded song context, and recent user/assistant turns from the same websocket client session.
 - Conversation history is session-scoped in backend memory and is cleared when the websocket client disconnects.
 - Proposal-only turns are not committed to history until a model-authored assistant reply is completed.
+- The default assistant prompt profile prefers grounded timing answers as `bar.beat (seconds)` when both values are available from tool results.
+- The default assistant prompt profile does not restate the song name unless the user explicitly asks for it.
 
 ## Intent catalog (current implementation)
 
@@ -221,7 +223,11 @@ Notes on `fixture.set_values`:
 | `cue.update` | `index`, `patch` | validates index/patch, updates cue entry, persists to disk | `True` on success; else event `cue_update_failed` and `False` |
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
+| `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.apply_helper` | `helper_id` | validates helper, generates cue entries from song beats, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
+
+Notes on cue persistence:
+- Matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) are de-duplicated within `100ms`, keeping the latest write instead of persisting duplicates.
 
 ### Chaser intents
 
@@ -242,6 +248,9 @@ Notes on `fixture.set_values`:
 | `llm.cancel` | `request_id?` | cancels the active assistant request for the websocket session or the specified request | `False` |
 | `llm.confirm_action` | `request_id`, `action_id` | applies a pending assistant action, emits `llm_action_applied`, then emits a backend-generated completion summary and `llm_done` for the same turn | `False` |
 | `llm.reject_action` | `request_id`, `action_id` | dismisses a pending assistant action and emits `llm_action_rejected` | `False` |
+
+Assistant mutation behavior:
+- Confirmation-gated write turns are terminal. After `llm.confirm_action`, backend does not send the applied result back through the gateway for another assistant turn.
 
 ### Cue intents
 
@@ -379,6 +388,13 @@ Field notes:
 
 Patch behavior during playback:
 - While `playback.state` is `playing`, websocket patch generation suppresses `fixtures` updates.
+
+## Fixture effect contracts
+
+- `full` means full-on output only. It is not a blackout shortcut.
+- `blackout` is the dedicated immediate-off effect for fixture blackout intentions.
+- `fade_out` is the dedicated fade-to-zero effect. If no start level is provided it starts from full light, otherwise it starts from the provided level.
+- `fade_out` accepts byte values or fractional `0..1` values and normalizes fractions to DMX bytes before rendering.
 
 ## Effect data contracts
 

@@ -39,22 +39,28 @@ def _load_template_effects(template_name: str) -> list[str]:
 def effect_cases() -> list[dict]:
     template_configs = {
         "fixture.parcan.rgb_gen": {
+            "blackout": {"duration": 0.25, "data": {}, "preview_base": {"red": 255, "green": 255, "blue": 255}, "setup": [{"time": 0.0, "effect": "full", "duration": 0.0, "data": {"red": 255, "green": 255, "blue": 255}}]},
             "flash": {"duration": 0.5, "data": {}},
             "strobe": {"duration": 0.5, "data": {"rate": 12.0}, "preview_base": PARCAN_BASE, "setup": PARCAN_SETUP},
             "fade_in": {"duration": 0.5, "data": {"red": 90, "green": 40, "blue": 10}},
+            "fade_out": {"duration": 0.5, "data": {}},
             "full": {"duration": 0.25, "data": {"red": 25, "green": 50, "blue": 75}},
         },
         "fixture.parcan.rgb_proton": {
+            "blackout": {"duration": 0.25, "data": {}, "preview_base": {"red": 255, "green": 255, "blue": 255}, "setup": [{"time": 0.0, "effect": "full", "duration": 0.0, "data": {"red": 255, "green": 255, "blue": 255}}]},
             "flash": {"duration": 0.5, "data": {}},
             "strobe": {"duration": 0.5, "data": {"rate": 12.0}, "preview_base": PARCAN_BASE, "setup": PARCAN_SETUP},
             "fade_in": {"duration": 0.5, "data": {"red": 90, "green": 40, "blue": 10}},
+            "fade_out": {"duration": 0.5, "data": {}},
             "full": {"duration": 0.25, "data": {"red": 25, "green": 50, "blue": 75}},
         },
         "fixture.moving_head.mini_beam_prism": {
             "full": {"duration": 0.25, "data": {}},
+            "blackout": {"duration": 0.25, "data": {}, "preview_base": {"dim": 255}, "setup": [{"time": 0.0, "effect": "full", "duration": 0.0, "data": {}}]},
             "strobe": {"duration": 0.5, "data": {"rate": 12.0}},
             "flash": {"duration": 0.5, "data": {}},
             "fade_in": {"duration": 0.5, "data": {"dim": 180}},
+            "fade_out": {"duration": 0.5, "data": {}},
             "seek": {"duration": 0.5, "data": {"subject_POI": "subject", "start_POI": "start", "orbits": 1.0, "easing": "late_focus"}, "pois": POIS},
             "move_to": {"duration": 0.5, "data": {"pan": 40000, "tilt": 26000}},
             "move_to_poi": {"duration": 0.5, "data": {"target_POI": "target"}, "pois": POIS},
@@ -62,9 +68,11 @@ def effect_cases() -> list[dict]:
         },
         "fixture.moving_head.head_el150": {
             "full": {"duration": 0.25, "data": {}},
+            "blackout": {"duration": 0.25, "data": {}, "preview_base": {"dim": 255}, "setup": [{"time": 0.0, "effect": "full", "duration": 0.0, "data": {}}]},
             "strobe": {"duration": 0.5, "data": {"rate": 12.0}},
             "flash": {"duration": 0.5, "data": {}},
             "fade_in": {"duration": 0.5, "data": {"dim": 180}},
+            "fade_out": {"duration": 0.5, "data": {}},
             "seek": {"duration": 0.5, "data": {"subject_POI": "subject", "start_POI": "start", "orbits": 1.0, "easing": "late_focus"}, "pois": POIS},
             "move_to": {"duration": 0.5, "data": {"pan": 40000, "tilt": 26000}},
             "move_to_poi": {"duration": 0.5, "data": {"target_POI": "target"}, "pois": POIS},

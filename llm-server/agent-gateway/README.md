@@ -19,6 +19,21 @@ FastAPI OpenAI-compatible wrapper for local llama.cpp with MCP tool-calling supp
    - append tool results as `role=tool` messages,
    - call model again and return final output.
 
+## Fast-path assistant behavior
+
+The gateway also performs deterministic fast-path handling for common assistant requests before relying on a follow-up model turn.
+
+- Whole-sheet cue clear phrases resolve to a dedicated clear-all proposal instead of a synthetic `0..0` time window.
+- Chord-conditioned edit prompts for prisms, parcans, and protons resolve to grounded cue-add proposals using backend metadata and fixture lists.
+- `none` chord spans are resolved from analyzer label `N` and can produce `blackout` or `fade_out` cue proposals across the full span.
+- Write-capable turns stop at proposal generation so backend can require explicit confirmation before mutating cues.
+
+## Response shaping
+
+- Grounded timing answers prefer `bar.beat (seconds)` when tool results provide both values.
+- The default assistant prompt avoids repeating the loaded song name unless the user explicitly asks for it.
+- Proposal summaries preserve effect names where the distinction matters, including `blackout` and `fade_out`.
+
 ## MCP transport behavior
 
 Implemented directly in `main.py` via `fastmcp.Client` against a Streamable HTTP MCP endpoint.
@@ -36,6 +51,8 @@ Implemented directly in `main.py` via `fastmcp.Client` against a Streamable HTTP
 
 - `mcp_get_sections` → `metadata_get_sections`
 - `mcp_get_onsets` → `metadata_get_beats` with optional section windowing and subdivision expansion in the gateway
+
+The gateway also uses backend-mounted tools for transport cursor lookup, section/beat/chord/loudness grounding, fixture discovery, chaser discovery, and cue-sheet reads used to shape assistant proposals and summaries.
 
 ## LLM contributor checklist
 
