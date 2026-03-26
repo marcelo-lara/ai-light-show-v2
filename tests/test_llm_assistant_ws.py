@@ -342,6 +342,94 @@ def test_llm_prompt_adds_left_prism_flash_on_each_section_start(monkeypatch, tmp
     ]
 
 
+def test_llm_prompt_sets_all_parcans_to_blue_for_matching_chords(monkeypatch, tmp_path):
+    calls = []
+    fresh_backend_main = _fresh_backend_main()
+    monkeypatch.setenv("ASSISTANT_LOG_DIR", str(tmp_path / "assistant-logs"))
+
+    async def _noop_async(*_args, **_kwargs):
+        return None
+
+    async def _fake_load_song(self, song_name: str):
+        self.current_song = _fake_song(song_name)
+        self.song_length_seconds = 158.53
+        self.timecode = 37.62
+        self.is_playing = False
+        self.output_universe = bytearray(512)
+        self.editor_universe = bytearray(512)
+        self.cue_sheet = CueSheet(song_filename=song_name, entries=[])
+
+    async def _fake_add_effect(self, time: float, fixture_id: str, effect: str, duration: float, data):
+        calls.append((time, fixture_id, effect, duration, data))
+        return {"ok": True, "entry": {"time": time, "fixture_id": fixture_id, "effect": effect, "duration": duration, "data": data}}
+
+    async def _fake_gateway_stream(self, messages, assistant_id):
+        del assistant_id, messages
+        yield {"type": "status", "phase": "thinking", "label": "Thinking"}
+        yield {
+            "type": "proposal",
+            "action_id": "action-blue-parcans",
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {"time": 25.54, "fixture_id": "parcan_l", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 25.54, "fixture_id": "parcan_r", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 25.54, "fixture_id": "parcan_pl", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 25.54, "fixture_id": "parcan_pr", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 35.82, "fixture_id": "parcan_l", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 35.82, "fixture_id": "parcan_r", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 35.82, "fixture_id": "parcan_pl", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 35.82, "fixture_id": "parcan_pr", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Set parcan_l, parcan_r, parcan_pl, parcan_pr to blue at 25.540s, 35.820s.",
+        }
+
+    monkeypatch.setattr(fresh_backend_main, "run_startup_blue_wipe", _noop_async)
+    monkeypatch.setattr(SongService, "list_songs", lambda self: ["Yonaka - Seize the Power"])
+    monkeypatch.setattr(StateManager, "load_song", _fake_load_song)
+    monkeypatch.setattr(StateManager, "add_effect_cue_entry", _fake_add_effect)
+    monkeypatch.setattr(StateManager, "_dump_canvas_debug", lambda self, _song_name: None)
+    monkeypatch.setattr(ArtNetService, "start", _noop_async)
+    monkeypatch.setattr(ArtNetService, "stop", _noop_async)
+    monkeypatch.setattr(ArtNetService, "blackout", _noop_async)
+    monkeypatch.setattr(ArtNetService, "update_universe", _noop_async)
+    monkeypatch.setattr(ArtNetService, "arm_fixture", _noop_async)
+    monkeypatch.setattr(AssistantGatewayClient, "stream", _fake_gateway_stream)
+
+    with TestClient(fresh_backend_main.app) as client:
+        with client.websocket_connect("/ws") as ws:
+            _read_until(ws, lambda message: message.get("type") == "snapshot")
+
+            ws.send_json({"type": "intent", "req_id": "llm-1", "name": "llm.send_prompt", "payload": {"prompt": "set all parcans to blue when the chord is C#"}})
+
+            proposal = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_action_proposed")
+            assert proposal["data"]["tool_name"] == "propose_cue_add_entries"
+
+            ws.send_json({"type": "intent", "req_id": "llm-2", "name": "llm.confirm_action", "payload": {"request_id": "llm-1", "action_id": "action-blue-parcans"}})
+
+            applied = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_action_applied")
+            assert applied["data"]["tool_name"] == "propose_cue_add_entries"
+
+            delta = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_delta")
+            assert delta["data"]["delta"] == "Set parcan_l, parcan_r, parcan_pl, parcan_pr to blue at 25.540s, 35.820s."
+
+            done = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_done")
+            assert done["data"]["done"] is True
+
+    assert calls == [
+        (25.54, "parcan_l", "full", 0.0, {"red": 0, "green": 0, "blue": 255}),
+        (25.54, "parcan_r", "full", 0.0, {"red": 0, "green": 0, "blue": 255}),
+        (25.54, "parcan_pl", "full", 0.0, {"red": 0, "green": 0, "blue": 255}),
+        (25.54, "parcan_pr", "full", 0.0, {"red": 0, "green": 0, "blue": 255}),
+        (35.82, "parcan_l", "full", 0.0, {"red": 0, "green": 0, "blue": 255}),
+        (35.82, "parcan_r", "full", 0.0, {"red": 0, "green": 0, "blue": 255}),
+        (35.82, "parcan_pl", "full", 0.0, {"red": 0, "green": 0, "blue": 255}),
+        (35.82, "parcan_pr", "full", 0.0, {"red": 0, "green": 0, "blue": 255}),
+    ]
+
+
 def test_llm_prompt_includes_recent_chat_history(monkeypatch, tmp_path):
     seen_messages = []
     fresh_backend_main = _fresh_backend_main()

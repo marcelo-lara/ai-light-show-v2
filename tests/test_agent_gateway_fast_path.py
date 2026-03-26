@@ -34,6 +34,27 @@ async def test_fast_path_resolves_entire_cue_to_clear_all_proposal(monkeypatch):
     }
 
 
+@pytest.mark.asyncio
+async def test_fast_path_resolves_plain_clear_the_cue_to_clear_all_proposal(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "clear the cue"},
+    ])
+
+    assert result == {
+        "used_tools": [],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_clear_all",
+            "arguments": {},
+            "title": "Confirm cue sheet clear",
+            "summary": "Remove all cue items from the cue sheet.",
+        },
+    }
+
+
 def test_gateway_answer_prompts_omit_song_name_unless_requested():
     gateway_main = _load_gateway_main_module()
 
@@ -233,5 +254,69 @@ async def test_fast_path_proposes_left_prism_flash_on_first_beat_of_each_section
             },
             "title": "Confirm cue add",
             "summary": "Add flash to mini_beam_prism_l at 35.820s, 57.320s, 84.180s.",
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_proposes_blue_parcans_for_all_matching_chords(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_chords":
+            return {
+                "ok": True,
+                "data": {
+                    "chords": [
+                        {"time_s": 25.54, "bar": 14, "beat": 3, "label": "C#"},
+                        {"time_s": 27.20, "bar": 15, "beat": 1, "label": "F"},
+                        {"time_s": 35.82, "bar": 20, "beat": 1, "label": "C#"},
+                    ]
+                },
+            }
+        if tool_name == "mcp_read_fixtures":
+            return {
+                "ok": True,
+                "data": {
+                    "fixtures": [
+                        {"id": "parcan_l"},
+                        {"id": "parcan_r"},
+                        {"id": "parcan_pl"},
+                        {"id": "parcan_pr"},
+                        {"id": "mini_beam_prism_l"},
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "set all parcans to blue when the chord is C#"},
+    ])
+
+    assert tool_calls == [("mcp_read_chords", {}), ("mcp_read_fixtures", {})]
+    assert result == {
+        "used_tools": ["mcp_read_chords", "mcp_read_fixtures"],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {"time": 25.54, "fixture_id": "parcan_l", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 25.54, "fixture_id": "parcan_r", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 25.54, "fixture_id": "parcan_pl", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 25.54, "fixture_id": "parcan_pr", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 35.82, "fixture_id": "parcan_l", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 35.82, "fixture_id": "parcan_r", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 35.82, "fixture_id": "parcan_pl", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                    {"time": 35.82, "fixture_id": "parcan_pr", "effect": "full", "duration": 0.0, "data": {"red": 0, "green": 0, "blue": 255}},
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Set parcan_l, parcan_r, parcan_pl, parcan_pr to blue at 25.540s, 35.820s.",
         },
     }

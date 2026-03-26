@@ -12,6 +12,18 @@ from .prompts import load_prompt
 
 
 MAX_HISTORY_MESSAGES = 12
+RGB_NAME_MAP = {
+    (0, 0, 255): "blue",
+    (255, 0, 0): "red",
+    (0, 255, 0): "green",
+    (255, 255, 255): "white",
+    (255, 255, 0): "yellow",
+    (0, 255, 255): "cyan",
+    (255, 0, 255): "magenta",
+    (128, 0, 255): "purple",
+    (255, 128, 0): "orange",
+    (255, 105, 180): "pink",
+}
 
 
 class AssistantService:
@@ -294,9 +306,10 @@ class AssistantService:
             fixture_ids = ", ".join(dict.fromkeys(str(entry.get("fixture_id") or "") for entry in entries if str(entry.get("fixture_id") or "")))
             effect_name = str(entries[0].get("effect") or "effect")
             unique_times = list(dict.fromkeys(float(entry.get("time", 0.0) or 0.0) for entry in entries))
-            if len(unique_times) == 1:
-                return f"Added {effect_name} to {fixture_ids} at {unique_times[0]:.3f}s."
             time_text = ", ".join(f"{time_value:.3f}s" for time_value in unique_times)
+            color_name = self._resolve_full_effect_color_name(entries[0].get("data") or {}) if effect_name == "full" else None
+            if color_name is not None:
+                return f"Set {fixture_ids} to {color_name} at {time_text}."
             return f"Added {effect_name} to {fixture_ids} at {time_text}."
         if pending.tool_name == "propose_cue_clear_all":
             removed = int(result.get("removed", 0) or 0)
@@ -318,6 +331,15 @@ class AssistantService:
         if abs(end_time - start_time) < 1e-9:
             return f"at {start_time:.3f}s"
         return f"from {start_time:.3f}s to {end_time:.3f}s"
+
+    def _resolve_full_effect_color_name(self, data: Dict[str, Any]) -> str | None:
+        try:
+            red = int(data.get("red"))
+            green = int(data.get("green"))
+            blue = int(data.get("blue"))
+        except (TypeError, ValueError):
+            return None
+        return RGB_NAME_MAP.get((red, green, blue))
 
     def _build_request_messages(self, manager, client_id: str, assistant_id: str, prompt: str) -> list[Dict[str, Any]]:
         messages = [{"role": "system", "content": load_prompt(self._assistant_root, assistant_id)}]

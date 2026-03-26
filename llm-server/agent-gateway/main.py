@@ -757,12 +757,14 @@ def _extract_section_name(prompt: str) -> Optional[str]:
 
 def _is_full_cue_clear_request(prompt: str) -> bool:
     lowered = str(prompt or "").lower()
+    if re.search(r"\bclear\s+the\s+cue\b", lowered):
+        return True
     has_all = any(token in lowered for token in ["all", "entire", "whole", "full"])
     return has_all and "cue" in lowered
 
 
 def _extract_chord_label(prompt: str) -> Optional[str]:
-    match = re.search(r"chord\s+([A-G](?:#|b)?m?)(?=$|\s|[^A-Za-z0-9_])", str(prompt or ""), flags=re.IGNORECASE)
+    match = re.search(r"chord(?:\s+is)?\s+([A-G](?:#|b)?m?)(?=$|\s|[^A-Za-z0-9_])", str(prompt or ""), flags=re.IGNORECASE)
     if not match:
         return None
     return match.group(1)
@@ -811,6 +813,78 @@ def _resolve_prism_fixture_ids(result: Dict[str, Any]) -> List[str]:
 
 def _resolve_left_prism_fixture_ids(result: Dict[str, Any]) -> List[str]:
     return [fixture_id for fixture_id in _resolve_prism_fixture_ids(result) if fixture_id.endswith("_l")]
+
+
+def _resolve_parcan_fixture_ids(result: Dict[str, Any]) -> List[str]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return []
+    fixtures = (result.get("data") or {}).get("fixtures") or []
+    ids = [str(fixture.get("id") or "") for fixture in fixtures if str(fixture.get("id") or "").lower().startswith("parcan")]
+    return [fixture_id for fixture_id in ids if fixture_id]
+
+
+def _find_chord_times(result: Dict[str, Any], chord_label: str) -> List[float]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return []
+    chords = (result.get("data") or {}).get("chords") or []
+    label_normalized = chord_label.strip().lower()
+    return [
+        float(chord.get("time_s", chord.get("time", 0.0)) or 0.0)
+        for chord in chords
+        if str(chord.get("label") or chord.get("chord") or "").strip().lower() == label_normalized
+    ]
+
+
+def _extract_color_name(prompt: str) -> Optional[str]:
+    lowered = str(prompt or "").lower()
+    for color_name in ["blue", "red", "green", "white", "yellow", "cyan", "magenta", "purple", "orange", "pink"]:
+        if re.search(rf"\b{re.escape(color_name)}\b", lowered):
+            return color_name
+    return None
+
+
+def _color_name_to_rgb(color_name: str) -> Optional[Dict[str, int]]:
+    return {
+        "blue": {"red": 0, "green": 0, "blue": 255},
+        "red": {"red": 255, "green": 0, "blue": 0},
+        "green": {"red": 0, "green": 255, "blue": 0},
+        "white": {"red": 255, "green": 255, "blue": 255},
+        "yellow": {"red": 255, "green": 255, "blue": 0},
+        "cyan": {"red": 0, "green": 255, "blue": 255},
+        "magenta": {"red": 255, "green": 0, "blue": 255},
+        "purple": {"red": 128, "green": 0, "blue": 255},
+        "orange": {"red": 255, "green": 128, "blue": 0},
+        "pink": {"red": 255, "green": 105, "blue": 180},
+    }.get(color_name.lower())
+
+
+def _describe_cue_add_entries(entries: List[Dict[str, Any]]) -> str:
+    fixtures = ", ".join(dict.fromkeys(str(entry.get("fixture_id") or "") for entry in entries if str(entry.get("fixture_id") or "")))
+    unique_times = list(dict.fromkeys(float(entry.get("time", 0.0) or 0.0) for entry in entries))
+    if len(unique_times) <= 1:
+        time_text = f"{(unique_times[0] if unique_times else 0.0):.3f}s"
+    else:
+        time_text = ", ".join(f"{time_value:.3f}s" for time_value in unique_times)
+    if entries:
+        first_effect = str(entries[0].get("effect") or "effect")
+        first_data = entries[0].get("data") or {}
+        if first_effect == "full":
+            for color_name, rgb in {
+                "blue": {"red": 0, "green": 0, "blue": 255},
+                "red": {"red": 255, "green": 0, "blue": 0},
+                "green": {"red": 0, "green": 255, "blue": 0},
+                "white": {"red": 255, "green": 255, "blue": 255},
+                "yellow": {"red": 255, "green": 255, "blue": 0},
+                "cyan": {"red": 0, "green": 255, "blue": 255},
+                "magenta": {"red": 255, "green": 0, "blue": 255},
+                "purple": {"red": 128, "green": 0, "blue": 255},
+                "orange": {"red": 255, "green": 128, "blue": 0},
+                "pink": {"red": 255, "green": 105, "blue": 180},
+            }.items():
+                if all(int(first_data.get(channel, -1)) == value for channel, value in rgb.items()):
+                    return f"Set {fixtures} to {color_name} at {time_text}."
+    effect_name = str(entries[0].get("effect") or "effect") if entries else "effect"
+    return f"Add {effect_name} to {fixtures} at {time_text}."
 
 
 def _section_start_times(result: Dict[str, Any]) -> List[float]:
@@ -991,6 +1065,38 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
                     ),
                 }
 
+    if any(word in lowered for word in ["set", "make", "turn"]) and "parcan" in lowered and "chord" in lowered:
+        chord_label = _extract_chord_label(prompt)
+        color_name = _extract_color_name(prompt)
+        rgb = _color_name_to_rgb(color_name) if color_name is not None else None
+        if chord_label and rgb is not None:
+            used_tools.append("mcp_read_chords")
+            chords_result = await call_mcp("mcp_read_chords", {})
+            used_tools.append("mcp_read_fixtures")
+            fixtures_result = await call_mcp("mcp_read_fixtures", {})
+            chord_times = _find_chord_times(chords_result, chord_label)
+            parcan_fixture_ids = _resolve_parcan_fixture_ids(fixtures_result)
+            if chord_times and parcan_fixture_ids:
+                return {
+                    "used_tools": used_tools,
+                    "proposal": _proposal_for_tool(
+                        "propose_cue_add_entries",
+                        {
+                            "entries": [
+                                {
+                                    "time": chord_time,
+                                    "fixture_id": fixture_id,
+                                    "effect": "full",
+                                    "duration": 0.0,
+                                    "data": dict(rgb),
+                                }
+                                for chord_time in chord_times
+                                for fixture_id in parcan_fixture_ids
+                            ]
+                        },
+                    ),
+                }
+
     if "first occurrence" in lowered and "chord" in lowered:
         chord_label = _extract_chord_label(prompt)
         if chord_label:
@@ -1093,20 +1199,13 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
 def _proposal_for_tool(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
     if tool_name == "propose_cue_add_entries":
         entries = list(args.get("entries") or [])
-        fixtures = ", ".join(dict.fromkeys(str(entry.get("fixture_id") or "") for entry in entries if str(entry.get("fixture_id") or "")))
-        effect_name = str(entries[0].get("effect") or "effect") if entries else "effect"
-        unique_times = list(dict.fromkeys(float(entry.get("time", 0.0) or 0.0) for entry in entries))
-        if len(unique_times) <= 1:
-            time_text = f"{(unique_times[0] if unique_times else 0.0):.3f}s"
-        else:
-            time_text = ", ".join(f"{time_value:.3f}s" for time_value in unique_times)
         return {
             "type": "proposal",
             "action_id": f"proposal-{abs(hash(orjson.dumps(args).decode('utf-8'))) % 1000000}",
             "tool_name": tool_name,
             "arguments": {"entries": entries},
             "title": "Confirm cue add",
-            "summary": f"Add {effect_name} to {fixtures} at {time_text}.",
+            "summary": _describe_cue_add_entries(entries),
         }
     if tool_name == "propose_cue_clear_all":
         return {
