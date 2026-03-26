@@ -335,6 +335,10 @@ def _inject_query_guidance(messages: List[Dict[str, Any]]) -> List[Dict[str, Any
     return list(messages) + [guidance]
 
 
+def _song_name_mention_instruction() -> str:
+    return "Do not mention the song name unless the original question explicitly asks for it. "
+
+
 async def _call_mcp_tool(name: str, arguments: Dict[str, Any]) -> Any:
     async with Client(MCP_BASE_URL) as client:
         result = await client.call_tool(name, arguments, raise_on_error=False)
@@ -603,7 +607,6 @@ def _build_section_answer_messages(messages: List[Dict[str, Any]], result: Dict[
         section = payload.get("section") or {}
         section_block = (
             "section_found=true\n"
-            f"song={payload.get('song', 'unknown')}\n"
             f"section_name={section.get('name', 'Unnamed')}\n"
             f"section_start_seconds={float(section.get('start_s', 0.0)):.3f}\n"
             f"section_end_seconds={float(section.get('end_s', 0.0)):.3f}"
@@ -621,6 +624,7 @@ def _build_section_answer_messages(messages: List[Dict[str, Any]], result: Dict[
             "role": "system",
             "content": (
                 "Answer only from the resolved section facts provided by the user. "
+                + _song_name_mention_instruction() +
                 "If section_found=true, never say the data is missing. "
                 "Answer the original question directly with the exact numeric time and 's' suffix. "
                 "Keep the answer to one sentence."
@@ -642,7 +646,6 @@ def _build_chord_answer_messages(messages: List[Dict[str, Any]], result: Dict[st
     payload = (result.get("data") or {}) if isinstance(result, dict) and result.get("ok") else {}
     chord = payload.get("chord") or {}
     facts = (
-        f"song={payload.get('song', 'unknown')}\n"
         f"occurrence={int(payload.get('occurrence', 1))}\n"
         f"time_seconds={float(chord.get('time_s', 0.0)):.3f}\n"
         f"bar={int(chord.get('bar', 0))}\n"
@@ -654,6 +657,7 @@ def _build_chord_answer_messages(messages: List[Dict[str, Any]], result: Dict[st
             "role": "system",
             "content": (
                 "Answer only from the resolved chord facts provided by the user. "
+                + _song_name_mention_instruction() +
                 "Report the exact time in seconds and the exact bar.beat in one sentence."
             ),
         },
@@ -678,6 +682,7 @@ def _build_cursor_answer_messages(messages: List[Dict[str, Any]], result: Dict[s
             "role": "system",
             "content": (
                 "Answer only from the resolved cursor facts provided by the user. "
+                + _song_name_mention_instruction() +
                 "You must report the exact time in seconds and the exact bar.beat in one sentence, with no reinterpretation."
             ),
         },
@@ -753,7 +758,7 @@ def _build_first_effect_answer_messages(messages: List[Dict[str, Any]], section_
     return [
         {
             "role": "system",
-            "content": "Answer only from the resolved section and cue facts provided by the user. Use exactly one sentence in this structure: At <first_effect_time_seconds>s, <fixtures> <effect> for <duration_seconds>s.",
+            "content": "Answer only from the resolved section and cue facts provided by the user. " + _song_name_mention_instruction() + "Use exactly one sentence in this structure: At <first_effect_time_seconds>s, <fixtures> <effect> for <duration_seconds>s.",
         },
         {
             "role": "user",
@@ -766,7 +771,6 @@ def _build_loudness_answer_messages(messages: List[Dict[str, Any]], loudness_res
     original_question = _latest_user_prompt(messages)
     payload = (loudness_result.get("data") or {}) if loudness_result.get("ok") else {}
     facts = (
-        f"song={payload.get('song', 'unknown')}\n"
         f"start_time={float(payload.get('start_time', 0.0)):.3f}\n"
         f"end_time={float(payload.get('end_time', 0.0)):.3f}\n"
         f"average={float(payload.get('average', 0.0)):.6f}\n"
@@ -776,7 +780,7 @@ def _build_loudness_answer_messages(messages: List[Dict[str, Any]], loudness_res
     return [
         {
             "role": "system",
-            "content": "Answer only from the resolved loudness facts provided by the user. Use exactly one sentence in this structure: The first verse spans <start_time>s to <end_time>s and has average loudness <average>.",
+            "content": "Answer only from the resolved loudness facts provided by the user. " + _song_name_mention_instruction() + "Use exactly one sentence in this structure: The first verse spans <start_time>s to <end_time>s and has average loudness <average>.",
         },
         {
             "role": "user",
@@ -804,7 +808,7 @@ def _build_fixtures_at_bar_answer_messages(messages: List[Dict[str, Any]], posit
     return [
         {
             "role": "system",
-            "content": "Answer only from the resolved musical position and cue facts provided by the user. Use exactly one sentence in this structure: At <time_seconds>s (bar <bar>.<beat>), <fixtures> <effect> for <duration_seconds>s.",
+            "content": "Answer only from the resolved musical position and cue facts provided by the user. " + _song_name_mention_instruction() + "Use exactly one sentence in this structure: At <time_seconds>s (bar <bar>.<beat>), <fixtures> <effect> for <duration_seconds>s.",
         },
         {
             "role": "user",
@@ -821,7 +825,7 @@ def _build_left_fixtures_answer_messages(messages: List[Dict[str, Any]], fixture
     return [
         {
             "role": "system",
-            "content": "Answer only from the resolved fixture facts provided by the user. Repeat every id from left_fixture_ids exactly once, comma-separated, with no omissions.",
+            "content": "Answer only from the resolved fixture facts provided by the user. " + _song_name_mention_instruction() + "Repeat every id from left_fixture_ids exactly once, comma-separated, with no omissions.",
         },
         {
             "role": "user",
@@ -1062,6 +1066,7 @@ async def _event_stream(req: ChatRequest):
                 "role": "system",
                 "content": (
                     "Answer strictly from the tool outputs already provided in this conversation. "
+                    "Do not mention the song name unless the original question explicitly asks for it. "
                     "Do not say that you lack access to databases, metadata, websites, or external tools. "
                     "Use exact values present in the tool outputs, including times, bars, beats, fixture ids, cue effects, and loudness statistics. "
                     "If the requested fact is present in the tool outputs, answer directly with that fact. "
@@ -1170,6 +1175,7 @@ async def chat_completions(req: ChatRequest):
                 "role": "system",
                 "content": (
                     "Answer strictly from the tool outputs already provided in this conversation. "
+                    "Do not mention the song name unless the original question explicitly asks for it. "
                     "Do not say that you lack access to databases, metadata, websites, or external tools. "
                     "Use exact values present in the tool outputs, including times, bars, beats, fixture ids, cue effects, and loudness statistics. "
                     "If the requested fact is present in the tool outputs, answer directly with that fact. "
