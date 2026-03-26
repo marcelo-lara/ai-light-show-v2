@@ -89,6 +89,7 @@ Behavior:
 - Assistant event messages are `llm_status`, `llm_delta`, `llm_done`, `llm_action_proposed`, `llm_action_applied`, `llm_action_rejected`, `llm_cancelled`, and `llm_error`.
 - Confirmed assistant mutations are terminal for the current turn: backend applies the action, emits `llm_action_applied`, then emits a backend-generated completion summary and `llm_done` without asking the gateway for another follow-up turn.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
+- Cue persistence de-duplicates matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) within `100ms`, keeping the latest write.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
 - Chaser intents are `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, and `chaser.list`.
 - Chaser effect fields `beat` and `duration` are beat-based; conversion uses `beatToTimeMs(beat_count, bpm)`.

@@ -7,6 +7,9 @@ from typing import Any, Dict, List, Optional
 from .models import CueEntry, CueSheet
 
 
+DUPLICATE_WINDOW_SECONDS = 0.1
+
+
 def _round_floats_for_save(value: Any) -> Any:
     if isinstance(value, float):
         return round(value, 3)
@@ -90,6 +93,35 @@ def _cue_sort_key(entry: CueEntry) -> tuple[float, str, str]:
     return (entry.time, label, effect)
 
 
+def _is_same_identity(left: CueEntry, right: CueEntry) -> bool:
+    if bool(left.chaser_id) != bool(right.chaser_id):
+        return False
+    if left.chaser_id:
+        return left.chaser_id == right.chaser_id
+    return left.fixture_id == right.fixture_id and left.effect == right.effect
+
+
+def _find_duplicate_index(entries: List[CueEntry], candidate: CueEntry) -> Optional[int]:
+    for index, entry in enumerate(entries):
+        if not _is_same_identity(entry, candidate):
+            continue
+        if abs(float(entry.time) - float(candidate.time)) <= DUPLICATE_WINDOW_SECONDS:
+            return index
+    return None
+
+
+def _dedupe_entries(entries: List[CueEntry]) -> List[CueEntry]:
+    deduped: List[CueEntry] = []
+    for entry in entries:
+        duplicate_index = _find_duplicate_index(deduped, entry)
+        if duplicate_index is not None:
+            deduped[duplicate_index] = entry
+            continue
+        deduped.append(entry)
+    deduped.sort(key=_cue_sort_key)
+    return deduped
+
+
 def _clean_cue_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     entry = CueEntry(**payload)
     return entry.model_dump(exclude_none=True)
@@ -111,7 +143,11 @@ def _merge_cue_payload(current: Dict[str, Any], payload: Dict[str, Any]) -> Dict
 
 def create_cue_entry(cue_sheet: CueSheet, payload: Dict[str, Any]) -> CueEntry:
     entry = CueEntry(**_clean_cue_payload(payload))
-    cue_sheet.entries.append(entry)
+    duplicate_index = _find_duplicate_index(cue_sheet.entries, entry)
+    if duplicate_index is not None:
+        cue_sheet.entries[duplicate_index] = entry
+    else:
+        cue_sheet.entries.append(entry)
     cue_sheet.entries.sort(key=_cue_sort_key)
     return entry
 
@@ -142,42 +178,23 @@ def upsert_cue_entries(cue_sheet: CueSheet, new_entries: List[Dict[str, Any]]) -
     Replaces existing entries with matching time+fixture_id, inserts new ones.
     Returns counts of generated, replaced, and skipped entries.
     """
-    # Create a lookup map for existing entries by (time, fixture_id)
-    existing_map: Dict[tuple[Any, ...], int] = {}
-    for i, entry in enumerate(cue_sheet.entries):
-        key = (
-            round(entry.time, 6),
-            entry.chaser_id or "",
-            entry.fixture_id or "",
-            entry.effect or "",
-        )
-        existing_map[key] = i
-
     generated = 0
     replaced = 0
     skipped = 0
 
     for new_payload in new_entries:
         new_entry = CueEntry(**_clean_cue_payload(new_payload))
-        key = (
-            round(new_entry.time, 6),
-            new_entry.chaser_id or "",
-            new_entry.fixture_id or "",
-            new_entry.effect or "",
-        )
+        duplicate_index = _find_duplicate_index(cue_sheet.entries, new_entry)
 
-        if key in existing_map:
-            # Replace existing entry
-            index = existing_map[key]
+        if duplicate_index is not None:
+            index = duplicate_index
             cue_sheet.entries[index] = new_entry
             replaced += 1
         else:
-            # Insert new entry
             cue_sheet.entries.append(new_entry)
             generated += 1
 
-    # Re-sort all entries after modifications
-    cue_sheet.entries.sort(key=_cue_sort_key)
+    cue_sheet.entries = _dedupe_entries(cue_sheet.entries)
 
     return {
         "generated": generated,

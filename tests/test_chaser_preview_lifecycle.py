@@ -62,17 +62,18 @@ async def test_chaser_apply_persists_chaser_rows():
 
     try:
         first = await sm.apply_chaser(CHASER_ID, start_time_ms=0.0, repetitions=1)
-        second = await sm.apply_chaser(CHASER_ID, start_time_ms=0.0, repetitions=1)
+        second = await sm.apply_chaser(CHASER_ID, start_time_ms=50.0, repetitions=2)
 
         assert first["ok"] is True
         assert second["ok"] is True
         assert first["entry"]["chaser_id"] == CHASER_ID
         assert second["entry"]["chaser_id"] == CHASER_ID
         assert first["entry"]["data"] == {"repetitions": 1}
-        assert second["entry"]["data"] == {"repetitions": 1}
-        assert len(sm.cue_sheet.entries) == 2
+        assert second["entry"]["data"] == {"repetitions": 2}
+        assert len(sm.cue_sheet.entries) == 1
         assert sm.cue_sheet.entries[0].chaser_id == CHASER_ID
-        assert sm.cue_sheet.entries[1].chaser_id == CHASER_ID
+        assert sm.cue_sheet.entries[0].time == 0.05
+        assert sm.cue_sheet.entries[0].data == {"repetitions": 2}
     finally:
         if cue_file.exists():
             cue_file.unlink()

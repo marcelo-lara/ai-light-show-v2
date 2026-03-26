@@ -1,5 +1,6 @@
 where does the intro starts?
 where does the intro ends?
+add a flash effect to the prisms when the song changes from C# to D#
 what is the first occurrence of the chord F?
 where is the cursor?
 what is the first effect of the verse?

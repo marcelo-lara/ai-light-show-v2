@@ -195,7 +195,7 @@ class StateSongCueMixin:
                 return {"ok": False, "reason": "invalid_entry", "error": str(exc)}
 
             self.cue_sheet.entries = next_entries
-            self.cue_sheet.entries.sort(key=self._cue_sort_key)
+            self.cue_sheet.entries = self._dedupe_entries(self.cue_sheet.entries)
             try:
                 self._validate_cue_sheet()
             except ValueError as exc:
@@ -209,6 +209,11 @@ class StateSongCueMixin:
                 "count": len(self.cue_sheet.entries),
                 "entries": self.get_cue_entries(),
             }
+
+    def _dedupe_entries(self, entries: List[CueEntry]) -> List[CueEntry]:
+        from models.cues.crud import _dedupe_entries
+
+        return _dedupe_entries(entries)
 
     async def update_cue_entry(self, index: int, payload: Dict[str, Any]) -> Dict[str, Any]:
         async with self.lock:
