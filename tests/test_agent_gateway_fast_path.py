@@ -134,3 +134,59 @@ async def test_fast_path_proposes_prism_flash_for_chord_transition(monkeypatch):
             "summary": "Add flash to mini_beam_prism_l, mini_beam_prism_r at 0.480s.",
         },
     }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_proposes_left_prism_flash_on_first_beat_of_each_section(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_sections":
+            return {
+                "ok": True,
+                "data": {
+                    "sections": [
+                        {"name": "Intro", "start_s": 35.82},
+                        {"name": "Verse", "start_s": 57.32},
+                        {"name": "Chorus", "start_s": 84.18},
+                    ]
+                },
+            }
+        if tool_name == "mcp_read_fixtures":
+            return {
+                "ok": True,
+                "data": {
+                    "fixtures": [
+                        {"id": "mini_beam_prism_l"},
+                        {"id": "mini_beam_prism_r"},
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "on the first beat of each section flash the left prism"},
+    ])
+
+    assert tool_calls == [("mcp_read_sections", {}), ("mcp_read_fixtures", {})]
+    assert result == {
+        "used_tools": ["mcp_read_sections", "mcp_read_fixtures"],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {"time": 35.82, "fixture_id": "mini_beam_prism_l", "effect": "flash", "duration": 0.5, "data": {}},
+                    {"time": 57.32, "fixture_id": "mini_beam_prism_l", "effect": "flash", "duration": 0.5, "data": {}},
+                    {"time": 84.18, "fixture_id": "mini_beam_prism_l", "effect": "flash", "duration": 0.5, "data": {}},
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Add flash to mini_beam_prism_l at 35.820s, 57.320s, 84.180s.",
+        },
+    }

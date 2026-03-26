@@ -291,10 +291,13 @@ class AssistantService:
             entries = list(result.get("entries") or pending.arguments.get("entries") or [])
             if not entries:
                 return "Added cue entries."
-            fixture_ids = ", ".join(str(entry.get("fixture_id") or "") for entry in entries)
+            fixture_ids = ", ".join(dict.fromkeys(str(entry.get("fixture_id") or "") for entry in entries if str(entry.get("fixture_id") or "")))
             effect_name = str(entries[0].get("effect") or "effect")
-            time_value = float(entries[0].get("time", 0.0) or 0.0)
-            return f"Added {effect_name} to {fixture_ids} at {time_value:.3f}s."
+            unique_times = list(dict.fromkeys(float(entry.get("time", 0.0) or 0.0) for entry in entries))
+            if len(unique_times) == 1:
+                return f"Added {effect_name} to {fixture_ids} at {unique_times[0]:.3f}s."
+            time_text = ", ".join(f"{time_value:.3f}s" for time_value in unique_times)
+            return f"Added {effect_name} to {fixture_ids} at {time_text}."
         if pending.tool_name == "propose_cue_clear_all":
             removed = int(result.get("removed", 0) or 0)
             return f"Cleared the cue sheet. Removed {removed} entries."
