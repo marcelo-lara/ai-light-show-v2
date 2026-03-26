@@ -17,9 +17,11 @@
 	},
 	"effects": [
 		"full",
+		"blackout",
 		"strobe",
 		"flash",
 		"fade_in",
+		"fade_out",
 		"seek",
 		"move_to",
 		"move_to_poi",

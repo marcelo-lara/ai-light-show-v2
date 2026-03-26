@@ -764,7 +764,7 @@ def _is_full_cue_clear_request(prompt: str) -> bool:
 
 
 def _extract_chord_label(prompt: str) -> Optional[str]:
-    match = re.search(r"chord(?:\s+is)?\s+([A-G](?:#|b)?m?)(?=$|\s|[^A-Za-z0-9_])", str(prompt or ""), flags=re.IGNORECASE)
+    match = re.search(r"chord(?:s|\s+is|s\s+is|s\s+turns\s+to|\s+turns\s+to)?\s+(none|N|[A-G](?:#|b)?m?)(?=$|\s|[^A-Za-z0-9_])", str(prompt or ""), flags=re.IGNORECASE)
     if not match:
         return None
     return match.group(1)
@@ -793,14 +793,21 @@ def _find_chord_transition_time(result: Dict[str, Any], start_label: str, end_la
     if not isinstance(result, dict) or not result.get("ok"):
         return None
     chords = (result.get("data") or {}).get("chords") or []
-    start_normalized = start_label.strip().lower()
-    end_normalized = end_label.strip().lower()
+    start_normalized = _normalize_chord_label(start_label)
+    end_normalized = _normalize_chord_label(end_label)
     for current, nxt in zip(chords, chords[1:]):
-        current_label = str(current.get("label") or current.get("chord") or "").strip().lower()
-        next_label = str(nxt.get("label") or nxt.get("chord") or "").strip().lower()
+        current_label = _normalize_chord_label(str(current.get("label") or current.get("chord") or ""))
+        next_label = _normalize_chord_label(str(nxt.get("label") or nxt.get("chord") or ""))
         if current_label == start_normalized and next_label == end_normalized:
             return float(nxt.get("time_s", nxt.get("time", 0.0)) or 0.0)
     return None
+
+
+def _normalize_chord_label(label: str) -> str:
+    lowered = str(label or "").strip().lower()
+    if lowered in {"n", "none", "no chord", "no_chord"}:
+        return "n"
+    return lowered
 
 
 def _resolve_prism_fixture_ids(result: Dict[str, Any]) -> List[str]:
@@ -823,16 +830,52 @@ def _resolve_parcan_fixture_ids(result: Dict[str, Any]) -> List[str]:
     return [fixture_id for fixture_id in ids if fixture_id]
 
 
+def _resolve_proton_fixture_ids(result: Dict[str, Any]) -> List[str]:
+    return [fixture_id for fixture_id in _resolve_parcan_fixture_ids(result) if fixture_id.endswith(("_pl", "_pr"))]
+
+
+def _resolve_non_parcan_fixture_ids(result: Dict[str, Any]) -> List[str]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return []
+    fixtures = (result.get("data") or {}).get("fixtures") or []
+    ids = [str(fixture.get("id") or "") for fixture in fixtures if not str(fixture.get("id") or "").lower().startswith("parcan")]
+    return [fixture_id for fixture_id in ids if fixture_id]
+
+
 def _find_chord_times(result: Dict[str, Any], chord_label: str) -> List[float]:
     if not isinstance(result, dict) or not result.get("ok"):
         return []
     chords = (result.get("data") or {}).get("chords") or []
-    label_normalized = chord_label.strip().lower()
+    label_normalized = _normalize_chord_label(chord_label)
     return [
         float(chord.get("time_s", chord.get("time", 0.0)) or 0.0)
         for chord in chords
-        if str(chord.get("label") or chord.get("chord") or "").strip().lower() == label_normalized
+        if _normalize_chord_label(str(chord.get("label") or chord.get("chord") or "")) == label_normalized
     ]
+
+
+def _find_chord_spans(result: Dict[str, Any], chord_label: str) -> List[tuple[float, float]]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return []
+    chords = (result.get("data") or {}).get("chords") or []
+    label_normalized = _normalize_chord_label(chord_label)
+    spans: List[tuple[float, float]] = []
+    index = 0
+    while index < len(chords):
+        current_label = _normalize_chord_label(str(chords[index].get("label") or chords[index].get("chord") or ""))
+        if current_label != label_normalized:
+            index += 1
+            continue
+        start_time = float(chords[index].get("time_s", chords[index].get("time", 0.0)) or 0.0)
+        next_index = index + 1
+        while next_index < len(chords):
+            next_label = _normalize_chord_label(str(chords[next_index].get("label") or chords[next_index].get("chord") or ""))
+            if next_label != label_normalized:
+                spans.append((start_time, float(chords[next_index].get("time_s", chords[next_index].get("time", 0.0)) or start_time)))
+                break
+            next_index += 1
+        index = next_index
+    return [span for span in spans if span[1] > span[0]]
 
 
 def _extract_color_name(prompt: str) -> Optional[str]:
@@ -867,6 +910,10 @@ def _describe_cue_add_entries(entries: List[Dict[str, Any]]) -> str:
         time_text = ", ".join(f"{time_value:.3f}s" for time_value in unique_times)
     if entries:
         first_effect = str(entries[0].get("effect") or "effect")
+        if first_effect == "blackout":
+            return f"Turn off {fixtures} at {time_text}."
+        if first_effect == "fade_out":
+            return f"Add fade_out to {fixtures} at {time_text}."
         first_data = entries[0].get("data") or {}
         if first_effect == "full":
             for color_name, rgb in {
@@ -1096,6 +1143,132 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
                         },
                     ),
                 }
+
+    if any(word in lowered for word in ["set", "make", "turn"]) and "proton" in lowered and "chord" in lowered:
+        chord_label = _extract_chord_label(prompt)
+        color_name = _extract_color_name(prompt)
+        rgb = _color_name_to_rgb(color_name) if color_name is not None else None
+        if chord_label and rgb is not None:
+            used_tools.append("mcp_read_chords")
+            chords_result = await call_mcp("mcp_read_chords", {})
+            used_tools.append("mcp_read_fixtures")
+            fixtures_result = await call_mcp("mcp_read_fixtures", {})
+            chord_times = _find_chord_times(chords_result, chord_label)
+            proton_fixture_ids = _resolve_proton_fixture_ids(fixtures_result)
+            if chord_times and proton_fixture_ids:
+                return {
+                    "used_tools": used_tools,
+                    "proposal": _proposal_for_tool(
+                        "propose_cue_add_entries",
+                        {
+                            "entries": [
+                                {
+                                    "time": chord_time,
+                                    "fixture_id": fixture_id,
+                                    "effect": "full",
+                                    "duration": 0.0,
+                                    "data": dict(rgb),
+                                }
+                                for chord_time in chord_times
+                                for fixture_id in proton_fixture_ids
+                            ]
+                        },
+                    ),
+                }
+
+    if ("turn off" in lowered or "off" in lowered) and "proton" in lowered and "chord" in lowered:
+        chord_label = _extract_chord_label(prompt)
+        if chord_label:
+            used_tools.append("mcp_read_chords")
+            chords_result = await call_mcp("mcp_read_chords", {})
+            used_tools.append("mcp_read_fixtures")
+            fixtures_result = await call_mcp("mcp_read_fixtures", {})
+            chord_times = _find_chord_times(chords_result, chord_label)
+            proton_fixture_ids = _resolve_proton_fixture_ids(fixtures_result)
+            if chord_times and proton_fixture_ids:
+                return {
+                    "used_tools": used_tools,
+                    "proposal": _proposal_for_tool(
+                        "propose_cue_add_entries",
+                        {
+                            "entries": [
+                                {
+                                    "time": chord_time,
+                                    "fixture_id": fixture_id,
+                                    "effect": "blackout",
+                                    "duration": 0.0,
+                                    "data": {},
+                                }
+                                for chord_time in chord_times
+                                for fixture_id in proton_fixture_ids
+                            ]
+                        },
+                    ),
+                }
+
+    if "none" in lowered and "prism" in lowered and ("fade out" in lowered or "from 1 to 0" in lowered):
+        used_tools.append("mcp_read_chords")
+        chords_result = await call_mcp("mcp_read_chords", {})
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        none_spans = _find_chord_spans(chords_result, "none")
+        prism_fixture_ids = _resolve_prism_fixture_ids(fixtures_result)
+        if none_spans and prism_fixture_ids:
+            return {
+                "used_tools": used_tools,
+                "proposal": _proposal_for_tool(
+                    "propose_cue_add_entries",
+                    {
+                        "entries": [
+                            {
+                                "time": start_time,
+                                "fixture_id": fixture_id,
+                                    "effect": "fade_out",
+                                "duration": max(0.1, end_time - start_time),
+                                    "data": {},
+                            }
+                            for start_time, end_time in none_spans
+                            for fixture_id in prism_fixture_ids
+                        ]
+                    },
+                ),
+            }
+
+    if "none" in lowered and "fixture" in lowered and ("turn off" in lowered or "off" in lowered):
+        used_tools.append("mcp_read_chords")
+        chords_result = await call_mcp("mcp_read_chords", {})
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        none_spans = _find_chord_spans(chords_result, "none")
+        parcan_fixture_ids = _resolve_parcan_fixture_ids(fixtures_result)
+        dimmable_fixture_ids = _resolve_non_parcan_fixture_ids(fixtures_result)
+        if none_spans and (parcan_fixture_ids or dimmable_fixture_ids):
+            entries = [
+                {
+                    "time": start_time,
+                    "fixture_id": fixture_id,
+                    "effect": "blackout",
+                    "duration": 0.0,
+                    "data": {},
+                }
+                for start_time, _end_time in none_spans
+                for fixture_id in parcan_fixture_ids
+            ]
+            entries.extend(
+                {
+                    "time": start_time,
+                    "fixture_id": fixture_id,
+                    "effect": "fade_out",
+                    "duration": max(0.1, end_time - start_time),
+                    "data": {},
+                }
+                for start_time, end_time in none_spans
+                for fixture_id in dimmable_fixture_ids
+            )
+            return {
+                "used_tools": used_tools,
+                "proposal": _proposal_for_tool("propose_cue_add_entries", {"entries": entries}),
+            }
 
     if "first occurrence" in lowered and "chord" in lowered:
         chord_label = _extract_chord_label(prompt)

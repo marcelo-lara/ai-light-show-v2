@@ -4,7 +4,12 @@ where does the intro ends?
 add a flash effect to the prisms when the song changes from C# to D#
 what is the first occurrence of the chord F?
 where is the cursor?
-set all parcans to blue when the chord is C#
+set all protons to blue when the chord is C#
+turn off the protons when the chord is F
+when the chords is none, turn off all the fixtures.
+when the chords turns to none, fade out both prisms from 1 to 0 until next chord is not none.
+move left prism to piano one beat before the second instrumental section.
+on the first beat of the second instrumental section, sweep left prism from piano to table.
 what is the first effect of the verse?
 clear the corus cue sheet
 how loud is the first verse?

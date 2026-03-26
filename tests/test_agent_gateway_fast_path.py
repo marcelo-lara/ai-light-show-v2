@@ -320,3 +320,112 @@ async def test_fast_path_proposes_blue_parcans_for_all_matching_chords(monkeypat
             "summary": "Set parcan_l, parcan_r, parcan_pl, parcan_pr to blue at 25.540s, 35.820s.",
         },
     }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_proposes_blue_protons_for_all_matching_chords(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_chords":
+            return {"ok": True, "data": {"chords": [{"time_s": 25.54, "label": "C#"}, {"time_s": 35.82, "label": "C#"}]}}
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "parcan_l"}, {"id": "parcan_pl"}, {"id": "parcan_pr"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "set all protons to blue when the chord is C#"},
+    ])
+
+    assert tool_calls == [("mcp_read_chords", {}), ("mcp_read_fixtures", {})]
+    assert result["proposal"]["summary"] == "Set parcan_pl, parcan_pr to blue at 25.540s, 35.820s."
+
+
+@pytest.mark.asyncio
+async def test_fast_path_turns_off_protons_for_matching_chords(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_chords":
+            return {"ok": True, "data": {"chords": [{"time_s": 51.94, "label": "F"}]}}
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "parcan_pl"}, {"id": "parcan_pr"}, {"id": "mini_beam_prism_l"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "turn off the protons when the chord is F"},
+    ])
+
+    assert tool_calls == [("mcp_read_chords", {}), ("mcp_read_fixtures", {})]
+    assert result["proposal"]["summary"] == "Turn off parcan_pl, parcan_pr at 51.940s."
+    entries = result["proposal"]["arguments"]["entries"]
+    assert all(entry["effect"] == "blackout" for entry in entries)
+
+
+@pytest.mark.asyncio
+async def test_fast_path_fades_out_both_prisms_during_none_spans(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_chords":
+            return {
+                "ok": True,
+                "data": {
+                    "chords": [
+                        {"time_s": 10.0, "label": "F"},
+                        {"time_s": 12.0, "label": "N"},
+                        {"time_s": 14.5, "label": "N"},
+                        {"time_s": 18.0, "label": "C"},
+                    ]
+                },
+            }
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "mini_beam_prism_l"}, {"id": "mini_beam_prism_r"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "when the chords turns to none, fade out both prisms from 1 to 0 until next chord is not none."},
+    ])
+
+    assert tool_calls == [("mcp_read_chords", {}), ("mcp_read_fixtures", {})]
+    assert result["proposal"]["summary"] == "Add fade_out to mini_beam_prism_l, mini_beam_prism_r at 12.000s."
+    entries = result["proposal"]["arguments"]["entries"]
+    assert all(entry["effect"] == "fade_out" for entry in entries)
+
+
+@pytest.mark.asyncio
+async def test_fast_path_turns_off_all_fixtures_during_none_spans(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_chords":
+            return {"ok": True, "data": {"chords": [{"time_s": 0.0, "label": "N"}, {"time_s": 4.0, "label": "C"}]}}
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "parcan_l"}, {"id": "parcan_r"}, {"id": "mini_beam_prism_l"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "when the chords is none, turn off all the fixtures."},
+    ])
+
+    assert tool_calls == [("mcp_read_chords", {}), ("mcp_read_fixtures", {})]
+    entries = result["proposal"]["arguments"]["entries"]
+    assert any(entry["fixture_id"] == "parcan_l" and entry["effect"] == "blackout" for entry in entries)
+    assert any(entry["fixture_id"] == "parcan_r" and entry["effect"] == "blackout" for entry in entries)
+    assert any(entry["fixture_id"] == "mini_beam_prism_l" and entry["effect"] == "fade_out" for entry in entries)

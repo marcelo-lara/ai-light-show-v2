@@ -307,6 +307,10 @@ class AssistantService:
             effect_name = str(entries[0].get("effect") or "effect")
             unique_times = list(dict.fromkeys(float(entry.get("time", 0.0) or 0.0) for entry in entries))
             time_text = ", ".join(f"{time_value:.3f}s" for time_value in unique_times)
+            if effect_name == "blackout":
+                return f"Turned off {fixture_ids} at {time_text}."
+            if effect_name == "fade_out":
+                return f"Added fade_out to {fixture_ids} at {time_text}."
             color_name = self._resolve_full_effect_color_name(entries[0].get("data") or {}) if effect_name == "full" else None
             if color_name is not None:
                 return f"Set {fixture_ids} to {color_name} at {time_text}."
@@ -333,10 +337,15 @@ class AssistantService:
         return f"from {start_time:.3f}s to {end_time:.3f}s"
 
     def _resolve_full_effect_color_name(self, data: Dict[str, Any]) -> str | None:
+        red_value = data.get("red")
+        green_value = data.get("green")
+        blue_value = data.get("blue")
+        if red_value is None or green_value is None or blue_value is None:
+            return None
         try:
-            red = int(data.get("red"))
-            green = int(data.get("green"))
-            blue = int(data.get("blue"))
+            red = int(red_value)
+            green = int(green_value)
+            blue = int(blue_value)
         except (TypeError, ValueError):
             return None
         return RGB_NAME_MAP.get((red, green, blue))

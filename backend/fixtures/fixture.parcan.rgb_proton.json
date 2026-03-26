@@ -13,7 +13,9 @@
 		"strobe",
 		"flash",
 		"fade_in",
-		"full"
+		"fade_out",
+		"full",
+		"blackout"
 	],
 	"meta_channels": {
 		"rgb": {
