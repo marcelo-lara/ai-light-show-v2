@@ -125,6 +125,7 @@ class AssistantService:
         self._conversation_history.pop(client_id, None)
 
     async def _run_prompt(self, manager, context: ActiveRequest) -> None:
+        current_task = asyncio.current_task()
         messages = self._build_request_messages(manager, context.client_id, context.assistant_id, context.prompt)
         response_chunks: list[str] = []
         proposal_emitted = False
@@ -168,11 +169,13 @@ class AssistantService:
             await self._emit_client_event(context.client_id, manager, "error", "llm_error", {"domain": "llm", "request_id": context.request_id, "code": "assistant_request_failed", "detail": str(exc), "retryable": True})
         finally:
             await self._interaction_log.write("request_finished", request_id=context.request_id, client_id=context.client_id)
-            self._requests.pop(context.request_id, None)
-            self._active_by_client.pop(context.client_id, None)
+            if self._requests.get(context.request_id) is current_task:
+                self._requests.pop(context.request_id, None)
+                self._active_by_client.pop(context.client_id, None)
             self._request_context.pop(context.request_id, None)
 
     async def _run_confirmed_action(self, manager, pending: PendingAction) -> None:
+        current_task = asyncio.current_task()
         response_chunks: list[str] = []
         try:
             await self._emit_client_event(pending.client_id, manager, "info", "llm_status", {"domain": "llm", "request_id": pending.request_id, "phase": "applying_action", "label": f"Applying {pending.tool_name}", "assistant_id": pending.assistant_id})
@@ -201,7 +204,7 @@ class AssistantService:
                 await self._interaction_log.write("gateway_event", request_id=pending.request_id, client_id=pending.client_id, payload=event)
                 if str(event.get("type") or "") == "delta":
                     response_chunks.append(str(event.get("delta") or ""))
-                await self._forward_event(manager, pending.client_id, pending.request_id, pending.assistant_id, event)
+                await self._forward_event(manager, pending.client_id, pending.request_id, pending.assistant_id, event, pending.prompt)
             assistant_text = "".join(response_chunks).strip()
             if assistant_text:
                 self._append_conversation_turns(pending.client_id, pending.prompt, assistant_text)
@@ -220,8 +223,9 @@ class AssistantService:
             await self._emit_client_event(pending.client_id, manager, "error", "llm_error", {"domain": "llm", "request_id": pending.request_id, "code": "assistant_request_failed", "detail": str(exc), "retryable": True})
         finally:
             await self._interaction_log.write("request_finished", request_id=pending.request_id, client_id=pending.client_id)
-            self._requests.pop(pending.request_id, None)
-            self._active_by_client.pop(pending.client_id, None)
+            if self._requests.get(pending.request_id) is current_task:
+                self._requests.pop(pending.request_id, None)
+                self._active_by_client.pop(pending.client_id, None)
 
     async def _forward_event(self, manager, client_id: str, request_id: str, assistant_id: str, event: Dict[str, Any], prompt: str | None = None) -> None:
         event_type = str(event.get("type") or "")

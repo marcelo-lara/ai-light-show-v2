@@ -180,6 +180,108 @@ def test_llm_prompt_includes_recent_chat_history(monkeypatch, tmp_path):
     assert len(seen_messages) == 2
 
 
+def test_llm_prompt_can_confirm_follow_up_proposal(monkeypatch, tmp_path):
+    calls = []
+    fresh_backend_main = _fresh_backend_main()
+    monkeypatch.setenv("ASSISTANT_LOG_DIR", str(tmp_path / "assistant-logs"))
+
+    async def _noop_async(*_args, **_kwargs):
+        return None
+
+    async def _fake_load_song(self, song_name: str):
+        self.current_song = _fake_song(song_name)
+        self.song_length_seconds = 158.53
+        self.timecode = 37.62
+        self.is_playing = False
+        self.output_universe = bytearray(512)
+        self.editor_universe = bytearray(512)
+        self.cue_sheet = CueSheet(song_filename=song_name, entries=[])
+
+    async def _fake_clear_cues(self, from_time: float = 0.0, to_time: float | None = None):
+        calls.append((from_time, to_time))
+        return {"ok": True, "removed": len(calls), "remaining": max(0, 2 - len(calls))}
+
+    async def _fake_gateway_stream(self, messages, assistant_id):
+        del assistant_id
+        if str(messages[-1]["content"]).startswith("The confirmed action has been executed."):
+            if len(calls) == 1:
+                yield {"type": "status", "phase": "awaiting_tool_calls", "label": "Resolving tool calls"}
+                yield {
+                    "type": "proposal",
+                    "action_id": "action-2",
+                    "tool_name": "propose_cue_clear_range",
+                    "arguments": {"start_time": 100.28, "end_time": 110.0},
+                    "title": "Confirm outro clear",
+                    "summary": "Remove cue items from 100.280s to 110.000s.",
+                }
+                return
+            yield {"type": "delta", "delta": "Cleared the requested cue ranges."}
+            yield {"type": "done", "finish_reason": "stop"}
+            return
+
+        yield {"type": "status", "phase": "thinking", "label": "Thinking"}
+        yield {
+            "type": "proposal",
+            "action_id": "action-1",
+            "tool_name": "propose_cue_clear_range",
+            "arguments": {"start_time": 84.18, "end_time": 100.28},
+            "title": "Confirm chorus clear",
+            "summary": "Remove cue items from 84.180s to 100.280s.",
+        }
+
+    monkeypatch.setattr(fresh_backend_main, "run_startup_blue_wipe", _noop_async)
+    monkeypatch.setattr(SongService, "list_songs", lambda self: ["Yonaka - Seize the Power"])
+    monkeypatch.setattr(StateManager, "load_song", _fake_load_song)
+    monkeypatch.setattr(StateManager, "clear_cue_entries", _fake_clear_cues)
+    monkeypatch.setattr(StateManager, "_dump_canvas_debug", lambda self, _song_name: None)
+    monkeypatch.setattr(ArtNetService, "start", _noop_async)
+    monkeypatch.setattr(ArtNetService, "stop", _noop_async)
+    monkeypatch.setattr(ArtNetService, "blackout", _noop_async)
+    monkeypatch.setattr(ArtNetService, "update_universe", _noop_async)
+    monkeypatch.setattr(ArtNetService, "arm_fixture", _noop_async)
+    monkeypatch.setattr(AssistantGatewayClient, "stream", _fake_gateway_stream)
+
+    with TestClient(fresh_backend_main.app) as client:
+        with client.websocket_connect("/ws") as ws:
+            _read_until(ws, lambda message: message.get("type") == "snapshot")
+
+            ws.send_json({"type": "intent", "req_id": "llm-1", "name": "llm.send_prompt", "payload": {"prompt": "clear the chorus cue sheet"}})
+
+            first_proposal = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_action_proposed")
+            assert first_proposal["data"]["action_id"] == "action-1"
+
+            ws.send_json({"type": "intent", "req_id": "llm-2", "name": "llm.confirm_action", "payload": {"request_id": "llm-1", "action_id": "action-1"}})
+
+            first_applied = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_action_applied")
+            assert first_applied["data"]["action_id"] == "action-1"
+
+            second_proposal = _read_until(
+                ws,
+                lambda message: message.get("type") == "event"
+                and message.get("message") == "llm_action_proposed"
+                and message.get("data", {}).get("action_id") == "action-2",
+            )
+            assert second_proposal["data"]["arguments"] == {"start_time": 100.28, "end_time": 110.0}
+
+            ws.send_json({"type": "intent", "req_id": "llm-3", "name": "llm.confirm_action", "payload": {"request_id": "llm-1", "action_id": "action-2"}})
+
+            second_applied = _read_until(
+                ws,
+                lambda message: message.get("type") == "event"
+                and message.get("message") == "llm_action_applied"
+                and message.get("data", {}).get("action_id") == "action-2",
+            )
+            assert second_applied["data"]["tool_name"] == "propose_cue_clear_range"
+
+            delta = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_delta")
+            assert delta["data"]["delta"] == "Cleared the requested cue ranges."
+
+            done = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_done")
+            assert done["data"]["done"] is True
+
+    assert calls == [(84.18, 100.28), (100.28, 110.0)]
+
+
 def test_llm_clear_conversation_resets_history(monkeypatch, tmp_path):
     seen_messages = []
     fresh_backend_main = _fresh_backend_main()
