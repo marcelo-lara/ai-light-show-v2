@@ -59,6 +59,8 @@
 .chat-msg.system.kind-status {
   color: var(--muted);
   font-style: italic;
+  align-self: flex-start;
+  padding: 0 0.5em;
 }
 
 .chat-msg.system.kind-proposal {

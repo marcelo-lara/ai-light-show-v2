@@ -81,6 +81,51 @@ def test_gateway_answer_prompts_omit_song_name_unless_requested():
     assert "song=" not in loudness_messages[1]["content"]
 
 
+def test_gateway_answer_prompts_prefer_bar_beat_before_seconds():
+    gateway_main = _load_gateway_main_module()
+
+    chord_messages = gateway_main._build_chord_answer_messages(
+        [{"role": "user", "content": "when is the first occurrence of chord F?"}],
+        {
+            "ok": True,
+            "data": {
+                "occurrence": 1,
+                "chord": {"time_s": 35.82, "bar": 20, "beat": 1, "label": "F"},
+            },
+        },
+    )
+    cursor_messages = gateway_main._build_cursor_answer_messages(
+        [{"role": "user", "content": "where is the cursor?"}],
+        {
+            "ok": True,
+            "data": {"time_s": 35.82, "bar": 20, "beat": 1, "section_name": "Verse"},
+        },
+    )
+    fixtures_messages = gateway_main._build_fixtures_at_bar_answer_messages(
+        [{"role": "user", "content": "what fixtures are active at bar 20.1?"}],
+        {
+            "ok": True,
+            "data": {"position": {"time": 35.82, "bar": 20, "beat": 1}},
+        },
+        {
+            "ok": True,
+            "data": {
+                "entries": [
+                    {"fixture_id": "mini_beam_prism_l", "effect": "flash", "duration": 0.5},
+                ]
+            },
+        },
+    )
+
+    expected_phrase = "When bar and beat facts are available, report time as <bar>.<beat> (<seconds>s), with bar.beat first. "
+    assert expected_phrase in chord_messages[0]["content"]
+    assert expected_phrase in cursor_messages[0]["content"]
+    assert expected_phrase in fixtures_messages[0]["content"]
+    assert "Report the exact bar.beat first and the exact seconds in parentheses in one sentence." in chord_messages[0]["content"]
+    assert "You must report the exact bar.beat first and the exact seconds in parentheses in one sentence, with no reinterpretation." in cursor_messages[0]["content"]
+    assert "Use exactly one sentence in this structure: At <bar>.<beat> (<time_seconds>s), <fixtures> <effect> for <duration_seconds>s." in fixtures_messages[0]["content"]
+
+
 @pytest.mark.asyncio
 async def test_fast_path_proposes_prism_flash_for_chord_transition(monkeypatch):
     gateway_main = _load_gateway_main_module()

@@ -370,6 +370,10 @@ def _song_name_mention_instruction() -> str:
     return "Do not mention the song name unless the original question explicitly asks for it. "
 
 
+def _bar_beat_time_instruction() -> str:
+    return "When bar and beat facts are available, report time as <bar>.<beat> (<seconds>s), with bar.beat first. "
+
+
 async def _call_mcp_tool(name: str, arguments: Dict[str, Any]) -> Any:
     async with Client(MCP_BASE_URL) as client:
         result = await client.call_tool(name, arguments, raise_on_error=False)
@@ -656,8 +660,9 @@ def _build_section_answer_messages(messages: List[Dict[str, Any]], result: Dict[
             "content": (
                 "Answer only from the resolved section facts provided by the user. "
                 + _song_name_mention_instruction() +
+                _bar_beat_time_instruction() +
                 "If section_found=true, never say the data is missing. "
-                "Answer the original question directly with the exact numeric time and 's' suffix. "
+                "Answer the original question directly with the exact numeric time. Use seconds only if bar and beat are unavailable in the resolved facts. "
                 "Keep the answer to one sentence."
             ),
         },
@@ -689,7 +694,8 @@ def _build_chord_answer_messages(messages: List[Dict[str, Any]], result: Dict[st
             "content": (
                 "Answer only from the resolved chord facts provided by the user. "
                 + _song_name_mention_instruction() +
-                "Report the exact time in seconds and the exact bar.beat in one sentence."
+                _bar_beat_time_instruction() +
+                "Report the exact bar.beat first and the exact seconds in parentheses in one sentence."
             ),
         },
         {
@@ -714,7 +720,8 @@ def _build_cursor_answer_messages(messages: List[Dict[str, Any]], result: Dict[s
             "content": (
                 "Answer only from the resolved cursor facts provided by the user. "
                 + _song_name_mention_instruction() +
-                "You must report the exact time in seconds and the exact bar.beat in one sentence, with no reinterpretation."
+                _bar_beat_time_instruction() +
+                "You must report the exact bar.beat first and the exact seconds in parentheses in one sentence, with no reinterpretation."
             ),
         },
         {
@@ -841,7 +848,7 @@ def _build_first_effect_answer_messages(messages: List[Dict[str, Any]], section_
     return [
         {
             "role": "system",
-            "content": "Answer only from the resolved section and cue facts provided by the user. " + _song_name_mention_instruction() + "Use exactly one sentence in this structure: At <first_effect_time_seconds>s, <fixtures> <effect> for <duration_seconds>s.",
+            "content": "Answer only from the resolved section and cue facts provided by the user. " + _song_name_mention_instruction() + _bar_beat_time_instruction() + "If bar and beat for the first effect are unavailable in the resolved facts, use seconds. Use exactly one sentence in this structure: At <bar>.<beat> (<first_effect_time_seconds>s), <fixtures> <effect> for <duration_seconds>s. If bar and beat are unavailable, use: At <first_effect_time_seconds>s, <fixtures> <effect> for <duration_seconds>s.",
         },
         {
             "role": "user",
@@ -863,7 +870,7 @@ def _build_loudness_answer_messages(messages: List[Dict[str, Any]], loudness_res
     return [
         {
             "role": "system",
-            "content": "Answer only from the resolved loudness facts provided by the user. " + _song_name_mention_instruction() + "Use exactly one sentence in this structure: The first verse spans <start_time>s to <end_time>s and has average loudness <average>.",
+            "content": "Answer only from the resolved loudness facts provided by the user. " + _song_name_mention_instruction() + _bar_beat_time_instruction() + "If bar and beat facts are unavailable for the time range, use seconds. Use exactly one sentence in this structure: The first verse spans <start_bar>.<start_beat> (<start_time>s) to <end_bar>.<end_beat> (<end_time>s) and has average loudness <average>. If bar and beat are unavailable, use seconds only.",
         },
         {
             "role": "user",
@@ -891,7 +898,7 @@ def _build_fixtures_at_bar_answer_messages(messages: List[Dict[str, Any]], posit
     return [
         {
             "role": "system",
-            "content": "Answer only from the resolved musical position and cue facts provided by the user. " + _song_name_mention_instruction() + "Use exactly one sentence in this structure: At <time_seconds>s (bar <bar>.<beat>), <fixtures> <effect> for <duration_seconds>s.",
+            "content": "Answer only from the resolved musical position and cue facts provided by the user. " + _song_name_mention_instruction() + _bar_beat_time_instruction() + "Use exactly one sentence in this structure: At <bar>.<beat> (<time_seconds>s), <fixtures> <effect> for <duration_seconds>s.",
         },
         {
             "role": "user",
@@ -1230,6 +1237,7 @@ async def _event_stream(req: ChatRequest):
                     "Do not mention the song name unless the original question explicitly asks for it. "
                     "Do not say that you lack access to databases, metadata, websites, or external tools. "
                     "Use exact values present in the tool outputs, including times, bars, beats, fixture ids, cue effects, and loudness statistics. "
+                    "When both bar.beat and seconds are available, present bar.beat first and seconds in parentheses. "
                     "If the requested fact is present in the tool outputs, answer directly with that fact. "
                     "If it is not present, say that the current loaded song data does not contain that fact."
                 ),
@@ -1339,6 +1347,7 @@ async def chat_completions(req: ChatRequest):
                     "Do not mention the song name unless the original question explicitly asks for it. "
                     "Do not say that you lack access to databases, metadata, websites, or external tools. "
                     "Use exact values present in the tool outputs, including times, bars, beats, fixture ids, cue effects, and loudness statistics. "
+                    "When both bar.beat and seconds are available, present bar.beat first and seconds in parentheses. "
                     "If the requested fact is present in the tool outputs, answer directly with that fact. "
                     "If it is not present, say that the current loaded song data does not contain that fact."
                 ),
