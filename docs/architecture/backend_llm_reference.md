@@ -240,8 +240,15 @@ Notes on `fixture.set_values`:
 | --- | --- | --- | --- |
 | `llm.send_prompt` | `prompt`, `assistant_id?` | starts a session-scoped assistant request, emits `llm_status`, `llm_delta`, `llm_done`, and optionally `llm_action_proposed` | `False` |
 | `llm.cancel` | `request_id?` | cancels the active assistant request for the websocket session or the specified request | `False` |
-| `llm.confirm_action` | `request_id`, `action_id` | applies a pending assistant action, emits `llm_action_applied`, then resumes model-authored response streaming | `False` |
+| `llm.confirm_action` | `request_id`, `action_id` | applies a pending assistant action, emits `llm_action_applied`, then emits a backend-generated completion summary and `llm_done` for the same turn | `False` |
 | `llm.reject_action` | `request_id`, `action_id` | dismisses a pending assistant action and emits `llm_action_rejected` | `False` |
+
+### Cue intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `cue.clear` | `from_time?`, `to_time?` | removes cue entries within a time window | `True` on success, else `False` |
+| `cue.clear_all` | none | removes every entry from the current cue sheet | `True` on success, else `False` |
 
 ## Event message catalog
 

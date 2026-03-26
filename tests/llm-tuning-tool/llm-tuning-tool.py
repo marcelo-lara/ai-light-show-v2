@@ -16,6 +16,55 @@ def iso_now() -> str:
 	return datetime.now(timezone.utc).isoformat()
 
 
+def display_time(timestamp: str) -> str:
+	return datetime.fromisoformat(timestamp).astimezone().strftime("%H:%M:%S.%f")[:-3]
+
+
+def print_live_line(timestamp: str, text: str) -> None:
+	print(f"{display_time(timestamp)} {text}", flush=True)
+
+
+def print_outbound(message: dict, timestamp: str) -> None:
+	name = str(message.get("name") or "")
+	payload: dict = message["payload"] if isinstance(message.get("payload"), dict) else {}
+	if name == "llm.send_prompt":
+		print_live_line(timestamp, f"user -> {payload.get('prompt', '')}")
+		return
+	if name == "llm.confirm_action":
+		action_id = str(payload.get("action_id") or "")
+		print_live_line(timestamp, f"intent -> confirm {action_id}")
+
+
+def print_inbound(message: dict, timestamp: str) -> None:
+	if message.get("type") != "event":
+		return
+	data: dict = message["data"] if isinstance(message.get("data"), dict) else {}
+	kind = str(message.get("message") or "")
+	if kind == "llm_status":
+		label = str(data.get("label") or data.get("phase") or "status")
+		if str(data.get("phase") or "") == "thinking":
+			label = "thinking"
+		print_live_line(timestamp, f"event <- {label}")
+		return
+	if kind == "llm_delta":
+		print_live_line(timestamp, f"llm_delta <- {json.dumps(str(data.get('delta', '')))}")
+		return
+	if kind == "llm_action_proposed":
+		summary = str(data.get("summary") or data.get("title") or data.get("tool_name") or "action proposed")
+		print_live_line(timestamp, f"event <- proposal: {summary}")
+		return
+	if kind == "llm_action_applied":
+		tool_name = str(data.get("tool_name") or "action")
+		print_live_line(timestamp, f"event <- applied {tool_name}")
+		return
+	if kind == "llm_done":
+		print_live_line(timestamp, "llm_done")
+		return
+	if kind == "llm_error":
+		detail = str(data.get("detail") or data.get("code") or "unknown error")
+		print_live_line(timestamp, f"llm_error <- {detail}")
+
+
 def build_parser() -> argparse.ArgumentParser:
 	parser = argparse.ArgumentParser(description="Run one LLM prompt per websocket session and log the responses.")
 	parser.add_argument("--ws-url", default=os.getenv("LLM_TUNING_WS_URL", "ws://localhost:5001/ws"))
@@ -65,7 +114,8 @@ def wait_for_snapshot(ws, timeout: float) -> list[dict]:
 		if remaining <= 0:
 			raise TimeoutError("timed out waiting for initial snapshot")
 		message = recv_json(ws, remaining)
-		transcript.append({"direction": "in", "message": compact_message(message), "received_at": iso_now()})
+		timestamp = iso_now()
+		transcript.append({"direction": "in", "message": compact_message(message), "received_at": timestamp})
 		if message.get("type") == "snapshot":
 			return transcript
 
@@ -73,7 +123,9 @@ def wait_for_snapshot(ws, timeout: float) -> list[dict]:
 def send_intent(ws, name: str, payload: dict, request_id: str, transcript: list[dict]) -> None:
 	message = {"type": "intent", "req_id": request_id, "name": name, "payload": payload}
 	ws.send(json.dumps(message))
-	transcript.append({"direction": "out", "message": message, "sent_at": iso_now()})
+	timestamp = iso_now()
+	transcript.append({"direction": "out", "message": message, "sent_at": timestamp})
+	print_outbound(message, timestamp)
 
 
 def run_prompt(index: int, prompt: str, args: argparse.Namespace) -> dict:
@@ -95,7 +147,9 @@ def run_prompt(index: int, prompt: str, args: argparse.Namespace) -> dict:
 				data: dict = message["data"] if isinstance(message.get("data"), dict) else {}
 				if message.get("type") != "event" or data.get("request_id") != request_id:
 					continue
-				transcript.append({"direction": "in", "message": message, "received_at": iso_now()})
+				timestamp = iso_now()
+				transcript.append({"direction": "in", "message": message, "received_at": timestamp})
+				print_inbound(message, timestamp)
 				kind = message.get("message")
 				if kind == "llm_delta":
 					deltas.append(str(data.get("delta", "")))
@@ -130,6 +184,7 @@ def run_prompt(index: int, prompt: str, args: argparse.Namespace) -> dict:
 						"terminal_event": message,
 					}
 	except (ConnectionClosed, OSError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+		print_live_line(iso_now(), f"error <- {type(exc).__name__}: {exc}")
 		return {
 			"index": index,
 			"prompt": prompt,

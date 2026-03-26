@@ -14,7 +14,7 @@ Local inference + tool-gateway stack used for metadata-aware cue planning.
 3. If model emits read tool calls, gateway maps them to backend MCP methods and loops until the model produces a final answer.
 4. If model emits write proposal tools, gateway stops before mutation and streams a structured proposal event back to the backend assistant service.
 5. Gateway connects to the backend-mounted MCP endpoint at `/mcp` over Streamable HTTP.
-6. Backend confirmation applies the proposed action and then requests a model-authored follow-up response.
+6. Backend confirmation applies the proposed action and then returns a backend-generated completion summary for that same turn.
 
 ## Key files
 

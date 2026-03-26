@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import os
 from pathlib import Path
 from typing import Any, Dict
@@ -176,7 +175,6 @@ class AssistantService:
 
     async def _run_confirmed_action(self, manager, pending: PendingAction) -> None:
         current_task = asyncio.current_task()
-        response_chunks: list[str] = []
         try:
             await self._emit_client_event(pending.client_id, manager, "info", "llm_status", {"domain": "llm", "request_id": pending.request_id, "phase": "applying_action", "label": f"Applying {pending.tool_name}", "assistant_id": pending.assistant_id})
             result = await self._apply_pending_action(manager, pending)
@@ -192,21 +190,17 @@ class AssistantService:
                 await self._emit_client_event(pending.client_id, manager, "error", "llm_error", {"domain": "llm", "request_id": pending.request_id, "code": "action_failed", "detail": str(result.get("reason") or result), "retryable": False})
                 return
             await self._emit_client_event(pending.client_id, manager, "info", "llm_action_applied", {"domain": "llm", "request_id": pending.request_id, "action_id": pending.action_id, "tool_name": pending.tool_name})
-            follow_up = self._build_follow_up_messages(manager, pending, result)
+            assistant_text = self._build_action_completion_text(pending, result)
             await self._interaction_log.write(
-                "gateway_follow_up_started",
+                "action_completion_generated",
                 request_id=pending.request_id,
                 client_id=pending.client_id,
                 assistant_id=pending.assistant_id,
-                messages=follow_up,
+                completion=assistant_text,
             )
-            async for event in self._gateway.stream(follow_up, pending.assistant_id):
-                await self._interaction_log.write("gateway_event", request_id=pending.request_id, client_id=pending.client_id, payload=event)
-                if str(event.get("type") or "") == "delta":
-                    response_chunks.append(str(event.get("delta") or ""))
-                await self._forward_event(manager, pending.client_id, pending.request_id, pending.assistant_id, event, pending.prompt)
-            assistant_text = "".join(response_chunks).strip()
             if assistant_text:
+                await self._emit_client_event(pending.client_id, manager, "info", "llm_delta", {"domain": "llm", "request_id": pending.request_id, "delta": assistant_text, "done": False})
+                await self._emit_client_event(pending.client_id, manager, "info", "llm_done", {"domain": "llm", "request_id": pending.request_id, "finish_reason": "stop", "done": True})
                 self._append_conversation_turns(pending.client_id, pending.prompt, assistant_text)
                 await self._interaction_log.write(
                     "conversation_history_appended",
@@ -258,6 +252,11 @@ class AssistantService:
             await self._emit_client_event(client_id, manager, "error", "llm_error", {"domain": "llm", "request_id": request_id, "code": event.get("code", "gateway_error"), "detail": event.get("detail", "Assistant request failed."), "retryable": bool(event.get("retryable", True))})
 
     async def _apply_pending_action(self, manager, pending: PendingAction) -> Dict[str, Any]:
+        if pending.tool_name == "propose_cue_clear_all":
+            result = await manager.state_manager.clear_all_cue_entries()
+            if result.get("ok"):
+                await manager._schedule_broadcast()
+            return result
         if pending.tool_name == "propose_cue_clear_range":
             result = await manager.state_manager.clear_cue_entries(from_time=float(pending.arguments.get("start_time", 0.0)), to_time=float(pending.arguments.get("end_time", 0.0)))
             if result.get("ok"):
@@ -270,16 +269,27 @@ class AssistantService:
             return result
         return {"ok": False, "reason": "unsupported_action"}
 
-    def _build_follow_up_messages(self, manager, pending: PendingAction, result: Dict[str, Any]) -> list[Dict[str, Any]]:
-        prompt = load_prompt(self._assistant_root, pending.assistant_id)
-        current_song = self._current_song_name(manager)
-        result_text = json.dumps({"tool_name": pending.tool_name, "arguments": pending.arguments, "result": result}, ensure_ascii=True)
-        messages = [{"role": "system", "content": prompt}]
-        if current_song:
-            messages.append({"role": "system", "content": f"Current loaded song: {current_song}"})
-        messages.append({"role": "user", "content": pending.prompt})
-        messages.append({"role": "user", "content": f"The confirmed action has been executed. Tool result: {result_text}"})
-        return messages
+    def _build_action_completion_text(self, pending: PendingAction, result: Dict[str, Any]) -> str:
+        if pending.tool_name == "propose_cue_clear_all":
+            removed = int(result.get("removed", 0) or 0)
+            return f"Cleared the cue sheet. Removed {removed} entries."
+        if pending.tool_name == "propose_cue_clear_range":
+            start_time = float(pending.arguments.get("start_time", 0.0))
+            end_time = float(pending.arguments.get("end_time", start_time))
+            removed = int(result.get("removed", 0) or 0)
+            window_text = self._format_time_window(start_time, end_time)
+            return f"Cleared cue items {window_text}. Removed {removed} entries."
+        if pending.tool_name == "propose_chaser_apply":
+            chaser_id = str(pending.arguments.get("chaser_id") or result.get("chaser_id") or "unknown_chaser")
+            start_time = float(pending.arguments.get("start_time", 0.0))
+            repetitions = int(pending.arguments.get("repetitions", 1) or 1)
+            return f"Applied chaser {chaser_id} at {start_time:.3f}s for {repetitions} repetitions."
+        return f"Completed {pending.tool_name}."
+
+    def _format_time_window(self, start_time: float, end_time: float) -> str:
+        if abs(end_time - start_time) < 1e-9:
+            return f"at {start_time:.3f}s"
+        return f"from {start_time:.3f}s to {end_time:.3f}s"
 
     def _build_request_messages(self, manager, client_id: str, assistant_id: str, prompt: str) -> list[Dict[str, Any]]:
         messages = [{"role": "system", "content": load_prompt(self._assistant_root, assistant_id)}]

@@ -216,6 +216,18 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "propose_cue_clear_all",
+            "description": "Propose clearing every cue entry from the current cue sheet. Use for destructive whole-sheet clears that need confirmation.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "propose_chaser_apply",
             "description": "Propose adding a chaser cue entry starting at a time with repetitions. Use for cue changes that need confirmation.",
             "parameters": {
@@ -304,7 +316,7 @@ def _build_query_guidance(messages: List[Dict[str, Any]]) -> Optional[Dict[str, 
     if "first effect" in prompt or ("effect" in prompt and any(word in prompt for word in ["verse", "chorus", "intro", "instrumental", "outro"])):
         hints.append("For section effect questions, first resolve the section with mcp_find_section, then inspect the cue entries in that section using mcp_read_cue_window. Answer from the earliest cue entry in that window.")
     if "clear" in prompt and "cue" in prompt:
-        hints.append("For cue clearing requests, resolve the target section first and then propose_cue_clear_range with that exact section start and end time. Never propose a 0 to 0 range.")
+        hints.append("For cue clearing requests, resolve the target section first and then propose_cue_clear_range with that exact section start and end time. For full-sheet requests like clear all the cue, entire cue, or all cues, use propose_cue_clear_all. Never propose a 0 to 0 range.")
     if "fixture" in prompt and "left" in prompt:
         hints.append("For left-side fixture questions, call mcp_read_fixtures and answer with the matching fixture ids. In this rig, left fixtures use ids ending in _l or _pl.")
     if "fixture" in prompt and re.search(r"\bbar\s+\d+", prompt):
@@ -700,6 +712,12 @@ def _extract_section_name(prompt: str) -> Optional[str]:
     return None
 
 
+def _is_full_cue_clear_request(prompt: str) -> bool:
+    lowered = str(prompt or "").lower()
+    has_all = any(token in lowered for token in ["all", "entire", "whole", "full"])
+    return has_all and "cue" in lowered
+
+
 def _extract_chord_label(prompt: str) -> Optional[str]:
     match = re.search(r"chord\s+([A-G](?:#|b)?m?)\b", str(prompt or ""), flags=re.IGNORECASE)
     if not match:
@@ -846,6 +864,12 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
             if entries:
                 return {"used_tools": used_tools, "answer_messages": _build_first_effect_answer_messages(messages, section_result, cue_result)}
 
+    if "clear" in lowered and "cue" in lowered and _is_full_cue_clear_request(prompt):
+        return {
+            "used_tools": used_tools,
+            "proposal": _proposal_for_tool("propose_cue_clear_all", {}),
+        }
+
     if "clear" in lowered and "cue" in lowered and section_name:
         used_tools.append("mcp_find_section")
         section_result = await call_mcp("mcp_find_section", {"section_name": section_name})
@@ -912,6 +936,15 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
 
 
 def _proposal_for_tool(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    if tool_name == "propose_cue_clear_all":
+        return {
+            "type": "proposal",
+            "action_id": f"proposal-{abs(hash(orjson.dumps(args).decode('utf-8'))) % 1000000}",
+            "tool_name": tool_name,
+            "arguments": {},
+            "title": "Confirm cue sheet clear",
+            "summary": "Remove all cue items from the cue sheet.",
+        }
     if tool_name == "propose_cue_clear_range":
         start_time = float(args.get("start_time", 0.0))
         end_time = float(args.get("end_time", 0.0))

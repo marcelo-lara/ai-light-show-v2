@@ -270,6 +270,9 @@ class StateSongCueMixin:
                 "remaining": len(self.cue_sheet.entries),
             }
 
+    async def clear_all_cue_entries(self) -> Dict[str, Any]:
+        return await self.clear_cue_entries(from_time=0.0, to_time=None)
+
     async def apply_cue_helper(self, helper_id: str) -> Dict[str, Any]:
         """Apply a cue helper to generate and upsert cue entries."""
         from services.cue_helpers import generate_downbeats_and_beats

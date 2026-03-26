@@ -87,6 +87,7 @@ Behavior:
 - The assistant service keeps recent per-client user and assistant turns for the lifetime of the websocket session and includes them in later `llm.send_prompt` requests.
 - Assistant websocket intents are `llm.send_prompt`, `llm.cancel`, `llm.confirm_action`, and `llm.reject_action`.
 - Assistant event messages are `llm_status`, `llm_delta`, `llm_done`, `llm_action_proposed`, `llm_action_applied`, `llm_action_rejected`, `llm_cancelled`, and `llm_error`.
+- Confirmed assistant mutations are terminal for the current turn: backend applies the action, emits `llm_action_applied`, then emits a backend-generated completion summary and `llm_done` without asking the gateway for another follow-up turn.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
 - Chaser intents are `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, and `chaser.list`.

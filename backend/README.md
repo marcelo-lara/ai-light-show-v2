@@ -106,8 +106,9 @@ Patch behavior:
 - `fixture.set_values` applies live channel updates via Art-Net using fixture meta-channel mappings. For `kind="rgb"` meta-channels, send `values.rgb` as `#RRGGBB` (or mapped color name); backend converts it to channel bytes.
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
 - `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
+- `cue.clear_all` removes every entry from the current cue sheet.
 - `llm.send_prompt` starts an assistant request through the backend-owned assistant service. The assistant service loads a named prompt profile, includes recent per-client chat history from the current websocket session, forwards the request to the agent gateway, relays streamed model output to the requesting websocket client, and pauses write-capable tool calls at the proposal stage.
-- `llm.confirm_action` applies a proposed cue or chaser mutation after explicit user confirmation, schedules a broadcast for the resulting state change, and then requests a model-authored follow-up summary.
+- `llm.confirm_action` applies a proposed cue or chaser mutation after explicit user confirmation, schedules a broadcast for the resulting state change, and then emits a backend-generated completion summary for that executed action.
 - `llm.reject_action` dismisses a pending proposal without mutating cues.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.

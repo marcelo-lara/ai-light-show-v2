@@ -2,6 +2,7 @@ import pytest
 
 from backend.api.intents.cue.actions.apply_helper import apply_helper
 from backend.api.intents.cue.actions.clear import clear_cue
+from backend.api.intents.cue.actions.clear_all import clear_all_cues
 from backend.api.intents.cue.actions.delete import delete_cue
 from backend.api.intents.cue.actions.update import update_cue
 from backend.api.intents.cue.handlers import CUE_HANDLERS
@@ -25,6 +26,9 @@ class _FakeStateManager:
         if to_time is not None and to_time < from_time:
             return {"ok": False, "reason": "invalid_time_range"}
         return {"ok": True, "removed": 3, "remaining": 2}
+
+    async def clear_all_cue_entries(self):
+        return {"ok": True, "removed": 5, "remaining": 0}
 
     async def apply_cue_helper(self, helper_id):
         if helper_id == "downbeats_and_beats":
@@ -70,6 +74,18 @@ async def test_clear_cue_intent_success():
     assert ok is True
     assert manager.events[-1][1] == "cue_cleared"
     assert manager.events[-1][2]["removed"] == 3
+
+
+@pytest.mark.asyncio
+async def test_clear_all_cues_intent_success():
+    manager = _FakeManager()
+
+    ok = await clear_all_cues(manager, {})
+
+    assert ok is True
+    assert manager.events[-1][1] == "cue_cleared"
+    assert manager.events[-1][2]["removed"] == 5
+    assert manager.events[-1][2]["remaining"] == 0
 
 
 @pytest.mark.asyncio
@@ -144,4 +160,5 @@ async def test_cue_handlers_map_contains_full_names():
     assert "cue.update" in CUE_HANDLERS
     assert "cue.delete" in CUE_HANDLERS
     assert "cue.clear" in CUE_HANDLERS
+    assert "cue.clear_all" in CUE_HANDLERS
     assert "cue.apply_helper" in CUE_HANDLERS
