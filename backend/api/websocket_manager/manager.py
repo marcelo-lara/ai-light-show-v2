@@ -8,7 +8,7 @@ from fastapi import WebSocket
 
 from api.websocket_manager.broadcasting import broadcast_patch, execute_broadcast, schedule_broadcast
 from api.websocket_manager.lifecycle import ensure_arm_state_initialized, next_seq
-from api.websocket_manager.messaging import broadcast, broadcast_event, handle_message, send_snapshot
+from api.websocket_manager.messaging import broadcast, broadcast_event, handle_message, send_event_to_client, send_snapshot
 
 if TYPE_CHECKING:
     from backend.store.state import StateManager
@@ -22,6 +22,7 @@ class WebSocketManager:
         self.artnet_service = artnet_service
         self.song_service = song_service
         self.active_connections: List[WebSocket] = []
+        self.client_connections: Dict[str, WebSocket] = {}
         self.seq: int = 0
         self.fixture_armed: Dict[str, bool] = {}
         self._last_broadcast_time = 0.0
@@ -30,6 +31,7 @@ class WebSocketManager:
         self._last_state_snapshot: Optional[Dict[str, Any]] = None
         self._playback_task: Optional[asyncio.Task] = None
         self._playback_task_running: bool = False
+        self.assistant_service = None
 
     async def start_playback_ticker(self) -> None:
         if self._playback_task and not self._playback_task.done():
@@ -72,12 +74,16 @@ class WebSocketManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
+        self.client_connections[str(id(websocket))] = websocket
         self._ensure_arm_state_initialized()
         await self.send_snapshot(websocket)
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
+        self.client_connections.pop(str(id(websocket)), None)
+        if self.assistant_service is not None:
+            asyncio.create_task(self.assistant_service.disconnect_client(str(id(websocket))))
 
     async def send_snapshot(self, websocket: WebSocket):
         await send_snapshot(self, websocket)
@@ -87,6 +93,9 @@ class WebSocketManager:
 
     async def broadcast_event(self, level: str, message: str, data: Optional[Dict[str, Any]] = None):
         await broadcast_event(self, level, message, data)
+
+    async def send_event_to_client(self, client_id: str, level: str, message: str, data: Optional[Dict[str, Any]] = None):
+        return await send_event_to_client(self, client_id, level, message, data)
 
     async def handle_message(self, websocket: WebSocket, data: str):
         await handle_message(self, websocket, data)

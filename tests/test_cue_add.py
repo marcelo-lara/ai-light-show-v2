@@ -171,6 +171,85 @@ async def test_add_chaser_cue_entry_valid(state_manager, workspace_root):
     assert result["entry"]["data"] == {"repetitions": 2}
 
 
+@pytest.mark.asyncio
+async def test_add_effect_cue_entry_deduplicates_within_100ms(state_manager, workspace_root):
+    fixtures_json = workspace_root / "backend" / "fixtures" / "fixtures.json"
+    await state_manager.load_fixtures(fixtures_json)
+
+    state_manager.cue_sheet = CueSheet(song_filename="test_cue_add", entries=[])
+
+    first = await state_manager.add_effect_cue_entry(
+        time=5.0,
+        fixture_id="parcan_l",
+        effect="flash",
+        duration=0.5,
+        data={},
+    )
+    second = await state_manager.add_effect_cue_entry(
+        time=5.05,
+        fixture_id="parcan_l",
+        effect="flash",
+        duration=1.25,
+        data={"speed": 2},
+    )
+
+    assert first["ok"] is True
+    assert second["ok"] is True
+    assert len(state_manager.cue_sheet.entries) == 1
+    stored = state_manager.cue_sheet.entries[0]
+    assert stored.time == 5.05
+    assert stored.duration == 1.25
+    assert stored.data == {"speed": 2}
+
+
+@pytest.mark.asyncio
+async def test_add_chaser_cue_entry_deduplicates_within_100ms(state_manager, workspace_root):
+    fixtures_json = workspace_root / "backend" / "fixtures" / "fixtures.json"
+    await state_manager.load_fixtures(fixtures_json)
+    state_manager.load_chasers()
+
+    state_manager.cue_sheet = CueSheet(song_filename="test_cue_add", entries=[])
+
+    first = await state_manager.add_chaser_cue_entry(
+        time=1.36,
+        chaser_id="blue_parcan_chase",
+        data={"repetitions": 2},
+    )
+    second = await state_manager.add_chaser_cue_entry(
+        time=1.41,
+        chaser_id="blue_parcan_chase",
+        data={"repetitions": 4},
+    )
+
+    assert first["ok"] is True
+    assert second["ok"] is True
+    assert len(state_manager.cue_sheet.entries) == 1
+    stored = state_manager.cue_sheet.entries[0]
+    assert stored.chaser_id == "blue_parcan_chase"
+    assert stored.time == 1.41
+    assert stored.data == {"repetitions": 4}
+
+
+@pytest.mark.asyncio
+async def test_replace_cue_sheet_entries_deduplicates_within_100ms(state_manager, workspace_root):
+    fixtures_json = workspace_root / "backend" / "fixtures" / "fixtures.json"
+    await state_manager.load_fixtures(fixtures_json)
+
+    state_manager.cue_sheet = CueSheet(song_filename="test_cue_add", entries=[])
+
+    result = await state_manager.replace_cue_sheet_entries([
+        {"time": 2.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}},
+        {"time": 2.08, "fixture_id": "parcan_l", "effect": "flash", "duration": 1.0, "data": {"speed": 3}},
+        {"time": 2.2, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.25, "data": {}},
+    ])
+
+    assert result["ok"] is True
+    assert result["count"] == 2
+    assert result["entries"][0]["time"] == 2.08
+    assert result["entries"][0]["duration"] == 1.0
+    assert result["entries"][1]["time"] == 2.2
+
+
 def test_load_mixed_cue_sheet_real_file(workspace_root):
     cue_sheet = load_cue_sheet(workspace_root / "backend" / "cues", "Yonaka - Seize the Power")
     assert any(getattr(entry, "chaser_id", None) == "blue_parcan_chase" for entry in cue_sheet.entries)

@@ -4,7 +4,9 @@ from .set_channels import handle as handle_set_channels
 from .flash import handle as handle_flash
 from .strobe import handle as handle_strobe
 from .fade_in import handle as handle_fade_in
+from .fade_out import handle as handle_fade_out
 from .full import handle as handle_full
+from .blackout import handle as handle_blackout
 
 
 class Parcan(Fixture):
@@ -38,7 +40,9 @@ class Parcan(Fixture):
             "flash": handle_flash,
             "strobe": handle_strobe,
             "fade_in": handle_fade_in,
+            "fade_out": handle_fade_out,
             "full": handle_full,
+            "blackout": handle_blackout,
         }
         handler = effect_handlers.get(effect)
         if handler:

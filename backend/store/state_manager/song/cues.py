@@ -16,6 +16,12 @@ from models.cues import (
 
 
 class StateSongCueMixin:
+    @staticmethod
+    def _cue_sort_key(entry: CueEntry) -> tuple[float, str, str]:
+        label = entry.chaser_id or entry.fixture_id or ""
+        effect = entry.effect or ""
+        return (entry.time, label, effect)
+
     def _validate_cue_entry(self, entry: CueEntry) -> None:
         if entry.is_chaser:
             chaser = self.get_chaser_definition(entry.chaser_id or "")
@@ -171,6 +177,44 @@ class StateSongCueMixin:
             return []
         return read_cue_entries(self.cue_sheet)
 
+    def get_cue_entries_window(self, start_time: float, end_time: float) -> List[Dict[str, Any]]:
+        if end_time < start_time:
+            raise ValueError("invalid_time_range")
+        entries = self.get_cue_entries()
+        return [entry for entry in entries if start_time <= float(entry.get("time", 0.0)) <= end_time]
+
+    async def replace_cue_sheet_entries(self, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+
+            current_entries = list(self.cue_sheet.entries)
+            try:
+                next_entries = [CueEntry(**entry) for entry in entries]
+            except Exception as exc:
+                return {"ok": False, "reason": "invalid_entry", "error": str(exc)}
+
+            self.cue_sheet.entries = next_entries
+            self.cue_sheet.entries = self._dedupe_entries(self.cue_sheet.entries)
+            try:
+                self._validate_cue_sheet()
+            except ValueError as exc:
+                self.cue_sheet.entries = current_entries
+                return {"ok": False, "reason": str(exc)}
+
+            await self.save_cue_sheet()
+            self._refresh_canvas_after_cue_change()
+            return {
+                "ok": True,
+                "count": len(self.cue_sheet.entries),
+                "entries": self.get_cue_entries(),
+            }
+
+    def _dedupe_entries(self, entries: List[CueEntry]) -> List[CueEntry]:
+        from models.cues.crud import _dedupe_entries
+
+        return _dedupe_entries(entries)
+
     async def update_cue_entry(self, index: int, payload: Dict[str, Any]) -> Dict[str, Any]:
         async with self.lock:
             if not self.cue_sheet:
@@ -230,6 +274,9 @@ class StateSongCueMixin:
                 "removed": max(0, removed),
                 "remaining": len(self.cue_sheet.entries),
             }
+
+    async def clear_all_cue_entries(self) -> Dict[str, Any]:
+        return await self.clear_cue_entries(from_time=0.0, to_time=None)
 
     async def apply_cue_helper(self, helper_id: str) -> Dict[str, Any]:
         """Apply a cue helper to generate and upsert cue entries."""

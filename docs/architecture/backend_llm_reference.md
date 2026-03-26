@@ -7,6 +7,7 @@ Code is the source of truth.
 
 1. App bootstrap: `backend/main.py`
 - Creates `StateManager`, `ArtNetService`, `SongService`, `WebSocketManager`.
+- Creates and mounts the backend MCP server at `/mcp`.
 - Loads POIs and fixtures.
 - Arms fixtures and starts Art-Net send loop.
 - Loads default song (`Yonaka - Seize the Power` if present, else first available).
@@ -20,7 +21,12 @@ Code is the source of truth.
 
 3. Intent routing: `backend/api/intents/*`
 - `apply_intent.py` dispatches by domain via `INTENT_HANDLERS`.
-- Domains: `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm`.
+- Domains: `song`, `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm`.
+
+3a. MCP routing: `backend/mcp_server/*`
+- `server.py` registers the mounted MCP tools.
+- `runtime.py` binds the MCP server to the live backend `WebSocketManager` and `SongService` instances.
+- Tool groups are split across `songs.py`, `fixtures.py`, `cues.py`, and `metadata.py`.
 
 4. State authority: `backend/store/state.py`
 - Holds fixtures, POIs, song/cue state, playback flags, preview lifecycle.
@@ -45,6 +51,9 @@ Code is the source of truth.
 | Module | Key symbols | Runtime responsibility |
 | --- | --- | --- |
 | `backend/main.py` | `lifespan`, `websocket_route` | Startup/shutdown wiring and route exposure |
+| `backend/mcp_server/server.py` | `create_backend_mcp` | Mounted MCP server composition |
+| `backend/mcp_server/runtime.py` | `BackendMcpRuntime` | Holds runtime references for MCP tool handlers |
+| `backend/mcp_server/song_data.py` | `build_song_details` | Shared song/analysis serialization for MCP tools |
 | `backend/api/websocket_manager/manager.py` | `WebSocketManager` | Connection registry, sequencing, orchestration |
 | `backend/api/websocket_manager/messaging.py` | `handle_message`, `send_snapshot`, `broadcast_event` | Protocol handling and message emission |
 | `backend/api/websocket_manager/broadcasting.py` | `schedule_broadcast`, `broadcast_patch` | Throttled state-diff broadcasting |
@@ -98,7 +107,77 @@ Code is the source of truth.
 3. `event`
 - Shape: `{"type":"event","level":"info|warning|error","message":string,"data"?:object}`
 
+## MCP contract
+
+- Endpoint: `/mcp`
+- Transport: Streamable HTTP
+- Configuration: mounted with stateless HTTP and JSON responses
+
+### Current MCP tools
+
+#### Songs
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `songs_list` | none | returns backend song ids from `SongService.list_songs()` |
+| `songs_get_details` | `song?` | returns normalized song payload for the requested song or the currently loaded song |
+| `songs_load` | `song` | loads the song into live backend state, stops playback ticker activity, disables continuous Art-Net send, reapplies output universe, schedules websocket broadcast |
+
+#### Fixtures
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `fixtures_list` | none | returns serialized fixture payloads using current output universe values |
+| `fixtures_get` | `fixture_id` | returns one serialized fixture payload |
+| `chasers_list` | none | returns the currently loaded chaser definitions from `backend/fixtures/chasers.json` |
+
+#### Cues
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `cues_get_sheet` | none | returns full cue sheet for current song |
+| `cues_get_window` | `start_time`, `end_time` | returns entries whose `time` falls in the inclusive window |
+| `cues_add_entry` | `entry` | adds one effect or chaser row, persists, re-renders canvas, schedules websocket broadcast |
+| `cues_update_entry` | `index`, `patch` | updates one cue row by index, persists, schedules websocket broadcast |
+| `cues_delete_entry` | `index` | deletes one cue row by index, persists, schedules websocket broadcast |
+| `cues_replace_sheet` | `entries` | replaces the entire cue sheet after validation, persists, re-renders canvas, schedules websocket broadcast |
+
+#### Metadata
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `metadata_get_overview` | `song?` | returns song length/BPM and counts for sections, beats, chords |
+- `metadata_get_sections` | `song?` | returns normalized section rows with resolved `start_bar`, `start_beat`, `end_bar`, and `end_beat` |
+| `metadata_find_section` | `section_name`, `song?` | returns one exact section row by section name |
+| `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered |
+| `metadata_get_bar_beats` | `song?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns beat rows filtered by musical position |
+| `metadata_find_bar_beat` | `bar`, `beat`, `song?` | returns one exact beat row with its resolved time |
+| `metadata_get_chords` | `song?`, `start_time?`, `end_time?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns chord-change rows parsed from `beats.json`, optionally time-filtered or bar/beat-filtered |
+| `metadata_find_chord` | `chord`, `occurrence?`, `song?` | returns one exact chord occurrence with resolved time and musical position |
+| `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads analyzer `essentia/loudness_envelope.json` and returns averaged window statistics |
+
+#### Transport
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `transport_get_cursor` | none | returns current timecode plus nearest resolved `bar`, `beat`, `beat_time_s`, next beat position, and active `section_name` |
+
+## Assistant request context
+
+- Each `llm.send_prompt` request includes the assistant system prompt, the current loaded song context, and recent user/assistant turns from the same websocket client session.
+- Conversation history is session-scoped in backend memory and is cleared when the websocket client disconnects.
+- Proposal-only turns are not committed to history until a model-authored assistant reply is completed.
+- The default assistant prompt profile prefers grounded timing answers as `bar.beat (seconds)` when both values are available from tool results.
+- The default assistant prompt profile does not restate the song name unless the user explicitly asks for it.
+
 ## Intent catalog (current implementation)
+
+### Song intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `song.list` | none | emits `song_list` with backend-discoverable song names from `SongService.list_songs()` | `False` |
+| `song.load` | `filename` | validates the song id, loads the selected song into `StateManager`, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and emits `song_loaded` | `True` on success; else event `song_load_failed` and `False` |
 
 ### Transport intents
 
@@ -144,7 +223,11 @@ Notes on `fixture.set_values`:
 | `cue.update` | `index`, `patch` | validates index/patch, updates cue entry, persists to disk | `True` on success; else event `cue_update_failed` and `False` |
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
+| `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.apply_helper` | `helper_id` | validates helper, generates cue entries from song beats, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
+
+Notes on cue persistence:
+- Matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) are de-duplicated within `100ms`, keeping the latest write instead of persisting duplicates.
 
 ### Chaser intents
 
@@ -161,8 +244,20 @@ Notes on `fixture.set_values`:
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `llm.send_prompt` | `prompt` | emits `llm_stream` chunks (`Echo: ` + prompt) | `False` (no patch broadcast) |
-| `llm.cancel` | none | emits `llm_cancelled` | `False` |
+| `llm.send_prompt` | `prompt`, `assistant_id?` | starts a session-scoped assistant request, emits `llm_status`, `llm_delta`, `llm_done`, and optionally `llm_action_proposed` | `False` |
+| `llm.cancel` | `request_id?` | cancels the active assistant request for the websocket session or the specified request | `False` |
+| `llm.confirm_action` | `request_id`, `action_id` | applies a pending assistant action, emits `llm_action_applied`, then emits a backend-generated completion summary and `llm_done` for the same turn | `False` |
+| `llm.reject_action` | `request_id`, `action_id` | dismisses a pending assistant action and emits `llm_action_rejected` | `False` |
+
+Assistant mutation behavior:
+- Confirmation-gated write turns are terminal. After `llm.confirm_action`, backend does not send the applied result back through the gateway for another assistant turn.
+
+### Cue intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `cue.clear` | `from_time?`, `to_time?` | removes cue entries within a time window | `True` on success, else `False` |
+| `cue.clear_all` | none | removes every entry from the current cue sheet | `True` on success, else `False` |
 
 ## Event message catalog
 
@@ -171,6 +266,9 @@ Notes on `fixture.set_values`:
 | `error` | `invalid_json` | none |
 | `warning` | `unsupported_message_type` | `{type: <received type>}` |
 | `warning` | `unknown_intent` | `{name}` |
+| `info` | `song_list` | `{songs:[...]}` |
+| `info` | `song_loaded` | `{filename}` |
+| `error` | `song_load_failed` | `{reason, filename?, songs?, error?}` |
 | `error` | `invalid_time_ms` | none |
 | `error` | `song_not_loaded` | none |
 | `error` | `no_sections_available` | none |
@@ -185,8 +283,14 @@ Notes on `fixture.set_values`:
 | `info` | `chaser_preview_stopped` | `{}` |
 | `warning` | `chaser_preview_stop_ignored` | `{reason:"preview_not_active"}` |
 | `error` | `prompt_required` | none |
-| `info` | `llm_stream` | `{domain:"llm", chunk, done}` |
-| `info` | `llm_cancelled` | `{domain:"llm"}` |
+| `info` | `llm_status` | `{domain:"llm", request_id, phase, label, assistant_id?}` |
+| `info` | `llm_delta` | `{domain:"llm", request_id, delta, done:false}` |
+| `info` | `llm_done` | `{domain:"llm", request_id, finish_reason, done:true}` |
+| `info` | `llm_action_proposed` | `{domain:"llm", request_id, action_id, title, summary, tool_name, arguments, requires_confirmation:true}` |
+| `info` | `llm_action_applied` | `{domain:"llm", request_id, action_id, tool_name}` |
+| `info` | `llm_action_rejected` | `{domain:"llm", request_id, action_id}` |
+| `info` | `llm_cancelled` | `{domain:"llm", request_id}` |
+| `error` | `llm_error` | `{domain:"llm", request_id, code, detail, retryable}` |
 | `error` | `cue_add_failed` | `{reason, fixture_id?, effect?, supported?}` |
 | `info` | `cue_added` | `{ok, entry}` |
 | `error` | `cue_update_failed` | `{reason}` |
@@ -202,6 +306,10 @@ Notes on `fixture.set_values`:
 | `error` | `chaser_stop_failed` | `{reason, instance_id?}` |
 | `info` | `chaser_stopped` | `{instance_id}` |
 | `info` | `chaser_list` | `{chasers:[...]}` |
+
+MCP tools return structured envelopes instead of websocket events:
+- success: `{ "ok": true, "data": { ... } }`
+- error: `{ "ok": false, "error": { "code", "message", "details?" } }`
 
 ## Snapshot state schema
 
@@ -280,6 +388,13 @@ Field notes:
 
 Patch behavior during playback:
 - While `playback.state` is `playing`, websocket patch generation suppresses `fixtures` updates.
+
+## Fixture effect contracts
+
+- `full` means full-on output only. It is not a blackout shortcut.
+- `blackout` is the dedicated immediate-off effect for fixture blackout intentions.
+- `fade_out` is the dedicated fade-to-zero effect. If no start level is provided it starts from full light, otherwise it starts from the provided level.
+- `fade_out` accepts byte values or fractional `0..1` values and normalizes fractions to DMX bytes before rendering.
 
 ## Effect data contracts
 

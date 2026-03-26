@@ -76,5 +76,40 @@
         }
       }
     ]
+  },
+  {
+    "id": "parcan_left_to_right",
+    "name": "Parcans left to right",
+    "description": "A simple chaser that flashes the par cans from left to right.",
+    "effects": [
+      {
+        "beat": 0.0,
+        "fixture_id": "parcan_pl",
+        "effect": "flash",
+        "duration": 1.0,
+        "data": {}
+      },
+      {
+        "beat": 1.0,
+        "fixture_id": "parcan_l",
+        "effect": "flash",
+        "duration": 1.0,
+        "data": {}
+      },
+      {
+        "beat": 2.0,
+        "fixture_id": "parcan_r",
+        "effect": "flash",
+        "duration": 1.0,
+        "data": {}
+      },
+      {
+        "beat": 3.0,
+        "fixture_id": "parcan_pr",
+        "effect": "flash",
+        "duration": 1.0,
+        "data": {}
+      }
+    ]
   }
 ]

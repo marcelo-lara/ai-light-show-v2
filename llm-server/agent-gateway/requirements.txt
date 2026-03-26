@@ -5,3 +5,4 @@ httpx
 pydantic
 tenacity
 orjson
+fastmcp>=2.4.0

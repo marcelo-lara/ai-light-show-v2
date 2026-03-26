@@ -56,8 +56,32 @@
   background: transparent;
 }
 
+.chat-msg.system.kind-status {
+  color: var(--muted);
+  font-style: italic;
+  align-self: flex-start;
+  padding: 0 0.5em;
+}
+
+.chat-msg.system.kind-proposal {
+  align-self: stretch;
+  background: color-mix(in oklab, var(--panel) 82%, black);
+}
+
+.chat-msg.system.kind-error {
+  color: color-mix(in oklab, #ff7766 78%, white);
+}
+
 .chat-msg.streaming {
   opacity: 0.9;
+}
+
+.chat-msg-title {
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+  color: var(--muted);
 }
 
 .chat-msg-role {
@@ -73,11 +97,17 @@
   white-space: pre-wrap;
 }
 
+.chat-msg-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .prompt-row {
   display: flex;
   align-items: flex-end;
   background: var(--card-2);
-  height: 2em;
+  min-height: 2em;
 }
 
 .prompt-actions {

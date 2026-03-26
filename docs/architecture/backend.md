@@ -5,10 +5,11 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 ## Key modules
 
 - `backend/main.py`: application lifecycle, startup loading, route wiring.
+- `backend/mcp_server/*`: backend-mounted MCP tool registration and runtime adapters.
 - `backend/api/websocket_manager/endpoint.py`: websocket accept/read loop.
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
-- `backend/api/intents/*`: intent registry + action handlers (`transport`, `fixture`, `cue`, `chaser`, `poi`, `llm` domains).
+- `backend/api/intents/*`: intent registry + action handlers (`song`, `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm` domains).
 - `backend/store/state.py`: compatibility export for `StateManager`, `FPS`, and `MAX_SONG_SECONDS`.
 - `backend/store/state_manager/manager.py`: `StateManager` mixin composition root.
 - `backend/store/state_manager/core/*`: bootstrap, fixture/POI store operations, metadata helpers, render wrappers.
@@ -55,10 +56,12 @@ Behavior:
 4. Start Art-Net send loop.
 5. Load default song and pre-render canvas.
 6. Sync initial output universe.
+7. Serve the mounted MCP endpoint from the same process so MCP clients share live backend state.
 
 ### Playback and time sync
 
 - Browser timeline provides periodic alignment (for example every 10s), while backend advances playback timecode continuously during `playing`.
+- Song intents: `song.list|load`.
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
 - `jump_to_time` seeks and applies nearest precomputed frame.
 - `jump_to_section` resolves `payload.section_index` against sections sorted by normalized start time (`start_s|start`), seeks to the section start time, and applies the nearest precomputed frame.
@@ -74,9 +77,21 @@ Behavior:
 
 - `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`; for `kind="rgb"` meta-channels, payload must use `values.rgb` as `#RRGGBB` (or mapped color name), and backend converts it to RGB channel writes.
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
-- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, and `cue.apply_helper`.
+- `song.list` emits an event with the available backend song names and does not broadcast state.
+- `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
+- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, and `cue.apply_helper`.
+- The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, and full-sheet replace.
+- The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, and section windows with resolved musical positions.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
+- `cue.clear_all` removes every cue entry from the current song and persists the empty cue sheet.
+- LLM chat is backend-owned through `services/assistant/*`: prompt profiles are loaded there, requests are relayed to the agent gateway, and assistant websocket events are targeted to the requesting client instead of globally broadcast.
+- The assistant service keeps recent per-client user and assistant turns for the lifetime of the websocket session and includes them in later `llm.send_prompt` requests.
+- The default assistant prompt profile prefers grounded timing answers in `bar.beat (seconds)` form when both values are available, and it avoids repeating the loaded song name unless the user explicitly asks for it.
+- Assistant websocket intents are `llm.send_prompt`, `llm.cancel`, `llm.confirm_action`, and `llm.reject_action`.
+- Assistant event messages are `llm_status`, `llm_delta`, `llm_done`, `llm_action_proposed`, `llm_action_applied`, `llm_action_rejected`, `llm_cancelled`, and `llm_error`.
+- Confirmed assistant mutations are terminal for the current turn: backend applies the action, emits `llm_action_applied`, then emits a backend-generated completion summary and `llm_done` without asking the gateway for another follow-up turn.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
+- Cue persistence de-duplicates matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) within `100ms`, keeping the latest write even when the duplicate arrives through assistant-confirmed MCP-backed edits.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
 - Chaser intents are `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, and `chaser.list`.
 - Chaser effect fields `beat` and `duration` are beat-based; conversion uses `beatToTimeMs(beat_count, bpm)`.
@@ -84,6 +99,9 @@ Behavior:
 - Render and preview paths expand chaser cue rows using song BPM plus beat offsets from the chaser definition.
 - Persisted chaser rows use `created_by` set to `chaser:{id}`.
 - `chaser.preview` renders temporary Art-Net output and does not persist cue data.
+- `full` means full-on output only. It is not used as a blackout shortcut.
+- `blackout` is the dedicated immediate-off effect for fixture blackout intentions.
+- `fade_out` is the dedicated fade-to-zero effect. When no start value is provided it fades from full light, and when a start value is provided it fades from that level instead. Fractional `0..1` start values are normalized to `0..255` DMX bytes before rendering.
 - Moving-head `strobe` is generated by the dimmer channel only. Dedicated fixture `strobe` and `shutter` channels stay at their existing values during the effect.
 - Moving-head `seek` is a POI-centered motion effect with physical travel compensation. The renderer starts it early with dark pre-roll from the last known pan/tilt position to `start_POI`, using template `physical_movement` timing plus `100 ms` safety and `100 ms` settle time. The visible motion rotates around `subject_POI` for the requested `orbits`, shrinks the orbit radius to zero by cue end, and limits per-frame pan/tilt changes to the fixture's maximum physical travel. `easing` controls the spiral collapse profile: `late_focus` keeps the circle wide longer, `balanced` is neutral, `linear` is constant, and `early_focus` tightens quickly.
 - `sweep` moving-head cues compute a dark pre-roll from the last known pan/tilt position to `start_POI`, using each fixture template's `physical_movement.pan_full_travel_seconds` and `physical_movement.tilt_full_travel_seconds` values plus an extra `100 ms` safety pre-roll. The renderer starts the cue early by that offset, moves the head to `start_POI`, holds there dark for `100 ms`, then uses per-leg cubic easing: ease-out into `subject_POI`, ease-in away from it, and a mirrored dimmer envelope controlled by `dimmer_easing` (`0` starts fading immediately at visible start, `1` delays until almost at the subject). Visible pan/tilt motion is clamped per frame to the fixture's maximum physical travel, so the actual beam can lag the ideal path on slower fixtures. When the fixture is on the subject POI, output intensity reaches `max_dim`.
@@ -108,6 +126,21 @@ See `docs/architecture/backend_llm_reference.md` for exact payloads and event ca
 Message types:
 - Client → backend: `hello`, `intent`.
 - Backend → client: `snapshot`, `patch`, `event`.
+
+## MCP surface
+
+- Mounted endpoint: `/mcp`
+- Transport: Streamable HTTP
+- Runtime ownership: the mounted MCP app uses the same `WebSocketManager`, `SongService`, and `StateManager` instances initialized in `backend/main.py`.
+
+Current mounted MCP tools:
+- `songs_list`, `songs_get_details`, `songs_load`
+- `fixtures_list`, `fixtures_get`, `chasers_list`
+- `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
+- `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
+- `transport_get_cursor`
+
+Mutation tools schedule websocket patch broadcasts after state changes so browser clients remain synchronized with MCP-originated edits.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.
@@ -172,6 +205,7 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 | Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | validation command above |
 | Fixture effect contracts or preview support | `backend/models/fixtures/**/*`, `backend/store/state_manager/core/fixture_effects.py`, `backend/store/state_manager/playback/preview_start.py` | validation command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | validation command above |
+| Song enumeration and load intents | `backend/api/intents/song/*`, `backend/services/song_service.py` | websocket/file-backed command above + `tests/test_song_intents.py` + `tests/test_ws_song_e2e.py` |
 | Playback transport or timecode/frame application | `backend/store/state_manager/playback/transport.py` | validation command above + `tests/test_ws_transport_jump_to_section_e2e.py` |
 | Chaser preview start/stop/runner behavior | `backend/store/state_manager/playback/preview_chaser.py` | validation command above + `tests/test_chaser_preview_lifecycle.py` |
 | Fixture live value write behavior | `backend/api/intents/fixture/actions/set_values.py`, `backend/store/state_manager/playback/channels.py` | validation command above + `tests/test_set_values_regression.py` |

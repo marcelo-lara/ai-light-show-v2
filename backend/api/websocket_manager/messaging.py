@@ -40,6 +40,21 @@ async def broadcast_event(manager, level: str, message: str, data: Optional[Dict
     await manager.broadcast(payload)
 
 
+async def send_event(manager, websocket: WebSocket, level: str, message: str, data: Optional[Dict[str, Any]] = None) -> None:
+    payload: Dict[str, Any] = {"type": "event", "level": level, "message": message}
+    if data is not None:
+        payload["data"] = data
+    await websocket.send_json(payload)
+
+
+async def send_event_to_client(manager, client_id: str, level: str, message: str, data: Optional[Dict[str, Any]] = None) -> bool:
+    websocket = manager.client_connections.get(client_id)
+    if websocket is None:
+        return False
+    await send_event(manager, websocket, level, message, data)
+    return True
+
+
 async def handle_message(manager, websocket: WebSocket, data: str) -> None:
     try:
         message = json.loads(data)
@@ -61,6 +76,7 @@ async def handle_message(manager, websocket: WebSocket, data: str) -> None:
     payload = message.get("payload") or {}
     if not isinstance(payload, dict):
         payload = {}
+    payload = {**payload, "_req_id": str(message.get("req_id") or ""), "_client_id": str(id(websocket))}
 
     logger.info("[WS] Intent received: %s", name)
 

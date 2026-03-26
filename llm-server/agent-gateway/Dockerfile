@@ -20,7 +20,7 @@ COPY . .
 # ---- Runtime environment ----
 ENV PYTHONUNBUFFERED=1
 ENV LLM_BASE_URL=http://llm-server:8080
-ENV MCP_BASE_URL=http://mcp-server:7000
+ENV MCP_BASE_URL=http://backend:5001/mcp
 
 # ---- Expose FastAPI port ----
 EXPOSE 8090

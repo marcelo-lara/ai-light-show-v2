@@ -9,7 +9,6 @@ AI Light Show is split into six primary modules:
 - **frontend/**: Deno-served TypeScript client acting as a "dumb console" that maps user actions to backend intents.
 - **backend/**: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
 - **analyzer/**: Offline metadata generation (`analyzer/meta/<song>/...`).
-- **mcp/song_metadata/**: MCP server exposing read-only metadata query tools over SSE.
 - **llm-server/agent-gateway/**: OpenAI-compatible gateway that translates model tool calls to MCP JSON-RPC.
 - **tests/**: backend/analyzer integration and regression tests.
 
@@ -20,7 +19,7 @@ AI Light Show is split into six primary modules:
 3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
 4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
 5. Analyzer writes song metadata; backend consumes it from `/app/meta` in Docker.
-6. MCP server exposes metadata tools; agent-gateway forwards LLM tool calls to MCP.
+6. Backend exposes mounted MCP tools at `/mcp`; agent-gateway forwards LLM tool calls there.
 
 ### Important behavior constraints
 
@@ -37,7 +36,6 @@ AI Light Show is split into six primary modules:
 - [analyzer/README.md](analyzer/README.md)
 - [backend/README.md](backend/README.md)
 - [llm-server/README.md](llm-server/README.md)
-- [mcp/README.md](mcp/README.md)
 - [tests/README.md](tests/README.md)
 
 ## Local development
@@ -71,7 +69,6 @@ docker compose up --build
 - Frontend: http://localhost:5173
 - LLM server: http://localhost:8080
 - Agent gateway: http://localhost:8090
-- Song metadata MCP: http://localhost:8089
 - Analyzer: run manually via `docker compose run analyzer ...`
 
 ## Tests
