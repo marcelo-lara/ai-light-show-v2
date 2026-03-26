@@ -216,6 +216,33 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "propose_cue_add_entries",
+            "description": "Propose adding one or more effect cue entries. Use for cue edits that need confirmation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entries": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "time": {"type": "number"},
+                                "fixture_id": {"type": "string"},
+                                "effect": {"type": "string"},
+                                "duration": {"type": "number"},
+                                "data": {"type": "object"}
+                            },
+                            "required": ["time", "fixture_id", "effect", "duration", "data"]
+                        }
+                    }
+                },
+                "required": ["entries"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "propose_cue_clear_all",
             "description": "Propose clearing every cue entry from the current cue sheet. Use for destructive whole-sheet clears that need confirmation.",
             "parameters": {
@@ -311,6 +338,8 @@ def _build_query_guidance(messages: List[Dict[str, Any]]) -> Optional[Dict[str, 
         hints.append("For cursor questions, call mcp_read_cursor and answer with time_s plus bar.beat.")
     if "chord" in prompt:
         hints.append("For chord questions, use mcp_find_chord for exact occurrence lookups or mcp_read_chords for broader windows. Do not use mcp_find_section unless the user explicitly asks about a section boundary.")
+    if any(word in prompt for word in ["add", "apply"]) and "prism" in prompt and "change" in prompt and " to " in prompt:
+        hints.append("For cue additions tied to a chord change, resolve the full chord stream with mcp_read_chords, find the requested adjacent transition, resolve target fixtures with mcp_read_fixtures, and propose_cue_add_entries for the matching fixtures at that transition time.")
     if "loud" in prompt:
         hints.append("For loudness questions, use mcp_read_loudness. If the prompt names a section like verse or chorus, pass that section or resolve it first.")
     if "first effect" in prompt or ("effect" in prompt and any(word in prompt for word in ["verse", "chorus", "intro", "instrumental", "outro"])):
@@ -724,10 +753,51 @@ def _is_full_cue_clear_request(prompt: str) -> bool:
 
 
 def _extract_chord_label(prompt: str) -> Optional[str]:
-    match = re.search(r"chord\s+([A-G](?:#|b)?m?)\b", str(prompt or ""), flags=re.IGNORECASE)
+    match = re.search(r"chord\s+([A-G](?:#|b)?m?)(?=$|\s|[^A-Za-z0-9_])", str(prompt or ""), flags=re.IGNORECASE)
     if not match:
         return None
     return match.group(1)
+
+
+def _extract_chord_transition(prompt: str) -> Optional[tuple[str, str]]:
+    match = re.search(
+        r"changes?\s+from\s+([A-G](?:#|b)?m?)(?=\s+to\s+)\s+to\s+([A-G](?:#|b)?m?)(?=$|\s|[^A-Za-z0-9_])",
+        str(prompt or ""),
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    return match.group(1), match.group(2)
+
+
+def _extract_effect_name(prompt: str) -> Optional[str]:
+    lowered = str(prompt or "").lower()
+    for effect_name in ["flash", "strobe", "full", "fade_in"]:
+        if effect_name.replace("_", " ") in lowered or effect_name in lowered:
+            return effect_name
+    return None
+
+
+def _find_chord_transition_time(result: Dict[str, Any], start_label: str, end_label: str) -> Optional[float]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return None
+    chords = (result.get("data") or {}).get("chords") or []
+    start_normalized = start_label.strip().lower()
+    end_normalized = end_label.strip().lower()
+    for current, nxt in zip(chords, chords[1:]):
+        current_label = str(current.get("label") or current.get("chord") or "").strip().lower()
+        next_label = str(nxt.get("label") or nxt.get("chord") or "").strip().lower()
+        if current_label == start_normalized and next_label == end_normalized:
+            return float(nxt.get("time_s", nxt.get("time", 0.0)) or 0.0)
+    return None
+
+
+def _resolve_prism_fixture_ids(result: Dict[str, Any]) -> List[str]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return []
+    fixtures = (result.get("data") or {}).get("fixtures") or []
+    ids = [str(fixture.get("id") or "") for fixture in fixtures if "prism" in str(fixture.get("id") or "").lower()]
+    return [fixture_id for fixture_id in ids if fixture_id]
 
 
 def _extract_bar_beat(prompt: str) -> Optional[tuple[int, int]]:
@@ -840,6 +910,37 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
     section_name = _extract_section_name(prompt)
     used_tools: List[str] = []
 
+    if any(word in lowered for word in ["add", "apply"]) and "prism" in lowered and "change" in lowered:
+        chord_transition = _extract_chord_transition(prompt)
+        effect_name = _extract_effect_name(prompt)
+        if chord_transition is not None and effect_name is not None:
+            start_chord, end_chord = chord_transition
+            used_tools.append("mcp_read_chords")
+            chords_result = await call_mcp("mcp_read_chords", {})
+            used_tools.append("mcp_read_fixtures")
+            fixtures_result = await call_mcp("mcp_read_fixtures", {})
+            transition_time = _find_chord_transition_time(chords_result, start_chord, end_chord)
+            prism_fixture_ids = _resolve_prism_fixture_ids(fixtures_result)
+            if transition_time is not None and prism_fixture_ids:
+                return {
+                    "used_tools": used_tools,
+                    "proposal": _proposal_for_tool(
+                        "propose_cue_add_entries",
+                        {
+                            "entries": [
+                                {
+                                    "time": transition_time,
+                                    "fixture_id": fixture_id,
+                                    "effect": effect_name,
+                                    "duration": 0.5,
+                                    "data": {},
+                                }
+                                for fixture_id in prism_fixture_ids
+                            ]
+                        },
+                    ),
+                }
+
     if "first occurrence" in lowered and "chord" in lowered:
         chord_label = _extract_chord_label(prompt)
         if chord_label:
@@ -940,6 +1041,19 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
 
 
 def _proposal_for_tool(tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    if tool_name == "propose_cue_add_entries":
+        entries = list(args.get("entries") or [])
+        fixtures = ", ".join(str(entry.get("fixture_id") or "") for entry in entries)
+        time_value = float(entries[0].get("time", 0.0)) if entries else 0.0
+        effect_name = str(entries[0].get("effect") or "effect") if entries else "effect"
+        return {
+            "type": "proposal",
+            "action_id": f"proposal-{abs(hash(orjson.dumps(args).decode('utf-8'))) % 1000000}",
+            "tool_name": tool_name,
+            "arguments": {"entries": entries},
+            "title": "Confirm cue add",
+            "summary": f"Add {effect_name} to {fixtures} at {time_value:.3f}s.",
+        }
     if tool_name == "propose_cue_clear_all":
         return {
             "type": "proposal",

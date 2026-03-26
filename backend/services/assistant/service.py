@@ -252,6 +252,23 @@ class AssistantService:
             await self._emit_client_event(client_id, manager, "error", "llm_error", {"domain": "llm", "request_id": request_id, "code": event.get("code", "gateway_error"), "detail": event.get("detail", "Assistant request failed."), "retryable": bool(event.get("retryable", True))})
 
     async def _apply_pending_action(self, manager, pending: PendingAction) -> Dict[str, Any]:
+        if pending.tool_name == "propose_cue_add_entries":
+            entries = list(pending.arguments.get("entries") or [])
+            added_entries: list[Dict[str, Any]] = []
+            for entry in entries:
+                result = await manager.state_manager.add_effect_cue_entry(
+                    time=float(entry.get("time", 0.0)),
+                    fixture_id=str(entry.get("fixture_id") or ""),
+                    effect=str(entry.get("effect") or ""),
+                    duration=float(entry.get("duration", 0.0) or 0.0),
+                    data=entry.get("data") or {},
+                )
+                if not result.get("ok"):
+                    return result
+                added_entries.append(dict(result.get("entry") or {}))
+            if added_entries:
+                await manager._schedule_broadcast()
+            return {"ok": True, "entries": added_entries, "count": len(added_entries)}
         if pending.tool_name == "propose_cue_clear_all":
             result = await manager.state_manager.clear_all_cue_entries()
             if result.get("ok"):
@@ -270,6 +287,14 @@ class AssistantService:
         return {"ok": False, "reason": "unsupported_action"}
 
     def _build_action_completion_text(self, pending: PendingAction, result: Dict[str, Any]) -> str:
+        if pending.tool_name == "propose_cue_add_entries":
+            entries = list(result.get("entries") or pending.arguments.get("entries") or [])
+            if not entries:
+                return "Added cue entries."
+            fixture_ids = ", ".join(str(entry.get("fixture_id") or "") for entry in entries)
+            effect_name = str(entries[0].get("effect") or "effect")
+            time_value = float(entries[0].get("time", 0.0) or 0.0)
+            return f"Added {effect_name} to {fixture_ids} at {time_value:.3f}s."
         if pending.tool_name == "propose_cue_clear_all":
             removed = int(result.get("removed", 0) or 0)
             return f"Cleared the cue sheet. Removed {removed} entries."
