@@ -68,6 +68,7 @@ def print_inbound(message: dict, timestamp: str) -> None:
 def build_parser() -> argparse.ArgumentParser:
 	parser = argparse.ArgumentParser(description="Run one LLM prompt per websocket session and log the responses.")
 	parser.add_argument("--ws-url", default=os.getenv("LLM_TUNING_WS_URL", "ws://localhost:5001/ws"))
+	parser.add_argument("--prompt", help="Run a single prompt provided directly on the command line.")
 	parser.add_argument("--requests-file", type=Path, default=Path(os.getenv("LLM_TUNING_REQUESTS_FILE", str(Path(__file__).resolve().parent / "user-requests.txt"))))
 	parser.add_argument("--log-dir", type=Path, default=Path(os.getenv("LLM_TUNING_LOG_DIR", str(Path(__file__).resolve().parent / "logs"))))
 	parser.add_argument("--assistant-id", default=os.getenv("LLM_TUNING_ASSISTANT_ID", "generic"))
@@ -78,7 +79,11 @@ def build_parser() -> argparse.ArgumentParser:
 	return parser
 
 
-def load_prompts(path: Path, limit: int) -> list[str]:
+
+def load_prompts(path: Path, limit: int, prompt: str | None) -> list[str]:
+	if prompt is not None:
+		text = prompt.strip()
+		return [text] if text else []
 	prompts = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 	return prompts[:limit] if limit > 0 else prompts
 
@@ -211,11 +216,14 @@ def summarize(results: list[dict]) -> dict:
 
 def main() -> int:
 	args = build_parser().parse_args()
-	prompts = load_prompts(args.requests_file, args.limit)
+	prompts = load_prompts(args.requests_file, args.limit, args.prompt)
+	if not prompts:
+		raise SystemExit("no prompts provided")
 	session = {
 		"session_id": uuid.uuid4().hex,
 		"started_at": iso_now(),
 		"ws_url": args.ws_url,
+		"prompt": args.prompt,
 		"requests_file": str(args.requests_file),
 		"assistant_id": args.assistant_id,
 		"results": [],

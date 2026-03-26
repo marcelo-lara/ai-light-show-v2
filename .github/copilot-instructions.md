@@ -92,6 +92,11 @@ PYENV_VERSION=ai-light pyenv exec <command>
   docker compose down && docker compose up --build -d
   ```
 
+## LLM assistant validation
+- When testing assistants, ALWAYS use `tests/llm-tuning-tool/llm-tuning-tool.py` to send and validate user prompts.
+- NEVER create shortcuts, fallbacks or hardcoded answers to respond to the client. All user prompts must be handled by the LLM.
+- After validating LLM assistants, inspect `tests/llm-tuning-tool/logs/llm-tuning-session-*.json` and verify each answer is coherent with the request.
+
 ## Project-specific conventions
 - DMX channels are 1-based in fixture/message contracts; runtime storage uses 512-byte arrays.
 - `ArtNetService` sends at `60 FPS` to configured `ARTNET_IP`/`ARTNET_PORT`.
