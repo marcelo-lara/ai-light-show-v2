@@ -267,33 +267,6 @@ label.toggle > span {
   cursor: not-allowed;
 }
 
-.color-picker {
-  display: flex;
-  gap: 0.5em;
-  min-width: 0;
-  font-size: 0.8em;
-  align-items: center;
-}
-
-.color-picker-shell {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-  min-width: 0;
-}
-
-.color-picker-input {
-  width: 44px;
-  height: 20px;
-  padding: 0;
-  background: transparent;
-  border: 1px solid var(--border-strong);
-}
-
-.color-picker-value {
-  font-size: 0.75rem;
-}
-
 .main-content {
   min-height: 0;
   overflow-y: auto;

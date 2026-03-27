@@ -114,10 +114,13 @@ PYENV_VERSION=ai-light pyenv exec <command>
   - CUBE model in this repo: Composition uses `l-`/`o-`, Utilities use `u-`, Blocks use semantic component names, Exceptions use `is-`/`has-`.
   - Keep components plain: avoid wrapper-over-wrapper nesting unless required for semantics, accessibility, or behavior.
   - Do not add padding or gap values unless explicitly required by the task or LoFi constraints.
-  - In `frontend/src/features`, use shared themed controls (`Button`, `Dropdown`, `Slider`, `Toggle`) instead of creating raw `button`, `select`, `input[type=range]`, or `input[type=checkbox]` elements.
+  - In `frontend/src/features`, use shared themed controls from `frontend/src/shared/components/controls` (`Button`, `Dropdown`, `Slider`, `Toggle`, `Input`, `ColorPicker`) instead of creating primitive HTML form elements unless that is strictly necessary for behavior or semantics.
+  - Avoid redundant wrappers. Add extra containers only when they are required for layout, accessibility, or behavior.
   - Avoid feature-local custom styling variants for those controls; extend shared control components/tokens when behavior or appearance changes are needed.
   - Keep feature CSS layout-focused; do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
   - Keep state visuals shared: use `.is-active` and `.is-selected` from `frontend/src/app/themes.css`; do not create feature-specific selected/active visual variants.
+  - Do not change `frontend/src/app/themes.css` for feature-specific UI work. Prefer creating or updating small CSS files next to the feature or shared component that owns the UI.
+  - Display song-position and cue-time values in `s.mmm` format everywhere in the UI. If backend-owned formatted time strings are introduced later, they should follow the same `s.mmm` format rather than inventing a second display convention.
   - For destructive actions (for example deleting cues), use `frontend/src/shared/components/feedback/ConfirmCancelPrompt.ts` instead of direct delete execution.
   - For rows combining cue/info text and actions, use a two-column flex layout with right-aligned action group.
   - Use the reusable prompt in [frontend/README.md](../frontend/README.md) section `LLM UI Task Template` for layout tasks.

@@ -25,6 +25,11 @@ UI layout references live in [../docs/ui/README.md](../docs/ui/README.md).
 4. `AppShell.ts` renders `Sidebar + Main + RightPanel`, rerenders on UI/Backend/LLM store updates, and refreshes the singleton song player.
 5. Timecode sync exception: browser playback time is authoritative during playback and syncs via `transport.jump_to_time`.
 
+Time display convention:
+- Show song-position and cue-time values in `s.mmm` format across the UI.
+- Current transport/cue editing flows continue to use numeric milliseconds or seconds in data payloads where required, but displayed values should stay normalized to `s.mmm`.
+- If backend-formatted time strings are introduced later, they should use the same `s.mmm` display convention.
+
 ## Active route map (actual code)
 
 Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`.
@@ -175,7 +180,7 @@ Show Builder current cue-sheet behavior:
 - `src/features/dmx_control/components/controls/StandardControls.ts`: meta-channel-driven sliders/dropdowns.
 - `src/features/dmx_control/components/controls/EnumGrid.ts`: slot-style enum control grid used for mapped wheels (color/gobo).
 - `src/features/dmx_control/components/controls/RgbControls.ts`: color control + standard controls composition.
-- `src/features/dmx_control/components/controls/RgbPreview.ts`: typed RGB preview display.
+- `src/shared/components/controls/ColorPicker.ts`: shared color input control used by helper forms and DMX RGB controls.
 - `src/features/dmx_control/components/controls/MovingHeadControls.ts`: pan/tilt surface + POI controller + standard controls.
 - `src/features/dmx_control/components/controls/PanTiltControl.ts`: XY pad with throttled updates and commit callback.
 - `src/features/dmx_control/components/controls/PoiLocationController.ts`: POI selector and `set` target action.
@@ -191,7 +196,7 @@ Show Builder current cue-sheet behavior:
 ### Layout/feedback/control primitives
 - `src/shared/components/layout/*`: `Sidebar`, `RightPanel`, `Card`.
 - `src/shared/components/feedback/*`: `StatusCard`, `Badge`, theme model.
-- `src/shared/components/controls/*`: generic slider/toggle/dropdown/color swatch.
+- `src/shared/components/controls/*`: generic button/input/dropdown/slider/toggle/color-picker controls.
 - `src/shared/utils/*`: id generation, throttling, time formatting, SVG icon creation.
 - `src/shared/svg_icons/index.ts`: generated icon registry used by sidebar and transport controls.
 
@@ -207,6 +212,12 @@ Show Builder current cue-sheet behavior:
 - `src/features/llm_chat/LlmChat.css`: chat layout and message styles.
 
 Use CSS variables from `themes.css` for visual values. Do not hardcode mockup colors/dimensions.
+
+Frontend UI implementation rules:
+- Use shared controls from `src/shared/components/controls` before creating primitive HTML form elements.
+- Avoid redundant wrapper elements; add containers only when they are needed for layout, accessibility, or behavior.
+- Keep CSS close to the owning feature or component. Do not use `src/app/themes.css` for feature-specific UI changes.
+- Display song-position and cue-time values in `s.mmm` format consistently across views and controls.
 
 ## DMX LoFi layout contract
 
