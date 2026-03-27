@@ -3,7 +3,6 @@ import { ColorPicker } from "../../../../shared/components/controls/ColorPicker.
 import { Input } from "../../../../shared/components/controls/Input.ts";
 import { Slider } from "../../../../shared/components/controls/Slider.ts";
 import type { CueHelperDefinition, CueHelperParameterDefinition } from "../../../../shared/transport/protocol.ts";
-import { time_position } from "../time_position.ts";
 import { formatTime } from "../effect_picker/selectors.ts";
 
 type CueHelperParamFormProps = {
@@ -49,16 +48,18 @@ function createSelectField(param: CueHelperParameterDefinition, value: unknown, 
 }
 
 function createTimeField(label: string, valueMs: number): HTMLElement {
-	const field = document.createElement("div");
-	field.className = "cue-helper-field";
-
-	const caption = document.createElement("span");
-	caption.className = "input-control-label";
-	caption.textContent = label;
-
-	const control = time_position(formatTime(valueMs), `${label} at current song position`);
-	field.append(caption, control.root);
-	return field;
+	return Input({
+		caption: label,
+		bindings: {
+			type: "text",
+			value: formatTime(valueMs),
+			readOnly: true,
+			disabled: true,
+			attributes: {
+				"aria-label": `${label} at current song position`,
+			},
+		},
+	}).root;
 }
 
 export function CueHelperParamForm(props: CueHelperParamFormProps): HTMLElement {
