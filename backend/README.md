@@ -47,7 +47,7 @@ Supported intent names:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
-- Cue helpers: `cue.apply_helper`.
+- Cue helpers: `cue.apply_helper` with `helper_id` plus optional `params`.
 - Chaser: `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, `chaser.list`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
 - LLM: `llm.send_prompt`, `llm.cancel`.
@@ -112,7 +112,7 @@ Patch behavior:
 - `llm.confirm_action` applies a proposed cue or chaser mutation after explicit user confirmation, schedules a broadcast for the resulting state change, and then emits a backend-generated completion summary for that executed action.
 - `llm.reject_action` dismisses a pending proposal without mutating cues.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
-- `cue.apply_helper` generates cue entries from song beats and upserts into cue sheet.
+- `cue.apply_helper` generates cue entries from backend-owned helper definitions and upserts them into the cue sheet. Helpers can expose parameter schemas and runtime params.
 - `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
@@ -143,7 +143,8 @@ Song payload fields under `state.song`:
 - Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`) and `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`).
 
 Cue helpers payload under `state.cue_helpers`:
-- List of helper definitions (`id`, `label`, `description`, `mode`) for frontend helper UI.
+- List of helper definitions (`id`, `label`, `description`, `mode`, `parameters[]`) for frontend helper UI.
+- Each helper parameter definition includes schema fields such as `name`, `label`, `type`, `default`, `min`, `max`, `step`, `required`, and optional `options`.
 
 MCP cue payloads:
 - `cues_get_sheet` returns the full persisted cue sheet for the current song.

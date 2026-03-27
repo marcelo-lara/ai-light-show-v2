@@ -224,7 +224,7 @@ Notes on `fixture.set_values`:
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
-| `cue.apply_helper` | `helper_id` | validates helper, generates cue entries from song beats, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
+| `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 Notes on cue persistence:
 - Matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) are de-duplicated within `100ms`, keeping the latest write instead of persisting duplicates.
@@ -415,7 +415,7 @@ Patch behavior during playback:
 
 | Effect | Required/expected `data` keys | Behavior |
 | --- | --- | --- |
-| `flash` | optional `channels` list | fades selected channels (default RGB) |
+| `flash` | optional `channels` list, optional `color`, optional `brightness`/`intensity` | fades selected channels (default RGB). For parcans, `color` sets the RGB target and `brightness`/`intensity` sets the starting flash level before fade-down. |
 | `strobe` | optional `rate` or `speed` | toggles RGB between cached "on" color and off |
 | `fade_in` | any of `red`, `green`, `blue` | interpolates from current RGB to targets |
 | `full` | optional `red`, `green`, `blue` | instant RGB set (default white) |

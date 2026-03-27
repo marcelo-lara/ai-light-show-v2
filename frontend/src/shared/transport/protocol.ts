@@ -122,11 +122,24 @@ export type ChaserCueEntry = CueEntryBase & {
 
 export type CueEntry = EffectCueEntry | ChaserCueEntry;
 
+export type CueHelperParameterDefinition = {
+  name: string;
+  label: string;
+  type: "number" | "range" | "select" | "text";
+  default?: string | number | boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  required?: boolean;
+  options?: Array<{ value: string; label: string }>;
+};
+
 export type CueHelperDefinition = {
   id: string;
   label: string;
   description: string;
   mode: string;
+  parameters: CueHelperParameterDefinition[];
 };
 
 export type ChaserDefinition = {

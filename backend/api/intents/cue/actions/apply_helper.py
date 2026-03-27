@@ -15,21 +15,17 @@ async def apply_helper(manager, payload: Dict[str, Any]) -> bool:
         await manager.broadcast_event("error", "cue_helper_apply_failed", {"reason": "missing_helper_id"})
         return False
 
-    if helper_id != "downbeats_and_beats":
-        await manager.broadcast_event("error", "cue_helper_apply_failed", {"reason": "unknown_helper_id", "helper_id": helper_id})
-        return False
-
-    # Check if song has beats data
     if not manager.state_manager.current_song:
         await manager.broadcast_event("error", "cue_helper_apply_failed", {"reason": "no_song_loaded"})
         return False
 
-    beats = manager.state_manager.current_song.beats
-    if not beats or not beats.beats:
-        await manager.broadcast_event("error", "cue_helper_apply_failed", {"reason": "beats_unavailable"})
+    raw_params = payload.get("params")
+    params = {} if raw_params is None else raw_params
+    if not isinstance(params, dict):
+        await manager.broadcast_event("error", "cue_helper_apply_failed", {"reason": "invalid_helper_params", "helper_id": helper_id})
         return False
 
-    result = await manager.state_manager.apply_cue_helper(helper_id)
+    result = await manager.state_manager.apply_cue_helper(helper_id, params)
     if not result.get("ok"):
         await manager.broadcast_event("error", "cue_helper_apply_failed", result)
         return False

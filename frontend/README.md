@@ -150,7 +150,7 @@ Global bridge fields used across modules:
 - `src/features/show_builder/components/effect_params/params_schema.ts`: effect parameter definitions for dynamic form generation.
 - `src/features/show_builder/components/effect_params/ParamForm.ts`: renders parameter inputs based on effect schema.
 - `src/features/show_builder/components/chaser_picker/ChaserPicker.ts`: chaser selection and chaser cue editing. The picker shows the individual chaser effects for reference/preview, but `Add` and `Update` persist a single cue row with `chaser_id` plus `data.repetitions`.
-- `src/features/show_builder/components/cue_helpers/CueHelpers.ts`: backend-driven helper list with `Apply` actions.
+- `src/features/show_builder/components/cue_helpers/CueHelpers.ts`: backend-driven helper selector with dynamic parameter fields and a bottom `Apply` action.
 
 Show Builder current cue-sheet behavior:
 - Cue sheet rows render one of two layouts:

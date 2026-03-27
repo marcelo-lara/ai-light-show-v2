@@ -30,8 +30,8 @@ class _FakeStateManager:
     async def clear_all_cue_entries(self):
         return {"ok": True, "removed": 5, "remaining": 0}
 
-    async def apply_cue_helper(self, helper_id):
-        if helper_id == "downbeats_and_beats":
+    async def apply_cue_helper(self, helper_id, params=None):
+        if helper_id in {"downbeats_and_beats", "parcan_echoes"}:
             return {"ok": True, "generated": 5, "replaced": 2, "skipped": 0}
         return {"ok": False, "reason": "unknown_helper_id", "helper_id": helper_id}
 
@@ -129,6 +129,21 @@ async def test_apply_helper_intent_success():
 
 
 @pytest.mark.asyncio
+async def test_apply_helper_intent_accepts_params():
+    manager = _FakeManager()
+    manager.state_manager.current_song = type('MockSong', (), {'beats': None})()
+
+    ok = await apply_helper(manager, {
+        "helper_id": "parcan_echoes",
+        "params": {"start_time_ms": 1200, "color": "#FF0000"},
+    })
+
+    assert ok is True
+    assert manager.events[-1][1] == "cue_helper_applied"
+    assert manager.events[-1][2]["helper_id"] == "parcan_echoes"
+
+
+@pytest.mark.asyncio
 async def test_apply_helper_intent_validation_error():
     manager = _FakeManager()
 
@@ -136,6 +151,18 @@ async def test_apply_helper_intent_validation_error():
 
     assert ok is False
     assert manager.events[-1][1] == "cue_helper_apply_failed"
+
+
+@pytest.mark.asyncio
+async def test_apply_helper_intent_invalid_params_error():
+    manager = _FakeManager()
+    manager.state_manager.current_song = type('MockSong', (), {'beats': None})()
+
+    ok = await apply_helper(manager, {"helper_id": "parcan_echoes", "params": []})
+
+    assert ok is False
+    assert manager.events[-1][1] == "cue_helper_apply_failed"
+    assert manager.events[-1][2]["reason"] == "invalid_helper_params"
 
 
 @pytest.mark.asyncio

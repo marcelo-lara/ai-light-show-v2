@@ -278,15 +278,22 @@ class StateSongCueMixin:
     async def clear_all_cue_entries(self) -> Dict[str, Any]:
         return await self.clear_cue_entries(from_time=0.0, to_time=None)
 
-    async def apply_cue_helper(self, helper_id: str) -> Dict[str, Any]:
+    async def apply_cue_helper(self, helper_id: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Apply a cue helper to generate and upsert cue entries."""
-        from services.cue_helpers import generate_downbeats_and_beats
+        from services.cue_helpers import generate_cue_helper_entries, get_cue_helper_definition
 
         async with self.lock:
             if not self.cue_sheet:
                 return {"ok": False, "reason": "no_cue_sheet"}
 
-            if not self.current_song or not self.current_song.beats or not self.current_song.beats.beats:
+            if not self.current_song:
+                return {"ok": False, "reason": "no_song_loaded"}
+
+            helper = get_cue_helper_definition(helper_id)
+            if not helper:
+                return {"ok": False, "reason": "unknown_helper_id", "helper_id": helper_id}
+
+            if helper.get("requires_beats") and (not self.current_song.beats or not self.current_song.beats.beats):
                 return {"ok": False, "reason": "beats_unavailable"}
 
             try:
@@ -296,10 +303,17 @@ class StateSongCueMixin:
             if bpm <= 0.0:
                 return {"ok": False, "reason": "bpm_unavailable"}
 
-            if helper_id == "downbeats_and_beats":
-                new_entries = generate_downbeats_and_beats(self.current_song.beats.beats, bpm)
-            else:
-                return {"ok": False, "reason": "unknown_helper_id", "helper_id": helper_id}
+            beats = self.current_song.beats.beats if self.current_song.beats and self.current_song.beats.beats else []
+            try:
+                new_entries = generate_cue_helper_entries(helper_id, beats=beats, bpm=bpm, params=params)
+            except ValueError as exc:
+                return {"ok": False, "reason": str(exc), "helper_id": helper_id}
+
+            try:
+                for entry in new_entries:
+                    self._validate_cue_entry(CueEntry(**entry))
+            except Exception as exc:
+                return {"ok": False, "reason": str(exc), "helper_id": helper_id}
 
             for entry in new_entries:
                 entry["created_by"] = helper_id
