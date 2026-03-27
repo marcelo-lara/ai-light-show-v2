@@ -25,6 +25,8 @@ The gateway also performs deterministic fast-path handling for common assistant 
 
 - Whole-sheet cue clear phrases resolve to a dedicated clear-all proposal instead of a synthetic `0..0` time window.
 - Chord-conditioned edit prompts for prisms, parcans, and protons resolve to grounded cue-add proposals using backend metadata and fixture lists.
+- POI-conditioned movement prompts such as moving a prism to piano before a named section resolve through section timing, beat lookup, fixture lookup, and POI lookup before producing a cue-add proposal.
+- POI transition prompts for prism `seek` and `sweep` effects resolve when the prompt provides an ordered POI path such as `from table to piano` or `from table to piano to sofa`.
 - `none` chord spans are resolved from analyzer label `N` and can produce `blackout` or `fade_out` cue proposals across the full span.
 - Write-capable turns stop at proposal generation so backend can require explicit confirmation before mutating cues.
 

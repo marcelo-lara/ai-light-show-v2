@@ -160,6 +160,18 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "mcp_read_pois",
+            "description": "Read the available POIs and their ids. Use this when a request mentions named stage locations like piano, table, or center.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "mcp_read_chasers",
             "description": "Read the available chaser definitions.",
             "parameters": {
@@ -291,6 +303,7 @@ MCP_TOOL_MAP = {
     "mcp_read_chords": "metadata_get_chords",
     "mcp_read_cue_window": "cues_get_window",
     "mcp_read_fixtures": "fixtures_list",
+    "mcp_read_pois": "pois_list",
     "mcp_read_chasers": "chasers_list",
     "mcp_read_cursor": "transport_get_cursor",
     "mcp_read_loudness": "metadata_get_loudness",
@@ -342,6 +355,8 @@ def _build_query_guidance(messages: List[Dict[str, Any]]) -> Optional[Dict[str, 
         hints.append("For cue additions tied to a chord change, resolve the full chord stream with mcp_read_chords, find the requested adjacent transition, resolve target fixtures with mcp_read_fixtures, and propose_cue_add_entries for the matching fixtures at that transition time.")
     if any(word in prompt for word in ["add", "flash", "effect"]) and "each section" in prompt and "prism" in prompt:
         hints.append("For requests like first beat of each section on the left prism, resolve section starts with mcp_read_sections, resolve the target fixture with mcp_read_fixtures, and propose_cue_add_entries with one entry per section start.")
+    if any(word in prompt for word in ["move", "point", "aim", "seek", "sweep"]) and "prism" in prompt and any(word in prompt for word in ["intro", "verse", "chorus", "instrumental", "outro", "section"]):
+        hints.append("For fixture movement requests that mention named places like piano, table, or center, treat those place names as POIs. Resolve the target section timing, validate the POIs with mcp_read_pois, resolve the target fixture with mcp_read_fixtures, and propose_cue_add_entries using move_to_poi or another POI-aware effect. Do not use chord tools unless the user explicitly asks about chords.")
     if "loud" in prompt:
         hints.append("For loudness questions, use mcp_read_loudness. If the prompt names a section like verse or chorus, pass that section or resolve it first.")
     if "first effect" in prompt or ("effect" in prompt and any(word in prompt for word in ["verse", "chorus", "intro", "instrumental", "outro"])):
@@ -561,6 +576,17 @@ def _format_fixtures(result: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _format_pois(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    pois = payload.get("pois") or []
+    if not pois:
+        return "POIs: unavailable"
+    lines = ["POIs:"]
+    for poi in pois[:64]:
+        lines.append(f"- id={poi.get('id')} name={poi.get('name')}")
+    return "\n".join(lines)
+
+
 def _format_chasers(result: Dict[str, Any]) -> str:
     payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
     chasers = payload.get("chasers") or []
@@ -621,6 +647,8 @@ def _render_tool_result(tool_name: str, result: Any) -> str:
         return _format_cue_window(result)
     if tool_name == "mcp_read_fixtures":
         return _format_fixtures(result)
+    if tool_name == "mcp_read_pois":
+        return _format_pois(result)
     if tool_name == "mcp_read_chasers":
         return _format_chasers(result)
     if tool_name == "mcp_read_cursor":
@@ -755,6 +783,112 @@ def _extract_section_name(prompt: str) -> Optional[str]:
     return None
 
 
+ORDINAL_WORD_TO_INDEX = {
+    "first": 1,
+    "second": 2,
+    "third": 3,
+    "fourth": 4,
+    "fifth": 5,
+}
+
+
+def _extract_section_reference(prompt: str) -> tuple[Optional[str], int]:
+    lowered = str(prompt or "").lower()
+    match = re.search(
+        r"\b(first|second|third|fourth|fifth|\d+(?:st|nd|rd|th)?)\s+(intro|verse|chorus|instrumental|outro)\b",
+        lowered,
+    )
+    if match:
+        raw_ordinal = match.group(1)
+        section_name = match.group(2).title()
+        occurrence = ORDINAL_WORD_TO_INDEX.get(raw_ordinal)
+        if occurrence is None:
+            occurrence = int(re.sub(r"(?:st|nd|rd|th)$", "", raw_ordinal))
+        return section_name, max(1, occurrence)
+    section_name = _extract_section_name(prompt)
+    return section_name, 1
+
+
+def _find_section_occurrence(result: Dict[str, Any], section_name: str, occurrence: int) -> Optional[Dict[str, Any]]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return None
+    sections = (result.get("data") or {}).get("sections") or []
+    normalized_target = str(section_name or "").strip().lower()
+    matches = [
+        section
+        for section in sections
+        if str(section.get("name") or section.get("label") or "").strip().lower() == normalized_target
+    ]
+    if occurrence <= 0 or occurrence > len(matches):
+        return None
+    return matches[occurrence - 1]
+
+
+def _find_previous_beat_time(result: Dict[str, Any], boundary_time: float) -> Optional[float]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return None
+    beats = (result.get("data") or {}).get("beats") or []
+    previous_times = [
+        float(beat.get("time", 0.0) or 0.0)
+        for beat in beats
+        if float(beat.get("time", 0.0) or 0.0) < float(boundary_time)
+    ]
+    if not previous_times:
+        return None
+    return max(previous_times)
+
+
+def _resolve_poi_id(prompt: str, result: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return None
+    lowered = str(prompt or "").lower()
+    pois = (result.get("data") or {}).get("pois") or []
+    best_match: tuple[int, str] | None = None
+    for poi in pois:
+        poi_id = str(poi.get("id") or "").strip()
+        poi_name = str(poi.get("name") or "").strip()
+        for candidate in [poi_name.lower(), poi_id.lower()]:
+            if not candidate:
+                continue
+            if re.search(rf"\b{re.escape(candidate)}\b", lowered):
+                score = len(candidate)
+                if best_match is None or score > best_match[0]:
+                    best_match = (score, poi_id)
+    return best_match[1] if best_match is not None else None
+
+
+def _extract_ordered_poi_ids(prompt: str, result: Dict[str, Any]) -> List[str]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return []
+    lowered = str(prompt or "").lower()
+    pois = (result.get("data") or {}).get("pois") or []
+    mentions: List[tuple[int, int, str]] = []
+    for poi in pois:
+        poi_id = str(poi.get("id") or "").strip()
+        poi_name = str(poi.get("name") or "").strip()
+        if not poi_id:
+            continue
+        for candidate in [poi_name.lower(), poi_id.lower()]:
+            if not candidate:
+                continue
+            for match in re.finditer(rf"\b{re.escape(candidate)}\b", lowered):
+                mentions.append((match.start(), -len(candidate), poi_id))
+    ordered_ids: List[str] = []
+    for _, _, poi_id in sorted(mentions):
+        if poi_id not in ordered_ids:
+            ordered_ids.append(poi_id)
+    return ordered_ids
+
+
+def _extract_poi_transition(prompt: str, result: Dict[str, Any]) -> Optional[tuple[str, str, Optional[str]]]:
+    poi_ids = _extract_ordered_poi_ids(prompt, result)
+    if len(poi_ids) < 2:
+        return None
+    start_poi, subject_poi = poi_ids[0], poi_ids[1]
+    end_poi = poi_ids[2] if len(poi_ids) > 2 else None
+    return start_poi, subject_poi, end_poi
+
+
 def _is_full_cue_clear_request(prompt: str) -> bool:
     lowered = str(prompt or "").lower()
     if re.search(r"\bclear\s+the\s+cue\b", lowered):
@@ -820,6 +954,19 @@ def _resolve_prism_fixture_ids(result: Dict[str, Any]) -> List[str]:
 
 def _resolve_left_prism_fixture_ids(result: Dict[str, Any]) -> List[str]:
     return [fixture_id for fixture_id in _resolve_prism_fixture_ids(result) if fixture_id.endswith("_l")]
+
+
+def _resolve_right_prism_fixture_ids(result: Dict[str, Any]) -> List[str]:
+    return [fixture_id for fixture_id in _resolve_prism_fixture_ids(result) if fixture_id.endswith("_r")]
+
+
+def _resolve_target_prism_fixture_ids(prompt: str, result: Dict[str, Any]) -> List[str]:
+    lowered = str(prompt or "").lower()
+    if "right" in lowered:
+        return _resolve_right_prism_fixture_ids(result)
+    if "left" in lowered:
+        return _resolve_left_prism_fixture_ids(result)
+    return _resolve_prism_fixture_ids(result)
 
 
 def _resolve_parcan_fixture_ids(result: Dict[str, Any]) -> List[str]:
@@ -915,6 +1062,23 @@ def _describe_cue_add_entries(entries: List[Dict[str, Any]]) -> str:
         if first_effect == "fade_out":
             return f"Add fade_out to {fixtures} at {time_text}."
         first_data = entries[0].get("data") or {}
+        if first_effect == "move_to_poi":
+            target_poi = str(first_data.get("target_POI") or first_data.get("poi") or first_data.get("POI") or "").strip()
+            if target_poi:
+                return f"Move {fixtures} to {target_poi} at {time_text}."
+        if first_effect == "seek":
+            start_poi = str(first_data.get("start_POI") or "").strip()
+            subject_poi = str(first_data.get("subject_POI") or "").strip()
+            if start_poi and subject_poi:
+                return f"Add seek on {fixtures} from {start_poi} to {subject_poi} at {time_text}."
+        if first_effect == "sweep":
+            start_poi = str(first_data.get("start_POI") or "").strip()
+            subject_poi = str(first_data.get("subject_POI") or "").strip()
+            end_poi = str(first_data.get("end_POI") or "").strip()
+            if start_poi and subject_poi and end_poi:
+                return f"Add sweep on {fixtures} from {start_poi} through {subject_poi} to {end_poi} at {time_text}."
+            if start_poi and subject_poi:
+                return f"Add sweep on {fixtures} from {start_poi} through {subject_poi} at {time_text}."
         if first_effect == "full":
             for color_name, rgb in {
                 "blue": {"red": 0, "green": 0, "blue": 255},
@@ -1048,8 +1212,87 @@ def _build_left_fixtures_answer_messages(messages: List[Dict[str, Any]], fixture
 async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     prompt = _latest_user_prompt(messages)
     lowered = prompt.lower()
-    section_name = _extract_section_name(prompt)
+    section_name, section_occurrence = _extract_section_reference(prompt)
     used_tools: List[str] = []
+
+    if any(word in lowered for word in ["move", "point", "aim"]) and "prism" in lowered and "one beat before" in lowered and section_name:
+        used_tools.append("mcp_read_sections")
+        sections_result = await call_mcp("mcp_read_sections", {})
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        used_tools.append("mcp_read_pois")
+        pois_result = await call_mcp("mcp_read_pois", {})
+        section = _find_section_occurrence(sections_result, section_name, section_occurrence)
+        poi_id = _resolve_poi_id(prompt, pois_result)
+        if section is not None and poi_id:
+            fixture_ids = _resolve_target_prism_fixture_ids(prompt, fixtures_result)
+            if fixture_ids:
+                section_start = float(section.get("start_s", 0.0) or 0.0)
+                used_tools.append("mcp_read_beats")
+                beats_result = await call_mcp("mcp_read_beats", {"end_time": section_start})
+                cue_time = _find_previous_beat_time(beats_result, section_start)
+                if cue_time is not None:
+                    duration = max(0.1, round(section_start - cue_time, 3))
+                    return {
+                        "used_tools": used_tools,
+                        "proposal": _proposal_for_tool(
+                            "propose_cue_add_entries",
+                            {
+                                "entries": [
+                                    {
+                                        "time": cue_time,
+                                        "fixture_id": fixture_id,
+                                        "effect": "move_to_poi",
+                                        "duration": duration,
+                                        "data": {"target_POI": poi_id},
+                                    }
+                                    for fixture_id in fixture_ids
+                                ]
+                            },
+                        ),
+                    }
+
+    if any(word in lowered for word in ["seek", "sweep"]) and "prism" in lowered and "one beat before" in lowered and section_name:
+        effect_name = "seek" if "seek" in lowered else "sweep"
+        used_tools.append("mcp_read_sections")
+        sections_result = await call_mcp("mcp_read_sections", {})
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        used_tools.append("mcp_read_pois")
+        pois_result = await call_mcp("mcp_read_pois", {})
+        section = _find_section_occurrence(sections_result, section_name, section_occurrence)
+        poi_transition = _extract_poi_transition(prompt, pois_result)
+        if section is not None and poi_transition is not None:
+            fixture_ids = _resolve_target_prism_fixture_ids(prompt, fixtures_result)
+            if fixture_ids:
+                section_start = float(section.get("start_s", 0.0) or 0.0)
+                used_tools.append("mcp_read_beats")
+                beats_result = await call_mcp("mcp_read_beats", {"end_time": section_start})
+                cue_time = _find_previous_beat_time(beats_result, section_start)
+                if cue_time is not None:
+                    start_poi, subject_poi, end_poi = poi_transition
+                    duration = max(0.1, round(section_start - cue_time, 3))
+                    data: Dict[str, Any] = {"start_POI": start_poi, "subject_POI": subject_poi}
+                    if effect_name == "sweep" and end_poi:
+                        data["end_POI"] = end_poi
+                    return {
+                        "used_tools": used_tools,
+                        "proposal": _proposal_for_tool(
+                            "propose_cue_add_entries",
+                            {
+                                "entries": [
+                                    {
+                                        "time": cue_time,
+                                        "fixture_id": fixture_id,
+                                        "effect": effect_name,
+                                        "duration": duration,
+                                        "data": dict(data),
+                                    }
+                                    for fixture_id in fixture_ids
+                                ]
+                            },
+                        ),
+                    }
 
     if any(word in lowered for word in ["flash", "effect", "add"]) and "each section" in lowered and "prism" in lowered:
         effect_name = _extract_effect_name(prompt)

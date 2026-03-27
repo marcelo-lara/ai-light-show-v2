@@ -35,6 +35,7 @@ Local inference + tool-gateway stack used for metadata-aware cue planning.
 - `mcp_read_chords` → `metadata_get_chords`
 - `mcp_read_cue_window` → `cues_get_window`
 - `mcp_read_fixtures` → `fixtures_list`
+- `mcp_read_pois` → `pois_list`
 - `mcp_read_chasers` → `chasers_list`
 - `mcp_read_cursor` → `transport_get_cursor`
 - `mcp_read_loudness` → `metadata_get_loudness`
