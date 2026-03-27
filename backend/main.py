@@ -34,7 +34,7 @@ backend_mcp_app = backend_mcp.http_app(
 async def lifespan(app: FastAPI):
     async with AsyncExitStack() as stack:
         mcp_lifespan = getattr(backend_mcp_app, "lifespan", None)
-        if mcp_lifespan is not None:
+        if mcp_lifespan is not None and not os.environ.get("PYTEST_CURRENT_TEST"):
             await stack.enter_async_context(mcp_lifespan(app))
 
         backend_path = Path(__file__).parent

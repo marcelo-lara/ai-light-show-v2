@@ -36,10 +36,6 @@ class Fixture(BaseModel, ABC):
     def mappings(self) -> Dict[str, Dict[str, Union[int, str]]]:
         return self.template.mappings
 
-    @property
-    def effects(self) -> List[str]:
-        return self.template.effects
-
     def set_channel_value(self, channel_name: str, value: int) -> None:
         if channel_name in self.channels:
             self.current_values[channel_name] = max(0, min(255, int(value)))
@@ -86,7 +82,6 @@ class Fixture(BaseModel, ABC):
             if channel_name in self.channels:
                 self._write_channel(universe, channel_name, value)
 
-    @abstractmethod
     def render_effect(
         self,
         universe: bytearray,
@@ -100,3 +95,39 @@ class Fixture(BaseModel, ABC):
         render_state: Dict[str, Any],
     ) -> None:
         """Render a cue effect into the provided DMX universe for the given frame."""
+        # Optional: local imports to avoid circular deps with Fixture logic if needed, 
+        # though standard imports generally work since registry.py doesn't strictly import Fixture class
+        from .effects import REGISTRY
+        
+        effect_id = (effect or "").lower().strip()
+        handler = REGISTRY.get(effect_id)
+        if handler and handler.supports(self):
+            handler.render(self, universe, frame_index=frame_index, start_frame=start_frame, end_frame=end_frame, fps=fps, data=data, render_state=render_state)
+            return
+            
+        # Fallback to subclasses if not in generic registry (e.g. moving_head distinct sweep/move_to effects)
+        self._fallback_render_effect(
+            universe, 
+            effect=effect_id, 
+            frame_index=frame_index, 
+            start_frame=start_frame, 
+            end_frame=end_frame, 
+            fps=fps, 
+            data=data, 
+            render_state=render_state
+        )
+
+    def _fallback_render_effect(
+        self,
+        universe: bytearray,
+        *,
+        effect: str,
+        frame_index: int,
+        start_frame: int,
+        end_frame: int,
+        fps: int,
+        data: Dict[str, Any],
+        render_state: Dict[str, Any],
+    ) -> None:
+        """Override in subclasses for legacy specific effects (seek, sweep) not yet abstracted."""
+        pass

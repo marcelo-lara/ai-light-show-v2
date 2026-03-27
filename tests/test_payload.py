@@ -35,17 +35,20 @@ async def test_fixture_payload_shape():
     parcan = payload.get("parcan_l")
     assert parcan is not None
     assert parcan["values"].get("rgb") == "#000000"
-    assert parcan["supported_effects"] == ["fade_in", "flash", "full", "strobe"]
+    assert parcan["supported_effects"] == ["blackout", "color_fade", "fade_in", "fade_out", "flash", "full", "set_channels", "strobe"]
 
     mover = payload.get("head_el150")
     assert mover is not None
     assert mover["supported_effects"] == [
+        "blackout",
         "fade_in",
+        "fade_out",
         "flash",
         "full",
         "move_to",
         "move_to_poi",
         "seek",
+        "set_channels",
         "strobe",
         "sweep",
     ]

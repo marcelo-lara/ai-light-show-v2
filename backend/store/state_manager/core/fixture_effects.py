@@ -3,17 +3,15 @@
 from typing import Optional
 
 from models.fixtures.fixture import Fixture
+from models.fixtures.effects import REGISTRY
 from store.dmx_canvas import DMX_CHANNELS
-
 
 class StateCoreFixtureEffectsMixin:
     def _get_fixture(self, fixture_id: str) -> Optional[Fixture]:
         return next((fixture for fixture in self.fixtures if fixture.id == fixture_id), None)
 
     def _fixture_supported_effects(self, fixture: Fixture) -> set[str]:
-        return {
-            str(effect).strip().lower() for effect in (fixture.effects or []) if str(effect).strip()
-        }
+        return REGISTRY.get_supported_effects(fixture)
 
     def _set_channel(self, universe: bytearray, channel_1_based: int, value: int) -> None:
         if 1 <= channel_1_based <= DMX_CHANNELS:

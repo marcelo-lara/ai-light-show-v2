@@ -252,7 +252,7 @@ async def test_replace_cue_sheet_entries_deduplicates_within_100ms(state_manager
 
 def test_load_mixed_cue_sheet_real_file(workspace_root):
     cue_sheet = load_cue_sheet(workspace_root / "backend" / "cues", "Yonaka - Seize the Power")
-    assert any(getattr(entry, "chaser_id", None) == "blue_parcan_chase" for entry in cue_sheet.entries)
+    assert any(getattr(entry, "chaser_id", None) == "parcan_left_to_right" for entry in cue_sheet.entries)
     assert any(getattr(entry, "effect", None) == "flash" for entry in cue_sheet.entries)
 
 

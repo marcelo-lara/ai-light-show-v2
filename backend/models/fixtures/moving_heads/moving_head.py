@@ -201,7 +201,7 @@ class MovingHead(Fixture):
             if k in self.channels:
                 self.set_channel_value(k, v)
 
-    def render_effect(
+    def _fallback_render_effect(
         self,
         universe: bytearray,
         *,
