@@ -1,4 +1,8 @@
 clear the cue
+blue flash parcan_l at second 1.36
+blue flash parcan_l at 1.1 for 1 beat
+set both prism to full on second 0.0
+set both prisms to full at 0.00s
 where does the intro starts?
 where does the intro ends?
 add a flash effect to the prisms when the song changes from C# to D#

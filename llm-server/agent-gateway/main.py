@@ -923,6 +923,20 @@ def _extract_effect_name(prompt: str) -> Optional[str]:
     return None
 
 
+def _extract_time_seconds(prompt: str) -> Optional[float]:
+    match = re.search(r"\bat\s+(?:second\s+)?(\d+(?:\.\d+)?)\s*(?:s|sec|secs|seconds?)?\b", str(prompt or ""), flags=re.IGNORECASE)
+    if not match:
+        return None
+    return float(match.group(1))
+
+
+def _extract_beat_duration(prompt: str) -> Optional[float]:
+    match = re.search(r"\bfor\s+(\d+(?:\.\d+)?)\s+beat(?:s)?\b", str(prompt or ""), flags=re.IGNORECASE)
+    if not match:
+        return None
+    return float(match.group(1))
+
+
 def _find_chord_transition_time(result: Dict[str, Any], start_label: str, end_label: str) -> Optional[float]:
     if not isinstance(result, dict) or not result.get("ok"):
         return None
@@ -967,6 +981,25 @@ def _resolve_target_prism_fixture_ids(prompt: str, result: Dict[str, Any]) -> Li
     if "left" in lowered:
         return _resolve_left_prism_fixture_ids(result)
     return _resolve_prism_fixture_ids(result)
+
+
+def _resolve_fixture_ids_from_prompt(prompt: str, result: Dict[str, Any]) -> List[str]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return []
+    lowered = str(prompt or "").lower()
+    fixtures = (result.get("data") or {}).get("fixtures") or []
+    explicit_ids = [
+        str(fixture.get("id") or "")
+        for fixture in fixtures
+        if str(fixture.get("id") or "") and re.search(rf"\b{re.escape(str(fixture.get('id') or '').lower())}\b", lowered)
+    ]
+    if explicit_ids:
+        return explicit_ids
+    if "prism" in lowered:
+        return _resolve_target_prism_fixture_ids(prompt, result)
+    if "parcan" in lowered:
+        return _resolve_parcan_fixture_ids(result)
+    return []
 
 
 def _resolve_parcan_fixture_ids(result: Dict[str, Any]) -> List[str]:
@@ -1048,6 +1081,28 @@ def _color_name_to_rgb(color_name: str) -> Optional[Dict[str, int]]:
     }.get(color_name.lower())
 
 
+def _estimate_beat_seconds(result: Dict[str, Any], cue_time: float) -> Optional[float]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return None
+    beats = (result.get("data") or {}).get("beats") or []
+    beat_times = sorted(
+        {
+            round(float(beat.get("time", 0.0) or 0.0), 6)
+            for beat in beats
+        }
+    )
+    if len(beat_times) < 2:
+        return None
+    for current, nxt in zip(beat_times, beat_times[1:]):
+        if current <= cue_time <= nxt:
+            return max(0.0, nxt - current)
+    intervals = [nxt - current for current, nxt in zip(beat_times, beat_times[1:]) if nxt > current]
+    if not intervals:
+        return None
+    nearest_interval = min(intervals, key=lambda interval: abs(interval - min(intervals)))
+    return max(0.0, nearest_interval)
+
+
 def _describe_cue_add_entries(entries: List[Dict[str, Any]]) -> str:
     fixtures = ", ".join(dict.fromkeys(str(entry.get("fixture_id") or "") for entry in entries if str(entry.get("fixture_id") or "")))
     unique_times = list(dict.fromkeys(float(entry.get("time", 0.0) or 0.0) for entry in entries))
@@ -1062,6 +1117,12 @@ def _describe_cue_add_entries(entries: List[Dict[str, Any]]) -> str:
         if first_effect == "fade_out":
             return f"Add fade_out to {fixtures} at {time_text}."
         first_data = entries[0].get("data") or {}
+        if first_effect == "flash":
+            channels = first_data.get("channels")
+            if isinstance(channels, list) and len(channels) == 1:
+                channel_name = str(channels[0] or "").strip().lower()
+                if channel_name:
+                    return f"Add {channel_name} flash to {fixtures} at {time_text}."
         if first_effect == "move_to_poi":
             target_poi = str(first_data.get("target_POI") or first_data.get("poi") or first_data.get("POI") or "").strip()
             if target_poi:
@@ -1080,6 +1141,8 @@ def _describe_cue_add_entries(entries: List[Dict[str, Any]]) -> str:
             if start_poi and subject_poi:
                 return f"Add sweep on {fixtures} from {start_poi} through {subject_poi} at {time_text}."
         if first_effect == "full":
+            if not first_data:
+                return f"Set {fixtures} to full at {time_text}."
             for color_name, rgb in {
                 "blue": {"red": 0, "green": 0, "blue": 255},
                 "red": {"red": 255, "green": 0, "blue": 0},
@@ -1214,6 +1277,66 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
     lowered = prompt.lower()
     section_name, section_occurrence = _extract_section_reference(prompt)
     used_tools: List[str] = []
+    cue_time = _extract_time_seconds(prompt)
+
+    if cue_time is not None and "flash" in lowered:
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        fixture_ids = _resolve_fixture_ids_from_prompt(prompt, fixtures_result)
+        color_name = _extract_color_name(prompt)
+        if fixture_ids and (color_name is None or all(fixture_id.startswith("parcan") for fixture_id in fixture_ids)):
+            beat_count = _extract_beat_duration(prompt) or 1.0
+            beat_window_start = round(max(0.0, cue_time - 1.0), 3)
+            beat_window_end = round(cue_time + 2.0, 3)
+            used_tools.append("mcp_read_beats")
+            beats_result = await call_mcp("mcp_read_beats", {"start_time": beat_window_start, "end_time": beat_window_end})
+            beat_seconds = _estimate_beat_seconds(beats_result, cue_time) or 0.5
+            duration = max(0.1, round(beat_count * beat_seconds, 3))
+            data: Dict[str, Any] = {}
+            if color_name is not None:
+                data["channels"] = [color_name]
+            return {
+                "used_tools": used_tools,
+                "proposal": _proposal_for_tool(
+                    "propose_cue_add_entries",
+                    {
+                        "entries": [
+                            {
+                                "time": cue_time,
+                                "fixture_id": fixture_id,
+                                "effect": "flash",
+                                "duration": duration,
+                                "data": dict(data),
+                            }
+                            for fixture_id in fixture_ids
+                        ]
+                    },
+                ),
+            }
+
+    if cue_time is not None and "full" in lowered and any(word in lowered for word in ["set", "make", "turn"]):
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        fixture_ids = _resolve_fixture_ids_from_prompt(prompt, fixtures_result)
+        if fixture_ids:
+            return {
+                "used_tools": used_tools,
+                "proposal": _proposal_for_tool(
+                    "propose_cue_add_entries",
+                    {
+                        "entries": [
+                            {
+                                "time": cue_time,
+                                "fixture_id": fixture_id,
+                                "effect": "full",
+                                "duration": 0.0,
+                                "data": {},
+                            }
+                            for fixture_id in fixture_ids
+                        ]
+                    },
+                ),
+            }
 
     if any(word in lowered for word in ["move", "point", "aim"]) and "prism" in lowered and "one beat before" in lowered and section_name:
         used_tools.append("mcp_read_sections")

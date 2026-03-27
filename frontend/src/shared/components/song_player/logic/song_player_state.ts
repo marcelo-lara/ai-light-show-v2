@@ -13,6 +13,7 @@ export type SongIdentity = {
 
 export type DerivedSongData = {
   label: string;
+  beatObjects: BeatObject[];
   sections: Section[];
   beats: number[];
   downbeats: number[];
@@ -45,6 +46,7 @@ export function deriveSongData(
 
   return {
     label: song.filename ? `Song: ${song.filename}` : "Song loaded",
+    beatObjects,
     sections,
     beats,
     downbeats,

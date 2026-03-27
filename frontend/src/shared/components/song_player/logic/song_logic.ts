@@ -120,26 +120,20 @@ export function getImplicitLoopSectionIndex(sections: Section[], currentTimeMs: 
   return null;
 }
 
-export function computeBarBeatLabel(downbeats: number[], beats: number[], timeMs: number): string {
-  if (!downbeats.length) return "1.1";
+export function computeBarBeatLabel(beatObjects: BeatObject[], timeMs: number): string {
+  if (!beatObjects.length) return "--.--";
 
   const t = timeMs / 1000;
-  let barIndex = 0;
-  for (let idx = 0; idx < downbeats.length; idx++) {
-    if (downbeats[idx] <= t) barIndex = idx;
-    else break;
-  }
-
-  const barStart = downbeats[barIndex] ?? 0;
-  let beatIndex = 1;
-  for (const beat of beats) {
-    if (beat > barStart && beat <= t + 0.0005) {
-      beatIndex += 1;
+  let current = beatObjects[0];
+  for (const beat of beatObjects) {
+    if (beat.time <= t + 0.0005) {
+      current = beat;
+      continue;
     }
-    if (beat > t) break;
+    break;
   }
 
-  return `${barIndex + 1}.${Math.min(9, Math.max(1, beatIndex))}`;
+  return `${current.bar}.${current.beat}`;
 }
 
 export function songFingerprint(song: SongState): string {

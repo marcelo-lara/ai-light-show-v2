@@ -259,6 +259,161 @@ async def test_fast_path_proposes_left_prism_flash_on_first_beat_of_each_section
 
 
 @pytest.mark.asyncio
+async def test_fast_path_adds_blue_flash_to_parcan_at_explicit_second(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "parcan_l"}, {"id": "mini_beam_prism_l"}]}}
+        if tool_name == "mcp_read_beats":
+            return {
+                "ok": True,
+                "data": {
+                    "beats": [
+                        {"time": 1.36, "bar": 1, "beat": 1},
+                        {"time": 1.8, "bar": 1, "beat": 2},
+                        {"time": 2.26, "bar": 1, "beat": 3},
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "blue flash parcan_l at second 1.36"},
+    ])
+
+    assert tool_calls == [
+        ("mcp_read_fixtures", {}),
+        ("mcp_read_beats", {"start_time": 0.36, "end_time": 3.36}),
+    ]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures", "mcp_read_beats"],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {
+                        "time": 1.36,
+                        "fixture_id": "parcan_l",
+                        "effect": "flash",
+                        "duration": 0.44,
+                        "data": {"channels": ["blue"]},
+                    },
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Add blue flash to parcan_l at 1.360s.",
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_adds_blue_flash_to_parcan_for_one_beat(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "parcan_l"}, {"id": "mini_beam_prism_l"}]}}
+        if tool_name == "mcp_read_beats":
+            return {
+                "ok": True,
+                "data": {
+                    "beats": [
+                        {"time": 1.36, "bar": 1, "beat": 1},
+                        {"time": 1.8, "bar": 1, "beat": 2},
+                        {"time": 2.26, "bar": 1, "beat": 3},
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "blue flash parcan_l at 1.1 for 1 beat"},
+    ])
+
+    assert tool_calls == [
+        ("mcp_read_fixtures", {}),
+        ("mcp_read_beats", {"start_time": 0.1, "end_time": 3.1}),
+    ]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures", "mcp_read_beats"],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {
+                        "time": 1.1,
+                        "fixture_id": "parcan_l",
+                        "effect": "flash",
+                        "duration": 0.44,
+                        "data": {"channels": ["blue"]},
+                    },
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Add blue flash to parcan_l at 1.100s.",
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_sets_both_prisms_to_full_at_explicit_time(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {
+                "ok": True,
+                "data": {
+                    "fixtures": [
+                        {"id": "mini_beam_prism_l"},
+                        {"id": "mini_beam_prism_r"},
+                        {"id": "parcan_l"},
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "set both prisms to full at 0.00s"},
+    ])
+
+    assert tool_calls == [("mcp_read_fixtures", {})]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures"],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {"time": 0.0, "fixture_id": "mini_beam_prism_l", "effect": "full", "duration": 0.0, "data": {}},
+                    {"time": 0.0, "fixture_id": "mini_beam_prism_r", "effect": "full", "duration": 0.0, "data": {}},
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Set mini_beam_prism_l, mini_beam_prism_r to full at 0.000s.",
+        },
+    }
+
+
+@pytest.mark.asyncio
 async def test_fast_path_moves_left_prism_to_piano_before_second_instrumental(monkeypatch):
     gateway_main = _load_gateway_main_module()
     tool_calls = []

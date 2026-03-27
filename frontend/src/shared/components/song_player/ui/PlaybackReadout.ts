@@ -4,7 +4,7 @@ export function PlaybackReadout(): {
 } {
   const barBeatEl = document.createElement("div");
   barBeatEl.className = "song-player-barbeat mono";
-  barBeatEl.textContent = "1.1";
+  barBeatEl.textContent = "--.--";
 
   const positionEl = document.createElement("div");
   positionEl.className = "song-player-position mono muted";
