@@ -5,23 +5,63 @@
   gap: 4px;
 }
 
+.slider-row:not(.has-label) {
+  grid-template-columns: 1fr auto;
+}
+
 .slider-row > span {
   color: var(--text);
   font-size: 0.8em;
 }
 
-.slider-value {
+.slider-value-slot {
+  position: relative;
+  min-width: 2.4em;
+}
+
+.slider-value,
+.slider-value-input {
+  box-sizing: border-box;
+  width: 100%;
   text-align: right;
   font-family: monospace;
   font-size: 0.8em;
   background-color: var(--accent);
   color: var(--text);
   padding: 0.2em;
-  min-width: 2.4em
+  min-width: 2.4em;
+  line-height: 1;
+}
+
+.slider-value {
+  cursor: text;
+  user-select: none;
+}
+
+.slider-value.is-hidden {
+  visibility: hidden;
+}
+
+.slider-value-input {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  outline: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slider-value-input.is-editing {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.slider-value-input.is-invalid {
+  box-shadow: inset 0 -1px 0 currentColor;
 }
 
 /* Custom range slider (DMX control) */
-.slider-row input {
+.slider-row input[type="range"] {
   --slider-fill-color: var(--accent);
   --slider-track-color: #4a4a4a;
   --slider-fill: 50%;
@@ -41,12 +81,12 @@
   cursor: pointer;
 }
 
-.slider-row input::-webkit-slider-runnable-track {
+.slider-row input[type="range"]::-webkit-slider-runnable-track {
   height: var(--slider-track-height);
   background: transparent;
 }
 
-.slider-row input::-webkit-slider-thumb {
+.slider-row input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: var(--slider-thumb-width);
@@ -57,17 +97,17 @@
   box-shadow: 0 0 0 2px rgba(20, 20, 20, 0.28);
 }
 
-.slider-row input::-moz-range-track {
+.slider-row input[type="range"]::-moz-range-track {
   height: var(--slider-track-height);
   background: transparent;
 }
 
-.slider-row input::-moz-range-progress {
+.slider-row input[type="range"]::-moz-range-progress {
   height: var(--slider-track-height);
   background: var(--slider-fill-color);
 }
 
-.slider-row input::-moz-range-thumb {
+.slider-row input[type="range"]::-moz-range-thumb {
   width: var(--slider-thumb-width);
   height: var(--slider-thumb-height);
   border: none;
