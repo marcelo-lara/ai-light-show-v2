@@ -6,10 +6,6 @@ from models.song.beats import Beat
 from services.cue_helpers.timing import beats_to_seconds
 
 
-def _beats_to_seconds(beat_count: float, bpm: float) -> float:
-    return beats_to_seconds(beat_count, bpm)
-
-
 def generate_downbeats_and_beats(beats: List[Beat], bpm: float) -> List[Dict[str, Any]]:
     """Generate cue entries for DownBeats and Beats pattern.
 
@@ -38,14 +34,14 @@ def generate_downbeats_and_beats(beats: List[Beat], bpm: float) -> List[Dict[str
                 "time": first_beat.time,
                 "fixture_id": "mini_beam_prism_l",
                 "effect": "flash",
-                "duration": _beats_to_seconds(2, bpm),
+                "duration": beats_to_seconds(2, bpm),
                 "data": {},
             })
             entries.append({
                 "time": first_beat.time,
                 "fixture_id": "mini_beam_prism_r",
                 "effect": "flash",
-                "duration": _beats_to_seconds(2, bpm),
+                "duration": beats_to_seconds(2, bpm),
                 "data": {},
             })
 
@@ -59,7 +55,7 @@ def generate_downbeats_and_beats(beats: List[Beat], bpm: float) -> List[Dict[str
                 "time": beat.time,
                 "fixture_id": fixture_id,
                 "effect": "flash",
-                "duration": _beats_to_seconds(1.25, bpm),
+                "duration": beats_to_seconds(1.25, bpm),
             })
 
     return entries
