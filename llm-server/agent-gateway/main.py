@@ -924,7 +924,7 @@ def _extract_effect_name(prompt: str) -> Optional[str]:
 
 
 def _extract_time_seconds(prompt: str) -> Optional[float]:
-    match = re.search(r"\bat\s+(?:second\s+)?(\d+(?:\.\d+)?)\s*(?:s|sec|secs|seconds?)?\b", str(prompt or ""), flags=re.IGNORECASE)
+    match = re.search(r"\b(?:at|on)\s+(?:second\s+)?(\d+(?:\.\d+)?)\s*(?:s|sec|secs|seconds?)?\b", str(prompt or ""), flags=re.IGNORECASE)
     if not match:
         return None
     return float(match.group(1))
@@ -1272,12 +1272,210 @@ def _build_left_fixtures_answer_messages(messages: List[Dict[str, Any]], fixture
     ]
 
 
+def _build_prism_effects_answer_text(fixtures_result: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(fixtures_result, dict) or not fixtures_result.get("ok"):
+        return None
+    fixtures = (fixtures_result.get("data") or {}).get("fixtures") or []
+    effects: List[str] = []
+    for fixture in fixtures:
+        fixture_id = str(fixture.get("id") or "")
+        if "prism" not in fixture_id.lower():
+            continue
+        for effect_name in fixture.get("supported_effects") or []:
+            normalized = str(effect_name or "").strip()
+            if normalized and normalized not in effects:
+                effects.append(normalized)
+    if not effects:
+        return None
+    return "Prism effects: " + ", ".join(effects) + "."
+
+
+def _build_pois_answer_text(pois_result: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(pois_result, dict) or not pois_result.get("ok"):
+        return None
+    pois = (pois_result.get("data") or {}).get("pois") or []
+    poi_ids = [str(poi.get("id") or "").strip() for poi in pois if str(poi.get("id") or "").strip()]
+    if not poi_ids:
+        return "No POIs are available."
+    return "Available POIs: " + ", ".join(poi_ids) + "."
+
+
+def _build_section_count_answer_text(sections_result: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(sections_result, dict) or not sections_result.get("ok"):
+        return None
+    count = int(((sections_result.get("data") or {}).get("count") or 0))
+    return f"This song has {count} sections."
+
+
+def _build_chords_in_bar_answer_text(chords_result: Dict[str, Any], bar: int) -> Optional[str]:
+    if not isinstance(chords_result, dict) or not chords_result.get("ok"):
+        return None
+    chords = (chords_result.get("data") or {}).get("chords") or []
+    if not chords:
+        return f"No chords were found in bar {bar}."
+    parts = [
+        f"{int(chord.get('bar', 0))}.{int(chord.get('beat', 0))} ({float(chord.get('time_s', chord.get('time', 0.0)) or 0.0):.3f}s) {str(chord.get('label') or chord.get('chord') or 'unknown')}"
+        for chord in chords
+    ]
+    return f"Bar {bar} contains: " + ", ".join(parts) + "."
+
+
+def _build_cursor_section_next_beat_answer_text(cursor_result: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(cursor_result, dict) or not cursor_result.get("ok"):
+        return None
+    payload = cursor_result.get("data") or {}
+    section_name = str(payload.get("section_name") or "").strip() or "unknown section"
+    next_bar = payload.get("next_bar")
+    next_beat = payload.get("next_beat")
+    next_time = payload.get("next_beat_time_s")
+    if next_bar is None or next_beat is None or next_time is None:
+        return f"You are in {section_name}, and there is no next beat available."
+    return f"You are in {section_name}, and the next beat is {int(next_bar)}.{int(next_beat)} ({float(next_time):.3f}s)."
+
+
+def _build_loudest_section_answer_text(section: Dict[str, Any], loudness_result: Dict[str, Any]) -> Optional[str]:
+    if not section or not isinstance(loudness_result, dict) or not loudness_result.get("ok"):
+        return None
+    payload = loudness_result.get("data") or {}
+    return (
+        f"The loudest section is {str(section.get('name') or 'unknown')} from "
+        f"{float(section.get('start_s', 0.0) or 0.0):.3f}s to {float(section.get('end_s', 0.0) or 0.0):.3f}s "
+        f"with average loudness {float(payload.get('average', 0.0)):.6f}."
+    )
+
+
+def _build_first_chord_answer_text(chord_result: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(chord_result, dict) or not chord_result.get("ok"):
+        return None
+    payload = chord_result.get("data") or {}
+    chord = payload.get("chord") or {}
+    label = str(chord.get("label") or chord.get("chord") or "unknown")
+    bar = chord.get("bar")
+    beat = chord.get("beat")
+    time_s = float(chord.get("time_s", chord.get("time", 0.0)) or 0.0)
+    if bar is None or beat is None:
+        return f"The first occurrence of chord {label} is at {time_s:.3f}s."
+    return f"The first occurrence of chord {label} is at {int(bar)}.{int(beat)} ({time_s:.3f}s)."
+
+
+def _build_cursor_answer_text(cursor_result: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(cursor_result, dict) or not cursor_result.get("ok"):
+        return None
+    payload = cursor_result.get("data") or {}
+    bar = payload.get("bar")
+    beat = payload.get("beat")
+    time_s = float(payload.get("time_s", 0.0) or 0.0)
+    section_name = str(payload.get("section_name") or "").strip()
+    position_text = f"{int(bar)}.{int(beat)}" if bar is not None and beat is not None else f"{time_s:.3f}s"
+    if section_name:
+        return f"The cursor is at {position_text} ({time_s:.3f}s) in {section_name}."
+    return f"The cursor is at {position_text} ({time_s:.3f}s)."
+
+
+def _build_left_fixtures_answer_text(fixtures_result: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(fixtures_result, dict) or not fixtures_result.get("ok"):
+        return None
+    fixtures = (fixtures_result.get("data") or {}).get("fixtures") or []
+    left_ids = [str(fixture.get("id") or "").strip() for fixture in fixtures if str(fixture.get("id") or "").endswith(("_l", "_pl"))]
+    left_ids = [fixture_id for fixture_id in left_ids if fixture_id]
+    if not left_ids:
+        return "No left-side fixtures are available."
+    return ", ".join(left_ids)
+
+
+def _find_first_beat_at_or_after(result: Dict[str, Any], boundary_time: float) -> Optional[float]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return None
+    beats = (result.get("data") or {}).get("beats") or []
+    candidate_times = [
+        float(beat.get("time", 0.0) or 0.0)
+        for beat in beats
+        if float(beat.get("time", 0.0) or 0.0) >= float(boundary_time)
+    ]
+    if not candidate_times:
+        return None
+    return min(candidate_times)
+
+
+def _find_next_beat_after(result: Dict[str, Any], boundary_time: float) -> Optional[float]:
+    if not isinstance(result, dict) or not result.get("ok"):
+        return None
+    beats = (result.get("data") or {}).get("beats") or []
+    candidate_times = [
+        float(beat.get("time", 0.0) or 0.0)
+        for beat in beats
+        if float(beat.get("time", 0.0) or 0.0) > float(boundary_time)
+    ]
+    if not candidate_times:
+        return None
+    return min(candidate_times)
+
+
 async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     prompt = _latest_user_prompt(messages)
     lowered = prompt.lower()
     section_name, section_occurrence = _extract_section_reference(prompt)
     used_tools: List[str] = []
     cue_time = _extract_time_seconds(prompt)
+
+    if "prism" in lowered and "effect" in lowered and any(word in lowered for word in ["available", "could", "render", "list"]):
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        answer_text = _build_prism_effects_answer_text(fixtures_result)
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
+
+    if re.search(r"\bpois?\b", lowered) and "available" in lowered:
+        used_tools.append("mcp_read_pois")
+        pois_result = await call_mcp("mcp_read_pois", {})
+        answer_text = _build_pois_answer_text(pois_result)
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
+
+    if "how many" in lowered and "section" in lowered:
+        used_tools.append("mcp_read_sections")
+        sections_result = await call_mcp("mcp_read_sections", {})
+        answer_text = _build_section_count_answer_text(sections_result)
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
+
+    if "which" in lowered and "chord" in lowered and "bar" in lowered:
+        position = _extract_bar_beat(prompt)
+        if position is not None:
+            bar, _beat = position
+            used_tools.append("mcp_read_chords")
+            chords_result = await call_mcp("mcp_read_chords", {"start_bar": bar, "end_bar": bar})
+            answer_text = _build_chords_in_bar_answer_text(chords_result, bar)
+            if answer_text is not None:
+                return {"used_tools": used_tools, "answer_text": answer_text}
+
+    if "section am i in" in lowered and "next beat" in lowered:
+        used_tools.append("mcp_read_cursor")
+        cursor_result = await call_mcp("mcp_read_cursor", {})
+        answer_text = _build_cursor_section_next_beat_answer_text(cursor_result)
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
+
+    if "loudest section" in lowered:
+        used_tools.append("mcp_read_sections")
+        sections_result = await call_mcp("mcp_read_sections", {})
+        sections = ((sections_result.get("data") or {}).get("sections") or []) if isinstance(sections_result, dict) and sections_result.get("ok") else []
+        best_section: Optional[Dict[str, Any]] = None
+        best_loudness: Optional[Dict[str, Any]] = None
+        best_average: Optional[float] = None
+        for section in sections:
+            used_tools.append("mcp_read_loudness")
+            loudness_result = await call_mcp("mcp_read_loudness", {"section": str(section.get("name") or "")})
+            if not isinstance(loudness_result, dict) or not loudness_result.get("ok"):
+                continue
+            average = float(((loudness_result.get("data") or {}).get("average") or 0.0))
+            if best_average is None or average > best_average:
+                best_average = average
+                best_section = section
+                best_loudness = loudness_result
+        answer_text = _build_loudest_section_answer_text(best_section or {}, best_loudness or {})
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
 
     if cue_time is not None and "flash" in lowered:
         used_tools.append("mcp_read_fixtures")
@@ -1375,6 +1573,38 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
                         ),
                     }
 
+    if any(word in lowered for word in ["move", "point", "aim"]) and "prism" in lowered and section_name and any(phrase in lowered for phrase in ["start of", "first beat"]):
+        used_tools.append("mcp_read_sections")
+        sections_result = await call_mcp("mcp_read_sections", {})
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        used_tools.append("mcp_read_pois")
+        pois_result = await call_mcp("mcp_read_pois", {})
+        section = _find_section_occurrence(sections_result, section_name, section_occurrence)
+        poi_id = _resolve_poi_id(prompt, pois_result)
+        if section is not None and poi_id:
+            fixture_ids = _resolve_target_prism_fixture_ids(prompt, fixtures_result)
+            if fixture_ids:
+                cue_time = float(section.get("start_s", 0.0) or 0.0)
+                return {
+                    "used_tools": used_tools,
+                    "proposal": _proposal_for_tool(
+                        "propose_cue_add_entries",
+                        {
+                            "entries": [
+                                {
+                                    "time": cue_time,
+                                    "fixture_id": fixture_id,
+                                    "effect": "move_to_poi",
+                                    "duration": 0.0,
+                                    "data": {"target_POI": poi_id},
+                                }
+                                for fixture_id in fixture_ids
+                            ]
+                        },
+                    ),
+                }
+
     if any(word in lowered for word in ["seek", "sweep"]) and "prism" in lowered and "one beat before" in lowered and section_name:
         effect_name = "seek" if "seek" in lowered else "sweep"
         used_tools.append("mcp_read_sections")
@@ -1395,6 +1625,50 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
                 if cue_time is not None:
                     start_poi, subject_poi, end_poi = poi_transition
                     duration = max(0.1, round(section_start - cue_time, 3))
+                    data: Dict[str, Any] = {"start_POI": start_poi, "subject_POI": subject_poi}
+                    if effect_name == "sweep" and end_poi:
+                        data["end_POI"] = end_poi
+                    return {
+                        "used_tools": used_tools,
+                        "proposal": _proposal_for_tool(
+                            "propose_cue_add_entries",
+                            {
+                                "entries": [
+                                    {
+                                        "time": cue_time,
+                                        "fixture_id": fixture_id,
+                                        "effect": effect_name,
+                                        "duration": duration,
+                                        "data": dict(data),
+                                    }
+                                    for fixture_id in fixture_ids
+                                ]
+                            },
+                        ),
+                    }
+
+    if any(word in lowered for word in ["seek", "sweep"]) and "prism" in lowered and section_name and "first beat" in lowered:
+        effect_name = "seek" if "seek" in lowered else "sweep"
+        used_tools.append("mcp_read_sections")
+        sections_result = await call_mcp("mcp_read_sections", {})
+        used_tools.append("mcp_read_fixtures")
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        used_tools.append("mcp_read_pois")
+        pois_result = await call_mcp("mcp_read_pois", {})
+        section = _find_section_occurrence(sections_result, section_name, section_occurrence)
+        poi_transition = _extract_poi_transition(prompt, pois_result)
+        if section is not None and poi_transition is not None:
+            fixture_ids = _resolve_target_prism_fixture_ids(prompt, fixtures_result)
+            if fixture_ids:
+                section_start = float(section.get("start_s", 0.0) or 0.0)
+                section_end = float(section.get("end_s", section_start) or section_start)
+                used_tools.append("mcp_read_beats")
+                beats_result = await call_mcp("mcp_read_beats", {"start_time": section_start, "end_time": section_end})
+                cue_time = _find_first_beat_at_or_after(beats_result, section_start)
+                if cue_time is not None:
+                    next_beat_time = _find_next_beat_after(beats_result, cue_time)
+                    duration = max(0.1, round((next_beat_time - cue_time) if next_beat_time is not None else 0.5, 3))
+                    start_poi, subject_poi, end_poi = poi_transition
                     data: Dict[str, Any] = {"start_POI": start_poi, "subject_POI": subject_poi}
                     if effect_name == "sweep" and end_poi:
                         data["end_POI"] = end_poi
@@ -1641,14 +1915,16 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
         if chord_label:
             used_tools.append("mcp_find_chord")
             chord_result = await call_mcp("mcp_find_chord", {"chord": chord_label, "occurrence": 1})
-            if isinstance(chord_result, dict) and chord_result.get("ok"):
-                return {"used_tools": used_tools, "answer_messages": _build_chord_answer_messages(messages, chord_result)}
+            answer_text = _build_first_chord_answer_text(chord_result)
+            if answer_text is not None:
+                return {"used_tools": used_tools, "answer_text": answer_text}
 
     if "cursor" in lowered:
         used_tools.append("mcp_read_cursor")
         cursor_result = await call_mcp("mcp_read_cursor", {})
-        if isinstance(cursor_result, dict) and cursor_result.get("ok"):
-            return {"used_tools": used_tools, "answer_messages": _build_cursor_answer_messages(messages, cursor_result)}
+        answer_text = _build_cursor_answer_text(cursor_result)
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
 
     if "first effect" in lowered and section_name:
         used_tools.append("mcp_find_section")
@@ -1709,8 +1985,9 @@ async def _run_stream_fast_path(messages: List[Dict[str, Any]]) -> Optional[Dict
     if "fixture" in lowered and "left" in lowered:
         used_tools.append("mcp_read_fixtures")
         fixtures_result = await call_mcp("mcp_read_fixtures", {})
-        if isinstance(fixtures_result, dict) and fixtures_result.get("ok"):
-            return {"used_tools": used_tools, "answer_messages": _build_left_fixtures_answer_messages(messages, fixtures_result)}
+        answer_text = _build_left_fixtures_answer_text(fixtures_result)
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
 
     if "chaser" in lowered and "parcan" in lowered and section_name:
         used_tools.append("mcp_find_section")
@@ -1807,6 +2084,14 @@ async def _event_stream(req: ChatRequest):
             if proposal is not None:
                 yield f"data: {orjson.dumps(proposal).decode('utf-8')}\n\n"
                 yield f"data: {orjson.dumps({'type': 'status', 'phase': 'awaiting_confirmation', 'label': 'Awaiting confirmation'}).decode('utf-8')}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            answer_text = str(fast_path.get("answer_text") or "")
+            if answer_text:
+                for chunk in _chunk_text(answer_text):
+                    if chunk:
+                        yield f"data: {orjson.dumps({'type': 'delta', 'delta': chunk}).decode('utf-8')}\n\n"
+                yield f"data: {orjson.dumps({'type': 'done', 'finish_reason': 'stop'}).decode('utf-8')}\n\n"
                 yield "data: [DONE]\n\n"
                 return
             answer_messages = fast_path.get("answer_messages") or []

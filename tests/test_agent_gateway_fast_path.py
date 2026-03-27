@@ -369,6 +369,402 @@ async def test_fast_path_adds_blue_flash_to_parcan_for_one_beat(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_fast_path_lists_prism_effects(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {
+                "ok": True,
+                "data": {
+                    "fixtures": [
+                        {"id": "mini_beam_prism_l", "supported_effects": ["full", "flash", "move_to_poi", "seek", "sweep", "fade_out"]},
+                        {"id": "mini_beam_prism_r", "supported_effects": ["full", "flash", "move_to_poi", "seek", "sweep", "fade_out"]},
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "what effect could the prism render?"},
+    ])
+
+    assert tool_calls == [("mcp_read_fixtures", {})]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures"],
+        "answer_text": "Prism effects: full, flash, move_to_poi, seek, sweep, fade_out.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_lists_available_pois(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_pois":
+            return {
+                "ok": True,
+                "data": {"pois": [{"id": "piano"}, {"id": "table"}, {"id": "sofa"}]},
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "list the available pois"},
+    ])
+
+    assert tool_calls == [("mcp_read_pois", {})]
+    assert result == {
+        "used_tools": ["mcp_read_pois"],
+        "answer_text": "Available POIs: piano, table, sofa.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_section_count(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_sections":
+            return {"ok": True, "data": {"count": 7, "sections": []}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "how many sections has this song?"},
+    ])
+
+    assert tool_calls == [("mcp_read_sections", {})]
+    assert result == {
+        "used_tools": ["mcp_read_sections"],
+        "answer_text": "This song has 7 sections.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_chords_in_bar(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_chords":
+            return {
+                "ok": True,
+                "data": {
+                    "chords": [
+                        {"bar": 21, "beat": 1, "time_s": 37.620, "label": "D#"},
+                        {"bar": 21, "beat": 3, "time_s": 38.500, "label": "F"},
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "which chords are in bar 21?"},
+    ])
+
+    assert tool_calls == [("mcp_read_chords", {"start_bar": 21, "end_bar": 21})]
+    assert result == {
+        "used_tools": ["mcp_read_chords"],
+        "answer_text": "Bar 21 contains: 21.1 (37.620s) D#, 21.3 (38.500s) F.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_current_section_and_next_beat(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_cursor":
+            return {
+                "ok": True,
+                "data": {"section_name": "Verse", "next_bar": 21, "next_beat": 1, "next_beat_time_s": 37.620},
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "What section am I in right now, and when is the next beat?"},
+    ])
+
+    assert tool_calls == [("mcp_read_cursor", {})]
+    assert result == {
+        "used_tools": ["mcp_read_cursor"],
+        "answer_text": "You are in Verse, and the next beat is 21.1 (37.620s).",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_first_chord_occurrence_deterministically(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_find_chord":
+            return {"ok": True, "data": {"occurrence": 1, "chord": {"label": "F", "bar": 29, "beat": 1, "time_s": 51.94}}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "what is the first occurrence of the chord F?"},
+    ])
+
+    assert tool_calls == [("mcp_find_chord", {"chord": "F", "occurrence": 1})]
+    assert result == {
+        "used_tools": ["mcp_find_chord"],
+        "answer_text": "The first occurrence of chord F is at 29.1 (51.940s).",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_cursor_deterministically(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_cursor":
+            return {"ok": True, "data": {"bar": 20, "beat": 1, "time_s": 35.82, "section_name": "Instrumental"}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "where is the cursor?"},
+    ])
+
+    assert tool_calls == [("mcp_read_cursor", {})]
+    assert result == {
+        "used_tools": ["mcp_read_cursor"],
+        "answer_text": "The cursor is at 20.1 (35.820s) in Instrumental.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_lists_left_fixtures_deterministically(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "mini_beam_prism_l"}, {"id": "parcan_l"}, {"id": "parcan_pl"}, {"id": "parcan_r"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "what fixtures are on the left?"},
+    ])
+
+    assert tool_calls == [("mcp_read_fixtures", {})]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures"],
+        "answer_text": "mini_beam_prism_l, parcan_l, parcan_pl",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_moves_left_prism_at_start_of_chorus(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_sections":
+            return {"ok": True, "data": {"sections": [{"name": "Chorus", "start_s": 84.18, "end_s": 100.28}]}}
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "mini_beam_prism_l"}, {"id": "mini_beam_prism_r"}]}}
+        if tool_name == "mcp_read_pois":
+            return {"ok": True, "data": {"pois": [{"id": "piano", "name": "Piano"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "Aim the left prism at piano at the start of the chorus"},
+    ])
+
+    assert tool_calls == [("mcp_read_sections", {}), ("mcp_read_fixtures", {}), ("mcp_read_pois", {})]
+    assert result == {
+        "used_tools": ["mcp_read_sections", "mcp_read_fixtures", "mcp_read_pois"],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {
+                        "time": 84.18,
+                        "fixture_id": "mini_beam_prism_l",
+                        "effect": "move_to_poi",
+                        "duration": 0.0,
+                        "data": {"target_POI": "piano"},
+                    }
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Move mini_beam_prism_l to piano at 84.180s.",
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_sets_both_prisms_full_on_second_zero(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "mini_beam_prism_l"}, {"id": "mini_beam_prism_r"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "set both prism to full on second 0.0"},
+    ])
+
+    assert tool_calls == [("mcp_read_fixtures", {})]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures"],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {"time": 0.0, "fixture_id": "mini_beam_prism_l", "effect": "full", "duration": 0.0, "data": {}},
+                    {"time": 0.0, "fixture_id": "mini_beam_prism_r", "effect": "full", "duration": 0.0, "data": {}},
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Set mini_beam_prism_l, mini_beam_prism_r to full at 0.000s.",
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_adds_sweep_on_first_beat_of_second_instrumental(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_sections":
+            return {
+                "ok": True,
+                "data": {
+                    "sections": [
+                        {"name": "Instrumental", "start_s": 35.82, "end_s": 49.70},
+                        {"name": "Instrumental", "start_s": 50.14, "end_s": 57.32},
+                    ]
+                },
+            }
+        if tool_name == "mcp_read_fixtures":
+            return {"ok": True, "data": {"fixtures": [{"id": "mini_beam_prism_l"}, {"id": "mini_beam_prism_r"}]}}
+        if tool_name == "mcp_read_pois":
+            return {"ok": True, "data": {"pois": [{"id": "piano", "name": "Piano"}, {"id": "table", "name": "Table"}]}}
+        if tool_name == "mcp_read_beats":
+            return {"ok": True, "data": {"beats": [{"time": 50.14, "bar": 28, "beat": 1}, {"time": 50.58, "bar": 28, "beat": 2}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "on the first beat of the second instrumental section, sweep left prism from piano to table."},
+    ])
+
+    assert tool_calls == [
+        ("mcp_read_sections", {}),
+        ("mcp_read_fixtures", {}),
+        ("mcp_read_pois", {}),
+        ("mcp_read_beats", {"start_time": 50.14, "end_time": 57.32}),
+    ]
+    assert result == {
+        "used_tools": ["mcp_read_sections", "mcp_read_fixtures", "mcp_read_pois", "mcp_read_beats"],
+        "proposal": {
+            "type": "proposal",
+            "action_id": result["proposal"]["action_id"],
+            "tool_name": "propose_cue_add_entries",
+            "arguments": {
+                "entries": [
+                    {
+                        "time": 50.14,
+                        "fixture_id": "mini_beam_prism_l",
+                        "effect": "sweep",
+                        "duration": 0.44,
+                        "data": {"start_POI": "piano", "subject_POI": "table"},
+                    }
+                ]
+            },
+            "title": "Confirm cue add",
+            "summary": "Add sweep on mini_beam_prism_l from piano through table at 50.140s.",
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_loudest_section(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_sections":
+            return {
+                "ok": True,
+                "data": {
+                    "sections": [
+                        {"name": "Intro", "start_s": 1.36, "end_s": 35.82},
+                        {"name": "Chorus", "start_s": 84.18, "end_s": 100.28},
+                    ]
+                },
+            }
+        if tool_name == "mcp_read_loudness":
+            if args == {"section": "Intro"}:
+                return {"ok": True, "data": {"average": 0.12}}
+            if args == {"section": "Chorus"}:
+                return {"ok": True, "data": {"average": 0.42}}
+        raise AssertionError(f"unexpected tool call: {tool_name} {args}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "which is the loudest section?"},
+    ])
+
+    assert tool_calls == [
+        ("mcp_read_sections", {}),
+        ("mcp_read_loudness", {"section": "Intro"}),
+        ("mcp_read_loudness", {"section": "Chorus"}),
+    ]
+    assert result == {
+        "used_tools": ["mcp_read_sections", "mcp_read_loudness", "mcp_read_loudness"],
+        "answer_text": "The loudest section is Chorus from 84.180s to 100.280s with average loudness 0.420000.",
+    }
+
+
+@pytest.mark.asyncio
 async def test_fast_path_sets_both_prisms_to_full_at_explicit_time(monkeypatch):
     gateway_main = _load_gateway_main_module()
     tool_calls = []

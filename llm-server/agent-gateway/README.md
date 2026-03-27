@@ -29,6 +29,7 @@ The gateway also performs deterministic fast-path handling for common assistant 
 - POI-conditioned movement prompts such as moving a prism to piano before a named section resolve through section timing, beat lookup, fixture lookup, and POI lookup before producing a cue-add proposal.
 - POI transition prompts for prism `seek` and `sweep` effects resolve when the prompt provides an ordered POI path such as `from table to piano` or `from table to piano to sofa`.
 - `none` chord spans are resolved from analyzer label `N` and can produce `blackout` or `fade_out` cue proposals across the full span.
+- Factual prompts for prism effects, available POIs, section count, chords in a bar, cursor position, current section plus next beat, loudest section, and left-side fixtures resolve to deterministic grounded answers without a follow-up model turn.
 - Write-capable turns stop at proposal generation so backend can require explicit confirmation before mutating cues.
 
 ## Response shaping

@@ -3,7 +3,7 @@
 ## Development policy
 - **NEVER keep deprecated code.** Remove deprecated helpers and dead code; do not retain compatibility shims.
 - **NEVER prioritize backward compatibility over correctness.** Breaking changes are acceptable when they improve clarity and behavior.
-- **ALWAYS use the `ai-light` Python environment** for local Python development.
+- **ALWAYS use the `ai-light` Python environment** for local Python development. DO NOT CREATE OTHER ENVIRONMENTS.
 
 ## LLM code size and quality rules
 - Prefer small files: target `<= 100` lines per file.
