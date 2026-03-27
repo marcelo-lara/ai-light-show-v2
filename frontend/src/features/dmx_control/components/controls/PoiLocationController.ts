@@ -37,9 +37,6 @@ export function PoiLocationController(
     const currentPan = Number(live?.pan ?? snapshotPan);
     const currentTilt = Number(live?.tilt ?? snapshotTilt);
 
-    const dropdownWrap = document.createElement("div");
-    dropdownWrap.className = "poi-dropdown-wrap";
-
     const options = pois.map((p) => ({
       label: p.name,
       value: p.id,
@@ -98,8 +95,7 @@ export function PoiLocationController(
         }, 120);
       },
     });
-    dropdownWrap.appendChild(dropdown.root);
-    container.appendChild(dropdownWrap);
+    container.appendChild(dropdown.root);
 
     const showSet = (() => {
       if (!currentSelectedPoiId) return false;

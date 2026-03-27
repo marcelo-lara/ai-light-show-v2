@@ -29,7 +29,7 @@
 .effect-tray-top {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
 }
 
 .effect-tray-top .dropdown,
@@ -205,9 +205,6 @@
 .poi-controller-row {
   display: flex;
   gap: 8px;
-}
-.poi-dropdown-wrap {
-  flex: 1;
 }
 
 .enum-grid {
