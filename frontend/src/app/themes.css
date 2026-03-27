@@ -160,7 +160,7 @@ button {
   border: 0;
   padding: 0.5em;
   color: var(--text);
-  background-color: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+  background-color: color-mix(in oklab, var(--accent) 40%, var(--card-2));
   cursor: pointer;
 }
 button:hover:not(:disabled) {

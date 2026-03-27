@@ -57,6 +57,20 @@
   align-items: center;
 }
 
+.song-player-transport button {
+  border-radius: .5em;
+  background-color: var(--btn-state-bg-soft);
+}
+
+.song-player-transport .play-pause-btn{
+  background-color: var(--accent);
+}
+
+.song-player-transport  button.play-pause-btn:hover:not(:disabled) {
+  background-color: color-mix(in oklab, var(--accent) 70%, var(--text))
+}
+
+
 .transport-icon {
   width: 20px;
   height: 20px;
