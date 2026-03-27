@@ -63,24 +63,6 @@
   flex: 1;
 }
 
-.rgb-preview {
-  display: grid;
-  gap: 6px;
-  justify-items: start;
-}
-
-.rgb-preview-input {
-  width: 44px;
-  height: 20px;
-  padding: 0;
-  background: transparent;
-  border: 1px solid var(--border-strong);
-}
-
-.rgb-preview-label {
-  font-size: 0.75rem;
-}
-
 .fixture-card h3 {
   margin: 0;
   font-size: 1.1rem;

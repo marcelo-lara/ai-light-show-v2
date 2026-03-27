@@ -82,6 +82,7 @@ export function CueHelpers(): HTMLElement {
 		const form = CueHelperParamForm({
 			helper,
 			values: state.params,
+			currentCursorMs: getPlaybackTimeMs(),
 			onChange: (name, value) => {
 				state.params[name] = value;
 			},
@@ -93,7 +94,10 @@ export function CueHelpers(): HTMLElement {
 			caption: "Apply",
 			state: "primary",
 			bindings: {
-				onClick: () => applyCueHelper(helper.id, state.params),
+				onClick: () => applyCueHelper(helper.id, {
+					...state.params,
+					start_time_ms: getPlaybackTimeMs(),
+				}),
 			},
 		}));
 

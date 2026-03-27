@@ -67,14 +67,24 @@
 .cue-helper-form {
   display: flex;
   flex-direction: column;
+  font-size: .8em;
   gap: 8px;
 }
 
 .cue-helper-field {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 }
 
+.cue-helper-field > label{
+  flex: 1 1 auto;
+}
+
+.cue-helper-field span{
+  min-width: 12em;
+}
 .cue-helper-actions {
   margin-top: auto;
   display: flex;
@@ -153,7 +163,7 @@
 .time_position {
   display: flex;
   align-items: center;
-  width: 100%;
+  flex-direction: row;
 }
 
 .time_position-input {

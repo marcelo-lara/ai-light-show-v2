@@ -27,6 +27,10 @@ export function hydrateCueHelperParams(
 
 	const next: Record<string, unknown> = {};
 	for (const param of helper.parameters ?? []) {
+		if (param.name === "start_time_ms") {
+			next[param.name] = playbackTimeMs;
+			continue;
+		}
 		next[param.name] = current[param.name] ?? getParamDefault(param, playbackTimeMs);
 	}
 	return next;

@@ -125,7 +125,7 @@ export type CueEntry = EffectCueEntry | ChaserCueEntry;
 export type CueHelperParameterDefinition = {
   name: string;
   label: string;
-  type: "number" | "range" | "select" | "text";
+  type: "number" | "range" | "select" | "text" | "color";
   default?: string | number | boolean;
   min?: number;
   max?: number;

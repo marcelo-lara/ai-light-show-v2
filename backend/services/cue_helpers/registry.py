@@ -24,7 +24,7 @@ _HELPERS: List[Dict[str, Any]] = [
         "mode": "parameterized",
         "parameters": [
             {"name": "start_time_ms", "label": "Start Time (ms)", "type": "number", "default": 0, "min": 0, "step": 50, "required": True},
-            {"name": "color", "label": "Color", "type": "text", "default": "#FFFFFF", "required": True},
+            {"name": "color", "label": "Color", "type": "color", "default": "#FFFFFF", "required": True},
             {"name": "initial_value", "label": "Initial Brightness", "type": "range", "default": 1.0, "min": 0.05, "max": 1.0, "step": 0.05, "required": True},
             {"name": "delay_beats", "label": "Delay (beats)", "type": "range", "default": 0.5, "min": 0.125, "max": 2.0, "step": 0.125, "required": True},
             {"name": "flash_duration_beats", "label": "Flash Duration (beats)", "type": "range", "default": 0.25, "min": 0.125, "max": 1.0, "step": 0.125, "required": True},
