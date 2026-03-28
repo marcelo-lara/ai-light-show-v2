@@ -389,6 +389,7 @@ Field notes:
 - `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song.
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
 - `fixtures.<id>.supported_effects` lists valid effects as rich metadata objects with `id`, `name`, `description`, `tags`, and `schema`.
+- Frontend consumers should read `fixtures.<id>.supported_effects[].id` as the stable effect identifier and `name` as the display label; treating `supported_effects` as a string id list is invalid.
 - Effect `tags` come from a controlled backend vocabulary for assistant reasoning, including concepts like `rise`, `drop`, `spike`, `soft`, `tension`, `wash`, and `focus`.
 - Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
 - `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet. Each cue entry includes `created_by`.

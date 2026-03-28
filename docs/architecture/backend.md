@@ -155,6 +155,8 @@ Mutation tools schedule websocket patch broadcasts after state changes so browse
 
 Serialized fixture payloads expose `supported_effects` as rich effect objects with `id`, `name`, `description`, `tags`, and `schema` rather than effect ids only.
 
+Frontend consumers should treat each `supported_effects[]` entry as a metadata object. `id` is the stable effect identifier for intent payloads and parameter-schema lookup, and `name` is the display label.
+
 `transport_get_cursor` returns the current timecode, nearest and next beat positions, the active `section_name` when the cursor is inside a labeled section, and `next_section_name` when the cursor is before the next section boundary.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:

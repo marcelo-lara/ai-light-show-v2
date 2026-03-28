@@ -76,6 +76,7 @@ Behavior notes:
 
 Fixture payload notes:
 - `fixtures.<id>.supported_effects` is a list of rich effect objects with `id`, `name`, `description`, `tags`, and `schema`.
+- Clients should treat `supported_effects` as metadata objects only. Use `id` as the stable effect value and `name` as the display label.
 - Controlled effect tags are intended for assistant reasoning and recommendation, for example `spike`, `drop`, `rise`, `soft`, `tension`, and `wash`.
 
 ### Backend → Client

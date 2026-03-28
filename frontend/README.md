@@ -73,6 +73,8 @@ Frontend cue/chaser payload expectations:
   - effect cue: `time`, `fixture_id`, `effect`, `duration`, `data`, optional `name`, optional `created_by`
   - chaser cue: `time`, `chaser_id`, `data`, optional `name`, optional `created_by`
 - `state.chasers` entries include stable `id`, display `name`, `description`, and beat-based `effects`.
+- `state.fixtures.<id>.supported_effects` is a list of effect descriptors with `id`, `name`, `description`, `tags`, and `schema`.
+- Frontend effect selectors and preview controls must use `supported_effects[].id` as the effect value and `supported_effects[].name` as the visible label.
 - Chaser intents use `chaser_id` in payloads, not `chaser_name`.
 - Chaser cue repetitions live in `cue.data.repetitions`.
 
@@ -102,6 +104,7 @@ Global bridge fields used across modules:
 ### Shared transport/state
 - `src/shared/transport/ws_client.ts`: `WsClient` reconnecting WebSocket client.
 - `src/shared/transport/protocol.ts`: all backend/frontend protocol types.
+- `src/shared/transport/supported_effects.ts`: helpers that normalize `FixtureState.supported_effects` descriptors into effect ids and dropdown options.
 - `src/shared/transport/transport_intents.ts`: transport intent senders.
 - `src/shared/state/backend_state.ts`: snapshot/patch reducer and subscribers.
 - `src/shared/state/song_data.ts`: cleaned song chord/section selectors shared by analysis and builder views.
@@ -171,7 +174,7 @@ Show Builder current cue-sheet behavior:
 
 ### DMX control
 - `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.
-- `src/features/dmx_control/adapters/fixture_vm.ts`: backend `FixtureState` -> frontend `FixtureVM`.
+- `src/features/dmx_control/adapters/fixture_vm.ts`: backend `FixtureState` -> frontend `FixtureVM`, including `supported_effects` metadata normalization for the tray UI.
 - `src/features/dmx_control/fixture_selectors.ts`: fixture selection entrypoint.
 - `src/features/dmx_control/fixture_intents.ts`: DMX + preview + POI intent senders.
 - `src/features/dmx_control/components/FixtureGrid.ts`: card grid and incremental control updates.
