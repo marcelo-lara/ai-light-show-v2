@@ -24,7 +24,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 ### Output structure
 
 - `analyzer/meta/<song>/info.json`: canonical song metadata.
-- `analyzer/meta/<song>/beats.json`: analyzer beat/downbeat times.
+- `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable mix data, this file is normalized from Moises beats and chords.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
 - `analyzer/meta/<song>/essentia/*.svg`: optional plots.
 - `analyzer/meta/<song>/stems/*`: separated stems when stem split is enabled.
@@ -46,6 +46,8 @@ docker compose up analyzer --build
 ```bash
 docker compose exec analyzer python analyze_song.py
 ```
+
+Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` and runs stem splitting, analyzer beat finding only when Moises mix data is absent, Essentia analysis, and Moises import when available.
 
 ### CLI mode
 
@@ -72,6 +74,8 @@ docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.m
 2. Prefer additive metadata fields; if breaking changes are required, update all consumers atomically.
 3. Keep feature names and file naming stable across songs.
 4. Validate with at least one real song end-to-end.
+
+Stem loudness files use `loudness_envelope.<stem>.json` and `loudness_envelope.<stem>.svg` in the song `essentia` directory, while the mix keeps `loudness_envelope.json` and `loudness_envelope.svg`.
 
 ## Verification
 

@@ -23,7 +23,14 @@ def analyze_with_essentia(
     out_dir: str,
     part_name: str,
     sample_rate: int = 44100,
+    artifact_file_stems: dict[str, str] | None = None,
 ) -> Dict[str, Any]:
+    artifact_file_stems = artifact_file_stems or {}
+
+    def artifact_path(name: str, suffix: str) -> Path:
+        file_stem = artifact_file_stems.get(name, name)
+        return Path(out_dir) / f"{file_stem}.{suffix}"
+
     loader = es.AudioLoader(filename=audio_path)
     audio, sr, *_ = loader()
     duration = len(audio) / sr
@@ -205,7 +212,7 @@ def analyze_with_essentia(
 
     # Write each artifact JSON
     for artifact_name, data in artifacts.items():
-        json_path = Path(out_dir) / f"{artifact_name}.json"
+        json_path = artifact_path(artifact_name, "json")
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(to_jsonable(data), f, indent=2)
 
@@ -218,7 +225,7 @@ def analyze_with_essentia(
             np.array(artifacts["rhythm"]["rhythm"]["downbeats"]),
             artifacts["rhythm"]["onsets"]["rate"],
             artifacts["rhythm"]["beat_loudness"]["values"],
-            Path(out_dir) / "rhythm.svg",
+            artifact_path("rhythm", "svg"),
         )
     except Exception as exc:
         warn(f"Rhythm plotting failed: {exc}")
@@ -227,7 +234,7 @@ def analyze_with_essentia(
             artifacts["loudness_envelope"]["times"],
             artifacts["loudness_envelope"]["loudness"],
             artifacts["loudness_envelope"]["envelope"],
-            Path(out_dir) / "loudness_envelope.svg",
+            artifact_path("loudness_envelope", "svg"),
         )
     except Exception as exc:
         warn(f"Loudness envelope plotting failed: {exc}")
@@ -235,7 +242,7 @@ def analyze_with_essentia(
         plot_chroma_hpcp(
             artifacts["chroma_hpcp"]["times"],
             artifacts["chroma_hpcp"]["hpcp"],
-            Path(out_dir) / "chroma_hpcp.svg",
+            artifact_path("chroma_hpcp", "svg"),
         )
     except Exception as exc:
         warn(f"Chroma HPCP plotting failed: {exc}")
@@ -243,7 +250,7 @@ def analyze_with_essentia(
         plot_mel_bands(
             artifacts["mel_bands"]["times"],
             artifacts["mel_bands"]["mel_bands"],
-            Path(out_dir) / "mel_bands.svg",
+            artifact_path("mel_bands", "svg"),
         )
     except Exception as exc:
         warn(f"Mel bands plotting failed: {exc}")
@@ -252,7 +259,7 @@ def analyze_with_essentia(
         plot_spectral_centroid(
             artifacts["spectral_centroid"]["times"],
             artifacts["spectral_centroid"]["centroid"],
-            Path(out_dir) / "spectral_centroid.svg",
+            artifact_path("spectral_centroid", "svg"),
         )
     except Exception as exc:
         warn(f"Spectral centroid plotting failed: {exc}")

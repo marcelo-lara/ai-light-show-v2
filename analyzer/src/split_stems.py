@@ -59,7 +59,7 @@ def split_stems(
     mp3: bool = False,
     jobs: int = 0,
     meta_dir: str | Path | None = None,
-) -> Path:
+) -> tuple[Path, list[str]]:
     """Run Demucs and return the directory containing generated stems."""
     song_path = Path(song_path).expanduser().resolve()
     output_dir = Path(output_dir).expanduser().resolve()
@@ -96,12 +96,11 @@ def split_stems(
             f"{stems_dir}"
         )
 
+    stem_files = sorted([str(p.resolve()) for p in stems_dir.glob("*") if p.is_file()])
+
     if meta_dir is not None:
         meta_dir = Path(meta_dir).expanduser().resolve()
         meta_dir.mkdir(parents=True, exist_ok=True)
-        stem_files = sorted(
-            [str(p.resolve()) for p in stems_dir.glob("*") if p.is_file()]
-        )
 
     return stems_dir, stem_files
 
@@ -150,7 +149,7 @@ def main() -> int:
     if len(sys.argv) == 1:
         print(f"Running test split with provided song: {SONG_PATH}")
         try:
-            stems_dir = split_stems(
+            stems_dir, _ = split_stems(
                 song_path=SONG_PATH,
                 output_dir=TEMP_FILES_FOLDER,
                 model=MODEL_NAME,
@@ -170,7 +169,7 @@ def main() -> int:
 
     args = parse_args()
     try:
-        stems_dir = split_stems(
+        stems_dir, _ = split_stems(
             song_path=args.song,
             output_dir=args.out,
             model=args.model,
