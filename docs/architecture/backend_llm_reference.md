@@ -154,7 +154,7 @@ Code is the source of truth.
 | `metadata_find_bar_beat` | `bar`, `beat`, `song?` | returns one exact beat row with its resolved time |
 | `metadata_get_chords` | `song?`, `start_time?`, `end_time?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns chord-change rows parsed from `beats.json`, optionally time-filtered or bar/beat-filtered |
 | `metadata_find_chord` | `chord`, `occurrence?`, `song?` | returns one exact chord occurrence with resolved time and musical position |
-| `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads analyzer `essentia/loudness_envelope.json` and returns averaged window statistics |
+| `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads the analyzer mix loudness artifact referenced from `info.json` and returns averaged window statistics |
 
 #### Transport
 

@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import quote
 
+from models.song.artifacts import build_essentia_plot_descriptors
+
 logger = logging.getLogger(__name__)
 
 def pick_numeric_list(*candidates: Any) -> List[float]:
@@ -102,25 +104,16 @@ def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[st
         return None
 
     artifacts = info_data.get("artifacts") or {}
-    essentia = artifacts.get("essentia") if isinstance(artifacts, dict) else None
 
     plots: List[Dict[str, Any]] = []
-    if isinstance(essentia, dict):
-        for key, value in essentia.items():
-            if not isinstance(value, dict):
-                continue
-            
-            # Simple conversion rule - standard absolute URL pattern mapping
-            svg_url = value.get("svg")
-            if not svg_url:
-                continue
-            
-            # Handle standard app mount mapping /app/meta/x -> /meta/x
-            if str(svg_url).startswith("/app/meta/"):
-                mapped_path_parts = Path(svg_url[len("/app/meta/"):]).parts
-                svg_url = f"/meta/{'/'.join(quote(part) for part in mapped_path_parts)}"
-
-            plots.append({"id": str(key), "title": str(key).replace("_", " ").title(), "svg_url": svg_url})
+    for plot in build_essentia_plot_descriptors(artifacts if isinstance(artifacts, dict) else None):
+        svg_url = plot.get("svg")
+        if not svg_url:
+            continue
+        if str(svg_url).startswith("/app/meta/"):
+            mapped_path_parts = Path(str(svg_url)[len("/app/meta/"):]).parts
+            svg_url = f"/meta/{'/'.join(quote(part) for part in mapped_path_parts)}"
+        plots.append({"id": str(plot["id"]), "title": str(plot["title"]), "svg_url": svg_url})
 
     chords_path = meta_root / song_filename / "beats.json"
     chords = parse_chords(chords_path) if chords_path.exists() else []

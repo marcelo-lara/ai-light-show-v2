@@ -25,6 +25,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 
 - `analyzer/meta/<song>/info.json`: canonical song metadata.
 - `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable mix data, this file is normalized from Moises beats and chords.
+- `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
 - `analyzer/meta/<song>/essentia/*.svg`: optional plots.
 - `analyzer/meta/<song>/stems/*`: separated stems when stem split is enabled.
@@ -75,7 +76,11 @@ docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.m
 3. Keep feature names and file naming stable across songs.
 4. Validate with at least one real song end-to-end.
 
-Stem loudness files use `loudness_envelope.<stem>.json` and `loudness_envelope.<stem>.svg` in the song `essentia` directory, while the mix keeps `loudness_envelope.json` and `loudness_envelope.svg`.
+`info.json` groups Essentia artifacts by part first: `artifacts.essentia.mix.loudness_envelope`, `artifacts.essentia.bass.chroma_hpcp`, and so on. The derived loudness hints file is exposed separately as `artifacts.hints_file`.
+
+`hints.json` is a plain list of song sections. Each section includes its time window and a `hints` array containing relevant `rise`, `drop`, `sustain`, and `sudden_spike` entries. Mix drives section-level meaning, while stems only appear when they materially support a local event.
+
+Stem Essentia files use a consistent `<part>_<feature>.json` and `<part>_<feature>.svg` naming pattern in the song `essentia` directory, while the mix keeps unprefixed filenames like `loudness_envelope.json` and `rhythm.json`.
 
 ## Verification
 

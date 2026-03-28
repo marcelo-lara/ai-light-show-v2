@@ -9,12 +9,13 @@ from typing import Any, List, Optional
 from beat_comparison import run_compare_beat_times_for
 from import_moises import import_moises
 from src.beat_finder import find_beats_and_downbeats
-from src.essentia_analysis import analyze_with_essentia
+from src.essentia_analysis import analyze_with_essentia, build_loudness_hints
 from src.essentia_analysis.common import is_stem_worth_analyzing
 from src.split_stems import MODEL_NAME, TEMP_FILES_FOLDER, split_stems
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")
 SONGS_DIR = os.environ.get("SONGS_DIR", "/app/songs")
+ESSENTIA_FEATURES = ("rhythm", "loudness_envelope", "chroma_hpcp", "mel_bands", "spectral_centroid")
 
 
 def warn(message: str) -> None:
@@ -89,6 +90,18 @@ def _load_list_file(path: Path) -> list[Any]:
     return payload if isinstance(payload, list) else []
 
 
+def _load_sections(song_meta_dir: Path) -> list[dict[str, Any]]:
+    sections = _load_list_file(song_meta_dir / "sections.json")
+    normalized: list[dict[str, Any]] = []
+    for index, section in enumerate(sections, start=1):
+        if not isinstance(section, dict):
+            continue
+        start_value = float(section.get("start_s", section.get("start", 0.0)) or 0.0)
+        end_value = float(section.get("end_s", section.get("end", start_value)) or start_value)
+        normalized.append({"name": str(section.get("name") or section.get("label") or f"Section {index}"), "start_s": round(start_value, 3), "end_s": round(max(end_value, start_value), 3)})
+    return normalized
+
+
 def _has_moises_mix_data(song_path: str | Path, meta_path: str | Path) -> bool:
     moises_dir = _moises_dir(song_path, meta_path)
     return bool(_load_list_file(moises_dir / "beats.json") or _load_list_file(moises_dir / "chords.json"))
@@ -153,11 +166,24 @@ def _write_song_beats(song_path: Path, meta_root: Path, beats: list[dict], sourc
     return beats_file
 
 
-def _artifact_file_stem(artifact_name: str) -> str:
-    parts = artifact_name.split("_", 1)
-    if len(parts) == 2 and parts[1] == "loudness_envelope":
-        return f"loudness_envelope.{parts[0]}"
-    return artifact_name
+def _artifact_file_stems_for_part(part_name: str) -> dict[str, str]:
+    if part_name == "mix":
+        return {feature: feature for feature in ESSENTIA_FEATURES}
+    return {feature: f"{part_name}_{feature}" for feature in ESSENTIA_FEATURES}
+
+
+def _build_essentia_manifest(essentia_dir: Path, part_artifacts: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    manifest: dict[str, Any] = {}
+    for part_name, artifacts in part_artifacts.items():
+        file_stems = _artifact_file_stems_for_part(part_name)
+        manifest[part_name] = {}
+        for artifact_name in artifacts:
+            file_stem = file_stems.get(artifact_name, artifact_name)
+            manifest[part_name][artifact_name] = {
+                "json": str(essentia_dir / f"{file_stem}.json"),
+                "svg": str(essentia_dir / f"{file_stem}.svg"),
+            }
+    return manifest
 
 
 def analyze_all_songs(
@@ -334,8 +360,15 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
 
         part_name = "mix"
         print(f"Analyzing entire song as part: {part_name}")
-        artifacts = analyze_with_essentia(str(song_path), str(essentia_dir), part_name)
-        rhythm = artifacts.get("rhythm", {}).get("rhythm", {}) if isinstance(artifacts, dict) else {}
+        part_artifacts = {
+            part_name: analyze_with_essentia(
+                str(song_path),
+                str(essentia_dir),
+                part_name,
+                artifact_file_stems=_artifact_file_stems_for_part(part_name),
+            )
+        }
+        rhythm = part_artifacts[part_name].get("rhythm", {}).get("rhythm", {}) if isinstance(part_artifacts[part_name], dict) else {}
         bpm_value = rhythm.get("bpm")
         try:
             if bpm_value is not None and float(bpm_value) == 0.0:
@@ -358,27 +391,21 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
                             str(stem_file),
                             str(essentia_dir),
                             stem_name,
-                            artifact_file_stems={"loudness_envelope": f"loudness_envelope.{stem_name}"},
+                            artifact_file_stems=_artifact_file_stems_for_part(stem_name),
                         )
-                        for key, value in stem_artifacts.items():
-                            artifacts[f"{stem_name}_{key}"] = value
+                        part_artifacts[stem_name] = stem_artifacts
                     else:
                         print(f"Skipping stem: {stem_name} (not worth analyzing)")
 
-        essentia_artifacts = {}
-        for artifact_name in artifacts:
-            file_stem = _artifact_file_stem(artifact_name)
-            json_path = essentia_dir / f"{file_stem}.json"
-            svg_path = essentia_dir / f"{file_stem}.svg"
-            essentia_artifacts[artifact_name] = {
-                "json": str(json_path),
-                "svg": str(svg_path),
-            }
-
-        _merge_json_file(meta_file, {"artifacts": {"essentia": essentia_artifacts}})
+        hints_path = song_meta_dir / "hints.json"
+        _dump_json(hints_path, build_loudness_hints(part_artifacts, _load_sections(song_meta_dir)))
+        _merge_json_file(
+            meta_file,
+            {"artifacts": {"essentia": _build_essentia_manifest(essentia_dir, part_artifacts), "hints_file": str(hints_path)}},
+        )
 
         print("Essentia analysis complete.")
-        return artifacts
+        return part_artifacts
     except Exception as e:
         warn(f"Essentia analysis failed: {e}")
         return None
