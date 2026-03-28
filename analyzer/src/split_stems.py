@@ -16,6 +16,8 @@ import sys
 from pathlib import Path
 from shutil import which
 
+import soundfile as sf
+
 # Config
 SONG_PATH = "/app/songs/Yonaka - Seize the Power.mp3"
 TEMP_FILES_FOLDER = "/app/analyzer/temp_files/"
@@ -39,6 +41,30 @@ def _demucs_base_command() -> list[str]:
     if which("demucs") is not None:
         return ["demucs"]
     return [sys.executable, "-m", "demucs.separate"]
+
+
+def _save_with_soundfile(path: str, wav, sample_rate: int, encoding=None, bits_per_sample=None):
+    subtype_map = {
+        ("PCM_S", 16): "PCM_16",
+        ("PCM_S", 24): "PCM_24",
+        ("PCM_S", 32): "PCM_32",
+        ("PCM_F", 32): "FLOAT",
+    }
+    subtype = subtype_map.get((encoding, bits_per_sample))
+    data = wav.detach().cpu().transpose(0, 1).numpy()
+    sf.write(path, data, sample_rate, subtype=subtype)
+
+
+def _run_demucs(command: list[str]) -> None:
+    from demucs import audio as demucs_audio
+    from demucs import separate as demucs_separate
+
+    original_save = demucs_audio.ta.save
+    demucs_audio.ta.save = _save_with_soundfile
+    try:
+        demucs_separate.main(command[1:])
+    finally:
+        demucs_audio.ta.save = original_save
 
 
 def _merge_json_file(path: Path, updates: dict) -> None:
@@ -86,7 +112,7 @@ def split_stems(
         command.insert(-1, "--mp3")
 
     print("Running:", " ".join(command))
-    subprocess.run(command, check=True)
+    _run_demucs(command)
 
     # Demucs output path format: <out>/<model>/<song_stem_name>/
     stems_dir = output_dir / model / song_path.stem
