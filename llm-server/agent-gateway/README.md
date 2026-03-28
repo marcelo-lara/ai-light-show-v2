@@ -19,6 +19,24 @@ FastAPI OpenAI-compatible wrapper for local llama.cpp with MCP tool-calling supp
    - append tool results as `role=tool` messages,
    - call model again and return final output.
 
+## Module layout
+
+- `main.py`: thin entrypoint and test-facing re-export surface.
+- `app.py`: FastAPI routes plus sync and streaming completion orchestration.
+- `config.py`: environment variables, tool declarations, and MCP tool mapping.
+- `gateway_models.py`: request model definitions used by the HTTP layer.
+- `gateway_mcp/client.py`: backend MCP transport and tool dispatch.
+- `gateway_mcp/arguments.py`: shared MCP argument helpers.
+- `rendering/results.py`: tool-result formatting and render dispatch.
+- `prompt/guidance.py`: query-specific tool-routing guidance injection.
+- `prompt/lookup_answers.py`: follow-up answer builders for section, chord, and cursor grounding.
+- `prompt/factual_answers.py`: follow-up answer builders for cue-window, loudness, and fixture facts.
+- `fast_path/extractors/*`: prompt parsing and fixture, section, chord, POI, timing, and effect helpers.
+- `fast_path/answer_text.py`: deterministic text answers that do not require a follow-up model turn.
+- `fast_path/proposals.py`: proposal payload construction and summary text.
+- `fast_path/handlers/*`: grouped deterministic handlers for informational answers, cue proposals, movement proposals, and chaser proposals.
+- `fast_path/router.py`: ordered fast-path orchestration.
+
 ## Fast-path assistant behavior
 
 The gateway also performs deterministic fast-path handling for common assistant requests before relying on a follow-up model turn.
@@ -40,7 +58,7 @@ The gateway also performs deterministic fast-path handling for common assistant 
 
 ## MCP transport behavior
 
-Implemented directly in `main.py` via `fastmcp.Client` against a Streamable HTTP MCP endpoint.
+Implemented in `gateway_mcp/client.py` via `fastmcp.Client` against a Streamable HTTP MCP endpoint.
 
 - Connect to backend MCP URL with automatic initialization.
 - Call tools through the typed client API.
