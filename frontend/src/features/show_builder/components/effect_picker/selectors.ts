@@ -1,5 +1,6 @@
 import { getBackendStore } from "../../../../shared/state/backend_state.ts";
 import type { ChaserDefinition } from "../../../../shared/transport/protocol.ts";
+import { getSupportedEffectIds } from "../../../../shared/transport/supported_effects.ts";
 
 export function formatTime(ms: number): string {
 	return (ms / 1000).toFixed(3);
@@ -24,7 +25,7 @@ export function getPlaybackTimeMs(): number {
 
 export function getSupportedEffects(fixtureId: string): string[] {
 	const fixtures = getBackendStore().state.fixtures ?? {};
-	return fixtures[fixtureId]?.supported_effects ?? [];
+	return getSupportedEffectIds(fixtures[fixtureId]?.supported_effects);
 }
 
 export function getCueHelpers() {

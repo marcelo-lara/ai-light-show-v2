@@ -210,6 +210,14 @@ export type SongSection = {
   end_s: number;
 };
 
+export type SupportedEffectDescriptor = {
+	id: string;
+	name: string;
+	description?: string;
+	tags?: string[];
+	schema?: Record<string, unknown>;
+};
+
 export type FixtureState = {
   id: string;
   type?: string; // "moving_head" | "rgb" | ...
@@ -220,7 +228,7 @@ export type FixtureState = {
   capabilities?: Record<string, boolean>; // e.g. { pan_tilt: true, rgb: true }
   meta_channels?: Record<string, MetaChannel>;
   mappings?: Record<string, Record<string, number | string>>;
-  supported_effects?: string[];
+  supported_effects?: SupportedEffectDescriptor[];
 };
 
 export type MetaChannel = {

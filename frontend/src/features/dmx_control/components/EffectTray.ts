@@ -8,10 +8,17 @@ import { ParamForm } from "../../show_builder/components/effect_params/ParamForm
 import { getDefaultParams } from "../../show_builder/components/effect_params/params_schema.ts";
 
 function effectOptions(fixture: FixtureVM): string[] {
-  if (fixture.supportedEffects.length > 0) return fixture.supportedEffects;
+  if (fixture.supportedEffects.length > 0) return fixture.supportedEffects.map((effect) => effect.id);
   if (fixture.hasPanTilt) return ["flash", "strobe", "full", "move_to", "move_to_poi", "seek", "sweep"];
   if (fixture.hasRgb) return ["flash", "strobe", "full", "fade_in"];
   return ["flash", "strobe", "full"];
+}
+
+function effectControlOptions(fixture: FixtureVM): Array<{ value: string; label: string }> {
+  if (fixture.supportedEffects.length > 0) {
+    return fixture.supportedEffects.map((effect) => ({ value: effect.id, label: effect.label }));
+  }
+  return effectOptions(fixture).map((effect) => ({ value: effect, label: effect }));
 }
 
 export function EffectTray(fixture: FixtureVM): HTMLElement {
@@ -26,7 +33,7 @@ export function EffectTray(fixture: FixtureVM): HTMLElement {
   let params = getDefaultParams(selectedEffect, fixture.type);
   const effectControl = Dropdown({
     value: selectedEffect,
-    options: effects.map((effect) => ({ value: effect, label: effect })),
+    options: effectControlOptions(fixture),
     attributes: { "aria-label": "Preview effect" },
     onChange: (value) => {
       selectedEffect = value;
