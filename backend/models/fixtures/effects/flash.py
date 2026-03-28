@@ -13,7 +13,11 @@ class FlashEffect(Effect):
 
     @property
     def description(self) -> str:
-        return "Instantly sets intensity or color to maximum and fades down to 0 over the duration."
+        return "Hits hard at the start and quickly decays, which suits spikes, accents, and transient energy."
+
+    @property
+    def tags(self) -> list[str]:
+        return ["spike", "accent", "hard", "short"]
 
     @property
     def schema(self) -> Dict[str, Any]:

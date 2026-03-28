@@ -130,6 +130,7 @@ Code is the source of truth.
 | `fixtures_list` | none | returns serialized fixture payloads using current output universe values |
 | `fixtures_get` | `fixture_id` | returns one serialized fixture payload |
 | `chasers_list` | none | returns the currently loaded chaser definitions from `backend/fixtures/chasers.json` |
+| `list_effects` | none | returns canonical effect metadata including `name`, `description`, controlled `tags`, and `schema` for each effect id |
 
 #### Cues
 
@@ -337,7 +338,15 @@ Top-level state object:
       "capabilities": {"pan_tilt": true, "rgb": false},
       "meta_channels": {},
       "mappings": {},
-      "supported_effects": ["flash", "strobe", "full"]
+      "supported_effects": [
+        {
+          "id": "flash",
+          "name": "Flash",
+          "description": "Hits hard at the start and quickly decays, which suits spikes, accents, and transient energy.",
+          "tags": ["spike", "accent", "hard", "short"],
+          "schema": {"type": "object", "properties": {"channels": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": true}
+        }
+      ]
     }
   },
   "song": {
@@ -379,7 +388,8 @@ Field notes:
 - `song` is `null` when no song is loaded.
 - `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song.
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
-- `fixtures.<id>.supported_effects` lists valid effect names for `fixture.preview_effect` and `cue.add` intents.
+- `fixtures.<id>.supported_effects` lists valid effects as rich metadata objects with `id`, `name`, `description`, `tags`, and `schema`.
+- Effect `tags` come from a controlled backend vocabulary for assistant reasoning, including concepts like `rise`, `drop`, `spike`, `soft`, `tension`, `wash`, and `focus`.
 - Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
 - `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet. Each cue entry includes `created_by`.
 - `cue_helpers` lists backend-declared helper definitions for frontend helper execution UI.

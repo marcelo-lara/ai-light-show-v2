@@ -35,11 +35,15 @@ async def test_fixture_payload_shape():
     parcan = payload.get("parcan_l")
     assert parcan is not None
     assert parcan["values"].get("rgb") == "#000000"
-    assert parcan["supported_effects"] == ["blackout", "color_fade", "fade_in", "fade_out", "flash", "full", "set_channels", "strobe"]
+    assert [effect["id"] for effect in parcan["supported_effects"]] == ["blackout", "color_fade", "fade_in", "fade_out", "flash", "full", "set_channels", "strobe"]
+    flash = next(effect for effect in parcan["supported_effects"] if effect["id"] == "flash")
+    assert flash["tags"] == ["spike", "accent", "hard", "short"]
+    assert "description" in flash
+    assert "schema" in flash
 
     mover = payload.get("head_el150")
     assert mover is not None
-    assert mover["supported_effects"] == [
+    assert [effect["id"] for effect in mover["supported_effects"]] == [
         "blackout",
         "fade_in",
         "fade_out",
@@ -52,6 +56,8 @@ async def test_fixture_payload_shape():
         "strobe",
         "sweep",
     ]
+    sweep = next(effect for effect in mover["supported_effects"] if effect["id"] == "sweep")
+    assert sweep["tags"] == ["movement", "tension", "long", "soft"]
 
 
 @pytest.mark.asyncio

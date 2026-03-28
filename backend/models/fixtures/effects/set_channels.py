@@ -12,7 +12,11 @@ class SetChannelsEffect(Effect):
 
     @property
     def description(self) -> str:
-        return "Instantly sets explicit raw channel values on the fixture."
+        return "Writes explicit raw channel values directly when you need technical control instead of a musical effect."
+
+    @property
+    def tags(self) -> list[str]:
+        return ["static", "accent"]
 
     @property
     def schema(self) -> Dict[str, Any]:

@@ -21,7 +21,11 @@ class StrobeEffect(Effect):
 
     @property
     def description(self) -> str:
-        return "Toggles the fixture's intensity or color on and off at a specified rate (in Hz) or speed (0-255)."
+        return "Repeats rapid on-off hits for sustained high-energy spikes, pressure, or aggressive accents."
+
+    @property
+    def tags(self) -> list[str]:
+        return ["spike", "sustain", "hard", "accent"]
 
     @property
     def schema(self) -> Dict[str, Any]:

@@ -12,7 +12,11 @@ class BlackoutEffect(Effect):
 
     @property
     def description(self) -> str:
-        return "Instantly drops the fixture's intensity or color to 0."
+        return "Cuts the fixture to black immediately for sharp drops, silence, or negative space."
+
+    @property
+    def tags(self) -> list[str]:
+        return ["drop", "valley", "hard", "release", "short"]
 
     @property
     def schema(self) -> Dict[str, Any]:

@@ -3,6 +3,26 @@ from typing import Any, Dict
 import orjson
 
 
+def _effect_id(effect: Any) -> str:
+    if isinstance(effect, dict):
+        return str(effect.get("id") or "").strip()
+    return str(effect or "").strip()
+
+
+def _format_effects(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    if not payload:
+        return _format_generic_result(result)
+    effects = payload.get("effects") or {}
+    lines = ["Effects:"]
+    for effect_id, effect in sorted(effects.items()):
+        if not isinstance(effect, dict):
+            continue
+        tags = ",".join(effect.get("tags") or [])
+        lines.append(f"- id={effect_id} name={effect.get('name')} tags={tags} description={effect.get('description')}")
+    return "\n".join(lines) if len(lines) > 1 else "Effects: unavailable"
+
+
 def _format_sections(result: Dict[str, Any]) -> str:
     payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
     sections = payload.get("sections") or []
@@ -91,7 +111,8 @@ def _format_fixtures(result: Dict[str, Any]) -> str:
         return "Fixtures: unavailable"
     lines = ["Fixtures:"]
     for fixture in fixtures[:64]:
-        lines.append(f"- id={fixture.get('id')} name={fixture.get('name')} type={fixture.get('type')} supported_effects={','.join(fixture.get('supported_effects') or [])}")
+        effect_ids = [_effect_id(effect) for effect in fixture.get("supported_effects") or []]
+        lines.append(f"- id={fixture.get('id')} name={fixture.get('name')} type={fixture.get('type')} supported_effects={','.join(effect_ids)}")
     return "\n".join(lines)
 
 
@@ -148,6 +169,8 @@ def _render_tool_result(tool_name: str, result: Any) -> str:
         return _format_cue_window(result)
     if tool_name == "mcp_read_fixtures":
         return _format_fixtures(result)
+    if tool_name == "mcp_read_effects":
+        return _format_effects(result)
     if tool_name == "mcp_read_pois":
         return _format_pois(result)
     if tool_name == "mcp_read_chasers":

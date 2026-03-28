@@ -144,12 +144,16 @@ Message types:
 
 Current mounted MCP tools:
 - `songs_list`, `songs_get_details`, `songs_load`
-- `fixtures_list`, `fixtures_get`, `chasers_list`
+- `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
 - `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
 - `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - `transport_get_cursor`
 
 Mutation tools schedule websocket patch broadcasts after state changes so browser clients remain synchronized with MCP-originated edits.
+
+`list_effects` exposes the canonical effect registry metadata, including assistant-facing descriptions, controlled tags, and effect data schemas.
+
+Serialized fixture payloads expose `supported_effects` as rich effect objects with `id`, `name`, `description`, `tags`, and `schema` rather than effect ids only.
 
 `transport_get_cursor` returns the current timecode, nearest and next beat positions, the active `section_name` when the cursor is inside a labeled section, and `next_section_name` when the cursor is before the next section boundary.
 

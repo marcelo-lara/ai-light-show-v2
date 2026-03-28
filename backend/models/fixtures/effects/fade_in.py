@@ -26,7 +26,11 @@ class FadeInEffect(Effect):
 
     @property
     def description(self) -> str:
-        return "Fades the fixture's intensity or color from 0 (or a specified start_value) to maximum over the duration."
+        return "Builds intensity or color upward over time, which suits rises, anticipation, and gradual reveals."
+
+    @property
+    def tags(self) -> list[str]:
+        return ["rise", "soft", "long", "tension"]
 
     @property
     def schema(self) -> Dict[str, Any]:

@@ -561,8 +561,8 @@ async def test_fast_path_lists_prism_effects(monkeypatch):
                 "ok": True,
                 "data": {
                     "fixtures": [
-                        {"id": "mini_beam_prism_l", "supported_effects": ["full", "flash", "move_to_poi", "seek", "sweep", "fade_out"]},
-                        {"id": "mini_beam_prism_r", "supported_effects": ["full", "flash", "move_to_poi", "seek", "sweep", "fade_out"]},
+                        {"id": "mini_beam_prism_l", "supported_effects": [{"id": "full"}, {"id": "flash"}, {"id": "move_to_poi"}, {"id": "seek"}, {"id": "sweep"}, {"id": "fade_out"}]},
+                        {"id": "mini_beam_prism_r", "supported_effects": [{"id": "full"}, {"id": "flash"}, {"id": "move_to_poi"}, {"id": "seek"}, {"id": "sweep"}, {"id": "fade_out"}]},
                     ]
                 },
             }

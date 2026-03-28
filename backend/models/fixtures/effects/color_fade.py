@@ -16,7 +16,11 @@ class ColorFadeEffect(Effect):
 
     @property
     def description(self) -> str:
-        return "Fades the fixture's color smoothly through the HSV color space rather than linear RGB to avoid muddy transitions."
+        return "Transitions smoothly between colors for sustained washes or gentle emotional shifts without abrupt jumps."
+
+    @property
+    def tags(self) -> list[str]:
+        return ["soft", "long", "wash", "sustain"]
 
     @property
     def schema(self) -> Dict[str, Any]:

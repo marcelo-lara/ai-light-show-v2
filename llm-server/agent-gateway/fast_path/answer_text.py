@@ -1,6 +1,12 @@
 from typing import Any, Dict, Optional
 
 
+def _effect_id(effect: Any) -> str:
+    if isinstance(effect, dict):
+        return str(effect.get("id") or "").strip()
+    return str(effect or "").strip()
+
+
 def _format_bar_beat(bar: Any, beat: Any) -> Optional[str]:
     if bar is None or beat is None:
         return None
@@ -22,7 +28,7 @@ def _build_prism_effects_answer_text(fixtures_result: Dict[str, Any]) -> Optiona
         if "prism" not in str(fixture.get("id") or "").lower():
             continue
         for effect_name in fixture.get("supported_effects") or []:
-            normalized = str(effect_name or "").strip()
+            normalized = _effect_id(effect_name)
             if normalized and normalized not in effects:
                 effects.append(normalized)
     return "Prism effects: " + ", ".join(effects) + "." if effects else None

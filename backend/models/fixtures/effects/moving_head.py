@@ -7,7 +7,9 @@ class MoveToEffect(Effect):
     @property
     def name(self) -> str: return "Move To"
     @property
-    def description(self) -> str: return "Moves the fixture to specific pan/tilt values."
+    def description(self) -> str: return "Moves the head to a specific position when you need a direct reposition or focus change."
+    @property
+    def tags(self) -> list[str]: return ["movement", "focus", "short"]
     @property
     def schema(self) -> Dict[str, Any]:
         return {
@@ -29,7 +31,9 @@ class MoveToPoiEffect(Effect):
     @property
     def name(self) -> str: return "Move To POI"
     @property
-    def description(self) -> str: return "Moves the fixture to target POI."
+    def description(self) -> str: return "Moves the head to a named POI for direct subject focus or quick staging changes."
+    @property
+    def tags(self) -> list[str]: return ["movement", "focus", "short", "static"]
     @property
     def schema(self) -> Dict[str, Any]:
         return {"type": "object", "properties": {"poi_id": {"type": "string"}}}
@@ -46,7 +50,9 @@ class SeekEffect(Effect):
     @property
     def name(self) -> str: return "Seek"
     @property
-    def description(self) -> str: return "Smoothly seeks to a target POI or pan/tilt over time."
+    def description(self) -> str: return "Glides toward a target over time, which suits builds, tightening focus, and rising tension."
+    @property
+    def tags(self) -> list[str]: return ["rise", "movement", "focus", "tension", "long"]
     @property
     def schema(self) -> Dict[str, Any]: return {"type": "object", "additionalProperties": True}
     def supports(self, fixture: Any) -> bool:
@@ -62,7 +68,9 @@ class SweepEffect(Effect):
     @property
     def name(self) -> str: return "Sweep"
     @property
-    def description(self) -> str: return "Sweeps the fixture from a start POI through a subject POI back and forth."
+    def description(self) -> str: return "Moves across space in a broad arc, which suits longer phrases, soft motion, and sustained tension."
+    @property
+    def tags(self) -> list[str]: return ["movement", "tension", "long", "soft"]
     @property
     def schema(self) -> Dict[str, Any]: return {"type": "object", "additionalProperties": True}
     def supports(self, fixture: Any) -> bool:

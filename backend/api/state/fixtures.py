@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any, Dict, Union
 
+from models.fixtures.effects import REGISTRY
 from models.fixtures.rgb_utils import rgb_to_hex
 
 
@@ -52,7 +53,7 @@ def _read_logical_values(fixture, universe) -> Dict[str, Union[int, str]]:
 def build_fixtures_payload(manager, universe) -> Dict[str, Any]:
     fixtures = {}
     for fixture in manager.state_manager.fixtures:
-        supported_effects = manager.state_manager._fixture_supported_effects(fixture)
+        supported_effects = REGISTRY.get_supported_effect_metadata(fixture)
         fixtures[fixture.id] = {
             "id": fixture.id,
             "name": fixture.name,
@@ -62,6 +63,6 @@ def build_fixtures_payload(manager, universe) -> Dict[str, Any]:
             "capabilities": _fixture_capabilities(fixture),
             "meta_channels": {k: v.model_dump() for k, v in fixture.meta_channels.items()},
             "mappings": fixture.mappings,
-            "supported_effects": sorted(supported_effects),
+            "supported_effects": supported_effects,
         }
     return fixtures

@@ -61,7 +61,7 @@ Supported intent names:
 
 Current MCP tools:
 - Songs: `songs_list`, `songs_get_details`, `songs_load`
-- Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`
+- Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
 - Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
 - Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - Transport: `transport_get_cursor`
@@ -71,7 +71,12 @@ Behavior notes:
 - MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
 - Metadata tools expose analyzer beat positions as bars and beats, including section start/end positions and exact bar/beat lookup.
 - Loudness summaries are read from the mix `artifacts.essentia` manifest entry for `loudness_envelope` and returned as averaged window statistics.
+- `list_effects` returns canonical effect metadata including effect descriptions, controlled tags, and JSON schemas.
 - `transport_get_cursor` returns the active section when the cursor is inside one, and `next_section_name` when the cursor is before the next labeled section.
+
+Fixture payload notes:
+- `fixtures.<id>.supported_effects` is a list of rich effect objects with `id`, `name`, `description`, `tags`, and `schema`.
+- Controlled effect tags are intended for assistant reasoning and recommendation, for example `spike`, `drop`, `rise`, `soft`, `tension`, and `wash`.
 
 ### Backend → Client
 

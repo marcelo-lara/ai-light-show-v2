@@ -12,7 +12,11 @@ class FullEffect(Effect):
 
     @property
     def description(self) -> str:
-        return "Instantly sets the fixture's intensity or color to maximum."
+        return "Brings the fixture fully on immediately for bold holds, strong accents, or saturated washes."
+
+    @property
+    def tags(self) -> list[str]:
+        return ["sustain", "accent", "wash", "hard", "static"]
 
     @property
     def schema(self) -> Dict[str, Any]:

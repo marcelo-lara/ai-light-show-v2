@@ -113,6 +113,14 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "mcp_read_effects",
+            "description": "Read effect metadata including description, controlled tags, and schema. Use this before suggesting which effect fits an intent like spike, drop, sustain, tension, or soft motion.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "propose_cue_clear_range",
             "description": "Propose clearing cue entries in a specific time range. Use for destructive cue sheet edits that need confirmation.",
             "parameters": {"type": "object", "properties": {"start_time": {"type": "number"}, "end_time": {"type": "number"}}, "required": ["start_time", "end_time"]},
@@ -174,4 +182,5 @@ MCP_TOOL_MAP = {
     "mcp_read_chasers": "chasers_list",
     "mcp_read_cursor": "transport_get_cursor",
     "mcp_read_loudness": "metadata_get_loudness",
+    "mcp_read_effects": "list_effects",
 }

@@ -14,7 +14,11 @@ class FadeOutEffect(Effect):
 
     @property
     def description(self) -> str:
-        return "Fades the fixture's intensity or color from its current state (or a specified start_value) to 0 over the duration."
+        return "Lets light fall away over time, which suits drops, releases, and softer exits than blackout."
+
+    @property
+    def tags(self) -> list[str]:
+        return ["drop", "soft", "long", "release"]
 
     @property
     def schema(self) -> Dict[str, Any]:
