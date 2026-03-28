@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 
 from config import LLM_BASE_URL, MCP_BASE_URL, MCP_TOOL_MAP, TOOLS
 from fast_path.router import _run_stream_fast_path
+from interpretation.resolution import try_section_timing_interpretation
 from llm_client import _chunk_text, _llm_complete
 from gateway_mcp.client import call_mcp
 from gateway_models import ChatRequest
@@ -55,6 +56,22 @@ async def _event_stream(req: ChatRequest):
                 if chunk:
                     yield f"data: {orjson.dumps({'type': 'delta', 'delta': chunk}).decode('utf-8')}\n\n"
             yield f"data: {orjson.dumps({'type': 'done', 'finish_reason': data['choices'][0].get('finish_reason', 'stop')}).decode('utf-8')}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+        interpreted = await try_section_timing_interpretation(request_messages, client, payload["model"], _llm_complete, call_mcp)
+        if interpreted is not None:
+            yield f"data: {orjson.dumps({'type': 'status', 'phase': 'awaiting_tool_calls', 'label': 'Resolving tool calls'}).decode('utf-8')}\n\n"
+            for tool_name in interpreted.get("used_tools") or []:
+                yield f"data: {orjson.dumps({'type': 'status', 'phase': 'executing_tool', 'label': f'Executing {MCP_TOOL_MAP.get(tool_name, tool_name)}', 'tool_name': tool_name}).decode('utf-8')}\n\n"
+            if interpreted.get("error") is not None:
+                error = dict(interpreted.get("error") or {})
+                yield f"data: {orjson.dumps({'type': 'error', 'code': error.get('code', 'gateway_error'), 'detail': error.get('detail', 'Assistant request failed.'), 'retryable': bool(error.get('retryable', True))}).decode('utf-8')}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+            for chunk in _chunk_text(str(interpreted.get('answer_text') or '')):
+                if chunk:
+                    yield f"data: {orjson.dumps({'type': 'delta', 'delta': chunk}).decode('utf-8')}\n\n"
+            yield f"data: {orjson.dumps({'type': 'done', 'finish_reason': 'stop'}).decode('utf-8')}\n\n"
             yield "data: [DONE]\n\n"
             return
         messages: List[Dict[str, Any]] = list(request_messages)
@@ -131,6 +148,30 @@ async def chat_completions(req: ChatRequest):
     request_messages = _inject_query_guidance(req.messages)
     payload = {'model': req.model or 'local', 'messages': request_messages, 'temperature': req.temperature if req.temperature is not None else 0.2, 'tools': TOOLS, 'tool_choice': req.tool_choice if req.tool_choice is not None else 'auto'}
     async with httpx.AsyncClient(timeout=120.0) as client:
+        interpreted = await try_section_timing_interpretation(request_messages, client, payload['model'], _llm_complete, call_mcp)
+        if interpreted is not None:
+            if interpreted.get('error') is not None:
+                error = dict(interpreted.get('error') or {})
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        'code': error.get('code', 'gateway_error'),
+                        'detail': error.get('detail', 'Assistant request failed.'),
+                        'retryable': bool(error.get('retryable', True)),
+                    },
+                )
+            answer_text = str(interpreted.get('answer_text') or '')
+            return {
+                'id': 'chatcmpl-section-timing',
+                'object': 'chat.completion',
+                'choices': [
+                    {
+                        'index': 0,
+                        'message': {'role': 'assistant', 'content': answer_text},
+                        'finish_reason': 'stop',
+                    }
+                ],
+            }
         data1 = await _llm_complete(client, payload)
         msg1 = data1['choices'][0]['message']
         tool_calls = msg1.get('tool_calls')

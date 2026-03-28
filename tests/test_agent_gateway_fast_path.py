@@ -35,6 +35,187 @@ async def test_fast_path_resolves_entire_cue_to_clear_all_proposal(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_structured_section_interpretation_resolves_second_verse_start():
+    gateway_main = _load_gateway_main_module()
+
+    async def _fake_llm_complete(_client, payload):
+        assert payload["tools"] == []
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": '{"intent":"section_timing","section_name":"Verse","section_occurrence":2,"boundary":"start"}'
+                    }
+                }
+            ]
+        }
+
+    async def _fake_call_mcp(tool_name, args):
+        assert tool_name == "mcp_read_sections"
+        assert args == {}
+        return {
+            "ok": True,
+            "data": {
+                "sections": [
+                    {"name": "Verse", "start_s": 12.5, "end_s": 24.0},
+                    {"name": "Verse", "start_s": 57.32, "end_s": 84.18},
+                ]
+            },
+        }
+
+    result = await gateway_main.try_section_timing_interpretation(
+        [{"role": "user", "content": "when does the second verse start?"}],
+        client=None,
+        model="local",
+        llm_complete=_fake_llm_complete,
+        call_mcp_fn=_fake_call_mcp,
+    )
+
+    assert result is not None
+    assert result["used_tools"] == ["mcp_read_sections"]
+    assert result["answer_text"] == "The second verse starts at 57.320 seconds."
+
+
+@pytest.mark.asyncio
+async def test_structured_section_interpretation_resolves_second_verse_end():
+    gateway_main = _load_gateway_main_module()
+
+    async def _fake_llm_complete(_client, _payload):
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": '{"intent":"section_timing","section_name":"Verse","section_occurrence":2,"boundary":"end"}'
+                    }
+                }
+            ]
+        }
+
+    async def _fake_call_mcp(_tool_name, _args):
+        return {
+            "ok": True,
+            "data": {
+                "sections": [
+                    {"name": "Verse", "start_s": 12.5, "end_s": 24.0},
+                    {"name": "Verse", "start_s": 57.32, "end_s": 84.18},
+                ]
+            },
+        }
+
+    result = await gateway_main.try_section_timing_interpretation(
+        [{"role": "user", "content": "when does the second verse end?"}],
+        client=None,
+        model="local",
+        llm_complete=_fake_llm_complete,
+        call_mcp_fn=_fake_call_mcp,
+    )
+
+    assert result is not None
+    assert result["answer_text"] == "The second verse ends at 84.180 seconds."
+
+
+@pytest.mark.asyncio
+async def test_structured_section_interpretation_normalizes_ordinal_in_section_name():
+    gateway_main = _load_gateway_main_module()
+
+    async def _fake_llm_complete(_client, _payload):
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": '{"intent":"section_timing","section_name":"second verse","section_occurrence":1,"boundary":"start"}'
+                    }
+                }
+            ]
+        }
+
+    async def _fake_call_mcp(_tool_name, _args):
+        return {
+            "ok": True,
+            "data": {
+                "sections": [
+                    {"name": "Verse", "start_s": 12.5, "end_s": 24.0},
+                    {"name": "Verse", "start_s": 57.32, "end_s": 84.18},
+                ]
+            },
+        }
+
+    result = await gateway_main.try_section_timing_interpretation(
+        [{"role": "user", "content": "when does the second verse start?"}],
+        client=None,
+        model="local",
+        llm_complete=_fake_llm_complete,
+        call_mcp_fn=_fake_call_mcp,
+    )
+
+    assert result is not None
+    assert result["answer_text"] == "The second verse starts at 57.320 seconds."
+
+
+@pytest.mark.asyncio
+async def test_structured_section_interpretation_returns_error_for_missing_occurrence():
+    gateway_main = _load_gateway_main_module()
+
+    async def _fake_llm_complete(_client, _payload):
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": '{"intent":"section_timing","section_name":"Verse","section_occurrence":2,"boundary":"start"}'
+                    }
+                }
+            ]
+        }
+
+    async def _fake_call_mcp(_tool_name, _args):
+        return {
+            "ok": True,
+            "data": {
+                "sections": [
+                    {"name": "Verse", "start_s": 57.32, "end_s": 84.18},
+                ]
+            },
+        }
+
+    result = await gateway_main.try_section_timing_interpretation(
+        [{"role": "user", "content": "when does the second verse start?"}],
+        client=None,
+        model="local",
+        llm_complete=_fake_llm_complete,
+        call_mcp_fn=_fake_call_mcp,
+    )
+
+    assert result is not None
+    assert result["used_tools"] == ["mcp_read_sections"]
+    assert result["error"] == {
+        "code": "section_not_found",
+        "detail": "Section 'Verse' occurrence 2 was not found.",
+        "retryable": False,
+    }
+
+
+@pytest.mark.asyncio
+async def test_structured_section_interpretation_skips_non_section_prompts():
+    gateway_main = _load_gateway_main_module()
+
+    async def _unexpected_llm_complete(_client, _payload):
+        raise AssertionError("structured extraction should not run")
+
+    async def _unexpected_call_mcp(_tool_name, _args):
+        raise AssertionError("section resolution should not run")
+
+    result = await gateway_main.try_section_timing_interpretation(
+        [{"role": "user", "content": "what fixtures are active at bar 20.1?"}],
+        client=None,
+        model="local",
+        llm_complete=_unexpected_llm_complete,
+        call_mcp_fn=_unexpected_call_mcp,
+    )
+
+    assert result is None
+
+
+@pytest.mark.asyncio
 async def test_fast_path_resolves_plain_clear_the_cue_to_clear_all_proposal(monkeypatch):
     gateway_main = _load_gateway_main_module()
 

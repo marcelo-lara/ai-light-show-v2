@@ -27,6 +27,7 @@ FastAPI OpenAI-compatible wrapper for local llama.cpp with MCP tool-calling supp
 - `gateway_models.py`: request model definitions used by the HTTP layer.
 - `gateway_mcp/client.py`: backend MCP transport and tool dispatch.
 - `gateway_mcp/arguments.py`: shared MCP argument helpers.
+- `interpretation/*`: structured slot extraction and deterministic resolution before the generic tool loop.
 - `rendering/results.py`: tool-result formatting and render dispatch.
 - `prompt/guidance.py`: query-specific tool-routing guidance injection.
 - `prompt/lookup_answers.py`: follow-up answer builders for section, chord, and cursor grounding.
@@ -40,6 +41,8 @@ FastAPI OpenAI-compatible wrapper for local llama.cpp with MCP tool-calling supp
 ## Fast-path assistant behavior
 
 The gateway also performs deterministic fast-path handling for common assistant requests before relying on a follow-up model turn.
+
+For prompts that are not handled by a deterministic fast path, the gateway can run a structured extraction stage before the generic tool loop. The first implemented slice extracts section timing slots from the prompt, resolves them against backend section metadata, and then asks the model to answer only from the resolved facts.
 
 - Whole-sheet cue clear phrases resolve to a dedicated clear-all proposal instead of a synthetic `0..0` time window.
 - Chord-conditioned edit prompts for prisms, parcans, and protons resolve to grounded cue-add proposals using backend metadata and fixture lists.

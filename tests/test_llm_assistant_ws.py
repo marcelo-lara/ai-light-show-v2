@@ -188,6 +188,59 @@ def test_llm_prompt_clear_all_proposal_and_confirm(monkeypatch, tmp_path):
     assert calls == ["clear_all"]
 
 
+def test_llm_prompt_forwards_gateway_error_to_frontend(monkeypatch, tmp_path):
+    fresh_backend_main = _fresh_backend_main()
+    monkeypatch.setenv("ASSISTANT_LOG_DIR", str(tmp_path / "assistant-logs"))
+
+    async def _noop_async(*_args, **_kwargs):
+        return None
+
+    async def _fake_load_song(self, song_name: str):
+        self.current_song = _fake_song(song_name)
+        self.song_length_seconds = 158.53
+        self.timecode = 37.62
+        self.is_playing = False
+        self.output_universe = bytearray(512)
+        self.editor_universe = bytearray(512)
+        self.cue_sheet = CueSheet(song_filename=song_name, entries=[])
+
+    async def _fake_gateway_stream(self, messages, assistant_id):
+        del assistant_id
+        assert any(message["role"] == "system" and message["content"] == "Current loaded song: Yonaka - Seize the Power" for message in messages)
+        yield {"type": "status", "phase": "thinking", "label": "Thinking"}
+        yield {"type": "status", "phase": "executing_tool", "label": "Executing metadata_get_sections"}
+        yield {
+            "type": "error",
+            "code": "section_not_found",
+            "detail": "Section 'Verse' occurrence 2 was not found.",
+            "retryable": False,
+        }
+
+    monkeypatch.setattr(fresh_backend_main, "run_startup_blue_wipe", _noop_async)
+    monkeypatch.setattr(SongService, "list_songs", lambda self: ["Yonaka - Seize the Power"])
+    monkeypatch.setattr(StateManager, "load_song", _fake_load_song)
+    monkeypatch.setattr(StateManager, "_dump_canvas_debug", lambda self, _song_name: None)
+    monkeypatch.setattr(ArtNetService, "start", _noop_async)
+    monkeypatch.setattr(ArtNetService, "stop", _noop_async)
+    monkeypatch.setattr(ArtNetService, "blackout", _noop_async)
+    monkeypatch.setattr(ArtNetService, "update_universe", _noop_async)
+    monkeypatch.setattr(ArtNetService, "arm_fixture", _noop_async)
+    monkeypatch.setattr(AssistantGatewayClient, "stream", _fake_gateway_stream)
+
+    with TestClient(fresh_backend_main.app) as client:
+        with client.websocket_connect("/ws") as ws:
+            _read_until(ws, lambda message: message.get("type") == "snapshot")
+
+            ws.send_json({"type": "intent", "req_id": "llm-1", "name": "llm.send_prompt", "payload": {"prompt": "when does the second verse start?"}})
+
+            _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_status")
+            error = _read_until(ws, lambda message: message.get("type") == "event" and message.get("message") == "llm_error")
+
+            assert error["data"]["code"] == "section_not_found"
+            assert error["data"]["detail"] == "Section 'Verse' occurrence 2 was not found."
+            assert error["data"]["retryable"] is False
+
+
 def test_llm_prompt_adds_prism_flash_for_chord_transition(monkeypatch, tmp_path):
     calls = []
     fresh_backend_main = _fresh_backend_main()

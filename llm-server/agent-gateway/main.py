@@ -21,6 +21,9 @@ from fast_path.answer_text import (
     _build_prism_effects_answer_text,
     _build_section_count_answer_text,
 )
+from interpretation.extractor import extract_section_timing_slots
+from interpretation.prompts import _build_section_timing_extraction_messages, _should_extract_section_timing
+from interpretation.resolution import try_section_timing_interpretation
 from fast_path.handlers import chaser as _fast_path_chaser_module
 from fast_path.handlers import cue_proposals as _fast_path_cue_module
 from fast_path.handlers import informational as _fast_path_informational_module
@@ -117,6 +120,7 @@ __all__ = [
     "_build_pois_answer_text",
     "_build_prism_effects_answer_text",
     "_build_query_guidance",
+    "_build_section_timing_extraction_messages",
     "_build_section_answer_messages",
     "_build_section_count_answer_text",
     "_call_mcp_tool",
@@ -158,6 +162,7 @@ __all__ = [
     "_format_sections",
     "_inject_query_guidance",
     "_is_section_timing_question",
+    "_should_extract_section_timing",
     "_latest_user_prompt",
     "_llm_complete",
     "_normalize_chord_label",
@@ -176,6 +181,7 @@ __all__ = [
     "_run_stream_fast_path",
     "_section_start_times",
     "_song_name_mention_instruction",
+    "extract_section_timing_slots",
     "TOOL_OUTPUT_SYSTEM_MESSAGE",
     "app",
     "call_mcp",
@@ -187,6 +193,7 @@ __all__ = [
     "MCP_BASE_URL",
     "MCP_TOOL_MAP",
     "TOOLS",
+    "try_section_timing_interpretation",
 ]
 
 if PATH_INSERTED:
