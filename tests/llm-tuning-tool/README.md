@@ -20,6 +20,15 @@ Standalone live runner for sending one prompt at a time to the backend websocket
 - The Docker stack is already running.
 - The project Python environment is `ai-light`.
 
+## Copilot workflow requirements
+
+Before running live assistant validation, VS Code Copilot should:
+
+1. Remove all previous session logs from `tests/llm-tuning-tool/logs`.
+2. Run `docker compose down && docker compose up -d --build --force-recreate` after code changes, and also before the first live test in a validation pass.
+
+This keeps live results tied to the current code and avoids mixing old transcripts with the current run.
+
 Bring up the stack if needed:
 
 ```bash

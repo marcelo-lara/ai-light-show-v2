@@ -1,6 +1,19 @@
 from typing import Any, Dict, Optional
 
 
+def _format_bar_beat(bar: Any, beat: Any) -> Optional[str]:
+    if bar is None or beat is None:
+        return None
+    try:
+        bar_value = int(bar)
+        beat_value = int(beat)
+    except (TypeError, ValueError):
+        return None
+    if bar_value <= 0 or beat_value <= 0:
+        return None
+    return f"{bar_value}.{beat_value}"
+
+
 def _build_prism_effects_answer_text(fixtures_result: Dict[str, Any]) -> Optional[str]:
     if not isinstance(fixtures_result, dict) or not fixtures_result.get("ok"):
         return None
@@ -44,10 +57,20 @@ def _build_cursor_section_next_beat_answer_text(cursor_result: Dict[str, Any]) -
     if not isinstance(cursor_result, dict) or not cursor_result.get("ok"):
         return None
     payload = cursor_result.get("data") or {}
-    section_name = str(payload.get("section_name") or "").strip() or "unknown section"
+    section_name = str(payload.get("section_name") or "").strip()
+    next_section_name = str(payload.get("next_section_name") or "").strip()
+    if section_name:
+        section_text = f"in {section_name}"
+    elif next_section_name:
+        section_text = f"before {next_section_name}"
+    else:
+        section_text = "between sections"
     if payload.get("next_bar") is None or payload.get("next_beat") is None or payload.get("next_beat_time_s") is None:
-        return f"You are in {section_name}, and there is no next beat available."
-    return f"You are in {section_name}, and the next beat is {int(payload.get('next_bar'))}.{int(payload.get('next_beat'))} ({float(payload.get('next_beat_time_s')):.3f}s)."
+        return f"You are {section_text}, and there is no next beat available."
+    next_position = _format_bar_beat(payload.get("next_bar"), payload.get("next_beat"))
+    if next_position is not None:
+        return f"You are {section_text}, and the next beat is {next_position} ({float(payload.get('next_beat_time_s')):.3f}s)."
+    return f"You are {section_text}, and the next beat is at {float(payload.get('next_beat_time_s')):.3f}s."
 
 
 def _build_loudest_section_answer_text(section: Dict[str, Any], loudness_result: Dict[str, Any]) -> Optional[str]:
@@ -75,13 +98,14 @@ def _build_cursor_answer_text(cursor_result: Dict[str, Any]) -> Optional[str]:
     if not isinstance(cursor_result, dict) or not cursor_result.get("ok"):
         return None
     payload = cursor_result.get("data") or {}
-    bar = payload.get("bar")
-    beat = payload.get("beat")
     time_s = float(payload.get("time_s", 0.0) or 0.0)
     section_name = str(payload.get("section_name") or "").strip()
-    position_text = f"{int(bar)}.{int(beat)}" if bar is not None and beat is not None else f"{time_s:.3f}s"
+    next_section_name = str(payload.get("next_section_name") or "").strip()
+    position_text = _format_bar_beat(payload.get("bar"), payload.get("beat")) or f"{time_s:.3f}s"
     if section_name:
         return f"The cursor is at {position_text} ({time_s:.3f}s) in {section_name}."
+    if next_section_name:
+        return f"The cursor is at {time_s:.3f}s before {next_section_name}."
     return f"The cursor is at {position_text} ({time_s:.3f}s)."
 
 

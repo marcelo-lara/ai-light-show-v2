@@ -143,6 +143,12 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         assert cursor.data["data"]["beat"] == 1
         assert cursor.data["data"]["beat_time_s"] == 37.62
 
+        state_manager.timecode = 0.0
+        cursor_before_intro = await client.call_tool("transport_get_cursor", {})
+        assert cursor_before_intro.data["ok"] is True
+        assert cursor_before_intro.data["data"]["section_name"] is None
+        assert cursor_before_intro.data["data"]["next_section_name"] == "Intro"
+
         loudness = await client.call_tool("metadata_get_loudness", {"song": "Yonaka - Seize the Power", "section": "Verse"})
         assert loudness.data["ok"] is True
         assert loudness.data["data"]["start_time"] == 57.32

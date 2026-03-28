@@ -145,6 +145,8 @@ Current mounted MCP tools:
 
 Mutation tools schedule websocket patch broadcasts after state changes so browser clients remain synchronized with MCP-originated edits.
 
+`transport_get_cursor` returns the current timecode, nearest and next beat positions, the active `section_name` when the cursor is inside a labeled section, and `next_section_name` when the cursor is before the next section boundary.
+
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.
 - `chords[]`: chord-change timeline entries when metadata exists.

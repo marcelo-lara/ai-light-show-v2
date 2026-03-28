@@ -3,6 +3,19 @@ from __future__ import annotations
 from .responses import fail, ok
 
 
+def _section_bounds(current_song) -> list[dict]:
+    sections = []
+    for section in getattr(getattr(current_song, "sections", None), "sections", []) or []:
+        sections.append(
+            {
+                "name": str(section.get("name") or section.get("label") or "").strip(),
+                "start_s": float(section.get("start_s", section.get("start", 0.0)) or 0.0),
+                "end_s": float(section.get("end_s", section.get("end", 0.0)) or 0.0),
+            }
+        )
+    return sections
+
+
 def register_transport_tools(mcp, runtime) -> None:
     @mcp.tool()
     async def transport_get_cursor():
@@ -24,12 +37,13 @@ def register_transport_tools(mcp, runtime) -> None:
                 next_beat = beat
                 break
         section_name = None
-        for section in getattr(getattr(current_song, "sections", None), "sections", []) or []:
-            start_s = float(section.get("start_s", section.get("start", 0.0)) or 0.0)
-            end_s = float(section.get("end_s", section.get("end", 0.0)) or 0.0)
-            if start_s <= float(timecode) <= end_s:
-                section_name = str(section.get("name") or section.get("label") or "")
+        next_section_name = None
+        for section in _section_bounds(current_song):
+            if section["start_s"] <= float(timecode) <= section["end_s"]:
+                section_name = section["name"]
                 break
+            if float(timecode) < section["start_s"] and next_section_name is None:
+                next_section_name = section["name"]
         return ok(
             {
                 "time_s": round(float(timecode), 3),
@@ -40,5 +54,6 @@ def register_transport_tools(mcp, runtime) -> None:
                 "next_beat": getattr(next_beat, "beat", None),
                 "next_beat_time_s": round(float(getattr(next_beat, "time", 0.0)), 3) if next_beat is not None else None,
                 "section_name": section_name,
+                "next_section_name": next_section_name,
             }
         )

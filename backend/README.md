@@ -71,6 +71,7 @@ Behavior notes:
 - MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
 - Metadata tools expose analyzer beat positions as bars and beats, including section start/end positions and exact bar/beat lookup.
 - Loudness summaries are read from analyzer `essentia/loudness_envelope.json` artifacts and returned as averaged window statistics.
+- `transport_get_cursor` returns the active section when the cursor is inside one, and `next_section_name` when the cursor is before the next labeled section.
 
 ### Backend → Client
 

@@ -692,6 +692,39 @@ async def test_fast_path_reports_current_section_and_next_beat(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_fast_path_reports_before_next_section_without_zero_bar_beat(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+
+    async def _fake_call_mcp(tool_name, args):
+        assert tool_name == "mcp_read_cursor"
+        assert args == {}
+        return {
+            "ok": True,
+            "data": {
+                "time_s": 0.0,
+                "bar": 0,
+                "beat": 2,
+                "next_bar": 0,
+                "next_beat": 3,
+                "next_beat_time_s": 0.460,
+                "section_name": None,
+                "next_section_name": "Intro",
+            },
+        }
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "What section am I in right now, and when is the next beat?"},
+    ])
+
+    assert result == {
+        "used_tools": ["mcp_read_cursor"],
+        "answer_text": "You are before Intro, and the next beat is at 0.460s.",
+    }
+
+
+@pytest.mark.asyncio
 async def test_fast_path_reports_first_chord_occurrence_deterministically(monkeypatch):
     gateway_main = _load_gateway_main_module()
     tool_calls = []
@@ -736,6 +769,30 @@ async def test_fast_path_reports_cursor_deterministically(monkeypatch):
     assert result == {
         "used_tools": ["mcp_read_cursor"],
         "answer_text": "The cursor is at 20.1 (35.820s) in Instrumental.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_cursor_before_next_section(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+
+    async def _fake_call_mcp(tool_name, args):
+        assert tool_name == "mcp_read_cursor"
+        assert args == {}
+        return {
+            "ok": True,
+            "data": {"time_s": 0.0, "bar": 0, "beat": 2, "section_name": None, "next_section_name": "Intro"},
+        }
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "where is the cursor?"},
+    ])
+
+    assert result == {
+        "used_tools": ["mcp_read_cursor"],
+        "answer_text": "The cursor is at 0.000s before Intro.",
     }
 
 

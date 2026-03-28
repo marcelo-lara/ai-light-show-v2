@@ -160,7 +160,7 @@ Code is the source of truth.
 
 | Tool | Arguments | Behavior |
 | --- | --- | --- |
-| `transport_get_cursor` | none | returns current timecode plus nearest resolved `bar`, `beat`, `beat_time_s`, next beat position, and active `section_name` |
+| `transport_get_cursor` | none | returns current timecode plus nearest resolved `bar`, `beat`, `beat_time_s`, next beat position, active `section_name`, and `next_section_name` when the cursor is before the next labeled section |
 
 ## Assistant request context
 
