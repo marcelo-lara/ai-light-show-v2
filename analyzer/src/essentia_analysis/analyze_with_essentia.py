@@ -22,7 +22,7 @@ def analyze_with_essentia(
     audio_path: str,
     out_dir: str,
     part_name: str,
-    sample_rate: int = 44100,
+    sample_rate: int | None = None,
     artifact_file_stems: dict[str, str] | None = None,
 ) -> Dict[str, Any]:
     artifact_file_stems = artifact_file_stems or {}
@@ -44,6 +44,10 @@ def analyze_with_essentia(
         audio = np.mean(audio, axis=1)
     audio = audio.astype(np.float32)
 
+    frame_size = 1024
+    hop_size = 512
+    spectrum_size = (frame_size // 2) + 1
+
     key = "unknown"
     scale = "unknown"
     key_strength = 0.0
@@ -63,8 +67,6 @@ def analyze_with_essentia(
     onsets = []
     onset_rate_values = []
     try:
-        frame_size = 1024
-        hop_size = 512
         windowing = es.Windowing(type="hann")
         fft = es.FFT()
         cartesian_to_polar = es.CartesianToPolar()
@@ -95,11 +97,7 @@ def analyze_with_essentia(
             beat_loudness.append(0.0)
 
     # New analyses: frame-wise computations
-    frame_size = 1024
-    hop_size = 512
     windowing = es.Windowing(type="hann")
-    fft = es.FFT()
-    cartesian_to_polar = es.CartesianToPolar()
 
     # Loudness & Envelope
     loudness_values = []
@@ -114,7 +112,7 @@ def analyze_with_essentia(
     hpcp_values = []
     spectral_peaks_alg = es.SpectralPeaks(sampleRate=sr)
     hpcp_alg = es.HPCP(size=12, referenceFrequency=440, harmonics=8, minFrequency=40, maxFrequency=5000, sampleRate=sr)
-    spectrum_alg = es.Spectrum()
+    spectrum_alg = es.Spectrum(size=frame_size)
     for frame in es.FrameGenerator(audio, frameSize=frame_size, hopSize=hop_size, startFromZero=True):
         spectrum = spectrum_alg(windowing(frame))
         frequencies, magnitudes = spectral_peaks_alg(spectrum)
@@ -123,7 +121,7 @@ def analyze_with_essentia(
 
     # Mel-Frequency Bands
     mel_bands_values = []
-    mel_bands_alg = es.MelBands(numberBands=40, sampleRate=sr)
+    mel_bands_alg = es.MelBands(numberBands=40, sampleRate=sr, inputSize=spectrum_size)
     for frame in es.FrameGenerator(audio, frameSize=frame_size, hopSize=hop_size, startFromZero=True):
         spectrum = spectrum_alg(windowing(frame))
         mel_bands = mel_bands_alg(spectrum)

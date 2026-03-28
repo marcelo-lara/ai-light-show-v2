@@ -50,3 +50,32 @@ def test_run_essentia_analysis_registers_dotted_stem_loudness_files(tmp_path: Pa
     assert essentia_artifacts["bass_loudness_envelope"]["svg"].endswith("/loudness_envelope.bass.svg")
     assert essentia_artifacts["drums_loudness_envelope"]["json"].endswith("/loudness_envelope.drums.json")
     assert essentia_artifacts["drums_loudness_envelope"]["svg"].endswith("/loudness_envelope.drums.svg")
+
+
+def test_run_essentia_analysis_probes_sample_rate_before_analysis(tmp_path: Path, monkeypatch):
+    song_path = tmp_path / "songs" / "Test Song.mp3"
+    song_path.parent.mkdir(parents=True)
+    song_path.touch()
+    meta_root = tmp_path / "meta"
+    song_meta_dir = meta_root / "Test Song"
+    song_meta_dir.mkdir(parents=True)
+    (song_meta_dir / "info.json").write_text(json.dumps({}))
+
+    captured_calls: list[tuple[str, int | None]] = []
+
+    def fake_analyze(audio_path: str, out_dir: str, part_name: str, sample_rate: int | None = None, artifact_file_stems=None):
+        captured_calls.append((part_name, sample_rate))
+        artifact_file_stems = artifact_file_stems or {}
+        for artifact_name in ["rhythm", "loudness_envelope"]:
+            file_stem = artifact_file_stems.get(artifact_name, artifact_name)
+            (Path(out_dir) / f"{file_stem}.json").write_text("{}")
+            (Path(out_dir) / f"{file_stem}.svg").write_text("<svg />")
+        return {"rhythm": {"rhythm": {"bpm": 120.0}}, "loudness_envelope": {"part": part_name}}
+
+    monkeypatch.setattr(analyze_song, "analyze_with_essentia", fake_analyze)
+    monkeypatch.setattr(analyze_song, "autodetect_device", lambda: "cpu")
+    monkeypatch.setattr(analyze_song, "_read_sample_rate", lambda audio_path: 48000)
+
+    analyze_song.run_essentia_analysis_for(song_path, meta_path=meta_root)
+
+    assert captured_calls == [("mix", 48000)]

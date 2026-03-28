@@ -87,6 +87,9 @@ Stem Essentia files use a consistent `<part>_<feature>.json` and `<part>_<featur
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --essentia-analysis
 ```
+```bash
+docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --split-stems
+```
 
 Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable JSON.
 

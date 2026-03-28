@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 from typing import Any, List, Optional
 
+import librosa
+
 from beat_comparison import run_compare_beat_times_for
 from import_moises import import_moises
 from src.beat_finder import find_beats_and_downbeats
@@ -81,6 +83,14 @@ def _meta_file_path(song_path: str | Path, meta_path: str | Path) -> Path:
 
 def _moises_dir(song_path: str | Path, meta_path: str | Path) -> Path:
     return _song_meta_dir(song_path, meta_path) / "moises"
+
+
+def _read_sample_rate(audio_path: str | Path) -> int | None:
+    try:
+        return int(librosa.get_samplerate(str(audio_path)))
+    except Exception as exc:
+        warn(f"Could not read sample rate for {audio_path}: {exc}")
+        return None
 
 
 def _load_list_file(path: Path) -> list[Any]:
@@ -359,12 +369,14 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
         essentia_dir.mkdir(parents=True, exist_ok=True)
 
         part_name = "mix"
+        mix_sample_rate = _read_sample_rate(song_path)
         print(f"Analyzing entire song as part: {part_name}")
         part_artifacts = {
             part_name: analyze_with_essentia(
                 str(song_path),
                 str(essentia_dir),
                 part_name,
+                sample_rate=mix_sample_rate,
                 artifact_file_stems=_artifact_file_stems_for_part(part_name),
             )
         }
@@ -386,11 +398,13 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
                 for stem_name in ["bass", "drums", "vocals", "other"]:
                     stem_file = stems_path / f"{stem_name}.wav"
                     if stem_file.exists() and is_stem_worth_analyzing(str(stem_file)):
+                        stem_sample_rate = _read_sample_rate(stem_file)
                         print(f"Analyzing stem: {stem_name}")
                         stem_artifacts = analyze_with_essentia(
                             str(stem_file),
                             str(essentia_dir),
                             stem_name,
+                            sample_rate=stem_sample_rate,
                             artifact_file_stems=_artifact_file_stems_for_part(stem_name),
                         )
                         part_artifacts[stem_name] = stem_artifacts
