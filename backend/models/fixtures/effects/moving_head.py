@@ -44,11 +44,11 @@ class MoveToPoiEffect(Effect):
         from ..moving_heads.move_to_poi import handle
         handle(fixture, universe, frame_index, start_frame, end_frame, fps, data, render_state)
 
-class SeekEffect(Effect):
+class OrbitEffect(Effect):
     @property
-    def id(self) -> str: return "seek"
+    def id(self) -> str: return "orbit"
     @property
-    def name(self) -> str: return "Seek"
+    def name(self) -> str: return "Orbit"
     @property
     def description(self) -> str: return "Glides toward a target over time, which suits builds, tightening focus, and rising tension."
     @property
@@ -59,7 +59,7 @@ class SeekEffect(Effect):
         meta = getattr(fixture, "meta_channels", {})
         return "pan" in meta or "tilt" in meta
     def render(self, fixture: Any, universe: bytearray, *, frame_index: int, start_frame: int, end_frame: int, fps: int, data: Dict[str, Any], render_state: Dict[str, Any]) -> None:
-        from ..moving_heads.seek import handle
+        from ..moving_heads.orbit import handle
         handle(fixture, universe, frame_index, start_frame, end_frame, fps, data, render_state)
 
 class SweepEffect(Effect):
@@ -82,5 +82,5 @@ class SweepEffect(Effect):
 
 REGISTRY.register(MoveToEffect())
 REGISTRY.register(MoveToPoiEffect())
-REGISTRY.register(SeekEffect())
+REGISTRY.register(OrbitEffect())
 REGISTRY.register(SweepEffect())

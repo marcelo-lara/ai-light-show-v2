@@ -129,5 +129,5 @@ class Fixture(BaseModel, ABC):
         data: Dict[str, Any],
         render_state: Dict[str, Any],
     ) -> None:
-        """Override in subclasses for legacy specific effects (seek, sweep) not yet abstracted."""
+        """Override in subclasses for fixture-specific effects not yet abstracted."""
         pass

@@ -4,16 +4,16 @@ from types import SimpleNamespace
 import pytest
 
 from backend.models.cues import CueSheet
-from backend.models.fixtures.moving_heads.seek_helpers import spiral_seek_position
+from backend.models.fixtures.moving_heads.orbit_helpers import spiral_orbit_position
 from tests.fixture_effect_matrix import EFFECT_START_S, FIXTURES_PATH, POIS, build_state_manager
 
 SETTLE_FRAMES = 6
 
 
-async def _render_seek(data: dict, *, fixture_id: str = "head_el150"):
+async def _render_orbit(data: dict, *, fixture_id: str = "head_el150"):
     state_manager = build_state_manager()
     await state_manager.load_fixtures(FIXTURES_PATH)
-    state_manager.current_song = SimpleNamespace(song_id="seek_effect", meta=SimpleNamespace(bpm=120.0))
+    state_manager.current_song = SimpleNamespace(song_id="orbit_effect", meta=SimpleNamespace(bpm=120.0))
     state_manager.poi_db.pois = POIS
     fixture = next(item for item in state_manager.fixtures if item.id == fixture_id)
     initial_pan = data.pop("__initial_pan", None)
@@ -28,9 +28,9 @@ async def _render_seek(data: dict, *, fixture_id: str = "head_el150"):
     entries = []
     if setup_full:
         entries.append({"time": 0.0, "fixture_id": fixture_id, "effect": "full", "duration": 0.25, "data": {}})
-    entries.append({"time": EFFECT_START_S, "fixture_id": fixture_id, "effect": "seek", "duration": 1.0, "data": data})
+    entries.append({"time": EFFECT_START_S, "fixture_id": fixture_id, "effect": "orbit", "duration": 1.0, "data": data})
     state_manager.cue_sheet = CueSheet(
-        song_filename="seek_effect",
+        song_filename="orbit_effect",
         entries=entries,
     )
     state_manager.song_length_seconds = EFFECT_START_S + 1.5
@@ -49,8 +49,8 @@ def _u8(frame, fixture, channel: str) -> int:
 
 
 @pytest.mark.asyncio
-async def test_seek_orbits_around_subject_then_lands_on_it():
-    canvas, fixture, start_frame = await _render_seek({"subject_POI": "subject", "start_POI": "start", "orbits": 1.0, "easing": "linear"})
+async def test_orbit_orbits_around_subject_then_lands_on_it():
+    canvas, fixture, start_frame = await _render_orbit({"subject_POI": "subject", "start_POI": "start", "orbits": 1.0, "easing": "linear"})
     start = canvas.frame_view(start_frame)
     quarter = canvas.frame_view(start_frame + 15)
     end = canvas.frame_view(start_frame + 60)
@@ -65,11 +65,11 @@ async def test_seek_orbits_around_subject_then_lands_on_it():
     assert _u16(quarter, fixture, "tilt") != quarter_linear_tilt
 
 
-def test_seek_easing_controls_how_late_the_spiral_tightens():
+def test_orbit_easing_controls_how_late_the_spiral_tightens():
     def radius(pan: int, tilt: int) -> float:
         return math.hypot(pan - 30000, tilt - 36000)
 
-    late_pan, late_tilt = spiral_seek_position(
+    late_pan, late_tilt = spiral_orbit_position(
         start_pan=6000,
         start_tilt=10000,
         subject_pan=30000,
@@ -78,7 +78,7 @@ def test_seek_easing_controls_how_late_the_spiral_tightens():
         orbits=1.0,
         easing="late_focus",
     )
-    linear_pan, linear_tilt = spiral_seek_position(
+    linear_pan, linear_tilt = spiral_orbit_position(
         start_pan=6000,
         start_tilt=10000,
         subject_pan=30000,
@@ -87,7 +87,7 @@ def test_seek_easing_controls_how_late_the_spiral_tightens():
         orbits=1.0,
         easing="linear",
     )
-    early_pan, early_tilt = spiral_seek_position(
+    early_pan, early_tilt = spiral_orbit_position(
         start_pan=6000,
         start_tilt=10000,
         subject_pan=30000,
@@ -101,8 +101,8 @@ def test_seek_easing_controls_how_late_the_spiral_tightens():
 
 
 @pytest.mark.asyncio
-async def test_seek_prerolls_dark_to_start_poi_before_visible_motion():
-    canvas, fixture, start_frame = await _render_seek(
+async def test_orbit_prerolls_dark_to_start_poi_before_visible_motion():
+    canvas, fixture, start_frame = await _render_orbit(
         {
             "subject_POI": "subject",
             "start_POI": "start",
@@ -126,8 +126,8 @@ async def test_seek_prerolls_dark_to_start_poi_before_visible_motion():
 
 
 @pytest.mark.asyncio
-async def test_seek_respects_max_travel_per_frame_for_physical_profile():
-    canvas, fixture, start_frame = await _render_seek(
+async def test_orbit_respects_max_travel_per_frame_for_physical_profile():
+    canvas, fixture, start_frame = await _render_orbit(
         {
             "subject_POI": "subject",
             "start_POI": "start",
@@ -150,10 +150,10 @@ async def test_seek_respects_max_travel_per_frame_for_physical_profile():
 
 
 @pytest.mark.asyncio
-async def test_seek_preview_prerolls_from_last_position():
+async def test_orbit_preview_prerolls_from_last_position():
     state_manager = build_state_manager()
     await state_manager.load_fixtures(FIXTURES_PATH)
-    state_manager.current_song = SimpleNamespace(song_id="seek_preview", meta=SimpleNamespace(bpm=120.0))
+    state_manager.current_song = SimpleNamespace(song_id="orbit_preview", meta=SimpleNamespace(bpm=120.0))
     state_manager.poi_db.pois = POIS
     fixture = next(item for item in state_manager.fixtures if item.id == "mini_beam_prism_l")
     fixture.current_values["pan"] = 0
@@ -164,10 +164,10 @@ async def test_seek_preview_prerolls_from_last_position():
 
     started = await state_manager.start_preview_effect(
         fixture_id="mini_beam_prism_l",
-        effect="seek",
+        effect="orbit",
         duration=1.0,
         data={"subject_POI": "subject", "start_POI": "start", "orbits": 1.0, "easing": "late_focus"},
-        request_id="seek-preview-preroll",
+        request_id="orbit-preview-preroll",
     )
 
     assert started["ok"] is True

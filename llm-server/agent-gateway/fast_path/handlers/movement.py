@@ -41,8 +41,8 @@ async def try_movement_fast_path(prompt: str, lowered: str) -> Optional[Dict[str
             if fixture_ids:
                 cue_time = float(section.get("start_s", 0.0) or 0.0)
                 return {"used_tools": used_tools, "proposal": _proposal_for_tool("propose_cue_add_entries", {"entries": [{"time": cue_time, "fixture_id": fixture_id, "effect": "move_to_poi", "duration": 0.0, "data": {"target_POI": poi_id}} for fixture_id in fixture_ids]})}
-    if any(word in lowered for word in ["seek", "sweep"]) and "prism" in lowered and ("one beat before" in lowered or "first beat" in lowered):
-        effect_name = "seek" if "seek" in lowered else "sweep"
+    if any(word in lowered for word in ["orbit", "sweep"]) and "prism" in lowered and ("one beat before" in lowered or "first beat" in lowered):
+        effect_name = "orbit" if "orbit" in lowered else "sweep"
         used_tools.extend(["mcp_read_sections", "mcp_read_fixtures", "mcp_read_pois"])
         sections_result = await call_mcp("mcp_read_sections", {})
         fixtures_result = await call_mcp("mcp_read_fixtures", {})

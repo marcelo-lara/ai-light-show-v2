@@ -22,9 +22,9 @@ def _describe_cue_add_entries(entries: List[Dict[str, Any]]) -> str:
             target_poi = str(first_data.get("target_POI") or first_data.get("poi") or first_data.get("POI") or "").strip()
             if target_poi:
                 return f"Move {fixtures} to {target_poi} at {time_text}."
-        if first_effect == "seek":
+        if first_effect == "orbit":
             if str(first_data.get("start_POI") or "").strip() and str(first_data.get("subject_POI") or "").strip():
-                return f"Add seek on {fixtures} from {first_data['start_POI']} to {first_data['subject_POI']} at {time_text}."
+                return f"Add orbit on {fixtures} from {first_data['start_POI']} to {first_data['subject_POI']} at {time_text}."
         if first_effect == "sweep":
             start_poi = str(first_data.get("start_POI") or "").strip()
             subject_poi = str(first_data.get("subject_POI") or "").strip()

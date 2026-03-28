@@ -8,7 +8,7 @@ from .strobe import StrobeEffect
 from .fade_in import FadeInEffect
 from .fade_out import FadeOutEffect
 from .color_fade import ColorFadeEffect
-from .moving_head import MoveToEffect, MoveToPoiEffect, SeekEffect, SweepEffect
+from .moving_head import MoveToEffect, MoveToPoiEffect, OrbitEffect, SweepEffect
 
 __all__ = [
     "Effect",

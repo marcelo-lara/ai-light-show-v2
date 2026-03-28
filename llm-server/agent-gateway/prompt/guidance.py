@@ -17,7 +17,7 @@ def _build_query_guidance(messages: List[Dict[str, Any]]) -> Optional[Dict[str, 
         hints.append("For cue additions tied to a chord change, resolve the full chord stream with mcp_read_chords, find the requested adjacent transition, resolve target fixtures with mcp_read_fixtures, and propose_cue_add_entries for the matching fixtures at that transition time.")
     if any(word in prompt for word in ["add", "flash", "effect"]) and "each section" in prompt and "prism" in prompt:
         hints.append("For requests like first beat of each section on the left prism, resolve section starts with mcp_read_sections, resolve the target fixture with mcp_read_fixtures, and propose_cue_add_entries with one entry per section start.")
-    if any(word in prompt for word in ["move", "point", "aim", "seek", "sweep"]) and "prism" in prompt and any(word in prompt for word in ["intro", "verse", "chorus", "instrumental", "outro", "section"]):
+    if any(word in prompt for word in ["move", "point", "aim", "orbit", "sweep"]) and "prism" in prompt and any(word in prompt for word in ["intro", "verse", "chorus", "instrumental", "outro", "section"]):
         hints.append("For fixture movement requests that mention named places like piano, table, or center, treat those place names as POIs. Resolve the target section timing, validate the POIs with mcp_read_pois, resolve the target fixture with mcp_read_fixtures, and propose_cue_add_entries using move_to_poi or another POI-aware effect. Do not use chord tools unless the user explicitly asks about chords.")
     if "loud" in prompt:
         hints.append("For loudness questions, use mcp_read_loudness. If the prompt names a section like verse or chorus, pass that section or resolve it first.")

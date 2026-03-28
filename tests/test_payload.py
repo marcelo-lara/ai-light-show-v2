@@ -51,7 +51,7 @@ async def test_fixture_payload_shape():
         "full",
         "move_to",
         "move_to_poi",
-        "seek",
+        "orbit",
         "set_channels",
         "strobe",
         "sweep",

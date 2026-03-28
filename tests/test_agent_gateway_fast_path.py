@@ -561,8 +561,8 @@ async def test_fast_path_lists_prism_effects(monkeypatch):
                 "ok": True,
                 "data": {
                     "fixtures": [
-                        {"id": "mini_beam_prism_l", "supported_effects": [{"id": "full"}, {"id": "flash"}, {"id": "move_to_poi"}, {"id": "seek"}, {"id": "sweep"}, {"id": "fade_out"}]},
-                        {"id": "mini_beam_prism_r", "supported_effects": [{"id": "full"}, {"id": "flash"}, {"id": "move_to_poi"}, {"id": "seek"}, {"id": "sweep"}, {"id": "fade_out"}]},
+                        {"id": "mini_beam_prism_l", "supported_effects": [{"id": "full"}, {"id": "flash"}, {"id": "move_to_poi"}, {"id": "orbit"}, {"id": "sweep"}, {"id": "fade_out"}]},
+                        {"id": "mini_beam_prism_r", "supported_effects": [{"id": "full"}, {"id": "flash"}, {"id": "move_to_poi"}, {"id": "orbit"}, {"id": "sweep"}, {"id": "fade_out"}]},
                     ]
                 },
             }
@@ -577,7 +577,7 @@ async def test_fast_path_lists_prism_effects(monkeypatch):
     assert tool_calls == [("mcp_read_fixtures", {})]
     assert result == {
         "used_tools": ["mcp_read_fixtures"],
-        "answer_text": "Prism effects: full, flash, move_to_poi, seek, sweep, fade_out.",
+        "answer_text": "Prism effects: full, flash, move_to_poi, orbit, sweep, fade_out.",
     }
 
 
@@ -1135,7 +1135,7 @@ async def test_fast_path_moves_left_prism_to_piano_before_second_instrumental(mo
 
 
 @pytest.mark.asyncio
-async def test_fast_path_adds_seek_from_table_to_piano_before_second_instrumental(monkeypatch):
+async def test_fast_path_adds_orbit_from_table_to_piano_before_second_instrumental(monkeypatch):
     gateway_main = _load_gateway_main_module()
     tool_calls = []
 
@@ -1189,7 +1189,7 @@ async def test_fast_path_adds_seek_from_table_to_piano_before_second_instrumenta
     monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
 
     result = await gateway_main._run_stream_fast_path([
-        {"role": "user", "content": "seek the left prism from table to piano one beat before the second instrumental section."},
+        {"role": "user", "content": "orbit the left prism from table to piano one beat before the second instrumental section."},
     ])
 
     assert tool_calls == [
@@ -1209,14 +1209,14 @@ async def test_fast_path_adds_seek_from_table_to_piano_before_second_instrumenta
                     {
                         "time": 49.692,
                         "fixture_id": "mini_beam_prism_l",
-                        "effect": "seek",
+                        "effect": "orbit",
                         "duration": 0.448,
                         "data": {"start_POI": "table", "subject_POI": "piano"},
                     },
                 ]
             },
             "title": "Confirm cue add",
-            "summary": "Add seek on mini_beam_prism_l from table to piano at 49.692s.",
+            "summary": "Add orbit on mini_beam_prism_l from table to piano at 49.692s.",
         },
     }
 

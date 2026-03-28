@@ -23,6 +23,10 @@ export function getPlaybackTimeMs(): number {
 	return getBackendStore().state.playback?.time_ms ?? 0;
 }
 
+export function getSongBpm(): number {
+	return Number(getBackendStore().state.playback?.bpm ?? getBackendStore().state.song?.bpm ?? 0);
+}
+
 export function getSupportedEffects(fixtureId: string): string[] {
 	const fixtures = getBackendStore().state.fixtures ?? {};
 	return getSupportedEffectIds(fixtures[fixtureId]?.supported_effects);
