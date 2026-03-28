@@ -24,7 +24,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 ### Output structure
 
 - `analyzer/meta/<song>/info.json`: canonical song metadata.
-- `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable mix data, this file is normalized from Moises beats and chords.
+- `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable chord data, this file is normalized from `moises/chords.json`.
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
 - `analyzer/meta/<song>/essentia/*.svg`: optional plots.
@@ -48,7 +48,7 @@ docker compose up analyzer --build
 docker compose exec analyzer python analyze_song.py
 ```
 
-Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` and runs stem splitting, analyzer beat finding only when Moises mix data is absent, Essentia analysis, and Moises import when available.
+Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` and runs stem splitting, analyzer beat finding only when usable Moises chord data is absent, Essentia analysis, and Moises import when available.
 
 ### CLI mode
 
@@ -107,7 +107,8 @@ Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable J
 		"beat": 2,
 		"bar": 0,
 		"bass": null,
-		"chord": "N"
+		"chord": "N",
+		"type": "beat"
 	}
 ]
 ```
@@ -116,6 +117,7 @@ Event fields:
 
 - `time` (number): beat timestamp in seconds (float precision of 3 digits. Example: 1.234).
 - `bar` (integer): bar index, incremented on each downbeat.
-- `beat` (integer): beat index within the current bar as produced by the analyzer.
+- `beat` (integer): beat index within the current bar from the canonical beat source.
 - `bass` (string | null): inferred bass note label, or `null` when unavailable.
-- `chord` (string): inferred chord label for the mix (for example `Fm`, `C#`, `N`).
+- `chord` (string | null): inferred chord label for the mix (for example `Fm`, `C#`, `N`).
+- `type` (string): `downbeat` when `beat == 1`, otherwise `beat`.

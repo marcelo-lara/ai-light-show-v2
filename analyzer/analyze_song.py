@@ -9,10 +9,10 @@ from typing import Any, List, Optional
 import librosa
 
 from beat_comparison import run_compare_beat_times_for
-from import_moises import import_moises
 from src.beat_finder import find_beats_and_downbeats
 from src.essentia_analysis import analyze_with_essentia, build_loudness_hints
 from src.essentia_analysis.common import is_stem_worth_analyzing
+from src.moises import import_moises
 from src.split_stems import MODEL_NAME, TEMP_FILES_FOLDER, split_stems
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")
@@ -142,6 +142,13 @@ def _normalize_analyzer_beats(beat_data: dict) -> list[dict]:
     return normalized
 
 
+def _annotate_beat_types(beats: list[dict]) -> list[dict]:
+    annotated: list[dict] = []
+    for beat_event in beats:
+        annotated.append({**beat_event, "type": "downbeat" if beat_event.get("beat") == 1 else "beat"})
+    return annotated
+
+
 def _beat_tracking_payload(method: str, beats: list[dict], beat_data: Optional[dict] = None) -> dict:
     beat_data = beat_data or {}
     return {
@@ -158,7 +165,8 @@ def _beat_tracking_payload(method: str, beats: list[dict], beat_data: Optional[d
 
 def _write_song_beats(song_path: Path, meta_root: Path, beats: list[dict], source: str, beat_data: Optional[dict] = None) -> Path:
     beats_file = _song_meta_dir(song_path, meta_root) / "beats.json"
-    _dump_json(beats_file, beats)
+    annotated_beats = _annotate_beat_types(beats)
+    _dump_json(beats_file, annotated_beats)
     artifacts = {"beats_file": str(beats_file)}
     moises_chords_file = _moises_dir(song_path, meta_root) / "chords.json"
     if source == "moises" and moises_chords_file.exists():
@@ -169,7 +177,7 @@ def _write_song_beats(song_path: Path, meta_root: Path, beats: list[dict], sourc
             "song_name": song_path.stem,
             "song_path": str(song_path),
             "beats_source": source,
-            "beat_tracking": _beat_tracking_payload(source, beats, beat_data),
+            "beat_tracking": _beat_tracking_payload(source, annotated_beats, beat_data),
             "artifacts": artifacts,
         },
     )
