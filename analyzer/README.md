@@ -82,6 +82,7 @@ docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.m
 
 Stem Essentia files use a consistent `<part>_<feature>.json` and `<part>_<feature>.svg` naming pattern in the song `essentia` directory, while the mix keeps unprefixed filenames like `loudness_envelope.json` and `rhythm.json`.
 
+
 ## Verification
 
 ```bash
