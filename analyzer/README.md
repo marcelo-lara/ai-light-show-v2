@@ -107,7 +107,7 @@ Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable J
 		"beat": 2,
 		"bar": 0,
 		"bass": null,
-		"chord": "N",
+		"chord": null,
 		"type": "beat"
 	}
 ]

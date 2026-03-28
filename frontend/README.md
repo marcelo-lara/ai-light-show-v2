@@ -122,11 +122,11 @@ Global bridge fields used across modules:
 - `src/shared/components/song_player/ui/buildSongPlayerUi.ts`: UI composition extracted from controller lifecycle logic.
 - `src/shared/components/song_player/logic/WaveSurferManager.ts`: WaveSurfer lifecycle, regions plugin, media controls.
 - `src/shared/components/song_player/logic/PlaybackSync.ts`: backend sync cadence (10s periodic + debounced seeks + immediate sync).
-- `src/shared/components/song_player/logic/song_logic.ts`: section/beat utilities and song fingerprinting.
+- `src/shared/components/song_player/logic/song_logic.ts`: section/beat utilities, canonical beat-type normalization, and song fingerprinting.
 - `src/shared/components/song_player/logic/navigation_loop.ts`: pure section/beat navigation and loop-wrap target helpers.
 - `src/shared/components/song_player/logic/song_player_state.ts`: song identity/data derivation, paused playback time normalization, audio URL resolution.
 - `src/shared/components/song_player/logic/wave_callbacks.ts`: WaveSurfer callback orchestration bindings for controller state updates.
-- `src/shared/components/song_player/logic/regions.ts`: section/downbeat overlay generation.
+- `src/shared/components/song_player/logic/regions.ts`: section/downbeat overlay generation driven by canonical beat events.
 - `src/shared/components/song_player/ui/*`: waveform, transport buttons, readout, options, layout primitives.
 
 ### Show Control
@@ -137,7 +137,7 @@ Global bridge fields used across modules:
 ### Song Analysis
 - `src/features/song_analysis/SongAnalysisView.ts`: composes player with the shared chord progression card and analyzer plot cards.
 - `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats and analyzer plots from backend state and composes shared song structure data.
-- `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel (downbeat/bar fallback behavior).
+- `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel for canonical analyzer beat events, including explicit beat/downbeat type.
 
 `BeatTable.ts` exists but is not mounted by the current `SongAnalysisView()`.
 

@@ -110,5 +110,9 @@ def test_ws_song_list_and_load(monkeypatch):
 
             assert refreshed["state"]["song"]["filename"] == "beta-song"
             assert refreshed["state"]["song"]["bpm"] == 140.0
+            assert refreshed["state"]["song"]["beats"] == [
+                {"time": 0.0, "beat": 1, "bar": 0, "bass": None, "chord": None, "type": "downbeat"},
+                {"time": 0.5, "beat": 2, "bar": 0, "bass": None, "chord": None, "type": "beat"},
+            ]
             assert refreshed["state"]["playback"]["time_ms"] == 0
             assert refreshed["state"]["cues"][0]["fixture_id"] == "fixture-b"

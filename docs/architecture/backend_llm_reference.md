@@ -149,7 +149,7 @@ Code is the source of truth.
 | `metadata_get_overview` | `song?` | returns song length/BPM and counts for sections, beats, chords |
 - `metadata_get_sections` | `song?` | returns normalized section rows with resolved `start_bar`, `start_beat`, `end_bar`, and `end_beat` |
 | `metadata_find_section` | `section_name`, `song?` | returns one exact section row by section name |
-| `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered |
+| `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered; each row includes `time`, `bar`, `beat`, optional `bass`/`chord`, and `type` (`beat` or `downbeat`) |
 | `metadata_get_bar_beats` | `song?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns beat rows filtered by musical position |
 | `metadata_find_bar_beat` | `bar`, `beat`, `song?` | returns one exact beat row with its resolved time |
 | `metadata_get_chords` | `song?`, `start_time?`, `end_time?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns chord-change rows parsed from `beats.json`, optionally time-filtered or bar/beat-filtered |

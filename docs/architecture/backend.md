@@ -73,6 +73,12 @@ Behavior:
 - Song payload serialization always emits `{name, start_s, end_s}` for frontend state.
 - Playback section name resolution and song length inference use normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
 
+### Beat metadata normalization
+
+- Canonical `beats.json` rows are exposed through `state.song.beats` and MCP metadata tools.
+- Beat rows always serialize `time`, `bar`, `beat`, optional `bass`/`chord`, and `type`.
+- `type` is `downbeat` when `beat == 1`, otherwise `beat`.
+
 ### Editing
 
 - `fixture.set_values` writes mapped channels to Art-Net and updates fixture `current_values`; for `kind="rgb"` meta-channels, payload must use `values.rgb` as `#RRGGBB` (or mapped color name), and backend converts it to RGB channel writes.

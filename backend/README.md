@@ -143,6 +143,14 @@ Song payload fields under `state.song`:
 - Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`.
 - Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`) and `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`).
 
+Canonical `state.song.beats[]` rows are analyzer beat events with:
+- `time`: beat timestamp in seconds.
+- `bar`: bar index.
+- `beat`: beat index within the bar.
+- `bass`: optional bass note label.
+- `chord`: optional chord label.
+- `type`: `downbeat` when `beat == 1`, otherwise `beat`.
+
 Cue helpers payload under `state.cue_helpers`:
 - List of helper definitions (`id`, `label`, `description`, `mode`, `parameters[]`) for frontend helper UI.
 - Each helper parameter definition includes schema fields such as `name`, `label`, `type`, `default`, `min`, `max`, `step`, `required`, and optional `options`.

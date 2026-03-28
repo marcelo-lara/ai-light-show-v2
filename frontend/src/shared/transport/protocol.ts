@@ -173,6 +173,7 @@ export type BeatObject = {
   beat: number;
   bass?: string;
   chord?: string;
+  type: "beat" | "downbeat";
 };
 
 export type SongState = {

@@ -1,6 +1,14 @@
 import type { SongState, BeatObject } from "../../../transport/protocol.ts";
 import type { Section } from "../types/types.ts";
 
+function normalizeBeatType(value: unknown, beat: number): BeatObject["type"] {
+  return value === "downbeat" || (value !== "beat" && beat === 1) ? "downbeat" : "beat";
+}
+
+export function isDownbeat(beat: Pick<BeatObject, "beat" | "type">): boolean {
+  return beat.type === "downbeat" || beat.beat === 1;
+}
+
 export function cleanSortedNumeric(values: unknown): number[] {
   if (!Array.isArray(values)) return [];
   return values
@@ -25,6 +33,7 @@ export function cleanBeatObjects(values: unknown): BeatObject[] {
       beat,
       bass: obj.bass ? String(obj.bass) : undefined,
       chord: obj.chord ? String(obj.chord) : undefined,
+      type: normalizeBeatType(obj.type, beat),
     });
   }
   picked.sort((a, b) => a.time - b.time);
@@ -140,7 +149,7 @@ export function songFingerprint(song: SongState): string {
   const sections = Array.isArray(song.sections) ? song.sections : [];
   const beatObjects = cleanBeatObjects(song.beats);
   const beats = beatObjects.map(b => b.time);
-  const downbeats = beatObjects.filter(b => b.beat === 1).map(b => b.time);
+  const downbeats = beatObjects.filter(isDownbeat).map(b => b.time);
 
   const firstSection = sections[0] as any;
   const lastSection = sections[sections.length - 1] as any;

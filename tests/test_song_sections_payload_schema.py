@@ -31,3 +31,7 @@ def test_build_song_payload_normalizes_analyzer_sections_shape():
         {"name": "Intro", "start_s": 1.36, "end_s": 35.82},
         {"name": "Instrumental", "start_s": 35.82, "end_s": 50.14},
     ]
+    assert payload["beats"] == [
+        {"time": 0.0, "beat": 1, "bar": 0, "bass": None, "chord": None, "type": "downbeat"},
+        {"time": 0.5, "beat": 2, "bar": 0, "bass": None, "chord": None, "type": "beat"},
+    ]

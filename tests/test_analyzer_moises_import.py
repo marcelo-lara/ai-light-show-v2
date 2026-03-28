@@ -33,7 +33,7 @@ def test_run_beat_finder_uses_moises_mix_data(tmp_path: Path, monkeypatch, capsy
     assert result == {"method": "moises", "beat_count": 2}
     assert beats_payload == [
         {"time": 1.001, "beat": 1, "bar": 1, "bass": "F", "chord": "Fm", "type": "downbeat"},
-        {"time": 1.5, "beat": 2, "bar": 1, "bass": None, "chord": "N", "type": "beat"},
+        {"time": 1.5, "beat": 2, "bar": 1, "bass": None, "chord": None, "type": "beat"},
     ]
     assert info_payload["beats_source"] == "moises"
     assert info_payload["artifacts"]["chords_file"].endswith("/Test Song/moises/chords.json")

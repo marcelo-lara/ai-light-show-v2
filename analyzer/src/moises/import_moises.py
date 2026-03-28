@@ -38,12 +38,13 @@ def _normalize_chord_row(row: dict) -> dict | None:
         return None
     bass_value = row.get("bass")
     chord_value = row.get("chord_basic_pop")
+    normalized_chord = None if chord_value in {None, "N"} else chord_value
     return {
         "time": time_value,
         "beat": beat_value,
         "bar": bar_value,
         "bass": bass_value if bass_value else None,
-        "chord": chord_value if chord_value is not None else None,
+        "chord": normalized_chord,
         "type": "downbeat" if beat_value == 1 else "beat",
     }
 
