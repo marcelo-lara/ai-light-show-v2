@@ -155,6 +155,15 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         assert loudness.data["data"]["end_time"] == 84.18
         assert loudness.data["data"]["average"] > 0.0
 
+        section_analysis = await client.call_tool("metadata_get_section_analysis", {"song": "Yonaka - Seize the Power", "section_name": "Verse"})
+        assert section_analysis.data["ok"] is True
+        verse_analysis = section_analysis.data["data"]["section"]
+        assert verse_analysis["name"] == "Verse"
+        assert verse_analysis["loudness"]["average"] > 0.0
+        assert verse_analysis["harmony"]["source"] == "moises"
+        assert set(verse_analysis["parts"]) >= {"mix", "bass", "drums", "vocals"}
+        assert all(event["dominant_part"] in {"mix", "bass", "drums", "vocals"} for event in verse_analysis["events"])
+
         chasers = await client.call_tool("chasers_list", {})
         assert chasers.data["ok"] is True
         assert chasers.data["data"]["count"] == 1

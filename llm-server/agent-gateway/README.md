@@ -52,6 +52,7 @@ For prompts that are not handled by a deterministic fast path, the gateway can r
 - POI transition prompts for prism `orbit` and `sweep` effects resolve when the prompt provides an ordered POI path such as `from table to piano` or `from table to piano to sofa`.
 - `none` chord spans are resolved from analyzer label `N` and can produce `blackout` or `fade_out` cue proposals across the full span.
 - Factual prompts for prism effects, available POIs, section count, chords in a bar, cursor position, current section plus next beat, loudest section, and left-side fixtures resolve to deterministic grounded answers without a follow-up model turn.
+- Section metadata drafting prompts are routed toward grounded section-analysis reads so the model can infer descriptions and hints from loudness, harmony, and stem-supported events instead of generic prose.
 - Write-capable turns stop at proposal generation so backend can require explicit confirmation before mutating cues.
 
 ## Response shaping
@@ -79,6 +80,7 @@ Implemented in `gateway_mcp/client.py` via `fastmcp.Client` against a Streamable
 - `mcp_get_onsets` → `metadata_get_beats` with optional section windowing and subdivision expansion in the gateway
 
 The gateway also uses backend-mounted tools for transport cursor lookup, section/beat/chord/loudness grounding, fixture discovery, chaser discovery, and cue-sheet reads used to shape assistant proposals and summaries.
+The metadata tool set also includes `mcp_read_section_analysis` for section-level authoring context built from `mix`, `bass`, `drums`, and `vocals` Essentia data plus harmonic summaries.
 
 ## LLM contributor checklist
 

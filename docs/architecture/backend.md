@@ -70,6 +70,7 @@ Behavior:
 ### Section metadata normalization
 
 - Backend accepts section records with either analyzer keys (`start`, `end`, `label`) or normalized keys (`start_s`, `end_s`, `name`).
+- Canonical persisted `sections.json` is a top-level list of section objects; authored `description` and `hints` stay on those same section rows.
 - Song payload serialization always emits `{name, start_s, end_s}` for frontend state.
 - Playback section name resolution and song length inference use normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
 
@@ -87,7 +88,7 @@ Behavior:
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, and `cue.apply_helper`.
 - The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, and full-sheet replace.
-- The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, and section windows with resolved musical positions.
+- The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, section windows with resolved musical positions, and section-analysis summaries for metadata drafting.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - `cue.clear_all` removes every cue entry from the current song and persists the empty cue sheet.
 - LLM chat is backend-owned through `services/assistant/*`: prompt profiles are loaded there, requests are relayed to the agent gateway, and assistant websocket events are targeted to the requesting client instead of globally broadcast.
@@ -146,7 +147,7 @@ Current mounted MCP tools:
 - `songs_list`, `songs_get_details`, `songs_load`
 - `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
 - `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
+- `metadata_get_overview`, `metadata_get_sections`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - `transport_get_cursor`
 
 Mutation tools schedule websocket patch broadcasts after state changes so browser clients remain synchronized with MCP-originated edits.
@@ -158,6 +159,7 @@ Serialized fixture payloads expose `supported_effects` as rich effect objects wi
 Frontend consumers should treat each `supported_effects[]` entry as a metadata object. `id` is the stable effect identifier for intent payloads and parameter-schema lookup, and `name` is the display label.
 
 `transport_get_cursor` returns the current timecode, nearest and next beat positions, the active `section_name` when the cursor is inside a labeled section, and `next_section_name` when the cursor is before the next section boundary.
+`metadata_get_section_analysis` summarizes each section with mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` so the assistant can draft grounded descriptions and hints.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.

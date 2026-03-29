@@ -59,4 +59,4 @@ def save_sections_data(song_dir: Path, sections: List[Dict[str, Any]]):
     sections_path.parent.mkdir(parents=True, exist_ok=True)
         
     with open(sections_path, 'w', encoding='utf-8') as f:
-        json.dump({"sections": sections}, f, indent=4)
+        json.dump(sections, f, indent=4)
