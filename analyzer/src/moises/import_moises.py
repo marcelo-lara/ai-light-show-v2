@@ -5,6 +5,8 @@ import os
 import sys
 from pathlib import Path
 
+from .sections_from_segments import generate_sections_from_segments
+
 META_PATH = os.environ.get("META_PATH", "/app/meta")
 
 
@@ -68,6 +70,7 @@ def import_moises(song_id: str, meta_path: str | Path = META_PATH) -> list[dict]
     with open(output_path, "w", encoding="utf-8") as handle:
         json.dump(normalized, handle, indent=2)
     print(f"Successfully normalized {len(normalized)} Moises chord rows to {output_path}")
+    generate_sections_from_segments(song_meta_dir)
     return normalized
 
 

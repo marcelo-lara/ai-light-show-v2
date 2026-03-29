@@ -12,7 +12,12 @@ from beat_comparison import run_compare_beat_times_for
 from src.beat_finder import find_beats_and_downbeats
 from src.essentia_analysis import analyze_with_essentia, build_loudness_hints
 from src.essentia_analysis.common import is_stem_worth_analyzing
+from src.generate_md import generate_md_file
 from src.moises import import_moises
+from src.song_meta import load_json_file as _load_json_file
+from src.song_meta import load_list_file as _load_list_file
+from src.song_meta import load_sections as _load_sections
+from src.song_meta import song_meta_dir as _song_meta_dir
 from src.split_stems import MODEL_NAME, TEMP_FILES_FOLDER, split_stems
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")
@@ -64,19 +69,6 @@ def _merge_json_file(path: Path, updates: dict) -> None:
     _dump_json(path, data)
 
 
-def _load_json_file(path: Path):
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def _song_name(song_path: str | Path) -> str:
-    return Path(song_path).expanduser().resolve().stem
-
-
-def _song_meta_dir(song_path: str | Path, meta_path: str | Path) -> Path:
-    return Path(meta_path).expanduser().resolve() / _song_name(song_path)
-
-
 def _meta_file_path(song_path: str | Path, meta_path: str | Path) -> Path:
     return _song_meta_dir(song_path, meta_path) / "info.json"
 
@@ -91,25 +83,6 @@ def _read_sample_rate(audio_path: str | Path) -> int | None:
     except Exception as exc:
         warn(f"Could not read sample rate for {audio_path}: {exc}")
         return None
-
-
-def _load_list_file(path: Path) -> list[Any]:
-    if not path.exists():
-        return []
-    payload = _load_json_file(path)
-    return payload if isinstance(payload, list) else []
-
-
-def _load_sections(song_meta_dir: Path) -> list[dict[str, Any]]:
-    sections = _load_list_file(song_meta_dir / "sections.json")
-    normalized: list[dict[str, Any]] = []
-    for index, section in enumerate(sections, start=1):
-        if not isinstance(section, dict):
-            continue
-        start_value = float(section.get("start_s", section.get("start", 0.0)) or 0.0)
-        end_value = float(section.get("end_s", section.get("end", start_value)) or start_value)
-        normalized.append({"name": str(section.get("name") or section.get("label") or f"Section {index}"), "start_s": round(start_value, 3), "end_s": round(max(end_value, start_value), 3)})
-    return normalized
 
 
 def _has_moises_mix_data(song_path: str | Path, meta_path: str | Path) -> bool:
@@ -242,6 +215,9 @@ def analyze_all_songs(
         if _has_moises_mix_data(song_path, meta_path):
             run_import_moises_for(song_path, meta_path=meta_path)
             song_result["steps"].append("import_moises")
+
+        run_generate_md_for(song_path, meta_path=meta_path)
+        song_result["steps"].append("generate_md")
 
         song_result["status"] = "completed"
         results.append(song_result)
@@ -447,6 +423,20 @@ def run_import_moises_for(song_path: Path, meta_path: str | Path = META_PATH) ->
         warn(f"Import moises failed: {e}")
 
 
+def run_generate_md_for(song_path: Path, meta_path: str | Path = META_PATH) -> Path | None:
+    print(f"Generating markdown file for {song_path.name}")
+    try:
+        output_path = generate_md_file(song_path, meta_path=meta_path)
+        if output_path is None:
+            warn(f"No sections metadata found for {song_path.stem}")
+            return None
+        print("Markdown generation complete. Output:", output_path)
+        return output_path
+    except Exception as e:
+        warn(f"Generate markdown failed: {e}")
+        return None
+
+
 def analyze_song(
     song_path: str | Path,
     meta_path: str | Path = META_PATH,
@@ -498,9 +488,10 @@ def main() -> int:
     parser.add_argument("--beat-finder", action="store_true", help="Run beat finder")
     parser.add_argument("--essentia-analysis", action="store_true", help="Run Essentia analysis")
     parser.add_argument("--import-moises", action="store_true", help="Import Moises chords")
+    parser.add_argument("--generate-md", action="store_true", help="Generate markdown from sections metadata")
     args = parser.parse_args()
 
-    if not any([args.split_stems, args.beat_finder, args.essentia_analysis, args.import_moises]):
+    if not any([args.split_stems, args.beat_finder, args.essentia_analysis, args.import_moises, args.generate_md]):
         current_song = resolve_song(args.song)
     else:
         current_song = resolve_song(args.song)
@@ -510,7 +501,7 @@ def main() -> int:
 
     device = autodetect_device()
 
-    if args.split_stems or args.beat_finder or args.essentia_analysis or args.import_moises:
+    if args.split_stems or args.beat_finder or args.essentia_analysis or args.import_moises or args.generate_md:
         if not current_song.exists():
             warn(f"Song file does not exist: {current_song}")
             return 1
@@ -522,6 +513,8 @@ def main() -> int:
             run_essentia_analysis_for(current_song)
         if args.import_moises:
             run_import_moises_for(current_song)
+        if args.generate_md:
+            run_generate_md_for(current_song)
         return 0
 
     while True:
@@ -532,6 +525,7 @@ def main() -> int:
         print("3. Essentia Analysis")
         print("4. Compare Beat Times")
         print("5. Import Moises Chords")
+        print("6. Generate MD file")
         print("8. Analyze All Songs")
         print("9. Exit (Esc also exits)")
         choice = input("Choose an option: ").strip()
@@ -565,6 +559,11 @@ def main() -> int:
             run_compare_beat_times_for(current_song)
         elif choice == "5":
             run_import_moises_for(current_song)
+        elif choice == "6":
+            if not current_song.exists():
+                warn(f"Current song file does not exist: {current_song}")
+                continue
+            run_generate_md_for(current_song)
         elif choice == "8":
             analyze_all_songs(device=device)
         else:

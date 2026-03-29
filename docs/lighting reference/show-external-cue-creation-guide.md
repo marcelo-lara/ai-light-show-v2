@@ -325,6 +325,33 @@ For this system, a good intro authoring strategy was:
 - use a stronger overlapping “double punch” for cycle anchors
 - save the repeated motif as a chaser once the pattern stabilizes
 
+For the full-song Yonaka pass, these approaches also worked well:
+
+- treat section changes as explicit events with a short blackout just before the new section hit
+- let the chorus and drop moments push prism rotation harder than the surrounding phrases
+- use `move_to_poi` as true pre-roll for prism drops instead of trying to arrive exactly on the hit
+- for the strongest drops, put both prisms on `table` in full white with `prism: 200` before the hit, then switch to `prism: 0` at the drop while fading over about 1 second
+- use a fade-to-black pseudo pre-drop sentence when a vocal or arrangement line needs negative space before the next impact
+- slow prism call-response motion reads better in instrumental sections than constant flash spam
+- parcan walking patterns across left/right fixtures work well for short build sections and can create motion without overusing moving heads
+
+## Final Yonaka Handoff Notes
+
+These are show-specific notes from the final refinement pass for `Yonaka - Seize the Power`:
+
+- do not use `inblue_desk` in this show
+- do not use `dark_desk` in this show
+- prefer `table`, `sofa`, `wall`, `piano`, `ceiling_station`, and the cardinal `ref_x_y_z` anchors instead
+- if a future refinement adds new prism drop moments, reuse the same winning drop recipe:
+  - pre-roll both prisms to `table`
+  - pre-roll parcans to full fade_out
+  - hold full white with prism on before the hit
+  - at the hit, turn off prism and fade intensity for about 2 second
+- if a phrase around `112s` feels too busy, preserve the pseudo pre-drop behavior:
+  - both prisms to `table`
+  - fade the scene toward black
+  - resume only after the drop handoff
+
 ## Common Gotchas
 
 ### 1. Root-owned cue files
@@ -367,6 +394,15 @@ Sometimes a better solution is:
 When repeatedly editing cues by script, it is easy to stack multiple flashes for the same fixture/time.
 
 Always inspect key timestamps after big changes.
+
+### 6. Old pre-rolls can conflict with new drop logic
+
+When refining a section late in the process, older `move_to_poi` entries may still be active at the same timestamp.
+
+This matters most on drop setups:
+
+- confirm there is only one intended pre-roll destination per fixture
+- especially re-check prism pre-rolls when switching a drop to `table`
 
 ## Minimal Verification Checklist
 

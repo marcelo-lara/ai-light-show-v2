@@ -42,6 +42,11 @@ def test_analyze_all_songs_runs_requested_steps_in_order(tmp_path: Path, monkeyp
         "run_import_moises_for",
         lambda song_path, meta_path=analyze_song.META_PATH: calls.append((song_path.stem, "import_moises")),
     )
+    monkeypatch.setattr(
+        analyze_song,
+        "run_generate_md_for",
+        lambda song_path, meta_path=analyze_song.META_PATH: calls.append((song_path.stem, "generate_md")),
+    )
 
     results = analyze_song.analyze_all_songs(songs_dir=songs_dir, meta_path=meta_root, device="cpu")
 
@@ -49,11 +54,13 @@ def test_analyze_all_songs_runs_requested_steps_in_order(tmp_path: Path, monkeyp
         ("Alpha", "split_stems"),
         ("Alpha", "beat_finder"),
         ("Alpha", "essentia_analysis"),
+        ("Alpha", "generate_md"),
         ("Beta", "split_stems"),
         ("Beta", "essentia_analysis"),
         ("Beta", "import_moises"),
+        ("Beta", "generate_md"),
     ]
     assert results == [
-        {"song": "Alpha.mp3", "steps": ["split_stems", "beat_finder", "essentia_analysis"], "status": "completed"},
-        {"song": "Beta.mp3", "steps": ["split_stems", "essentia_analysis", "import_moises"], "status": "completed"},
+        {"song": "Alpha.mp3", "steps": ["split_stems", "beat_finder", "essentia_analysis", "generate_md"], "status": "completed"},
+        {"song": "Beta.mp3", "steps": ["split_stems", "essentia_analysis", "import_moises", "generate_md"], "status": "completed"},
     ]

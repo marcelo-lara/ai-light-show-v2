@@ -25,6 +25,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 
 - `analyzer/meta/<song>/info.json`: canonical song metadata.
 - `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable chord data, this file is normalized from `moises/chords.json`.
+- `analyzer/meta/<song>/sections.json`: canonical persisted section list. When `moises/segments.json` exists and `sections.json` is absent, Moises import materializes this file using the analyzer section row shape (`start`, `end`, `label`, optional `description`, optional `hints`) after standalone section-range validation that stays compatible with backend consumers.
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
 - `analyzer/meta/<song>/essentia/*.svg`: optional plots.
@@ -48,7 +49,7 @@ docker compose up analyzer --build
 docker compose exec analyzer python analyze_song.py
 ```
 
-Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` and runs stem splitting, analyzer beat finding only when usable Moises chord data is absent, Essentia analysis, and Moises import when available.
+Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` and runs stem splitting, analyzer beat finding only when usable Moises chord data is absent, Essentia analysis, Moises import when available, and markdown generation for the resulting sections metadata.
 
 ### CLI mode
 
@@ -56,12 +57,29 @@ Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` a
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --essentia-analysis --beat-finder
 ```
 
+To validate Moises import and section/materialized metadata generation, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --import-moises
+```
+
+You can replace the song name with any other song that has usable `moises/` data.
+
+To validate markdown generation from existing sections metadata, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --generate-md
+```
+
+You can replace the song name with any other song that already has usable `sections.json` data.
+
 ### Common CLI flags
 
 - `--song <filename>`: song in `/app/songs`.
 - `--split-stems`: run Demucs separation.
 - `--beat-finder`: run beat/downbeat extraction.
 - `--essentia-analysis`: run Essentia analysis bundle.
+- `--generate-md`: render the per-song markdown summary from `sections.json`.
 
 ## Contract with other modules
 
@@ -90,6 +108,12 @@ docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.m
 ```
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --split-stems
+```
+```bash
+docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --import-moises
+```
+```bash
+docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --generate-md
 ```
 
 Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable JSON.

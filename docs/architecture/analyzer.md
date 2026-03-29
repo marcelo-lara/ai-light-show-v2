@@ -16,6 +16,8 @@ This document describes the `analyzer` module: the song analysis scripts, how th
 ## API / CLI
 
 - The pipeline is runnable via the local CLI: `python analyzer/analyze_song.py <song_path>`.
+- To validate Moises import in the container, run `docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --import-moises` or replace the song name with another track that has usable `moises/` data.
+- To validate markdown generation in the container, run `docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --generate-md` or replace the song name with another track that already has usable `sections.json` data.
 - For bulk runs the repository includes convenience scripts under `analyzer/`.
 
 ## Backend integration
@@ -31,8 +33,9 @@ This document describes the `analyzer` module: the song analysis scripts, how th
 - Temporary working dir: `analyzer/temp_files/{song_slug}` (configurable via `ANALYZER_TEMP_DIR`).
 - Run records and step artifact manifests are written into the song metadata directory (e.g., `run.json`).
 - `info.json` stores Essentia artifacts grouped by part under `artifacts.essentia.{mix|bass|drums|vocals|other}.{feature}`.
+- `sections.json` is the canonical persisted top-level list of section rows. Rows use analyzer-authored fields like `start`, `end`, and `label`, and may also carry `description` and `hints` on the same objects.
 - `hints.json` stores a plain list of song sections with relevant loudness-shape hints. Mix anchors section-level meaning, and stem events are folded in only when they materially support a local `rise`, `drop`, or `sudden_spike`. Stable high-energy sections receive `sustain` hints. The file is referenced by `artifacts.hints_file`.
-- Moises data (`moises/` directory): Exists purely for internal importing or beat-sync comparison purposes within the analyzer module and should never be used as a system-wide source of truth by the UI, Backend, or external systems (like MCP). The unified source of truth for rhythm data output is `analyzer/meta/{song_slug}/beats.json`.
+- Moises data (`moises/` directory): Exists purely for internal importing or beat-sync comparison purposes within the analyzer module and should never be used as a system-wide source of truth by the UI, Backend, or external systems (like MCP). The unified source of truth for rhythm data output is `analyzer/meta/{song_slug}/beats.json`. When `moises/segments.json` is present and `sections.json` is missing, the analyzer may materialize `sections.json` from those segments, but only after standalone section validation that stays compatible with backend section consumers.
 
 ## Docker & deployment notes
 
