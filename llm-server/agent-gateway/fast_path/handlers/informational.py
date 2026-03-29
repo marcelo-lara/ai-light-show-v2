@@ -1,7 +1,8 @@
 from typing import Any, Dict, List, Optional
 
-from fast_path.answer_text import _build_chords_in_bar_answer_text, _build_cursor_answer_text, _build_cursor_section_next_beat_answer_text, _build_first_chord_answer_text, _build_left_fixtures_answer_text, _build_loudest_section_answer_text, _build_pois_answer_text, _build_prism_effects_answer_text, _build_section_count_answer_text
+from fast_path.answer_text import _build_chords_in_bar_answer_text, _build_cursor_answer_text, _build_cursor_section_next_beat_answer_text, _build_first_chord_answer_text, _build_fixture_effects_answer_text, _build_fixture_type_count_answer_text, _build_fixture_type_list_answer_text, _build_left_fixtures_answer_text, _build_loudest_section_answer_text, _build_pois_answer_text, _build_prism_effects_answer_text, _build_section_count_answer_text
 from fast_path.extractors.chords import _extract_chord_label
+from fast_path.extractors.fixtures import _resolve_fixture_ids_from_prompt, _resolve_moving_head_fixture_ids
 from fast_path.extractors.sections import _extract_section_reference
 from fast_path.extractors.timing import _extract_bar_beat
 from gateway_mcp.client import call_mcp
@@ -16,6 +17,26 @@ async def try_informational_fast_path(messages: List[Dict[str, Any]], prompt: st
         answer_text = _build_prism_effects_answer_text(await call_mcp("mcp_read_fixtures", {}))
         if answer_text is not None:
             return {"used_tools": used_tools, "answer_text": answer_text}
+    if "how many" in lowered and ("moving head" in lowered or "moving heads" in lowered):
+        used_tools.append("mcp_read_fixtures")
+        answer_text = _build_fixture_type_count_answer_text(await call_mcp("mcp_read_fixtures", {}), "moving_head", "moving heads")
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
+    if any(phrase in lowered for phrase in ["which moving heads", "what moving heads", "what fixtures are moving heads", "which fixtures are moving heads"]):
+        used_tools.append("mcp_read_fixtures")
+        answer_text = _build_fixture_type_list_answer_text(await call_mcp("mcp_read_fixtures", {}), "moving_head", "moving heads")
+        if answer_text is not None:
+            return {"used_tools": used_tools, "answer_text": answer_text}
+    if "effect" in lowered and any(word in lowered for word in ["available", "can", "could", "perform", "render", "support"]):
+        if "moving head" in lowered or "moving heads" in lowered or "el-150" in lowered or "el150" in lowered or "head_el150" in lowered:
+            used_tools.append("mcp_read_fixtures")
+            fixtures_result = await call_mcp("mcp_read_fixtures", {})
+            fixture_ids = _resolve_fixture_ids_from_prompt(prompt, fixtures_result)
+            if not fixture_ids and ("moving head" in lowered or "moving heads" in lowered):
+                fixture_ids = _resolve_moving_head_fixture_ids(fixtures_result)
+            answer_text = _build_fixture_effects_answer_text(fixtures_result, fixture_ids, "moving head")
+            if answer_text is not None:
+                return {"used_tools": used_tools, "answer_text": answer_text}
     if "available" in lowered and any(token in lowered for token in ["poi", "pois"]):
         used_tools.append("mcp_read_pois")
         answer_text = _build_pois_answer_text(await call_mcp("mcp_read_pois", {}))

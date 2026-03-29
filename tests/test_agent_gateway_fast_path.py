@@ -582,6 +582,297 @@ async def test_fast_path_lists_prism_effects(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_fast_path_reports_moving_head_count(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {
+                "ok": True,
+                "data": {
+                    "fixtures": [
+                        {"id": "mini_beam_prism_l", "type": "moving_head"},
+                        {"id": "mini_beam_prism_r", "type": "moving_head"},
+                        {"id": "head_el150", "type": "moving_head"},
+                        {"id": "parcan_l", "type": "parcan"},
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "how many moving heads do we have?"},
+    ])
+
+    assert tool_calls == [("mcp_read_fixtures", {})]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures"],
+        "answer_text": "This rig has 3 moving heads: mini_beam_prism_l, mini_beam_prism_r, head_el150.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_head_el150_effects(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {
+                "ok": True,
+                "data": {
+                    "fixtures": [
+                        {
+                            "id": "head_el150",
+                            "name": "Head EL-150",
+                            "type": "moving_head",
+                            "supported_effects": [
+                                {"id": "blackout"},
+                                {"id": "fade_in"},
+                                {"id": "flash"},
+                                {"id": "full"},
+                                {"id": "move_to"},
+                                {"id": "move_to_poi"},
+                                {"id": "orbit"},
+                                {"id": "sweep"},
+                            ],
+                        },
+                        {
+                            "id": "mini_beam_prism_l",
+                            "name": "Mini Beam Prism (L)",
+                            "type": "moving_head",
+                            "supported_effects": [{"id": "full"}],
+                        },
+                    ]
+                },
+            }
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "what effects can perform the moving head el-150?"},
+    ])
+
+    assert tool_calls == [("mcp_read_fixtures", {})]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures"],
+        "answer_text": "head_el150 effects: blackout, fade_in, flash, full, move_to, move_to_poi, orbit, sweep.",
+    }
+
+
+def test_resolve_fixture_ids_filters_moving_head_qualifier():
+    gateway_main = _load_gateway_main_module()
+
+    fixtures_result = {
+        "ok": True,
+        "data": {
+            "fixtures": [
+                {"id": "head_el150", "name": "Head EL-150", "type": "moving_head"},
+                {"id": "mini_beam_prism_l", "name": "Mini Beam Prism (L)", "type": "moving_head"},
+                {"id": "mini_beam_prism_r", "name": "Mini Beam Prism (R)", "type": "moving_head"},
+            ]
+        },
+    }
+
+    assert gateway_main._resolve_fixture_ids_from_prompt("point the el-150 moving head to the table", fixtures_result) == ["head_el150"]
+    assert gateway_main._resolve_fixture_ids_from_prompt("point the denon moving head to the table", fixtures_result) == []
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_unknown_moving_head_alias_for_movement(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {
+                "ok": True,
+                "data": {
+                    "fixtures": [
+                        {"id": "head_el150", "name": "Head EL-150", "type": "moving_head"},
+                        {"id": "mini_beam_prism_l", "name": "Mini Beam Prism (L)", "type": "moving_head"},
+                        {"id": "mini_beam_prism_r", "name": "Mini Beam Prism (R)", "type": "moving_head"},
+                    ]
+                },
+            }
+        if tool_name == "mcp_read_pois":
+            return {"ok": True, "data": {"pois": [{"id": "table", "name": "Table"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "point the denon moving head to the table"},
+    ])
+
+    assert tool_calls == [("mcp_read_fixtures", {}), ("mcp_read_pois", {})]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures", "mcp_read_pois"],
+        "answer_text": "We do not have a denon moving head. Available moving heads: head_el150, mini_beam_prism_l, mini_beam_prism_r.",
+    }
+
+
+@pytest.mark.asyncio
+async def test_fast_path_reports_unknown_moving_head_alias_for_orbit(monkeypatch):
+    gateway_main = _load_gateway_main_module()
+    tool_calls = []
+
+    async def _fake_call_mcp(tool_name, args):
+        tool_calls.append((tool_name, args))
+        if tool_name == "mcp_read_fixtures":
+            return {
+                "ok": True,
+                "data": {
+                    "fixtures": [
+                        {"id": "head_el150", "name": "Head EL-150", "type": "moving_head"},
+                        {"id": "mini_beam_prism_l", "name": "Mini Beam Prism (L)", "type": "moving_head"},
+                        {"id": "mini_beam_prism_r", "name": "Mini Beam Prism (R)", "type": "moving_head"},
+                    ]
+                },
+            }
+        if tool_name == "mcp_read_pois":
+            return {"ok": True, "data": {"pois": [{"id": "table", "name": "Table"}, {"id": "piano", "name": "Piano"}]}}
+        raise AssertionError(f"unexpected tool call: {tool_name}")
+
+    monkeypatch.setattr(gateway_main, "call_mcp", _fake_call_mcp)
+
+    result = await gateway_main._run_stream_fast_path([
+        {"role": "user", "content": "orbit the denon moving head from table to piano"},
+    ])
+
+    assert tool_calls == [("mcp_read_fixtures", {}), ("mcp_read_pois", {})]
+    assert result == {
+        "used_tools": ["mcp_read_fixtures", "mcp_read_pois"],
+        "answer_text": "We do not have a denon moving head. Available moving heads: head_el150, mini_beam_prism_l, mini_beam_prism_r.",
+    }
+
+
+def test_query_guidance_routes_moving_head_questions_to_fixture_metadata():
+    gateway_main = _load_gateway_main_module()
+
+    guidance = gateway_main._build_query_guidance([
+        {"role": "user", "content": "what effects can the moving head el-150 perform?"},
+    ])
+
+    assert guidance is not None
+    assert "mcp_read_fixtures" in guidance["content"]
+    assert "supported_effects" in guidance["content"]
+
+
+def test_query_guidance_rejects_unknown_fixture_aliases_in_movement_requests():
+    gateway_main = _load_gateway_main_module()
+
+    guidance = gateway_main._build_query_guidance([
+        {"role": "user", "content": "point the denon moving head to the table"},
+    ])
+
+    assert guidance is not None
+    content = guidance["content"].lower()
+    assert "if there is no match, say that clearly" in content
+    assert "available matching fixtures" in content
+
+
+def test_query_guidance_routes_valid_moving_head_moves_through_cursor_and_proposal():
+    gateway_main = _load_gateway_main_module()
+
+    guidance = gateway_main._build_query_guidance([
+        {"role": "user", "content": "point the el-150 moving head to the table"},
+    ])
+
+    assert guidance is not None
+    assert "mcp_read_fixtures" in guidance["content"]
+    assert "mcp_read_pois" in guidance["content"]
+    assert "mcp_read_cursor" in guidance["content"]
+    assert "propose_cue_add_entries" in guidance["content"]
+    assert "move_to_poi" in guidance["content"]
+
+
+def test_query_guidance_routes_valid_moving_head_orbit_through_cursor_and_proposal():
+    gateway_main = _load_gateway_main_module()
+
+    guidance = gateway_main._build_query_guidance([
+        {"role": "user", "content": "orbit the el-150 moving head from table to piano"},
+    ])
+
+    assert guidance is not None
+    content = guidance["content"]
+    assert "mcp_read_fixtures" in content
+    assert "mcp_read_pois" in content
+    assert "mcp_read_cursor" in content
+    assert "propose_cue_add_entries" in content
+    assert "orbit" in content
+    assert "data.start_POI" in content
+    assert "data.subject_POI" in content
+
+
+def test_followup_tool_guidance_pushes_movement_request_to_missing_tools_and_proposal():
+    gateway_main = _load_gateway_main_module()
+
+    first_guidance = gateway_main._build_followup_tool_guidance(
+        [{"role": "user", "content": "point the el-150 moving head to the table"}],
+        ["mcp_read_fixtures"],
+    )
+    assert first_guidance is not None
+    assert "call mcp_read_pois now" in first_guidance["content"].lower()
+
+    second_guidance = gateway_main._build_followup_tool_guidance(
+        [{"role": "user", "content": "point the el-150 moving head to the table"}],
+        ["mcp_read_fixtures", "mcp_read_pois"],
+    )
+    assert second_guidance is not None
+    assert "call mcp_read_cursor now" in second_guidance["content"].lower()
+
+    final_guidance = gateway_main._build_followup_tool_guidance(
+        [{"role": "user", "content": "point the el-150 moving head to the table"}],
+        ["mcp_read_fixtures", "mcp_read_pois", "mcp_read_cursor"],
+    )
+    assert final_guidance is not None
+    final_content = final_guidance["content"].lower()
+    assert "propose_cue_add_entries" in final_content
+    assert "move_to_poi" in final_content
+
+
+def test_followup_tool_guidance_pushes_orbit_request_to_grounded_proposal():
+    gateway_main = _load_gateway_main_module()
+
+    final_guidance = gateway_main._build_followup_tool_guidance(
+        [{"role": "user", "content": "orbit the el-150 moving head from table to piano"}],
+        ["mcp_read_fixtures", "mcp_read_pois", "mcp_read_cursor"],
+    )
+
+    assert final_guidance is not None
+    final_content = final_guidance["content"].lower()
+    assert "propose_cue_add_entries" in final_content
+    assert "effect orbit" in final_content
+    assert "data.start_poi" in final_content
+    assert "data.subject_poi" in final_content
+
+
+def test_movement_followup_allowed_tools_progress_by_stage():
+    gateway_main = _load_gateway_main_module()
+
+    base_messages = [{"role": "user", "content": "point the el-150 moving head to the table"}]
+
+    assert gateway_main._movement_followup_allowed_tools(base_messages, ["mcp_read_fixtures"]) == ["mcp_read_pois"]
+    assert gateway_main._movement_followup_allowed_tools(base_messages, ["mcp_read_fixtures", "mcp_read_pois"]) == ["mcp_read_cursor"]
+    assert gateway_main._movement_followup_allowed_tools(base_messages, ["mcp_read_fixtures", "mcp_read_pois", "mcp_read_cursor"]) == ["propose_cue_add_entries"]
+
+
+def test_fixture_movement_detection_includes_orbit_requests():
+    gateway_main = _load_gateway_main_module()
+
+    assert gateway_main._is_fixture_movement_request("orbit the el-150 moving head from table to piano") is True
+    assert gateway_main._requested_poi_action("sweep the fixture from table to piano to sofa") == "sweep"
+
+
+@pytest.mark.asyncio
 async def test_fast_path_lists_available_pois(monkeypatch):
     gateway_main = _load_gateway_main_module()
     tool_calls = []

@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from fast_path.extractors.fixtures import _resolve_target_prism_fixture_ids
+from fast_path.answer_text import _build_missing_fixture_type_qualifier_answer_text
+from fast_path.extractors.fixtures import _extract_moving_head_qualifier, _resolve_fixture_ids_from_prompt, _resolve_target_prism_fixture_ids
 from fast_path.extractors.poi import _extract_poi_transition, _resolve_poi_id
 from fast_path.extractors.sections import _extract_section_reference, _find_section_occurrence
 from fast_path.extractors.timing import _find_first_beat_at_or_after, _find_next_beat_after, _find_previous_beat_time
@@ -9,6 +10,17 @@ from gateway_mcp.client import call_mcp
 
 
 async def try_movement_fast_path(prompt: str, lowered: str) -> Optional[Dict[str, Any]]:
+    if any(word in lowered for word in ["move", "point", "aim", "orbit", "sweep"]) and ("moving head" in lowered or "moving heads" in lowered):
+        used_tools: List[str] = ["mcp_read_fixtures", "mcp_read_pois"]
+        fixtures_result = await call_mcp("mcp_read_fixtures", {})
+        pois_result = await call_mcp("mcp_read_pois", {})
+        poi_id = _resolve_poi_id(prompt, pois_result)
+        qualifier = _extract_moving_head_qualifier(prompt)
+        fixture_ids = _resolve_fixture_ids_from_prompt(prompt, fixtures_result)
+        if poi_id and qualifier and not fixture_ids:
+            answer_text = _build_missing_fixture_type_qualifier_answer_text(fixtures_result, "moving_head", qualifier, "moving head", "moving heads")
+            if answer_text is not None:
+                return {"used_tools": used_tools, "answer_text": answer_text}
     section_name, section_occurrence = _extract_section_reference(prompt)
     if not section_name:
         return None

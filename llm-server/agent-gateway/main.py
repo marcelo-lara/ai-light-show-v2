@@ -70,7 +70,7 @@ from prompt.factual_answers import (
     _build_left_fixtures_answer_messages,
     _build_loudness_answer_messages,
 )
-from prompt.guidance import _build_query_guidance, _inject_query_guidance
+from prompt.guidance import _build_followup_tool_guidance, _build_query_guidance, _inject_query_guidance, _is_fixture_movement_request, _movement_followup_allowed_tools, _requested_poi_action
 from prompt.instructions import TOOL_OUTPUT_SYSTEM_MESSAGE, _bar_beat_time_instruction, _song_name_mention_instruction
 from prompt.lookup_answers import (
     _build_chord_answer_messages,
@@ -120,6 +120,10 @@ __all__ = [
     "_build_pois_answer_text",
     "_build_prism_effects_answer_text",
     "_build_query_guidance",
+    "_build_followup_tool_guidance",
+    "_is_fixture_movement_request",
+    "_movement_followup_allowed_tools",
+    "_requested_poi_action",
     "_build_section_timing_extraction_messages",
     "_build_section_answer_messages",
     "_build_section_count_answer_text",

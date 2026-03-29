@@ -112,7 +112,10 @@ def _format_fixtures(result: Dict[str, Any]) -> str:
     lines = ["Fixtures:"]
     for fixture in fixtures[:64]:
         effect_ids = [_effect_id(effect) for effect in fixture.get("supported_effects") or []]
-        lines.append(f"- id={fixture.get('id')} name={fixture.get('name')} type={fixture.get('type')} supported_effects={','.join(effect_ids)}")
+        lines.append(
+            f"- id={fixture.get('id')} name={fixture.get('name')} type={fixture.get('type')} "
+            f"supports_move_to_poi={'move_to_poi' in effect_ids} supported_effects={','.join(effect_ids)}"
+        )
     return "\n".join(lines)
 
 
@@ -121,7 +124,10 @@ def _format_pois(result: Dict[str, Any]) -> str:
     pois = payload.get("pois") or []
     if not pois:
         return "POIs: unavailable"
-    return "\n".join(["POIs:"] + [f"- id={poi.get('id')} name={poi.get('name')}" for poi in pois[:64]])
+    return "\n".join([
+        "POIs:",
+        "Use POI ids as data.target_POI in move_to_poi proposals and as data.start_POI, data.subject_POI, and data.end_POI in orbit or sweep proposals.",
+    ] + [f"- id={poi.get('id')} name={poi.get('name')}" for poi in pois[:64]])
 
 
 def _format_chasers(result: Dict[str, Any]) -> str:
@@ -136,7 +142,7 @@ def _format_cursor(result: Dict[str, Any]) -> str:
     payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
     if not payload:
         return _format_generic_result(result)
-    return f"Cursor: time={float(payload.get('time_s', 0.0)):.3f}s bar={payload.get('bar')} beat={payload.get('beat')} section={payload.get('section_name')} next={payload.get('next_bar')}.{payload.get('next_beat')}@{payload.get('next_beat_time_s')}s"
+    return f"Cursor: proposal_time={float(payload.get('time_s', 0.0)):.3f}s bar={payload.get('bar')} beat={payload.get('beat')} section={payload.get('section_name')} next={payload.get('next_bar')}.{payload.get('next_beat')}@{payload.get('next_beat_time_s')}s"
 
 
 def _format_loudness(result: Dict[str, Any]) -> str:

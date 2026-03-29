@@ -94,7 +94,7 @@ TOOLS = [
             "parameters": {"type": "object", "properties": {"start_time": {"type": "number"}, "end_time": {"type": "number"}}, "required": ["start_time", "end_time"]},
         },
     },
-    {"type": "function", "function": {"name": "mcp_read_fixtures", "description": "Read the fixture list including ids, names, and positions.", "parameters": {"type": "object", "properties": {}, "required": []}}},
+    {"type": "function", "function": {"name": "mcp_read_fixtures", "description": "Read the fixture list including ids, names, types, capabilities, positions, and supported_effects. Use this to resolve phrases like 'el-150 moving head' to exact fixture ids and to confirm whether a fixture supports move_to_poi.", "parameters": {"type": "object", "properties": {}, "required": []}}},
     {"type": "function", "function": {"name": "mcp_read_pois", "description": "Read the available POIs and their ids. Use this when a request mentions named stage locations like piano, table, or center.", "parameters": {"type": "object", "properties": {}, "required": []}}},
     {"type": "function", "function": {"name": "mcp_read_chasers", "description": "Read the available chaser definitions.", "parameters": {"type": "object", "properties": {}, "required": []}}},
     {"type": "function", "function": {"name": "mcp_read_cursor", "description": "Read the current transport cursor time, section, and nearest bar.beat.", "parameters": {"type": "object", "properties": {}, "required": []}}},

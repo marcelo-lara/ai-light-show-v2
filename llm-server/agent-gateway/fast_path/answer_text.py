@@ -34,6 +34,72 @@ def _build_prism_effects_answer_text(fixtures_result: Dict[str, Any]) -> Optiona
     return "Prism effects: " + ", ".join(effects) + "." if effects else None
 
 
+def _build_fixture_type_count_answer_text(fixtures_result: Dict[str, Any], fixture_type: str, label: str) -> Optional[str]:
+    if not isinstance(fixtures_result, dict) or not fixtures_result.get("ok"):
+        return None
+    fixture_ids = [
+        str(fixture.get("id") or "").strip()
+        for fixture in ((fixtures_result.get("data") or {}).get("fixtures") or [])
+        if str(fixture.get("type") or "").strip().lower() == fixture_type and str(fixture.get("id") or "").strip()
+    ]
+    if not fixture_ids:
+        return f"This rig has no {label}."
+    return f"This rig has {len(fixture_ids)} {label}: " + ", ".join(fixture_ids) + "."
+
+
+def _build_fixture_effects_answer_text(fixtures_result: Dict[str, Any], fixture_ids: list[str], label: str) -> Optional[str]:
+    if not isinstance(fixtures_result, dict) or not fixtures_result.get("ok"):
+        return None
+    if not fixture_ids:
+        return None
+    fixtures = {
+        str(fixture.get("id") or "").strip(): fixture
+        for fixture in ((fixtures_result.get("data") or {}).get("fixtures") or [])
+        if isinstance(fixture, dict) and str(fixture.get("id") or "").strip()
+    }
+    matched_fixtures = [fixtures[fixture_id] for fixture_id in fixture_ids if fixture_id in fixtures]
+    if not matched_fixtures:
+        return None
+    effects: list[str] = []
+    for fixture in matched_fixtures:
+        for effect_name in fixture.get("supported_effects") or []:
+            normalized = _effect_id(effect_name)
+            if normalized and normalized not in effects:
+                effects.append(normalized)
+    if not effects:
+        return None
+    if len(matched_fixtures) == 1:
+        fixture_id = str(matched_fixtures[0].get("id") or label).strip()
+        return f"{fixture_id} effects: " + ", ".join(effects) + "."
+    return f"{label} effects: " + ", ".join(effects) + "."
+
+
+def _build_fixture_type_list_answer_text(fixtures_result: Dict[str, Any], fixture_type: str, label: str) -> Optional[str]:
+    if not isinstance(fixtures_result, dict) or not fixtures_result.get("ok"):
+        return None
+    fixture_ids = [
+        str(fixture.get("id") or "").strip()
+        for fixture in ((fixtures_result.get("data") or {}).get("fixtures") or [])
+        if str(fixture.get("type") or "").strip().lower() == fixture_type and str(fixture.get("id") or "").strip()
+    ]
+    if not fixture_ids:
+        return f"No {label} are available."
+    return f"{label.capitalize()}: " + ", ".join(fixture_ids) + "."
+
+
+def _build_missing_fixture_type_qualifier_answer_text(fixtures_result: Dict[str, Any], fixture_type: str, qualifier: str, singular_label: str, plural_label: str) -> Optional[str]:
+    if not isinstance(fixtures_result, dict) or not fixtures_result.get("ok"):
+        return None
+    available_ids = [
+        str(fixture.get("id") or "").strip()
+        for fixture in ((fixtures_result.get("data") or {}).get("fixtures") or [])
+        if str(fixture.get("type") or "").strip().lower() == fixture_type and str(fixture.get("id") or "").strip()
+    ]
+    if not available_ids:
+        return f"We do not have any {plural_label}."
+    return f"We do not have a {qualifier} {singular_label}. Available {plural_label}: " + ", ".join(available_ids) + "."
+
+
 def _build_pois_answer_text(pois_result: Dict[str, Any]) -> Optional[str]:
     if not isinstance(pois_result, dict) or not pois_result.get("ok"):
         return None
