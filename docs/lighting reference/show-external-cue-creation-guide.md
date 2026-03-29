@@ -96,29 +96,36 @@ Useful left/right groups:
 
 ## POI Reality Check
 
-Do not assume every fixture can use every POI.
+Do not guess POI coverage. Read [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json) and use the actual stored pan/tilt mappings.
 
-Current meaningful POI coverage from [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json):
+Current named room POIs with fixture mappings:
 
-- `head_el150`:
-  - `piano`
-  - `table`
-- `mini_beam_prism_l`:
-  - `piano`
-  - `table`
-  - `sofa`
-  - `dark_desk`
-- `mini_beam_prism_r`:
-  - `piano`
-  - `table`
-  - `wall`
+- `piano`
+- `table`
+- `sofa`
+- `dark_desk`
+- `inblue_desk`
+- `wall`
+- `ceiling_station`
 
-There are also reference POIs like `ref_0_0_0`, but unless a fixture has stored pan/tilt targets for them, `move_to_poi` will not be useful.
+Current cardinal reference POIs:
 
-Important authoring rule:
+- `ref_0_0_0`
+- `ref_1_0_0`
+- `ref_1_1_0`
+- `ref_0_1_0`
+- `ref_0_0_1`
+- `ref_1_0_1`
+- `ref_1_1_1`
+- `ref_0_1_1`
 
-- If a user asks to use more POIs, first check whether the target fixture actually has mappings in `pois.json`.
-- In this repo, prism fixtures currently have more spatial variety than `head_el150`.
+Practical authoring rule:
+
+- If a user asks to use more POIs, check `pois.json` first instead of assuming coverage.
+- The named room POIs are good for storytelling and scene focus.
+- The cardinal `ref_x_y_z` POIs are good spatial anchors when you want motion to feel more intentional or extreme.
+- Use cardinal `ref_x_y_z` POIs as preferred start points for `orbit` and `sweep` when you want to emphasize those effects.
+- This is not a strict rule: use them as an emphasis tool, not as a mandatory starting point for every motion effect.
 
 ## Effects That Matter Most In Practice
 
@@ -155,10 +162,17 @@ Commonly useful effects in this project:
 
 - Use for direct fixture-to-POI positioning.
 - Only valid when the target fixture actually has that POI mapped.
+- Prism movement is mechanically slow: plan around roughly 2 seconds for full-range pan travel and 1 second for full-range tilt travel.
+- Use `move_to_poi` as a pre-roll tool when the next visual moment depends on being in position on time.
 
 `orbit` and `sweep`
 
 - Good for longer EL-150 phrase motion.
+- If you want the motion to read bigger and more deliberate, consider starting from a cardinal `ref_x_y_z` POI first.
+- Use this especially for section openings, instrumental lifts, and other “show the movement” moments.
+- Do not force this on every motion phrase; named room POIs can still be better for narrative focus.
+- For prism fixtures, movement effects should not be shorter than 2 seconds.
+- More broadly, avoid authoring movement moments that are faster than the rig can physically resolve.
 - Avoid overlapping multiple pan/tilt effects on the same moving head at the same timestamp unless you intentionally want one to win.
 
 `fade_out`
@@ -242,6 +256,13 @@ Preferred timing anchors:
   - exact beat times from `beats.json`
 - For repeated motifs:
   - map by `bar` and `beat`, not by rough seconds
+
+Mechanical timing rule:
+
+- Prism fixtures need travel time.
+- Assume about 2 seconds for full pan travel and about 1 second for full tilt travel.
+- Use earlier `move_to_poi` entries as pre-roll if a hit depends on the prism landing at a target.
+- Do not make movement-based prism effects shorter than 2 seconds.
 
 ## Chaser Format
 
