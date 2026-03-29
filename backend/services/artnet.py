@@ -8,7 +8,7 @@ ARTNET_IP = "192.168.10.221"
 ARTNET_PORT = 6454
 ARTNET_UNIVERSE = 0
 DMX_CHANNELS = 512
-FPS = 60
+SEND_FPS = 30
 
 UniverseLike = Union[bytes, bytearray, memoryview, Iterable[int]]
 
@@ -65,12 +65,18 @@ class ArtNetService:
         self.dmx_universe[:] = vals
 
     async def send_loop(self):
+        frame_interval = 1.0 / SEND_FPS
+        next_send = perf_counter()
         while self.running:
+            next_send += frame_interval
             now = perf_counter()
-            if now - self.last_send >= 1.0 / FPS:
-                await self.send_artnet()
-                self.last_send = now
-            await asyncio.sleep(0.01)  # small sleep to not hog CPU
+            delay = next_send - now
+            if delay > 0:
+                await asyncio.sleep(delay)
+            else:
+                next_send = now
+            await self.send_artnet()
+            self.last_send = perf_counter()
 
     async def send_artnet(self):
         current_packet = bytes(self.dmx_universe)

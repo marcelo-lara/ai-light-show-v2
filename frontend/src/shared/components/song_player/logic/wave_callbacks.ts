@@ -8,7 +8,7 @@ export type WaveCallbacksDeps = {
   setLocalTimeMsFromSeconds: (seconds: number) => void;
   enforceLoopRules: () => void;
   isSeekSyncSuppressed: () => boolean;
-  debounceSeekSync: (timeMs: number) => void;
+  debounceSeekSync: (timeMs: number, isPlaying: boolean) => void;
   isPlaying: () => boolean;
   setIsPlaying: (playing: boolean) => void;
   updatePlayPauseIcon: (playing: boolean) => void;
@@ -42,7 +42,7 @@ export function buildWaveCallbacks(
       deps.setLocalTimeMsFromSeconds(seconds);
       deps.renderReadout();
       if (!deps.isSeekSyncSuppressed()) {
-        deps.debounceSeekSync(deps.getLocalTimeMs());
+        deps.debounceSeekSync(deps.getLocalTimeMs(), deps.isPlaying());
       }
     },
     onFinish: () => {

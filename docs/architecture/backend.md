@@ -34,6 +34,7 @@ Compatibility exports:
 - Effect rows store `time`, `fixture_id`, `effect`, `duration`, `data`, `name`, `created_by`.
 - Chaser rows store `time`, `chaser_id`, `data`, `name`, `created_by`.
 - Renderer expands chaser rows into effect rows at render time and builds the full timeline canvas at `60 FPS`.
+- Art-Net transmission is decoupled from canvas rendering and sends the current output universe at `30 FPS`.
 
 ### Dual universe model
 
@@ -60,7 +61,7 @@ Behavior:
 
 ### Playback and time sync
 
-- Browser timeline provides periodic alignment (for example every 10s), while backend advances playback timecode continuously during `playing`.
+- Browser timeline is the authoritative clock and keeps backend timecode aligned on a short cadence while playback is running, while backend advances playback timecode continuously between sync updates.
 - Song intents: `song.list|load`.
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
 - `jump_to_time` seeks and applies nearest precomputed frame.
@@ -119,9 +120,10 @@ Behavior:
 ### Preview
 
 - `fixture.preview_effect` validates fixture/effect/duration, renders temporary canvas, streams it to output at 60 FPS via Art-Net, and emits:
+- `fixture.preview_effect` validates fixture/effect/duration, renders temporary canvas, updates preview frames at 60 FPS, and the Art-Net service transmits the current output universe at 30 FPS. It emits:
   - `preview_started` on success.
   - `preview_rejected` on failure.
-- `chaser.preview` validates chaser input, renders temporary chaser canvas, streams output at 60 FPS via Art-Net, and emits:
+- `chaser.preview` validates chaser input, renders temporary chaser canvas, updates preview frames at 60 FPS, and the Art-Net service transmits the current output universe at 30 FPS. It emits:
   - `chaser_preview_started` on success.
   - `chaser_preview_rejected` on failure.
 - `chaser.stop_preview` emits `chaser_preview_stopped` when active preview is cancelled.
@@ -178,6 +180,7 @@ Patch behavior:
 See `backend/services/artnet.py`.
 
 - Sends ArtDMX packets to configured target.
+- Sends the current output universe at `30 FPS`.
 - Loop runs continuously.
 - If `continuous_send` is disabled, identical frames are suppressed.
 - `DEBUG_MODE` enables DMX payload debug output to stdout and to a file if `DEBUG_FILE` is set.

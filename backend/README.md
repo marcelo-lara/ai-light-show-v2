@@ -30,7 +30,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 
 1. Startup loads POIs and fixtures, applies arm defaults, starts Art-Net loop, then loads a default song.
 2. Song load pre-renders a full `60 FPS` DMX canvas.
-3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net frames continuously.
+3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net packets continuously at `30 FPS`.
 4. Clients send websocket `intent` messages.
 5. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
 6. MCP clients call backend-owned tools over Streamable HTTP and share the same live runtime state.
@@ -103,7 +103,7 @@ Patch behavior:
 
 ## Playback and editing behavior
 
-- Browser audio timeline periodically aligns backend timecode (default 10s sync).
+- Browser audio timeline keeps backend timecode aligned while playback is running using a short sync cadence, plus immediate sync on play/pause/seek/stop.
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
 - `song.list` emits the currently loadable backend song names without mutating state.
 - `song.load` validates `payload.filename`, loads the selected song into backend state, resets playback to stopped, updates the output universe, and schedules a snapshot/patch broadcast.

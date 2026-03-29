@@ -1,4 +1,5 @@
 import asyncio
+from time import perf_counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -28,6 +29,8 @@ class StateCoreBootstrapMixin:
         self.cue_sheet = None
         self.timecode: float = 0.0
         self.is_playing: bool = False
+        self.playback_anchor_perf: float = perf_counter()
+        self.playback_anchor_timecode: float = 0.0
         self.canvas: Optional[DMXCanvas] = None
         self.song_length_seconds: float = 0.0
         self.canvas_dirty: bool = False
@@ -71,6 +74,8 @@ class StateCoreBootstrapMixin:
 
     async def get_timecode(self) -> float:
         async with self.lock:
+            if self.is_playing:
+                return float(self._current_playback_timecode_locked(perf_counter()))
             return float(self.timecode)
 
     async def get_max_used_channel(self) -> int:
