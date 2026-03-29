@@ -38,7 +38,7 @@ export function PoiLocationController(
     const currentTilt = Number(live?.tilt ?? snapshotTilt);
 
     const options = pois.map((p) => ({
-      label: p.name,
+      label: p.fixtures?.[fixtureId] ? p.name : `${p.name}*`,
       value: p.id,
     }));
 
