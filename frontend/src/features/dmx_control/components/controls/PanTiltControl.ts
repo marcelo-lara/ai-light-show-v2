@@ -30,6 +30,8 @@ export function PanTiltControl({
   const limits = { maxPan, maxTilt };
   const container = document.createElement("div");
   container.className = "pan-tilt-surface";
+  container.tabIndex = 0;
+  container.setAttribute("aria-label", `Pan and tilt control for ${fixtureId}`);
 
   const handle = document.createElement("div");
   handle.className = "pan-tilt-handle";
@@ -54,7 +56,10 @@ export function PanTiltControl({
   let currentPoiPan: number | null = poiPan;
   let currentPoiTilt: number | null = poiTilt;
   let isDragging = false;
+  let isActive = false;
   let detachDragListeners: (() => void) | null = null;
+
+  const clamp = (value: number, maxValue: number) => Math.max(0, Math.min(maxValue, value));
 
   const updatePoiHandle = () => {
     if (currentPoiPan === null || currentPoiTilt === null) {
@@ -75,13 +80,22 @@ export function PanTiltControl({
     tiltLabel.textContent = `Tilt ${Math.round(currentTilt)}`;
   };
 
-  const updateValues = (clientX: number, clientY: number) => {
-    const point = pointFromPointer(container.getBoundingClientRect(), clientX, clientY, limits);
-    currentPan = point.pan;
-    currentTilt = point.tilt;
+  const applyValues = (pan: number, tilt: number) => {
+    currentPan = clamp(pan, maxPan);
+    currentTilt = clamp(tilt, maxTilt);
     updateHandle();
     onChange?.(currentPan, currentTilt);
+  };
+
+  const updateValues = (clientX: number, clientY: number) => {
+    const point = pointFromPointer(container.getBoundingClientRect(), clientX, clientY, limits);
+    applyValues(point.pan, point.tilt);
     sendUpdates(currentPan, currentTilt);
+  };
+
+  const stepValues = (panDelta: number, tiltDelta: number) => {
+    applyValues(currentPan + panDelta, currentTilt + tiltDelta);
+    setFixtureValues(fixtureId, { pan: currentPan, tilt: currentTilt });
   };
 
   const sendUpdates = throttle((pan: number, tilt: number) => {
@@ -94,7 +108,22 @@ export function PanTiltControl({
     updateValues(firstX, firstY);
   };
 
+  const activate = () => {
+    if (isActive) return;
+    isActive = true;
+    container.classList.add("is-active");
+    container.focus();
+    document.dispatchEvent(new CustomEvent("pan-tilt-surface-activated", { detail: container }));
+  };
+
+  const deactivate = () => {
+    if (!isActive) return;
+    isActive = false;
+    container.classList.remove("is-active");
+  };
+
   const handleMouseDown = (event: MouseEvent) => {
+    activate();
     beginDrag(
       () =>
         startMouseDrag({
@@ -112,6 +141,7 @@ export function PanTiltControl({
 
   const handleTouchStart = (event: TouchEvent) => {
     if (event.touches.length === 0) return;
+    activate();
     beginDrag(
       () =>
         startTouchDrag({
@@ -127,24 +157,71 @@ export function PanTiltControl({
     );
   };
 
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (isDragging || !isActive) return;
+
+    const step = event.shiftKey ? 128 : 1;
+
+    switch (event.key) {
+      case "ArrowUp":
+        event.preventDefault();
+        stepValues(0, step);
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        stepValues(0, -step);
+        break;
+      case "ArrowLeft":
+        event.preventDefault();
+        stepValues(step, 0);
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        stepValues(-step, 0);
+        break;
+      case "Escape":
+        deactivate();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleDocumentPointerDown = (event: PointerEvent) => {
+    if (!isActive) return;
+    if (event.target instanceof Node && container.contains(event.target)) return;
+    deactivate();
+  };
+
+  const handleSurfaceActivated = (event: Event) => {
+    const activatedContainer = (event as CustomEvent<HTMLElement>).detail;
+    if (activatedContainer !== container) {
+      deactivate();
+    }
+  };
+
   container.addEventListener("mousedown", handleMouseDown);
   container.addEventListener("touchstart", handleTouchStart, { passive: false });
+  window.addEventListener("keydown", handleKeyDown);
+  document.addEventListener("pointerdown", handleDocumentPointerDown);
+  document.addEventListener("pan-tilt-surface-activated", handleSurfaceActivated);
 
   const updatePanTilt = (pan: number, tilt: number) => {
-    currentPan = pan;
-    currentTilt = tilt;
-    updateHandle();
-    onChange?.(currentPan, currentTilt);
+    applyValues(pan, tilt);
   };
 
   const dispose = () => {
     container.removeEventListener("mousedown", handleMouseDown);
     container.removeEventListener("touchstart", handleTouchStart);
+    window.removeEventListener("keydown", handleKeyDown);
+    document.removeEventListener("pointerdown", handleDocumentPointerDown);
+    document.removeEventListener("pan-tilt-surface-activated", handleSurfaceActivated);
     if (detachDragListeners) {
       detachDragListeners();
       detachDragListeners = null;
     }
     isDragging = false;
+    isActive = false;
   };
 
   updateHandle();
@@ -152,6 +229,7 @@ export function PanTiltControl({
 
   return {
     root: container,
+    activate,
     updatePanTilt,
     updatePoiTarget: (pan, tilt) => {
       currentPoiPan = pan;

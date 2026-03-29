@@ -31,6 +31,7 @@ Local inference + tool-gateway stack used for metadata-aware cue planning.
 ## Tool mapping (current)
 
 - `mcp_read_sections` → `metadata_get_sections`
+- `mcp_read_section_analysis` → `metadata_get_section_analysis`
 - `mcp_find_section` → `metadata_find_section`
 - `mcp_read_beats` → `metadata_get_beats`
 - `mcp_read_chords` → `metadata_get_chords`

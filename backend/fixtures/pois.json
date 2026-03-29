@@ -57,6 +57,14 @@
             "mini_beam_prism_l": {
                 "pan": 41287,
                 "tilt": 18677
+            },
+            "mini_beam_prism_r": {
+                "pan": 45910,
+                "tilt": 7045
+            },
+            "head_el150": {
+                "pan": 38364,
+                "tilt": 10107
             }
         }
     },
@@ -70,8 +78,16 @@
         },
         "fixtures": {
             "mini_beam_prism_l": {
-                "pan": 0,
+                "pan": 42925,
                 "tilt": 0
+            },
+            "mini_beam_prism_r": {
+                "pan": 44676,
+                "tilt": 23245
+            },
+            "head_el150": {
+                "pan": 46233,
+                "tilt": 14459
             }
         }
     },
@@ -82,6 +98,20 @@
             "x": 0.5,
             "y": 0.5,
             "z": 0
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 38993,
+                "tilt": 1638
+            },
+            "mini_beam_prism_r": {
+                "pan": 49540,
+                "tilt": 20685
+            },
+            "head_el150": {
+                "pan": 46233,
+                "tilt": 19579
+            }
         }
     },
     {
@@ -96,6 +126,14 @@
             "mini_beam_prism_r": {
                 "pan": 0,
                 "tilt": 0
+            },
+            "mini_beam_prism_l": {
+                "pan": 39321,
+                "tilt": 23265
+            },
+            "head_el150": {
+                "pan": 36060,
+                "tilt": 10107
             }
         }
     },
@@ -106,69 +144,181 @@
             "x": 0.5,
             "y": 0.5,
             "z": 0
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 30315,
+                "tilt": 16883
+            },
+            "mini_beam_prism_r": {
+                "pan": 57783,
+                "tilt": 21923
+            },
+            "head_el150": {
+                "pan": 48665,
+                "tilt": 39035
+            }
         }
     },
     {
         "id": "ref_0_0_0",
-        "name": "left back floor x0,y0,z0",
+        "name": "[x0,y0,z0] left back floor",
         "location": {
             "x": 0,
             "y": 0,
             "z": 0
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 47513,
+                "tilt": 0
+            },
+            "head_el150": {
+                "pan": 45997,
+                "tilt": 138
+            },
+            "mini_beam_prism_r": {
+                "pan": 40964,
+                "tilt": 19405
+            }
         }
     },
     {
         "id": "ref_1_0_0",
-        "name": "right back floor x1,y0,z0",
+        "name": "[x1,y0,z0] right back floor",
         "location": {
             "x": 1,
             "y": 0,
             "z": 0
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 46745,
+                "tilt": 17920
+            },
+            "head_el150": {
+                "pan": 38445,
+                "tilt": 650
+            },
+            "mini_beam_prism_r": {
+                "pan": 40836,
+                "tilt": 1741
+            }
         }
     },
     {
         "id": "ref_1_1_0",
-        "name": "right front floor x1,y1,z0",
+        "name": "[x1,y1,z0] right front floor",
         "location": {
             "x": 1,
             "y": 1,
             "z": 0
-        }
-    },
-    {
-        "id": "ref_1_1_1",
-        "name": "right front ceiling x1,y1,z1",
-        "location": {
-            "x": 1,
-            "y": 1,
-            "z": 1
-        }
-    },
-    {
-        "id": "ref_0_1_1",
-        "name": "left front ceiling x0,y1,z1",
-        "location": {
-            "x": 0,
-            "y": 1,
-            "z": 1
-        }
-    },
-    {
-        "id": "ref_0_0_1",
-        "name": "left back ceiling x0,y0,z1",
-        "location": {
-            "x": 0,
-            "y": 0,
-            "z": 1
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 37785,
+                "tilt": 14848
+            },
+            "head_el150": {
+                "pan": 38445,
+                "tilt": 18570
+            },
+            "mini_beam_prism_r": {
+                "pan": 49668,
+                "tilt": 1741
+            }
         }
     },
     {
         "id": "ref_0_1_0",
-        "name": "left front floor x0,y1,z0",
+        "name": "[x0,y1,z0] left front floor",
         "location": {
             "x": 0,
             "y": 1,
             "z": 0
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 37517,
+                "tilt": 0
+            },
+            "head_el150": {
+                "pan": 45741,
+                "tilt": 21002
+            },
+            "mini_beam_prism_r": {
+                "pan": 49563,
+                "tilt": 1059
+            }
+        }
+    },
+    {
+        "id": "ref_1_1_1",
+        "name": "[x1,y1,z1] right front ceiling",
+        "location": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 31385,
+                "tilt": 16640
+            },
+            "head_el150": {
+                "pan": 57645,
+                "tilt": 27018
+            },
+            "mini_beam_prism_r": {
+                "pan": 56347,
+                "tilt": 1059
+            }
+        }
+    },
+    {
+        "id": "ref_0_1_1",
+        "name": "[x0,y1,z1] left front ceiling",
+        "location": {
+            "x": 0,
+            "y": 1,
+            "z": 1
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 31501,
+                "tilt": 0
+            },
+            "head_el150": {
+                "pan": 52269,
+                "tilt": 42936
+            },
+            "mini_beam_prism_r": {
+                "pan": 56347,
+                "tilt": 1059
+            }
+        }
+    },
+    {
+        "id": "ref_0_0_1",
+        "name": "[x0,y0,z1] left back ceiling",
+        "location": {
+            "x": 0,
+            "y": 0,
+            "z": 1
+        },
+        "fixtures": {
+            "mini_beam_prism_l": {
+                "pan": 58637,
+                "tilt": 128
+            },
+            "head_el150": {
+                "pan": 58797,
+                "tilt": 27018
+            },
+            "mini_beam_prism_r": {
+                "pan": 29188,
+                "tilt": 26061
+            }
         }
     }
 ]

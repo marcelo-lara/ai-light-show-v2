@@ -34,6 +34,7 @@ Compatibility exports:
 - Effect rows store `time`, `fixture_id`, `effect`, `duration`, `data`, `name`, `created_by`.
 - Chaser rows store `time`, `chaser_id`, `data`, `name`, `created_by`.
 - Renderer expands chaser rows into effect rows at render time and builds the full timeline canvas at `60 FPS`.
+- Art-Net transmission is decoupled from canvas rendering and sends the current output universe at `30 FPS`.
 
 ### Dual universe model
 
@@ -60,7 +61,7 @@ Behavior:
 
 ### Playback and time sync
 
-- Browser timeline provides periodic alignment (for example every 10s), while backend advances playback timecode continuously during `playing`.
+- Browser timeline is the authoritative clock and keeps backend timecode aligned on a short cadence while playback is running, while backend advances playback timecode continuously between sync updates.
 - Song intents: `song.list|load`.
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
 - `jump_to_time` seeks and applies nearest precomputed frame.
@@ -70,6 +71,7 @@ Behavior:
 ### Section metadata normalization
 
 - Backend accepts section records with either analyzer keys (`start`, `end`, `label`) or normalized keys (`start_s`, `end_s`, `name`).
+- Canonical persisted `sections.json` is a top-level list of section objects; authored `description` and `hints` stay on those same section rows.
 - Song payload serialization always emits `{name, start_s, end_s}` for frontend state.
 - Playback section name resolution and song length inference use normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
 
@@ -87,7 +89,7 @@ Behavior:
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, and `cue.apply_helper`.
 - The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, and full-sheet replace.
-- The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, and section windows with resolved musical positions.
+- The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, section windows with resolved musical positions, and section-analysis summaries for metadata drafting.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - `cue.clear_all` removes every cue entry from the current song and persists the empty cue sheet.
 - LLM chat is backend-owned through `services/assistant/*`: prompt profiles are loaded there, requests are relayed to the agent gateway, and assistant websocket events are targeted to the requesting client instead of globally broadcast.
@@ -118,9 +120,10 @@ Behavior:
 ### Preview
 
 - `fixture.preview_effect` validates fixture/effect/duration, renders temporary canvas, streams it to output at 60 FPS via Art-Net, and emits:
+- `fixture.preview_effect` validates fixture/effect/duration, renders temporary canvas, updates preview frames at 60 FPS, and the Art-Net service transmits the current output universe at 30 FPS. It emits:
   - `preview_started` on success.
   - `preview_rejected` on failure.
-- `chaser.preview` validates chaser input, renders temporary chaser canvas, streams output at 60 FPS via Art-Net, and emits:
+- `chaser.preview` validates chaser input, renders temporary chaser canvas, updates preview frames at 60 FPS, and the Art-Net service transmits the current output universe at 30 FPS. It emits:
   - `chaser_preview_started` on success.
   - `chaser_preview_rejected` on failure.
 - `chaser.stop_preview` emits `chaser_preview_stopped` when active preview is cancelled.
@@ -146,7 +149,7 @@ Current mounted MCP tools:
 - `songs_list`, `songs_get_details`, `songs_load`
 - `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
 - `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
+- `metadata_get_overview`, `metadata_get_sections`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - `transport_get_cursor`
 
 Mutation tools schedule websocket patch broadcasts after state changes so browser clients remain synchronized with MCP-originated edits.
@@ -158,6 +161,7 @@ Serialized fixture payloads expose `supported_effects` as rich effect objects wi
 Frontend consumers should treat each `supported_effects[]` entry as a metadata object. `id` is the stable effect identifier for intent payloads and parameter-schema lookup, and `name` is the display label.
 
 `transport_get_cursor` returns the current timecode, nearest and next beat positions, the active `section_name` when the cursor is inside a labeled section, and `next_section_name` when the cursor is before the next section boundary.
+`metadata_get_section_analysis` summarizes each section with mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` so the assistant can draft grounded descriptions and hints.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.
@@ -176,6 +180,7 @@ Patch behavior:
 See `backend/services/artnet.py`.
 
 - Sends ArtDMX packets to configured target.
+- Sends the current output universe at `30 FPS`.
 - Loop runs continuously.
 - If `continuous_send` is disabled, identical frames are suppressed.
 - `DEBUG_MODE` enables DMX payload debug output to stdout and to a file if `DEBUG_FILE` is set.

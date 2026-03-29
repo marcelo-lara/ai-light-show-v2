@@ -122,6 +122,11 @@
   touch-action: none;
 }
 
+.pan-tilt-surface.is-active {
+  background: var(--surface) !important;
+  border-color: var(--accent);
+}
+
 .pan-tilt-surface::before,
 .pan-tilt-surface::after {
   content: "";

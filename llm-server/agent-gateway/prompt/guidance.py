@@ -56,6 +56,8 @@ def _build_query_guidance(messages: List[Dict[str, Any]]) -> Optional[Dict[str, 
         hints.append("For fixture movement requests that mention named places like piano, table, or center, treat those place names as POIs. Resolve the target section timing, validate the POIs with mcp_read_pois, resolve the target fixture with mcp_read_fixtures, and propose_cue_add_entries using move_to_poi or another POI-aware effect. Do not use chord tools unless the user explicitly asks about chords.")
     if "loud" in prompt:
         hints.append("For loudness questions, use mcp_read_loudness. If the prompt names a section like verse or chorus, pass that section or resolve it first.")
+    if any(token in prompt for token in ["section metadata", "sections metadata", "description", "descriptions", "hint", "hints"]) and any(token in prompt for token in ["section", "intro", "verse", "chorus", "instrumental", "outro"]):
+        hints.append("For section metadata drafting or review, read mcp_read_section_analysis first. Use it as the grounded source for section energy, harmonic patterns, and bass/drums/vocals support before writing descriptions or hints.")
     if any(token in prompt for token in ["moving head", "moving heads", "el-150", "el150"]) or ("fixture" in prompt and any(token in prompt for token in ["effect", "effects", "support", "supports", "how many", "count"])):
         hints.append("For fixture inventory, type, or capability questions, call mcp_read_fixtures and answer from the returned fixture ids, names, type, capabilities, and supported_effects fields. If the user asks what an effect does after that, read mcp_read_effects for effect descriptions.")
     if _is_fixture_movement_request(prompt):

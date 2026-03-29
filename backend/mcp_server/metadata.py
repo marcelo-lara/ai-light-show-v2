@@ -8,6 +8,7 @@ import re
 from models.song.artifacts import get_essentia_artifact_entry
 
 from .responses import fail, ok
+from .section_analysis import build_section_analysis
 from .song_data import build_song_details
 
 
@@ -164,6 +165,22 @@ def register_metadata_tools(mcp, runtime) -> None:
             return fail("song_not_loaded", "No song is currently loaded")
         details = build_song_details(current_song, ws_manager.state_manager.meta_path)
         return ok({"song": details["filename"], "sections": details["sections"], "count": len(details["sections"])})
+
+    @mcp.tool()
+    def metadata_get_section_analysis(song: str | None = None, section_name: str | None = None):
+        ws_manager, current_song, error = _load_song(song)
+        if error is not None:
+            return error
+        if current_song is None:
+            return fail("song_not_loaded", "No song is currently loaded")
+        details = build_song_details(current_song, ws_manager.state_manager.meta_path)
+        sections = build_section_analysis(current_song, Path(ws_manager.state_manager.meta_path), details)
+        if section_name:
+            match = _find_section_match(sections, str(section_name))
+            if match is None:
+                return fail("section_not_found", f"Section '{section_name}' not found", {"section_name": section_name, "available_sections": [section.get("name") for section in sections]})
+            return ok({"song": details["filename"], "section": match})
+        return ok({"song": details["filename"], "sections": sections, "count": len(sections)})
 
     @mcp.tool()
     def metadata_find_section(section_name: str, song: str | None = None):

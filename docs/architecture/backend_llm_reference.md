@@ -43,6 +43,7 @@ Code is the source of truth.
 5. DMX output: `backend/services/artnet.py`
 - Maintains active DMX universe.
 - Sends Art-Net packets on loop.
+- Sends the current output universe at `30 FPS`.
 - Sends only on change unless `continuous_send=True`.
 - Prints DMX payload bytes to stdout and to a file if `DEBUG_FILE` is set when `DEBUG_MODE` is truthy.
 
@@ -148,7 +149,8 @@ Code is the source of truth.
 | Tool | Arguments | Behavior |
 | --- | --- | --- |
 | `metadata_get_overview` | `song?` | returns song length/BPM and counts for sections, beats, chords |
-- `metadata_get_sections` | `song?` | returns normalized section rows with resolved `start_bar`, `start_beat`, `end_bar`, and `end_beat` |
+| `metadata_get_sections` | `song?` | returns normalized section rows with resolved `start_bar`, `start_beat`, `end_bar`, and `end_beat` |
+| `metadata_get_section_analysis` | `song?`, `section_name?` | returns compact section-analysis summaries for metadata drafting, including mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` |
 | `metadata_find_section` | `section_name`, `song?` | returns one exact section row by section name |
 | `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered; each row includes `time`, `bar`, `beat`, optional `bass`/`chord`, and `type` (`beat` or `downbeat`) |
 | `metadata_get_bar_beats` | `song?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns beat rows filtered by musical position |
@@ -187,7 +189,7 @@ Code is the source of truth.
 | `transport.play` | none | `set_playback_state(True)`, start backend playback ticker, enable continuous Art-Net send | `True` |
 | `transport.pause` | none | `set_playback_state(False)`, stop backend playback ticker, disable continuous send | `True` |
 | `transport.stop` | none | pause + stop ticker + seek `0` + blackout output universe + push Art-Net + disable continuous send | `True` |
-| `transport.jump_to_time` | `time_ms` | seek to `max(0, time_ms/1000)` and push output universe | `True` on valid time, else event `invalid_time_ms` and `False` |
+| `transport.jump_to_time` | `time_ms`, `sync?` | seek to `max(0, time_ms/1000)` and push output universe; `sync=true` is used by the running browser clock and suppresses websocket patch broadcasts | `True` on user seek, `False` on no-op or `sync=true`, else event `invalid_time_ms` and `False` |
 | `transport.jump_to_section` | `section_index` | sort sections by normalized start (`start_s|start`), seek to selected section start, then push output universe | `True` on valid index; else event `invalid_section_index`/`section_index_out_of_range`/`no_sections_available`/`song_not_loaded` and `False` |
 
 ### Fixture intents
@@ -235,7 +237,7 @@ Notes on cue persistence:
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
 | `chaser.apply` | `chaser_id`, `start_time_ms?`, `repetitions?` | validates chaser id, persists one chaser cue row with `data.repetitions`, re-renders canvas, tags `created_by` as `chaser:{id}` | `True` on success; else event `chaser_apply_failed` and `False` |
-| `chaser.preview` | `chaser_id`, `start_time_ms?`, `repetitions?` | expands chaser into temporary effect entries, renders non-persistent preview frames at 60 FPS, streams Art-Net output, does not write cues | `True` on success; else event `chaser_preview_rejected` and `False` |
+| `chaser.preview` | `chaser_id`, `start_time_ms?`, `repetitions?` | expands chaser into temporary effect entries, renders non-persistent preview frames at 60 FPS, and the Art-Net service transmits the current output universe at 30 FPS without writing cues | `True` on success; else event `chaser_preview_rejected` and `False` |
 | `chaser.stop_preview` | none | cancels active non-persistent chaser preview and restores editor output universe | emits `chaser_preview_stopped` when preview was active, otherwise `chaser_preview_stop_ignored`; returns `False` |
 | `chaser.start` | `chaser_id`, `start_time_ms?`, `repetitions?` | applies chaser row and tracks runtime instance id in memory | `True` on success; else event `chaser_start_failed` and `False` |
 | `chaser.stop` | `instance_id` | removes tracked runtime instance id from memory | emits `chaser_stopped`, returns `False` |

@@ -2,522 +2,1588 @@
   {
     "time": 0.0,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.5,
+    "effect": "fade_out",
+    "duration": 0.9,
+    "data": {
+      "easing": "ease-out"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "full",
+    "duration": 0.0,
     "data": {},
-    "created_by": "user"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "move_to_poi",
+    "duration": 0.35,
+    "data": {
+      "target_POI": "table"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 0,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0,
+        "speed": 28,
+        "autoplay": 0,
+        "reset": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_out",
+    "duration": 0.9,
+    "data": {
+      "easing": "ease-out"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "full",
+    "duration": 0.0,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "move_to_poi",
+    "duration": 0.35,
+    "data": {
+      "target_POI": "table"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 0,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0,
+        "speed": 28,
+        "autoplay": 0,
+        "reset": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "parcan_l",
+    "effect": "fade_out",
+    "duration": 0.9,
+    "data": {
+      "easing": "ease-out"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
+    "fixture_id": "parcan_l",
+    "effect": "full",
+    "duration": 0.0,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 0.0,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "effect": "fade_out",
+    "duration": 0.9,
+    "data": {
+      "easing": "ease-out"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 0.46,
+    "time": 0.0,
+    "fixture_id": "parcan_pl",
+    "effect": "full",
+    "duration": 0.0,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 0.0,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "effect": "fade_out",
+    "duration": 0.9,
+    "data": {
+      "easing": "ease-out"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 0.9,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
+    "time": 0.0,
+    "fixture_id": "parcan_pr",
+    "effect": "full",
+    "duration": 0.0,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 1.0,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.5,
-    "data": {},
-    "created_by": "user"
+    "time": 0.0,
+    "fixture_id": "parcan_r",
+    "effect": "fade_out",
+    "duration": 0.9,
+    "data": {
+      "easing": "ease-out"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 1.36,
-    "chaser_id": "blue_parcan_chase",
+    "time": 0.0,
+    "fixture_id": "parcan_r",
+    "effect": "full",
+    "duration": 0.0,
     "data": {},
-    "created_by": "user"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 1.36,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.32,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 1.36,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 0,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 1.8,
-    "fixture_id": "parcan_pl",
+    "time": 1.36,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 1.36,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 2.26,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.32,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 2.68,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 3.0,
-    "fixture_id": "parcan_l",
-    "effect": "strobe",
-    "duration": 1.0,
+    "time": 2.26,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
     "data": {
-      "rate": 10
+      "channels": {
+        "color": 55,
+        "prism": 0,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
     },
-    "created_by": "user"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 2.26,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 2.26,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 3.14,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 3.14,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 0,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 3.58,
-    "fixture_id": "parcan_pl",
+    "time": 3.14,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 3.14,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 4.04,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 4.48,
+    "time": 4.04,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 0,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 4.04,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 4.04,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 4.94,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.32,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 4.94,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 0,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 5.38,
-    "fixture_id": "parcan_pl",
+    "time": 4.94,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 4.94,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 5.82,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 6.26,
+    "time": 5.82,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 0,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 5.82,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 5.82,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.38,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 10,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.38,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 10,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.575,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 6.7,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.36,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.575,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 6.7,
     "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 0.575,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.575,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.575,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.92,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.575,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.92,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 6.7,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.575,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 7.16,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 7.16,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 7.16,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 7.16,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 7.16,
     "fixture_id": "parcan_pl",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 0.57,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 7.16,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 7.16,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 7.62,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 8.06,
+    "time": 7.62,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 7.62,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 7.62,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 8.52,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 8.52,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 8.96,
-    "fixture_id": "parcan_pl",
+    "time": 8.52,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 8.52,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 9.42,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 9.86,
+    "time": 9.42,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 9.42,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 9.42,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 10.32,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.36,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 10.32,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 10.76,
-    "fixture_id": "parcan_pl",
+    "time": 10.32,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 10.32,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 11.22,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 11.68,
+    "time": 11.22,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 11.22,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 11.22,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 12.12,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.32,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 12.12,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 12.56,
-    "fixture_id": "parcan_pl",
+    "time": 12.12,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 12.12,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 13.0,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 13.44,
+    "time": 13.0,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.0,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.0,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.58,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 10,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.58,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 10,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.555,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 13.9,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.555,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 13.9,
     "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 0.555,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.555,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.555,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.555,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 13.9,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.555,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 14.34,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 14.34,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 14.34,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 14.34,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 14.34,
     "fixture_id": "parcan_pl",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 0.57,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 14.599,
-    "chaser_id": "downbeats_and_beats",
-    "data": {
-      "repetitions": 4
-    },
-    "created_by": "chaser:downbeats_and_beats"
+    "time": 14.34,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 14.34,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.57,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 14.8,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 15.24,
+    "time": 14.8,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 14.8,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 14.8,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 15.7,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.36,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 15.7,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 16.14,
-    "fixture_id": "parcan_pl",
+    "time": 15.7,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 15.7,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 16.58,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.36,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 17.06,
+    "time": 16.58,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 16.58,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.92,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 16.58,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.92,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 17.5,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 17.5,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 17.94,
-    "fixture_id": "parcan_pl",
+    "time": 17.5,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 17.5,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 18.38,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 18.84,
+    "time": 18.38,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 18.38,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 18.38,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 19.28,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.32,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 19.28,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 19.72,
-    "fixture_id": "parcan_pl",
+    "time": 19.28,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 19.28,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 20.16,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 20.6,
+    "time": 20.16,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 20.16,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 20.16,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 20.74,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 10,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 20.74,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 10,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.55,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 21.06,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.36,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 21.06,
     "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 0.55,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.06,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.5,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.56,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.5,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.56,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.5,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.56,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.5,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.56,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 21.5,
@@ -525,2670 +1591,826 @@
     "effect": "flash",
     "duration": 0.56,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 21.94,
+    "time": 21.5,
     "fixture_id": "parcan_pr",
     "effect": "flash",
     "duration": 0.56,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 22.42,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 22.86,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 22.86,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 23.3,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 23.74,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 24.2,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 24.64,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 24.64,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 25.06,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 25.54,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 25.98,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 26.44,
+    "time": 21.5,
     "fixture_id": "parcan_r",
     "effect": "flash",
     "duration": 0.56,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.94,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 1.36,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.94,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.94,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.92,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 21.94,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.92,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 22.86,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 1.34,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 22.86,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 22.86,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 22.86,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 23.74,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 1.32,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 23.74,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 23.74,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 23.74,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 24.64,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 1.34,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 24.64,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 24.64,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 24.64,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 25.54,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 1.34,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 25.54,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 25.54,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 25.54,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 26.88,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 26.88,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 27.34,
-    "fixture_id": "parcan_pl",
+    "time": 26.88,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 26.88,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 27.76,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.38,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 28.22,
+    "time": 27.76,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 27.76,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 27.76,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.34,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 10,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.34,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 10,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.59,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 28.66,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.36,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.59,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 28.66,
     "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 0.59,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.59,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.59,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.92,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.59,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.92,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 28.66,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.59,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 29.14,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 29.14,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 29.14,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 29.14,
+    "fixture_id": "parcan_l",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 29.14,
     "fixture_id": "parcan_pl",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 0.55,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 29.14,
+    "fixture_id": "parcan_pr",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 29.14,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.55,
+    "data": {},
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 29.58,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 30.02,
+    "time": 29.58,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 29.58,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 29.58,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 30.48,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 30.48,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 30.92,
-    "fixture_id": "parcan_pl",
+    "time": 30.48,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 30.48,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 31.38,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.32,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 31.82,
+    "time": 31.38,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 31.38,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 31.38,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 32.26,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 32.26,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 32.7,
-    "fixture_id": "parcan_pl",
+    "time": 32.26,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 32.26,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 33.16,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.56,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 33.6,
+    "time": 33.16,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 33.16,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 33.16,
+    "fixture_id": "parcan_pl",
+    "effect": "flash",
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 34.04,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 34.04,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 34.5,
-    "fixture_id": "parcan_pl",
+    "time": 34.04,
+    "fixture_id": "parcan_pr",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
+  },
+  {
+    "time": 34.04,
+    "fixture_id": "parcan_r",
+    "effect": "flash",
+    "duration": 0.9,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
     "time": 34.94,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 35.38,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 35.82,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 35.82,
     "fixture_id": "mini_beam_prism_r",
     "effect": "flash",
-    "duration": 0.896,
+    "duration": 1.34,
     "data": {},
-    "created_by": "downbeats_and_beats"
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 36.28,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 36.72,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 37.16,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 37.62,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 37.62,
+    "time": 34.94,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "color": 55,
+        "prism": 130,
+        "gobo": 0,
+        "dim": 255,
+        "strobe": 0
+      }
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 38.06,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 38.5,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 38.94,
+    "time": 34.94,
     "fixture_id": "parcan_l",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   },
   {
-    "time": 39.4,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 39.4,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 39.84,
+    "time": 34.94,
     "fixture_id": "parcan_pl",
     "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 40.3,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 40.76,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 41.2,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 41.2,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 41.64,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 42.12,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 42.56,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 43.0,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 43.0,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 43.44,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 43.88,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 44.32,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 44.78,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 44.78,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 45.22,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 45.66,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 46.1,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 46.56,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 46.56,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 47.0,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 47.46,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 47.92,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 48.36,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 48.36,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 48.8,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 49.26,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 49.7,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 50.14,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 50.14,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 50.6,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 51.04,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 51.5,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 51.94,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 51.94,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 52.4,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 52.84,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 53.3,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 53.74,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 53.74,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 54.18,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 54.62,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 55.08,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 55.52,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 55.52,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 55.98,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 56.42,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 56.88,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 57.32,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 57.32,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 57.76,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 58.2,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 58.66,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 59.1,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 59.1,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 59.56,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 60.0,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 60.46,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 60.9,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 60.9,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 61.34,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 61.8,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 62.24,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 62.68,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 62.68,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 63.14,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 63.58,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 64.04,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 64.48,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 64.48,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 64.94,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 65.38,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 65.84,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 66.26,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 66.26,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 66.72,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 67.16,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 67.62,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 68.06,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 68.06,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 68.52,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 68.96,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 69.4,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 69.86,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 69.86,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 70.3,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 70.74,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 71.18,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 71.64,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 71.64,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 72.1,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 72.54,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 72.98,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 73.44,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 73.44,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 73.88,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 74.32,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 74.78,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 75.22,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 75.22,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 75.66,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 76.12,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 76.58,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 77.02,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 77.02,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 77.46,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 77.9,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 78.36,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 78.8,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 78.8,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 79.26,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 79.7,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 80.16,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 80.6,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 80.6,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 81.06,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 81.5,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 81.94,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 82.38,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 82.38,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 82.84,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 83.28,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 83.74,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 100.74,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 101.18,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 101.64,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 102.08,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 102.08,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 102.54,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 103.0,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 103.44,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 103.88,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 103.88,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 104.34,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 104.78,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 105.24,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 105.68,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 105.68,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 106.12,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 106.58,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 107.04,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 107.46,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 107.46,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 107.92,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 108.36,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 108.82,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 109.26,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 109.26,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 109.7,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 110.14,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 110.6,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 111.04,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 111.04,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 111.48,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 111.92,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 112.36,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 112.82,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 112.82,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 113.28,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 113.72,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 114.18,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 114.62,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 114.62,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 115.08,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 115.52,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 115.94,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 116.4,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 116.4,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 116.86,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 117.3,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 117.74,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 118.2,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 118.2,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 118.64,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 119.08,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 119.52,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 119.98,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 119.98,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 120.44,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 120.88,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 121.34,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 121.78,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 121.78,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 122.22,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 122.68,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 123.12,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 123.58,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 123.58,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 124.02,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 124.46,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 124.92,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 125.36,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 125.36,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 125.8,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 126.26,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 126.7,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 127.16,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 127.16,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 127.6,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 128.04,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 128.5,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 128.94,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 128.94,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 129.4,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 129.84,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 130.28,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 130.74,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 130.74,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 131.18,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 131.64,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 132.08,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 132.52,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 132.52,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 132.98,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 133.42,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 133.86,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 134.32,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 134.32,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 134.76,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 135.2,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 135.64,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 136.1,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 136.1,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 136.56,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 137.0,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 137.44,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 137.9,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 137.9,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 138.34,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 138.8,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 139.24,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 139.68,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 139.68,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 140.14,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 140.58,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 141.02,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 141.48,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 141.48,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 141.92,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 142.38,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 142.82,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 143.28,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 143.28,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 143.74,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 144.18,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 144.64,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 145.08,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 145.08,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 145.54,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 145.96,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 146.42,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 146.88,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 146.88,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 147.32,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 147.76,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 148.22,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 148.66,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 148.66,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 149.1,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 149.56,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 150.0,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 150.46,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 150.46,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 150.9,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 151.36,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 151.8,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 152.24,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 152.24,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 152.68,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 153.12,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 153.58,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 154.04,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 154.04,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 154.48,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 154.92,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 155.38,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 155.82,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 155.82,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 156.26,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 156.72,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 157.16,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.56,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 157.6,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
-  },
-  {
-    "time": 157.6,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "flash",
-    "duration": 0.896,
-    "data": {},
-    "created_by": "downbeats_and_beats"
+    "duration": 0.88,
+    "data": {
+      "color": "#0000FF"
+    },
+    "created_by": "codex:yonaka_intro_relooped"
   }
 ]

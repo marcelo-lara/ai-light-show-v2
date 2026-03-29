@@ -11,11 +11,12 @@ export interface PoiLocationControllerOptions {
   fixtureId: string;
   getLivePanTilt?: () => { pan: number; tilt: number };
   onSelectedPoiTargetChange?: (target: FixturePoiTarget | null) => void;
+  onActivatePanTilt?: () => void;
   setRefreshHandler?: (refresh: () => void) => void;
 }
 
 export function PoiLocationController(
-  { fixtureId, getLivePanTilt, onSelectedPoiTargetChange, setRefreshHandler }: PoiLocationControllerOptions,
+  { fixtureId, getLivePanTilt, onSelectedPoiTargetChange, onActivatePanTilt, setRefreshHandler }: PoiLocationControllerOptions,
 ): DisposableElementHandle {
   const container = document.createElement("div");
   container.className = "poi-controller-row";
@@ -38,7 +39,7 @@ export function PoiLocationController(
     const currentTilt = Number(live?.tilt ?? snapshotTilt);
 
     const options = pois.map((p) => ({
-      label: p.name,
+      label: p.fixtures?.[fixtureId] ? p.name : `${p.name}*`,
       value: p.id,
     }));
 
@@ -71,6 +72,7 @@ export function PoiLocationController(
       value: currentSelectedPoiId,
       options,
       onChange: (val) => {
+        onActivatePanTilt?.();
         currentSelectedPoiId = val;
 
         const newTarget = resolveTarget(val);
@@ -79,7 +81,6 @@ export function PoiLocationController(
 
         if (!newTarget) {
           optimisticSetVisibility = "show_once";
-          setFixtureValues(fixtureId, { pan: 0, tilt: 0 });
         } else {
           optimisticSetVisibility = "hide_once";
           setFixtureValues(fixtureId, { pan: newTarget.pan, tilt: newTarget.tilt });
@@ -95,6 +96,8 @@ export function PoiLocationController(
         }, 120);
       },
     });
+    dropdown.select.addEventListener("focus", () => onActivatePanTilt?.());
+    dropdown.select.addEventListener("pointerdown", () => onActivatePanTilt?.());
     container.appendChild(dropdown.root);
 
     const showSet = (() => {

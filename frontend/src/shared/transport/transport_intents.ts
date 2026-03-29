@@ -14,6 +14,10 @@ function reqId() {
   return makeId();
 }
 
+type JumpToTimeOptions = {
+  sync?: boolean;
+};
+
 export function transportPlay() {
   wsSend({
     type: "intent",
@@ -41,12 +45,15 @@ export function transportStop() {
   });
 }
 
-export function transportJumpToTime(timeMs: number) {
+export function transportJumpToTime(timeMs: number, options?: JumpToTimeOptions) {
   wsSend({
     type: "intent",
     req_id: reqId(),
     name: "transport.jump_to_time",
-    payload: { time_ms: Math.max(0, Math.round(timeMs)) },
+    payload: {
+      time_ms: Math.max(0, Math.round(timeMs)),
+      sync: options?.sync === true,
+    },
   });
 }
 

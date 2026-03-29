@@ -78,7 +78,10 @@ async def handle_message(manager, websocket: WebSocket, data: str) -> None:
         payload = {}
     payload = {**payload, "_req_id": str(message.get("req_id") or ""), "_client_id": str(id(websocket))}
 
-    logger.info("[WS] Intent received: %s", name)
+    if name == "transport.jump_to_time":
+        logger.debug("[WS] Intent received: %s", name)
+    else:
+        logger.info("[WS] Intent received: %s", name)
 
     if not manager._last_state_snapshot:
         manager._last_state_snapshot = await build_frontend_state(manager)

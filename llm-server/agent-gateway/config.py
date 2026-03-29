@@ -23,6 +23,18 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "mcp_read_section_analysis",
+            "description": "Read grounded section-analysis summaries including mix loudness stats, stem-supported events from bass, drums, and vocals, and harmonic patterns for metadata drafting.",
+            "parameters": {
+                "type": "object",
+                "properties": {"song_id": {"type": "string"}, "section_name": {"type": "string"}},
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "mcp_read_beats",
             "description": "Read beat entries with time, bar, and beat values for an optional time window.",
             "parameters": {
@@ -171,6 +183,7 @@ TOOLS = [
 MCP_TOOL_MAP = {
     "mcp_read_sections": "metadata_get_sections",
     "mcp_find_section": "metadata_find_section",
+    "mcp_read_section_analysis": "metadata_get_section_analysis",
     "mcp_read_beats": "metadata_get_beats",
     "mcp_read_bar_beats": "metadata_get_bar_beats",
     "mcp_find_bar_beat": "metadata_find_bar_beat",

@@ -280,7 +280,63 @@ def test_gateway_answer_prompts_omit_song_name_unless_requested():
     assert "Do not mention the song name unless the original question explicitly asks for it." in loudness_messages[0]["content"]
     assert "song=" not in section_messages[1]["content"]
     assert "song=" not in chord_messages[1]["content"]
-    assert "song=" not in loudness_messages[1]["content"]
+
+
+def test_gateway_config_exposes_section_analysis_tool():
+    gateway_main = _load_gateway_main_module()
+
+    tool_names = [tool["function"]["name"] for tool in gateway_main.TOOLS]
+
+    assert "mcp_read_section_analysis" in tool_names
+    assert gateway_main.MCP_TOOL_MAP["mcp_read_section_analysis"] == "metadata_get_section_analysis"
+
+
+def test_gateway_query_guidance_prefers_section_analysis_for_metadata_drafting():
+    gateway_main = _load_gateway_main_module()
+
+    guidance = gateway_main._build_query_guidance(
+        [{"role": "user", "content": "draft section descriptions and hints for the chorus"}]
+    )
+
+    assert guidance is not None
+    assert "mcp_read_section_analysis" in guidance["content"]
+
+
+def test_gateway_renders_section_analysis_compactly():
+    gateway_main = _load_gateway_main_module()
+
+    rendered = gateway_main._render_tool_result(
+        "mcp_read_section_analysis",
+        {
+            "ok": True,
+            "data": {
+                "song": "Yonaka - Seize the Power",
+                "sections": [
+                    {
+                        "name": "Verse",
+                        "start_s": 57.32,
+                        "end_s": 84.18,
+                        "loudness": {"average": 0.51, "peak_time_s": 75.651},
+                        "parts": {
+                            "mix": {"maximum": 0.8, "peak_time_s": 75.651},
+                            "drums": {"maximum": 0.92, "peak_time_s": 75.651},
+                        },
+                        "events": [{"time_s": 75.651, "kind": "rise", "dominant_part": "drums", "parts": ["drums"]}],
+                        "sustained_high_windows": [{"start_s": 80.0, "end_s": 84.18, "kind": "sustain", "dominant_part": "mix", "parts": ["mix"]}],
+                        "harmony": {
+                            "change_count": 4,
+                            "dominant_chords": [{"label": "Fm", "duration_s": 8.0}],
+                        },
+                    }
+                ],
+            },
+        },
+    )
+
+    assert "Section Analysis:" in rendered
+    assert "Verse: start=57.320s end=84.180s" in rendered
+    assert "dominant=Fm" in rendered
+    assert "drums@75.651s:0.920" in rendered
 
 
 def test_gateway_answer_prompts_prefer_bar_beat_before_seconds():

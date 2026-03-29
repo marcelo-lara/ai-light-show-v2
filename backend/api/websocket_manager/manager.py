@@ -53,20 +53,21 @@ class WebSocketManager:
     async def _playback_ticker_loop(self) -> None:
         target_fps = 60.0
         frame_interval = 1.0 / target_fps
-        last_tick = time.perf_counter()
+        next_tick = time.perf_counter()
 
         while self._playback_task_running:
+            next_tick += frame_interval
             now = time.perf_counter()
-            delta = now - last_tick
-            if delta < frame_interval:
-                await asyncio.sleep(frame_interval - delta)
-                continue
-            last_tick = now
+            delay = next_tick - now
+            if delay > 0:
+                await asyncio.sleep(delay)
+            else:
+                next_tick = now
 
             if not await self.state_manager.get_is_playing():
                 continue
 
-            await self.state_manager.advance_timecode(delta)
+            await self.state_manager.advance_timecode(frame_interval)
             universe = await self.state_manager.get_output_universe()
             await self.artnet_service.update_universe(universe)
             await self._schedule_broadcast()

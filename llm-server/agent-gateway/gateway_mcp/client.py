@@ -29,6 +29,14 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
     if tool_name == "mcp_read_sections":
         song = str(args.get("song") or args.get("song_id") or "")
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"song": song} if song else {})
+    if tool_name == "mcp_read_section_analysis":
+        song = str(args.get("song") or args.get("song_id") or "")
+        payload = {}
+        if song:
+            payload["song"] = song
+        if args.get("section_name"):
+            payload["section_name"] = str(args.get("section_name") or "")
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
     if tool_name == "mcp_find_section":
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"section_name": str(args.get("section_name") or "")})
     if tool_name == "mcp_find_bar_beat":

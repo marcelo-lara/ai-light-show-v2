@@ -124,7 +124,7 @@ export class SongPlayerController {
         },
         enforceLoopRules: () => this.enforceLoopRules(),
         isSeekSyncSuppressed: () => this.suppressSeekSync,
-        debounceSeekSync: (timeMs) => this.playbackSync.debounceSeekSync(timeMs),
+        debounceSeekSync: (timeMs, isPlaying) => this.playbackSync.debounceSeekSync(timeMs, isPlaying),
         isPlaying: () => this.isPlaying,
         setIsPlaying: (playing) => {
           this.isPlaying = playing;

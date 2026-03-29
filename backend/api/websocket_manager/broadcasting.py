@@ -68,7 +68,7 @@ async def broadcast_patch(manager, before: Dict[str, Any], after: Dict[str, Any]
         return
 
     seq = manager._next_seq()
-    logger.info("[WS] Broadcasting patch (seq=%s) with %s changes", seq, len(changes))
+    logger.debug("[WS] Broadcasting patch (seq=%s) with %s changes", seq, len(changes))
     for change in changes:
         if change["path"] == ["fixtures"]:
             logger.debug("[WS] Fixtures changed: %s", json.dumps(change["value"], indent=2))

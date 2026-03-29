@@ -111,5 +111,409 @@
         "data": {}
       }
     ]
+  },
+  {
+    "id": "yonaka_intro",
+    "name": "Yonaka Intro",
+    "description": "Four-bar intro motif: left/right prism plus opposite parcans, with a double-punch on the cycle start.",
+    "effects": [
+      {
+        "beat": 0.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "set_channels",
+        "duration": 0.0,
+        "data": {
+          "channels": {
+            "color": 55,
+            "prism": 130,
+            "gobo": 0,
+            "dim": 255,
+            "strobe": 0
+          }
+        }
+      },
+      {
+        "beat": 0.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "flash",
+        "duration": 3.0,
+        "data": {}
+      },
+      {
+        "beat": 0.0,
+        "fixture_id": "parcan_r",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 0.0,
+        "fixture_id": "parcan_pr",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 0.0,
+        "fixture_id": "head_el150",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 0.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 0.0,
+        "fixture_id": "parcan_l",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 0.0,
+        "fixture_id": "parcan_pl",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 1.0,
+        "fixture_id": "head_el150",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 1.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 1.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 1.0,
+        "fixture_id": "parcan_l",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 1.0,
+        "fixture_id": "parcan_r",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 1.0,
+        "fixture_id": "parcan_pl",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 1.0,
+        "fixture_id": "parcan_pr",
+        "effect": "flash",
+        "duration": 1.25,
+        "data": {}
+      },
+      {
+        "beat": 2.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "set_channels",
+        "duration": 0.0,
+        "data": {
+          "channels": {
+            "color": 55,
+            "prism": 130,
+            "gobo": 0,
+            "dim": 255,
+            "strobe": 0
+          }
+        }
+      },
+      {
+        "beat": 2.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "flash",
+        "duration": 3.0,
+        "data": {}
+      },
+      {
+        "beat": 2.0,
+        "fixture_id": "parcan_l",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 2.0,
+        "fixture_id": "parcan_pl",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 4.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "set_channels",
+        "duration": 0.0,
+        "data": {
+          "channels": {
+            "color": 55,
+            "prism": 130,
+            "gobo": 0,
+            "dim": 255,
+            "strobe": 0
+          }
+        }
+      },
+      {
+        "beat": 4.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "flash",
+        "duration": 3.0,
+        "data": {}
+      },
+      {
+        "beat": 4.0,
+        "fixture_id": "parcan_r",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 4.0,
+        "fixture_id": "parcan_pr",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 6.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "set_channels",
+        "duration": 0.0,
+        "data": {
+          "channels": {
+            "color": 55,
+            "prism": 130,
+            "gobo": 0,
+            "dim": 255,
+            "strobe": 0
+          }
+        }
+      },
+      {
+        "beat": 6.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "flash",
+        "duration": 3.0,
+        "data": {}
+      },
+      {
+        "beat": 6.0,
+        "fixture_id": "parcan_l",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 6.0,
+        "fixture_id": "parcan_pl",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 8.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "set_channels",
+        "duration": 0.0,
+        "data": {
+          "channels": {
+            "color": 55,
+            "prism": 130,
+            "gobo": 0,
+            "dim": 255,
+            "strobe": 0
+          }
+        }
+      },
+      {
+        "beat": 8.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "flash",
+        "duration": 3.0,
+        "data": {}
+      },
+      {
+        "beat": 8.0,
+        "fixture_id": "parcan_r",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 8.0,
+        "fixture_id": "parcan_pr",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 10.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "set_channels",
+        "duration": 0.0,
+        "data": {
+          "channels": {
+            "color": 55,
+            "prism": 130,
+            "gobo": 0,
+            "dim": 255,
+            "strobe": 0
+          }
+        }
+      },
+      {
+        "beat": 10.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "flash",
+        "duration": 3.0,
+        "data": {}
+      },
+      {
+        "beat": 10.0,
+        "fixture_id": "parcan_l",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 10.0,
+        "fixture_id": "parcan_pl",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 12.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "set_channels",
+        "duration": 0.0,
+        "data": {
+          "channels": {
+            "color": 55,
+            "prism": 130,
+            "gobo": 0,
+            "dim": 255,
+            "strobe": 0
+          }
+        }
+      },
+      {
+        "beat": 12.0,
+        "fixture_id": "mini_beam_prism_l",
+        "effect": "flash",
+        "duration": 3.0,
+        "data": {}
+      },
+      {
+        "beat": 12.0,
+        "fixture_id": "parcan_r",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 12.0,
+        "fixture_id": "parcan_pr",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 14.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "set_channels",
+        "duration": 0.0,
+        "data": {
+          "channels": {
+            "color": 55,
+            "prism": 130,
+            "gobo": 0,
+            "dim": 255,
+            "strobe": 0
+          }
+        }
+      },
+      {
+        "beat": 14.0,
+        "fixture_id": "mini_beam_prism_r",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {}
+      },
+      {
+        "beat": 14.0,
+        "fixture_id": "parcan_l",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      },
+      {
+        "beat": 14.0,
+        "fixture_id": "parcan_pl",
+        "effect": "flash",
+        "duration": 2.0,
+        "data": {
+          "color": "#0000FF"
+        }
+      }
+    ]
   }
 ]

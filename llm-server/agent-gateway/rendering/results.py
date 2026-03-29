@@ -37,6 +37,38 @@ def _format_sections(result: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _format_section_analysis(result: Dict[str, Any]) -> str:
+    payload = ((result.get("data") or {}) if result.get("ok") else {}) if isinstance(result, dict) else {}
+    song = payload.get("song") or "unknown"
+    sections = payload.get("sections") or []
+    if payload.get("section"):
+        sections = [payload.get("section") or {}]
+    if not sections:
+        return f"Song: {song}\nSection analysis: unavailable"
+    lines = [f"Song: {song}", "Section Analysis:"]
+    for section in sections:
+        loudness = section.get("loudness") or {}
+        harmony = section.get("harmony") or {}
+        dominant = ",".join(item.get("label", "") for item in (harmony.get("dominant_chords") or [])[:3] if item.get("label"))
+        parts = []
+        for part_name, stats in sorted((section.get("parts") or {}).items()):
+            peak_time = stats.get("peak_time_s")
+            maximum = stats.get("maximum")
+            if peak_time is None or maximum is None:
+                continue
+            parts.append(f"{part_name}@{float(peak_time):.3f}s:{float(maximum):.3f}")
+        event_count = len(section.get("events") or [])
+        sustain_count = len(section.get("sustained_high_windows") or [])
+        lines.append(
+            f"- {section.get('name') or 'Unnamed'}: start={float(section.get('start_s', 0.0)):.3f}s "
+            f"end={float(section.get('end_s', 0.0)):.3f}s avg={float(loudness.get('average', 0.0)):.6f} "
+            f"peak={float(loudness.get('peak_time_s', 0.0)):.3f}s change_count={int(harmony.get('change_count', 0))} "
+            f"dominant={dominant or 'none'} stem_peaks={';'.join(parts) or 'none'} "
+            f"events={event_count} sustains={sustain_count}"
+        )
+    return "\n".join(lines)
+
+
 def _format_section_match(result: Dict[str, Any]) -> str:
     if not isinstance(result, dict):
         return _format_generic_result(result)
@@ -161,6 +193,8 @@ def _render_tool_result(tool_name: str, result: Any) -> str:
         return _format_generic_result(result)
     if tool_name == "mcp_read_sections":
         return _format_sections(result)
+    if tool_name == "mcp_read_section_analysis":
+        return _format_section_analysis(result)
     if tool_name == "mcp_find_section":
         return _format_section_match(result)
     if tool_name in {"mcp_read_beats", "mcp_read_bar_beats"}:

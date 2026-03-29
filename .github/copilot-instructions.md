@@ -4,6 +4,7 @@
 - **NEVER keep deprecated code.** Remove deprecated helpers and dead code; do not retain compatibility shims.
 - **NEVER prioritize backward compatibility over correctness.** Breaking changes are acceptable when they improve clarity and behavior.
 - **ALWAYS use the `ai-light` Python environment** for local Python development. DO NOT CREATE OTHER ENVIRONMENTS.
+- **Treat live-show timing as critical.** When playback is running, design and validate transport/state synchronization to hold drift under `10 ms`; if a change risks exceeding that, prioritize timing correctness over convenience or extra synchronization chatter.
 
 ## LLM code size and quality rules
 - Prefer small files: target `<= 100` lines per file.
@@ -55,7 +56,8 @@ PYENV_VERSION=ai-light pyenv exec <command>
   - effect row: `time`, `fixture_id`, `effect`, `duration`, `data`
   - chaser row: `time`, `chaser_id`, `data`
 - On song load the backend renders a precomputed `60 FPS` DMX canvas for the song window (see [backend/store/dmx_canvas.py](../backend/store/dmx_canvas.py), [backend/store/state.py](../backend/store/state.py)).
-- Client audio time is authoritative for sync; backend maps timecode to nearest frame.
+- Art-Net transmission is separate from canvas rendering and currently sends the active output universe at `30 FPS`.
+- Client audio time is authoritative for sync; while playback is running the frontend keeps backend timecode aligned on a short cadence and the backend maps timecode to nearest frame.
 - Fixture classes own effect math via `render_effect(...)` in [backend/models/fixtures](../backend/models/fixtures).
 - Chaser cue rows persist by `chaser_id` and expand into effect renders only at canvas/preview time.
 
@@ -99,7 +101,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 
 ## Project-specific conventions
 - DMX channels are 1-based in fixture/message contracts; runtime storage uses 512-byte arrays.
-- `ArtNetService` sends at `60 FPS` to configured `ARTNET_IP`/`ARTNET_PORT`.
+- `ArtNetService` sends at `30 FPS` to configured `ARTNET_IP`/`ARTNET_PORT`.
 - Startup arm behavior applies configured fixture arm values.
 - Whenever fixture effect contracts change, update backend docs and active client integration in the same change.
 - For frontend UI implementation:

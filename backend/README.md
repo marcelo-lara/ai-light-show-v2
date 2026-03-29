@@ -30,7 +30,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 
 1. Startup loads POIs and fixtures, applies arm defaults, starts Art-Net loop, then loads a default song.
 2. Song load pre-renders a full `60 FPS` DMX canvas.
-3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net frames continuously.
+3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net packets continuously at `30 FPS`.
 4. Clients send websocket `intent` messages.
 5. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
 6. MCP clients call backend-owned tools over Streamable HTTP and share the same live runtime state.
@@ -63,7 +63,7 @@ Current MCP tools:
 - Songs: `songs_list`, `songs_get_details`, `songs_load`
 - Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
 - Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
+- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - Transport: `transport_get_cursor`
 
 Behavior notes:
@@ -71,6 +71,7 @@ Behavior notes:
 - MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
 - Metadata tools expose analyzer beat positions as bars and beats, including section start/end positions and exact bar/beat lookup.
 - Loudness summaries are read from the mix `artifacts.essentia` manifest entry for `loudness_envelope` and returned as averaged window statistics.
+- `metadata_get_section_analysis` returns compact section summaries for LLM metadata drafting, combining mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals`.
 - `list_effects` returns canonical effect metadata including effect descriptions, controlled tags, and JSON schemas.
 - `transport_get_cursor` returns the active section when the cursor is inside one, and `next_section_name` when the cursor is before the next labeled section.
 
@@ -102,7 +103,7 @@ Patch behavior:
 
 ## Playback and editing behavior
 
-- Browser audio timeline periodically aligns backend timecode (default 10s sync).
+- Browser audio timeline keeps backend timecode aligned while playback is running using a short sync cadence, plus immediate sync on play/pause/seek/stop.
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
 - `song.list` emits the currently loadable backend song names without mutating state.
 - `song.load` validates `payload.filename`, loads the selected song into backend state, resets playback to stopped, updates the output universe, and schedules a snapshot/patch broadcast.
@@ -172,6 +173,7 @@ Chasers payload under `state.chasers`:
 Section payload normalization:
 - Backend accepts analyzer section records with either `start/end/label` or `start_s/end_s/name` keys.
 - Snapshot payload always emits normalized section entries as `{name, start_s, end_s}`.
+- Canonical persisted `sections.json` is a top-level list of section objects. Optional authored `description` and `hints` stay in that same list shape.
 
 ## Reference docs
 
