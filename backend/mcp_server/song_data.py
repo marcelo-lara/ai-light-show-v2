@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import quote
 
+from models.song.artifacts import build_essentia_plot_descriptors
+
 
 def _normalize_sections(raw_sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     normalized = []
@@ -84,18 +86,13 @@ def _parse_chords(beats_path: Path) -> List[Dict[str, Any]]:
 
 def _build_plots(song, meta_root: Path) -> List[Dict[str, Any]]:
     artifacts = getattr(song.meta, "artifacts", {}) or {}
-    essentia = artifacts.get("essentia") if isinstance(artifacts, dict) else None
     plots: List[Dict[str, Any]] = []
-    if not isinstance(essentia, dict):
-        return plots
-    for key, value in essentia.items():
-        if not isinstance(value, dict) or not value.get("svg"):
-            continue
-        svg_url = str(value["svg"])
+    for plot in build_essentia_plot_descriptors(artifacts if isinstance(artifacts, dict) else None):
+        svg_url = str(plot["svg"])
         if svg_url.startswith("/app/meta/"):
             parts = Path(svg_url[len("/app/meta/"):]).parts
             svg_url = f"/meta/{'/'.join(quote(part) for part in parts)}"
-        plots.append({"id": str(key), "title": str(key).replace("_", " ").title(), "svg_url": svg_url})
+        plots.append({"id": str(plot["id"]), "title": str(plot["title"]), "svg_url": svg_url})
     return plots
 
 

@@ -73,7 +73,7 @@ export function BeatTable(props: BeatTableProps): HTMLElement {
 
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
-    ["Time", "Beat", "Bass", "Chord"].forEach(col => {
+    ["Time", "Beat", "Type", "Bass", "Chord"].forEach(col => {
       const th = document.createElement("th");
       th.textContent = col;
       headerRow.appendChild(th);
@@ -91,6 +91,10 @@ export function BeatTable(props: BeatTableProps): HTMLElement {
       const beatCell = document.createElement("td");
       beatCell.textContent = String(beat.beat);
       row.appendChild(beatCell);
+
+      const typeCell = document.createElement("td");
+      typeCell.textContent = beat.type;
+      row.appendChild(typeCell);
 
       const bassCell = document.createElement("td");
       bassCell.textContent = beat.bass || "-";

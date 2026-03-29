@@ -1,6 +1,6 @@
 import { StandardControls } from "./StandardControls.ts";
 import type { FixtureVM } from "../../adapters/fixture_vm.ts";
-import { RgbPreview } from "./RgbPreview.ts";
+import { ColorPicker } from "../../../../shared/components/controls/ColorPicker.ts";
 import type { FixtureControlHandle, FixtureValues } from "./control_types.ts";
 import { EnumGrid } from "./EnumGrid.ts";
 import { setFixtureValues } from "../../fixture_intents.ts";
@@ -107,18 +107,14 @@ export function RgbControls(fixture: FixtureVM): FixtureControlHandle {
     white: Number(values.white ?? 0),
   };
 
-  // Specialized RGB Swatch/Preview
-  const preview = RgbPreview({
-    red: state.red,
-    green: state.green,
-    blue: state.blue,
-    white: state.white,
-  }, {
-    onColorChange: (hex) => {
+  const colorPicker = ColorPicker({
+    label: "Color",
+    value: canonicalHex(`${state.red.toString(16).padStart(2, "0")}${state.green.toString(16).padStart(2, "0")}${state.blue.toString(16).padStart(2, "0")}`),
+    onChange: (hex) => {
       setFixtureValues(fixture.id, { rgb: hex.toUpperCase() });
     },
   });
-  leftCol.appendChild(preview.root);
+  leftCol.appendChild(colorPicker.root);
 
   let colorGridDispose = () => {};
   let colorGridSetValue: ((value: string) => void) | null = null;
@@ -187,12 +183,7 @@ export function RgbControls(fixture: FixtureVM): FixtureControlHandle {
     state.blue = Number(newValues.blue ?? state.blue);
     state.white = Number(newValues.white ?? state.white);
 
-    preview.setRgb({
-      red: state.red,
-      green: state.green,
-      blue: state.blue,
-      white: state.white,
-    });
+    colorPicker.setValue(canonicalHex(`${state.red.toString(16).padStart(2, "0")}${state.green.toString(16).padStart(2, "0")}${state.blue.toString(16).padStart(2, "0")}`));
 
     if (colorGridSetValue) {
       const selectedColor = colorIdFromToken(colorOptions, newValues.rgb) || colorIdFromRgb(colorOptions, state);
@@ -203,7 +194,7 @@ export function RgbControls(fixture: FixtureVM): FixtureControlHandle {
   };
 
   const dispose = () => {
-    preview.dispose();
+    colorPicker.dispose();
     colorGridDispose();
     standard.dispose();
   };

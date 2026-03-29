@@ -122,11 +122,24 @@ export type ChaserCueEntry = CueEntryBase & {
 
 export type CueEntry = EffectCueEntry | ChaserCueEntry;
 
+export type CueHelperParameterDefinition = {
+  name: string;
+  label: string;
+  type: "number" | "range" | "select" | "text" | "color";
+  default?: string | number | boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  required?: boolean;
+  options?: Array<{ value: string; label: string }>;
+};
+
 export type CueHelperDefinition = {
   id: string;
   label: string;
   description: string;
   mode: string;
+  parameters: CueHelperParameterDefinition[];
 };
 
 export type ChaserDefinition = {
@@ -160,6 +173,7 @@ export type BeatObject = {
   beat: number;
   bass?: string;
   chord?: string;
+  type: "beat" | "downbeat";
 };
 
 export type SongState = {
@@ -196,6 +210,14 @@ export type SongSection = {
   end_s: number;
 };
 
+export type SupportedEffectDescriptor = {
+	id: string;
+	name: string;
+	description?: string;
+	tags?: string[];
+	schema?: Record<string, unknown>;
+};
+
 export type FixtureState = {
   id: string;
   type?: string; // "moving_head" | "rgb" | ...
@@ -206,7 +228,7 @@ export type FixtureState = {
   capabilities?: Record<string, boolean>; // e.g. { pan_tilt: true, rgb: true }
   meta_channels?: Record<string, MetaChannel>;
   mappings?: Record<string, Record<string, number | string>>;
-  supported_effects?: string[];
+  supported_effects?: SupportedEffectDescriptor[];
 };
 
 export type MetaChannel = {

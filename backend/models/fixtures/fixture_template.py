@@ -27,7 +27,6 @@ class FixtureTemplate(BaseModel):
     id: str
     type: str
     channels: Dict[str, int]
-    effects: List[str] = []
     meta_channels: Dict[str, MetaChannel]
     mappings: Dict[str, Dict[str, Union[int, str]]] = {}
     physical_movement: Optional[PhysicalMovementProfile] = None

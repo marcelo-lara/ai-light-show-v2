@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import re
 
+from models.song.artifacts import get_essentia_artifact_entry
+
 from .responses import fail, ok
 from .song_data import build_song_details
 
@@ -281,7 +283,12 @@ def register_metadata_tools(mcp, runtime) -> None:
                 return fail("section_not_found", f"Section '{section}' not found")
             start_value = float(match.get("start_s", 0.0))
             end_value = float(match.get("end_s", 0.0))
-        path = Path(ws_manager.state_manager.meta_path) / current_song.song_id / "essentia" / "loudness_envelope.json"
+        loudness_entry = get_essentia_artifact_entry(getattr(current_song.meta, "artifacts", {}) or {}, "mix", "loudness_envelope")
+        raw_path = str((loudness_entry or {}).get("json") or Path(ws_manager.state_manager.meta_path) / current_song.song_id / "essentia" / "loudness_envelope.json")
+        if raw_path.startswith("/app/meta/"):
+            path = Path(ws_manager.state_manager.meta_path) / Path(raw_path[len("/app/meta/"):])
+        else:
+            path = Path(raw_path)
         if not path.exists():
             return fail("loudness_unavailable", "Loudness envelope not found")
         payload = json.loads(path.read_text(encoding="utf-8"))

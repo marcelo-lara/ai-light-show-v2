@@ -94,13 +94,14 @@ export function clearCues(fromTime = 0, toTime?: number) {
 	});
 }
 
-export function applyCueHelper(helperId: string) {
+export function applyCueHelper(helperId: string, params: Record<string, unknown> = {}) {
 	wsSend({
 		type: "intent",
 		req_id: makeId(),
 		name: "cue.apply_helper",
 		payload: {
 			helper_id: helperId,
+			params,
 		},
 	});
 }

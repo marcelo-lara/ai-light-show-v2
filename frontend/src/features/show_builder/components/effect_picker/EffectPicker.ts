@@ -4,8 +4,8 @@ import { subscribeBackendStore } from "../../../../shared/state/backend_state.ts
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { addCue, updateCue } from "../../cue_intents.ts";
 import { isEffectCue } from "../../cue_utils.ts";
-import { getDefaultParams } from "../effect_params/params_schema.ts";
-import { formatTime, getFixtureType, getFixtures, getPlaybackTimeMs } from "./selectors.ts";
+import { getDefaultDurationSeconds, getDefaultParams } from "../effect_params/params_schema.ts";
+import { formatTime, getFixtureType, getFixtures, getPlaybackTimeMs, getSongBpm } from "./selectors.ts";
 import { buildActions, buildMiddle, buildTopRow, createDivider } from "./layout.ts";
 import { applyEffectOptions, applyFixtureOptions, renderParamForm } from "./updates.ts";
 import type { PickerState } from "./types.ts";
@@ -28,6 +28,11 @@ export function EffectPicker(): HTMLElement {
 	const { root: topRoot, timeInput, fixtureDropdown, effectDropdown } = buildTopRow(formatTime(getPlaybackTimeMs()));
 	const { root: middleRoot, durationInput, paramFormContainer } = buildMiddle(state.duration);
 	const { root: actionsRoot, commitBtn, cancelBtn, previewBtn } = buildActions();
+
+	const applyDefaultDuration = () => {
+		state.duration = getDefaultDurationSeconds(state.effect, getSongBpm(), getFixtureType(state.fixtureId));
+		durationInput.setValue(String(state.duration));
+	};
 
 	const refreshActionMode = () => {
 		const isEditing = state.editingIndex !== null;
@@ -63,10 +68,12 @@ export function EffectPicker(): HTMLElement {
 	fixtureDropdown.select.addEventListener("change", () => {
 		state.fixtureId = fixtureDropdown.select.value;
 		updateEffects();
+		applyDefaultDuration();
 	});
 	effectDropdown.select.addEventListener("change", () => {
 		state.effect = effectDropdown.select.value;
 		state.params = getDefaultParams(state.effect, getFixtureType(state.fixtureId));
+		applyDefaultDuration();
 		renderParamForm(state, paramFormContainer);
 	});
 	durationInput.input.addEventListener("input", () => {
@@ -109,6 +116,7 @@ export function EffectPicker(): HTMLElement {
 	});
 
 	populate();
+	applyDefaultDuration();
 	refreshActionMode();
 	(content as unknown as { _cleanup: () => void })._cleanup = () => {
 		unsubscribe();

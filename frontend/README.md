@@ -25,6 +25,11 @@ UI layout references live in [../docs/ui/README.md](../docs/ui/README.md).
 4. `AppShell.ts` renders `Sidebar + Main + RightPanel`, rerenders on UI/Backend/LLM store updates, and refreshes the singleton song player.
 5. Timecode sync exception: browser playback time is authoritative during playback and syncs via `transport.jump_to_time`.
 
+Time display convention:
+- Show song-position and cue-time values in `s.mmm` format across the UI.
+- Current transport/cue editing flows continue to use numeric milliseconds or seconds in data payloads where required, but displayed values should stay normalized to `s.mmm`.
+- If backend-formatted time strings are introduced later, they should use the same `s.mmm` display convention.
+
 ## Active route map (actual code)
 
 Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`.
@@ -68,6 +73,8 @@ Frontend cue/chaser payload expectations:
   - effect cue: `time`, `fixture_id`, `effect`, `duration`, `data`, optional `name`, optional `created_by`
   - chaser cue: `time`, `chaser_id`, `data`, optional `name`, optional `created_by`
 - `state.chasers` entries include stable `id`, display `name`, `description`, and beat-based `effects`.
+- `state.fixtures.<id>.supported_effects` is a list of effect descriptors with `id`, `name`, `description`, `tags`, and `schema`.
+- Frontend effect selectors and preview controls must use `supported_effects[].id` as the effect value and `supported_effects[].name` as the visible label.
 - Chaser intents use `chaser_id` in payloads, not `chaser_name`.
 - Chaser cue repetitions live in `cue.data.repetitions`.
 
@@ -97,6 +104,7 @@ Global bridge fields used across modules:
 ### Shared transport/state
 - `src/shared/transport/ws_client.ts`: `WsClient` reconnecting WebSocket client.
 - `src/shared/transport/protocol.ts`: all backend/frontend protocol types.
+- `src/shared/transport/supported_effects.ts`: helpers that normalize `FixtureState.supported_effects` descriptors into effect ids and dropdown options.
 - `src/shared/transport/transport_intents.ts`: transport intent senders.
 - `src/shared/state/backend_state.ts`: snapshot/patch reducer and subscribers.
 - `src/shared/state/song_data.ts`: cleaned song chord/section selectors shared by analysis and builder views.
@@ -117,11 +125,11 @@ Global bridge fields used across modules:
 - `src/shared/components/song_player/ui/buildSongPlayerUi.ts`: UI composition extracted from controller lifecycle logic.
 - `src/shared/components/song_player/logic/WaveSurferManager.ts`: WaveSurfer lifecycle, regions plugin, media controls.
 - `src/shared/components/song_player/logic/PlaybackSync.ts`: backend sync cadence (10s periodic + debounced seeks + immediate sync).
-- `src/shared/components/song_player/logic/song_logic.ts`: section/beat utilities and song fingerprinting.
+- `src/shared/components/song_player/logic/song_logic.ts`: section/beat utilities, canonical beat-type normalization, and song fingerprinting.
 - `src/shared/components/song_player/logic/navigation_loop.ts`: pure section/beat navigation and loop-wrap target helpers.
 - `src/shared/components/song_player/logic/song_player_state.ts`: song identity/data derivation, paused playback time normalization, audio URL resolution.
 - `src/shared/components/song_player/logic/wave_callbacks.ts`: WaveSurfer callback orchestration bindings for controller state updates.
-- `src/shared/components/song_player/logic/regions.ts`: section/downbeat overlay generation.
+- `src/shared/components/song_player/logic/regions.ts`: section/downbeat overlay generation driven by canonical beat events.
 - `src/shared/components/song_player/ui/*`: waveform, transport buttons, readout, options, layout primitives.
 
 ### Show Control
@@ -132,7 +140,7 @@ Global bridge fields used across modules:
 ### Song Analysis
 - `src/features/song_analysis/SongAnalysisView.ts`: composes player with the shared chord progression card and analyzer plot cards.
 - `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats and analyzer plots from backend state and composes shared song structure data.
-- `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel (downbeat/bar fallback behavior).
+- `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel for canonical analyzer beat events, including explicit beat/downbeat type.
 
 `BeatTable.ts` exists but is not mounted by the current `SongAnalysisView()`.
 
@@ -150,7 +158,7 @@ Global bridge fields used across modules:
 - `src/features/show_builder/components/effect_params/params_schema.ts`: effect parameter definitions for dynamic form generation.
 - `src/features/show_builder/components/effect_params/ParamForm.ts`: renders parameter inputs based on effect schema.
 - `src/features/show_builder/components/chaser_picker/ChaserPicker.ts`: chaser selection and chaser cue editing. The picker shows the individual chaser effects for reference/preview, but `Add` and `Update` persist a single cue row with `chaser_id` plus `data.repetitions`.
-- `src/features/show_builder/components/cue_helpers/CueHelpers.ts`: backend-driven helper list with `Apply` actions.
+- `src/features/show_builder/components/cue_helpers/CueHelpers.ts`: backend-driven helper selector with dynamic parameter fields and a bottom `Apply` action.
 
 Show Builder current cue-sheet behavior:
 - Cue sheet rows render one of two layouts:
@@ -166,7 +174,7 @@ Show Builder current cue-sheet behavior:
 
 ### DMX control
 - `src/features/dmx_control/DmxControlView.ts`: fixture VM selection + grid rendering + partial value updates.
-- `src/features/dmx_control/adapters/fixture_vm.ts`: backend `FixtureState` -> frontend `FixtureVM`.
+- `src/features/dmx_control/adapters/fixture_vm.ts`: backend `FixtureState` -> frontend `FixtureVM`, including `supported_effects` metadata normalization for the tray UI.
 - `src/features/dmx_control/fixture_selectors.ts`: fixture selection entrypoint.
 - `src/features/dmx_control/fixture_intents.ts`: DMX + preview + POI intent senders.
 - `src/features/dmx_control/components/FixtureGrid.ts`: card grid and incremental control updates.
@@ -175,7 +183,7 @@ Show Builder current cue-sheet behavior:
 - `src/features/dmx_control/components/controls/StandardControls.ts`: meta-channel-driven sliders/dropdowns.
 - `src/features/dmx_control/components/controls/EnumGrid.ts`: slot-style enum control grid used for mapped wheels (color/gobo).
 - `src/features/dmx_control/components/controls/RgbControls.ts`: color control + standard controls composition.
-- `src/features/dmx_control/components/controls/RgbPreview.ts`: typed RGB preview display.
+- `src/shared/components/controls/ColorPicker.ts`: shared color input control used by helper forms and DMX RGB controls.
 - `src/features/dmx_control/components/controls/MovingHeadControls.ts`: pan/tilt surface + POI controller + standard controls.
 - `src/features/dmx_control/components/controls/PanTiltControl.ts`: XY pad with throttled updates and commit callback.
 - `src/features/dmx_control/components/controls/PoiLocationController.ts`: POI selector and `set` target action.
@@ -191,7 +199,7 @@ Show Builder current cue-sheet behavior:
 ### Layout/feedback/control primitives
 - `src/shared/components/layout/*`: `Sidebar`, `RightPanel`, `Card`.
 - `src/shared/components/feedback/*`: `StatusCard`, `Badge`, theme model.
-- `src/shared/components/controls/*`: generic slider/toggle/dropdown/color swatch.
+- `src/shared/components/controls/*`: generic button/input/dropdown/slider/toggle/color-picker controls.
 - `src/shared/utils/*`: id generation, throttling, time formatting, SVG icon creation.
 - `src/shared/svg_icons/index.ts`: generated icon registry used by sidebar and transport controls.
 
@@ -207,6 +215,12 @@ Show Builder current cue-sheet behavior:
 - `src/features/llm_chat/LlmChat.css`: chat layout and message styles.
 
 Use CSS variables from `themes.css` for visual values. Do not hardcode mockup colors/dimensions.
+
+Frontend UI implementation rules:
+- Use shared controls from `src/shared/components/controls` before creating primitive HTML form elements.
+- Avoid redundant wrapper elements; add containers only when they are needed for layout, accessibility, or behavior.
+- Keep CSS close to the owning feature or component. Do not use `src/app/themes.css` for feature-specific UI changes.
+- Display song-position and cue-time values in `s.mmm` format consistently across views and controls.
 
 ## DMX LoFi layout contract
 

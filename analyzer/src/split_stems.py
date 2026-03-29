@@ -16,6 +16,8 @@ import sys
 from pathlib import Path
 from shutil import which
 
+import soundfile as sf
+
 # Config
 SONG_PATH = "/app/songs/Yonaka - Seize the Power.mp3"
 TEMP_FILES_FOLDER = "/app/analyzer/temp_files/"
@@ -41,6 +43,30 @@ def _demucs_base_command() -> list[str]:
     return [sys.executable, "-m", "demucs.separate"]
 
 
+def _save_with_soundfile(path: str, wav, sample_rate: int, encoding=None, bits_per_sample=None):
+    subtype_map = {
+        ("PCM_S", 16): "PCM_16",
+        ("PCM_S", 24): "PCM_24",
+        ("PCM_S", 32): "PCM_32",
+        ("PCM_F", 32): "FLOAT",
+    }
+    subtype = subtype_map.get((encoding, bits_per_sample))
+    data = wav.detach().cpu().transpose(0, 1).numpy()
+    sf.write(path, data, sample_rate, subtype=subtype)
+
+
+def _run_demucs(command: list[str]) -> None:
+    from demucs import audio as demucs_audio
+    from demucs import separate as demucs_separate
+
+    original_save = demucs_audio.ta.save
+    demucs_audio.ta.save = _save_with_soundfile
+    try:
+        demucs_separate.main(command[1:])
+    finally:
+        demucs_audio.ta.save = original_save
+
+
 def _merge_json_file(path: Path, updates: dict) -> None:
     payload: dict = {}
     if path.exists():
@@ -59,7 +85,7 @@ def split_stems(
     mp3: bool = False,
     jobs: int = 0,
     meta_dir: str | Path | None = None,
-) -> Path:
+) -> tuple[Path, list[str]]:
     """Run Demucs and return the directory containing generated stems."""
     song_path = Path(song_path).expanduser().resolve()
     output_dir = Path(output_dir).expanduser().resolve()
@@ -86,7 +112,7 @@ def split_stems(
         command.insert(-1, "--mp3")
 
     print("Running:", " ".join(command))
-    subprocess.run(command, check=True)
+    _run_demucs(command)
 
     # Demucs output path format: <out>/<model>/<song_stem_name>/
     stems_dir = output_dir / model / song_path.stem
@@ -96,12 +122,11 @@ def split_stems(
             f"{stems_dir}"
         )
 
+    stem_files = sorted([str(p.resolve()) for p in stems_dir.glob("*") if p.is_file()])
+
     if meta_dir is not None:
         meta_dir = Path(meta_dir).expanduser().resolve()
         meta_dir.mkdir(parents=True, exist_ok=True)
-        stem_files = sorted(
-            [str(p.resolve()) for p in stems_dir.glob("*") if p.is_file()]
-        )
 
     return stems_dir, stem_files
 
@@ -150,7 +175,7 @@ def main() -> int:
     if len(sys.argv) == 1:
         print(f"Running test split with provided song: {SONG_PATH}")
         try:
-            stems_dir = split_stems(
+            stems_dir, _ = split_stems(
                 song_path=SONG_PATH,
                 output_dir=TEMP_FILES_FOLDER,
                 model=MODEL_NAME,
@@ -170,7 +195,7 @@ def main() -> int:
 
     args = parse_args()
     try:
-        stems_dir = split_stems(
+        stems_dir, _ = split_stems(
             song_path=args.song,
             output_dir=args.out,
             model=args.model,

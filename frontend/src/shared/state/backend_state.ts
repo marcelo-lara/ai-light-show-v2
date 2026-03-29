@@ -44,6 +44,7 @@ export function applySnapshot(msg: SnapshotMsg) {
       bar: beat.bar,
       beat: beat.beat,
       chord: beat.chord,
+      type: beat.type,
     })),
     sections: msg.state.song?.sections?.slice(0, 4),
   });

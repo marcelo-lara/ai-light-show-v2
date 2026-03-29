@@ -77,7 +77,7 @@ def _estimate_sweep_end_position(fixture: Fixture, data: dict[str, Any]) -> tupl
     )
 
 
-def _estimate_seek_end_position(fixture: Fixture, data: dict[str, Any]) -> tuple[int, int] | None:
+def _estimate_orbit_end_position(fixture: Fixture, data: dict[str, Any]) -> tuple[int, int] | None:
     subject_poi = str(data.get("subject_POI") or "").strip()
     start_poi = str(data.get("start_POI") or "").strip()
     if not subject_poi or not start_poi:
@@ -97,8 +97,8 @@ def _estimate_entry_end_position(fixture: Fixture, entry: CueEntry) -> tuple[int
         if target[0] is None or target[1] is None:
             return None
         return int(target[0]), int(target[1])
-    if effect == "seek":
-        return _estimate_seek_end_position(fixture, data)
+    if effect == "orbit":
+        return _estimate_orbit_end_position(fixture, data)
     if effect == "move_to_poi":
         target_poi = str(data.get("target_POI") or data.get("poi") or data.get("POI") or "").strip()
         if not target_poi:
@@ -128,7 +128,7 @@ def _estimate_sweep_preroll_seconds(fixture: Fixture, data: dict[str, Any], last
     return max(0.0, pan_seconds, tilt_seconds) + EFFECT_SAFETY_PREROLL_SECONDS + EFFECT_SETTLE_SECONDS
 
 
-def _estimate_seek_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
+def _estimate_orbit_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
     start_poi = str(data.get("start_POI") or "").strip()
     if not start_poi or last_position is None:
         return 0.0
@@ -148,8 +148,8 @@ def estimate_sweep_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_
     return _estimate_sweep_preroll_seconds(fixture, data, last_position)
 
 
-def estimate_seek_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
-    return _estimate_seek_preroll_seconds(fixture, data, last_position)
+def estimate_orbit_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
+    return _estimate_orbit_preroll_seconds(fixture, data, last_position)
 
 
 def iter_cues_for_render(
@@ -171,13 +171,13 @@ def iter_cues_for_render(
             duration = max(0.0, float(render_entry.duration or 0.0))
             end = int(round((float(render_entry.time) + duration) * fps))
             fixture = fixture_map.get(render_entry.fixture_id or "")
-            if fixture and str(render_entry.effect or "").strip().lower() in {"sweep", "seek"}:
+            if fixture and str(render_entry.effect or "").strip().lower() in {"sweep", "orbit"}:
                 last_position = fixture_positions.get(fixture.id) or _fixture_axis_position_from_current_values(fixture)
                 effect_name = str(render_entry.effect or "").strip().lower()
-                preroll_seconds = _estimate_sweep_preroll_seconds(fixture, render_data, last_position) if effect_name == "sweep" else _estimate_seek_preroll_seconds(fixture, render_data, last_position)
+                preroll_seconds = _estimate_sweep_preroll_seconds(fixture, render_data, last_position) if effect_name == "sweep" else _estimate_orbit_preroll_seconds(fixture, render_data, last_position)
                 preroll_frames = max(0, int(round(preroll_seconds * fps)))
                 if preroll_frames > 0:
-                    preroll_key = "__sweep_preroll_frames" if effect_name == "sweep" else "__seek_preroll_frames"
+                    preroll_key = "__sweep_preroll_frames" if effect_name == "sweep" else "__orbit_preroll_frames"
                     render_data[preroll_key] = preroll_frames
                     start = max(0, start - preroll_frames)
                     render_entry = CueEntry(

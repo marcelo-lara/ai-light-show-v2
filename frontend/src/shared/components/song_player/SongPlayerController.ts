@@ -1,6 +1,6 @@
 import { getBackendStore } from "../../state/backend_state.ts";
 import { setSongPlayerTimeMs } from "../../state/song_player_time.ts";
-import type { SongState } from "../../transport/protocol.ts";
+import type { BeatObject, SongState } from "../../transport/protocol.ts";
 import {
   transportPause,
   transportPlay,
@@ -53,6 +53,7 @@ export class SongPlayerController {
   private currentSongKey = "";
   private songMetaFingerprint = "";
   private sections: Section[] = [];
+  private beatObjects: BeatObject[] = [];
   private beats: number[] = [];
   private downbeats: number[] = [];
   private selectedSectionIndex: number | null = null;
@@ -316,6 +317,7 @@ export class SongPlayerController {
 
     this.songLabelEl.textContent = derived.label;
     this.sections = derived.sections;
+    this.beatObjects = derived.beatObjects;
     this.beats = derived.beats;
     this.downbeats = derived.downbeats;
     this.durationMs = derived.durationMs;
@@ -347,7 +349,7 @@ export class SongPlayerController {
   private renderReadout() {
     setSongPlayerTimeMs(this.localTimeMs);
     this.positionEl.textContent = `${formatCurrentTimeMs(this.localTimeMs)} / ${formatDurationMs(this.durationMs)}`;
-    this.barBeatEl.textContent = computeBarBeatLabel(this.downbeats, this.beats, this.localTimeMs);
+    this.barBeatEl.textContent = computeBarBeatLabel(this.beatObjects, this.localTimeMs);
   }
 
   dispose() {

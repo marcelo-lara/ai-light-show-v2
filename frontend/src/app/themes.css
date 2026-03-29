@@ -160,7 +160,7 @@ button {
   border: 0;
   padding: 0.5em;
   color: var(--text);
-  background-color: color-mix(in oklab, var(--accent) 16%, var(--card-2));
+  background-color: color-mix(in oklab, var(--accent) 40%, var(--card-2));
   cursor: pointer;
 }
 button:hover:not(:disabled) {
@@ -177,7 +177,7 @@ button:hover:not(:disabled) {
 .is-active,
 .is-selected {
   border-color: var(--accent);
-  background: var(--btn-state-bg-soft);
+  background: var(--accent) !important;
 }
 
 .is-active .muted,
@@ -213,10 +213,11 @@ button:disabled {
 
 .input-control {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: .5em;
   min-width: 0;
   font-size: .8em;
+  align-items: center;
 }
 
 label.toggle > span {
@@ -307,7 +308,7 @@ label.toggle > span {
 
 .status-row {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   gap: 6px;
   min-width: 0;

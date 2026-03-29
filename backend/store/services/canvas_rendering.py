@@ -6,7 +6,7 @@ from models.cues import CueEntry, CueSheet
 from models.fixtures.fixture import Fixture
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.services.canvas_debug import dump_canvas_debug
-from store.services.canvas_render_core import estimate_seek_preroll_seconds, estimate_sweep_preroll_seconds, iter_cues_for_render, render_entry_into_universe
+from store.services.canvas_render_core import estimate_orbit_preroll_seconds, estimate_sweep_preroll_seconds, iter_cues_for_render, render_entry_into_universe
 
 
 def render_cue_sheet_to_canvas(
@@ -71,17 +71,17 @@ def render_preview_canvas(
 ) -> DMXCanvas:
     preview_data = dict(data or {})
     preroll_frames = 0
-    if effect in {"sweep", "seek"}:
+    if effect in {"sweep", "orbit"}:
         last_position = None
         if hasattr(fixture, "_read_axis_u16_from_universe"):
             last_pan = fixture._read_axis_u16_from_universe(base_universe, "pan")
             last_tilt = fixture._read_axis_u16_from_universe(base_universe, "tilt")
             if last_pan is not None and last_tilt is not None:
                 last_position = (int(last_pan), int(last_tilt))
-        preroll_seconds = estimate_sweep_preroll_seconds(fixture, preview_data, last_position) if effect == "sweep" else estimate_seek_preroll_seconds(fixture, preview_data, last_position)
+        preroll_seconds = estimate_sweep_preroll_seconds(fixture, preview_data, last_position) if effect == "sweep" else estimate_orbit_preroll_seconds(fixture, preview_data, last_position)
         preroll_frames = max(0, int(round(preroll_seconds * fps)))
         if preroll_frames > 0:
-            preview_data["__sweep_preroll_frames" if effect == "sweep" else "__seek_preroll_frames"] = preroll_frames
+            preview_data["__sweep_preroll_frames" if effect == "sweep" else "__orbit_preroll_frames"] = preroll_frames
 
     visible_frames = max(1, int(math.ceil(float(duration) * fps)) + 1)
     total_frames = preroll_frames + visible_frames

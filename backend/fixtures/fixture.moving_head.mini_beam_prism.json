@@ -15,18 +15,6 @@
 		"autoplay": 10,
 		"reset": 11
 	},
-	"effects": [
-		"full",
-		"blackout",
-		"strobe",
-		"flash",
-		"fade_in",
-		"fade_out",
-		"seek",
-		"move_to",
-		"move_to_poi",
-		"sweep"
-	],
 	"physical_movement": {
 		"pan_full_travel_seconds": 2.0,
 		"tilt_full_travel_seconds": 0.9

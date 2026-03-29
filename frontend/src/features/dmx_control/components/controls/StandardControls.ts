@@ -17,6 +17,10 @@ function sortByNumericKey(options: MappingOption[]): MappingOption[] {
   return [...options].sort((a, b) => Number(a.key) - Number(b.key));
 }
 
+function mappingLabelByKey(options: MappingOption[]): Record<string, string> {
+  return Object.fromEntries(options.map((option) => [option.key, option.label]));
+}
+
 function isInlineWheelControl(fixture: FixtureVM, mcId: string): boolean {
   if (!fixture.hasPanTilt) return false;
   return mcId === "color" || mcId === "gobo" || mcId === "prism";
@@ -47,9 +51,11 @@ export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
 
     if (mc.kind === "enum" && mc.mapping && mc.step === true && isInlineWheelControl(fixture, mcId)) {
       const mapping = mappings[mc.mapping] || {};
-      const options = sortByNumericKey(mappingOptions(mapping)).map((option) => ({
+      const sortedOptions = sortByNumericKey(mappingOptions(mapping));
+      const labelsByKey = mappingLabelByKey(sortedOptions);
+      const options = sortedOptions.map((option) => ({
         label: option.label,
-        value: option.label,
+        value: option.key,
       }));
 
       const dropdown = Dropdown({
@@ -57,7 +63,7 @@ export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
         value: String(currentValue),
         options,
         onChange: (val) => {
-          send({ [mcId]: val });
+          send({ [mcId]: labelsByKey[val] ?? val });
         },
       });
       updaters[mcId] = (value) => {
@@ -66,9 +72,11 @@ export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
       inlineWheelControls.push(dropdown.root);
     } else if (mc.kind === "enum" && mc.mapping) {
       const mapping = mappings[mc.mapping] || {};
-      const options = sortByNumericKey(mappingOptions(mapping)).map((option) => ({
+      const sortedOptions = sortByNumericKey(mappingOptions(mapping));
+      const labelsByKey = mappingLabelByKey(sortedOptions);
+      const options = sortedOptions.map((option) => ({
         label: option.label,
-        value: option.label,
+        value: option.key,
       }));
 
       const enumGrid = EnumGrid({
@@ -76,7 +84,7 @@ export function StandardControls(fixture: FixtureVM): FixtureControlHandle {
         value: String(currentValue),
         options,
         onChange: (val) => {
-          send({ [mcId]: val });
+          send({ [mcId]: labelsByKey[val] ?? val });
         },
       });
       updaters[mcId] = (value) => {

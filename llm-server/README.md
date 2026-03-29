@@ -15,6 +15,7 @@ Local inference + tool-gateway stack used for metadata-aware cue planning.
 4. If model emits write proposal tools, gateway stops before mutation and streams a structured proposal event back to the backend assistant service.
 5. Gateway connects to the backend-mounted MCP endpoint at `/mcp` over Streamable HTTP.
 6. Backend confirmation applies the proposed action and then returns a backend-generated completion summary for that same turn.
+7. Common factual assistant questions can be answered directly in the gateway from grounded MCP results, avoiding a second model pass for effect lists, POIs, section counts, cursor facts, bar-chord lookups, and similar retrieval-only prompts.
 
 ## Key files
 
@@ -35,6 +36,7 @@ Local inference + tool-gateway stack used for metadata-aware cue planning.
 - `mcp_read_chords` → `metadata_get_chords`
 - `mcp_read_cue_window` → `cues_get_window`
 - `mcp_read_fixtures` → `fixtures_list`
+- `mcp_read_pois` → `pois_list`
 - `mcp_read_chasers` → `chasers_list`
 - `mcp_read_cursor` → `transport_get_cursor`
 - `mcp_read_loudness` → `metadata_get_loudness`

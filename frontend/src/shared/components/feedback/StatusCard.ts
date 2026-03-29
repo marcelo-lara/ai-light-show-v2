@@ -63,25 +63,25 @@ export function StatusCard(): HTMLElement {
   content.appendChild(syncRow);
   content.appendChild(editsRow);
   content.appendChild(llmRow);
-  content.appendChild(armRow);
+  // content.appendChild(armRow);
 
-  const themeRow = document.createElement("label");
-  themeRow.className = "status-row status-row-theme";
-  const themeText = document.createElement("span");
-  themeText.textContent = "Theme";
-  const themeSelect = document.createElement("select");
-  themeSelect.className = "theme-select";
-  const themeModel = getThemeModel();
-  for (const theme of themeModel.themes) {
-    const option = document.createElement("option");
-    option.value = theme.id;
-    option.textContent = theme.label;
-    option.selected = theme.id === themeModel.current;
-    themeSelect.appendChild(option);
-  }
-  themeSelect.addEventListener("change", () => themeModel.setTheme(themeSelect.value as any));
-  themeRow.append(themeText, themeSelect);
-  content.appendChild(themeRow);
+  // const themeRow = document.createElement("label");
+  // themeRow.className = "status-row status-row-theme";
+  // const themeText = document.createElement("span");
+  // themeText.textContent = "Theme";
+  // const themeSelect = document.createElement("select");
+  // themeSelect.className = "theme-select";
+  // const themeModel = getThemeModel();
+  // for (const theme of themeModel.themes) {
+  //   const option = document.createElement("option");
+  //   option.value = theme.id;
+  //   option.textContent = theme.label;
+  //   option.selected = theme.id === themeModel.current;
+  //   themeSelect.appendChild(option);
+  // }
+  // themeSelect.addEventListener("change", () => themeModel.setTheme(themeSelect.value as any));
+  // themeRow.append(themeText, themeSelect);
+  // content.appendChild(themeRow);
 
   const render = () => {
     const model = getStatusModel();
@@ -103,8 +103,8 @@ export function StatusCard(): HTMLElement {
     setBadge(syncBadge, sync.label, sync.tone);
     setBadge(editsBadge, cap(model.edits), model.edits === "locked" ? "warn" : "ok");
     setBadge(llmBadge, cap(model.llm), llmTone(model.llm));
-    setBadge(armBadge, model.arm, "default");
-    themeSelect.value = getThemeModel().current;
+    // setBadge(armBadge, model.arm, "default");
+    // themeSelect.value = getThemeModel().current;
   };
 
   const unsubscribeBackend = subscribeBackendStore(render);

@@ -1,4 +1,5 @@
 import type { FixtureState, MetaChannel } from "../../../shared/transport/protocol.ts";
+import { getSupportedEffectOptions, type SupportedEffectOption } from "../../../shared/transport/supported_effects.ts";
 
 export type FixtureVM = {
   id: string;
@@ -10,7 +11,7 @@ export type FixtureVM = {
   values: Record<string, number | string>;
   metaChannels: Record<string, MetaChannel>;
   mappings: Record<string, Record<string, number | string>>;
-  supportedEffects: string[];
+  supportedEffects: SupportedEffectOption[];
 };
 
 export function toFixtureVM(fx: FixtureState): FixtureVM {
@@ -20,7 +21,7 @@ export function toFixtureVM(fx: FixtureState): FixtureVM {
   const values = fx.values ?? {};
   const metaChannels = fx.meta_channels ?? {};
   const mappings = fx.mappings ?? {};
-  const supportedEffects = fx.supported_effects ?? [];
+  const supportedEffects = getSupportedEffectOptions(fx.supported_effects);
 
   // Presentation mapping (not business logic). Prefer backend-provided capabilities.
   const caps = fx.capabilities ?? {};

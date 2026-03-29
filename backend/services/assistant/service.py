@@ -314,6 +314,8 @@ class AssistantService:
             color_name = self._resolve_full_effect_color_name(entries[0].get("data") or {}) if effect_name == "full" else None
             if color_name is not None:
                 return f"Set {fixture_ids} to {color_name} at {time_text}."
+            if effect_name == "full":
+                return f"Set {fixture_ids} to full at {time_text}."
             return f"Added {effect_name} to {fixture_ids} at {time_text}."
         if pending.tool_name == "propose_cue_clear_all":
             removed = int(result.get("removed", 0) or 0)

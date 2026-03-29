@@ -9,14 +9,6 @@
 		"strobe": 4,
 		"program": 5
 	},
-	"effects": [
-		"strobe",
-		"flash",
-		"fade_in",
-		"fade_out",
-		"full",
-		"blackout"
-	],
 	"meta_channels": {
 		"rgb": {
 			"label": "Color",

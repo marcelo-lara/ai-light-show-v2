@@ -22,8 +22,15 @@ def analyze_with_essentia(
     audio_path: str,
     out_dir: str,
     part_name: str,
-    sample_rate: int = 44100,
+    sample_rate: int | None = None,
+    artifact_file_stems: dict[str, str] | None = None,
 ) -> Dict[str, Any]:
+    artifact_file_stems = artifact_file_stems or {}
+
+    def artifact_path(name: str, suffix: str) -> Path:
+        file_stem = artifact_file_stems.get(name, name)
+        return Path(out_dir) / f"{file_stem}.{suffix}"
+
     loader = es.AudioLoader(filename=audio_path)
     audio, sr, *_ = loader()
     duration = len(audio) / sr
@@ -36,6 +43,10 @@ def analyze_with_essentia(
     if audio.ndim > 1:
         audio = np.mean(audio, axis=1)
     audio = audio.astype(np.float32)
+
+    frame_size = 1024
+    hop_size = 512
+    spectrum_size = (frame_size // 2) + 1
 
     key = "unknown"
     scale = "unknown"
@@ -56,8 +67,6 @@ def analyze_with_essentia(
     onsets = []
     onset_rate_values = []
     try:
-        frame_size = 1024
-        hop_size = 512
         windowing = es.Windowing(type="hann")
         fft = es.FFT()
         cartesian_to_polar = es.CartesianToPolar()
@@ -88,11 +97,7 @@ def analyze_with_essentia(
             beat_loudness.append(0.0)
 
     # New analyses: frame-wise computations
-    frame_size = 1024
-    hop_size = 512
     windowing = es.Windowing(type="hann")
-    fft = es.FFT()
-    cartesian_to_polar = es.CartesianToPolar()
 
     # Loudness & Envelope
     loudness_values = []
@@ -107,7 +112,7 @@ def analyze_with_essentia(
     hpcp_values = []
     spectral_peaks_alg = es.SpectralPeaks(sampleRate=sr)
     hpcp_alg = es.HPCP(size=12, referenceFrequency=440, harmonics=8, minFrequency=40, maxFrequency=5000, sampleRate=sr)
-    spectrum_alg = es.Spectrum()
+    spectrum_alg = es.Spectrum(size=frame_size)
     for frame in es.FrameGenerator(audio, frameSize=frame_size, hopSize=hop_size, startFromZero=True):
         spectrum = spectrum_alg(windowing(frame))
         frequencies, magnitudes = spectral_peaks_alg(spectrum)
@@ -116,7 +121,7 @@ def analyze_with_essentia(
 
     # Mel-Frequency Bands
     mel_bands_values = []
-    mel_bands_alg = es.MelBands(numberBands=40, sampleRate=sr)
+    mel_bands_alg = es.MelBands(numberBands=40, sampleRate=sr, inputSize=spectrum_size)
     for frame in es.FrameGenerator(audio, frameSize=frame_size, hopSize=hop_size, startFromZero=True):
         spectrum = spectrum_alg(windowing(frame))
         mel_bands = mel_bands_alg(spectrum)
@@ -205,7 +210,7 @@ def analyze_with_essentia(
 
     # Write each artifact JSON
     for artifact_name, data in artifacts.items():
-        json_path = Path(out_dir) / f"{artifact_name}.json"
+        json_path = artifact_path(artifact_name, "json")
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(to_jsonable(data), f, indent=2)
 
@@ -218,7 +223,7 @@ def analyze_with_essentia(
             np.array(artifacts["rhythm"]["rhythm"]["downbeats"]),
             artifacts["rhythm"]["onsets"]["rate"],
             artifacts["rhythm"]["beat_loudness"]["values"],
-            Path(out_dir) / "rhythm.svg",
+            artifact_path("rhythm", "svg"),
         )
     except Exception as exc:
         warn(f"Rhythm plotting failed: {exc}")
@@ -227,7 +232,7 @@ def analyze_with_essentia(
             artifacts["loudness_envelope"]["times"],
             artifacts["loudness_envelope"]["loudness"],
             artifacts["loudness_envelope"]["envelope"],
-            Path(out_dir) / "loudness_envelope.svg",
+            artifact_path("loudness_envelope", "svg"),
         )
     except Exception as exc:
         warn(f"Loudness envelope plotting failed: {exc}")
@@ -235,7 +240,7 @@ def analyze_with_essentia(
         plot_chroma_hpcp(
             artifacts["chroma_hpcp"]["times"],
             artifacts["chroma_hpcp"]["hpcp"],
-            Path(out_dir) / "chroma_hpcp.svg",
+            artifact_path("chroma_hpcp", "svg"),
         )
     except Exception as exc:
         warn(f"Chroma HPCP plotting failed: {exc}")
@@ -243,7 +248,7 @@ def analyze_with_essentia(
         plot_mel_bands(
             artifacts["mel_bands"]["times"],
             artifacts["mel_bands"]["mel_bands"],
-            Path(out_dir) / "mel_bands.svg",
+            artifact_path("mel_bands", "svg"),
         )
     except Exception as exc:
         warn(f"Mel bands plotting failed: {exc}")
@@ -252,7 +257,7 @@ def analyze_with_essentia(
         plot_spectral_centroid(
             artifacts["spectral_centroid"]["times"],
             artifacts["spectral_centroid"]["centroid"],
-            Path(out_dir) / "spectral_centroid.svg",
+            artifact_path("spectral_centroid", "svg"),
         )
     except Exception as exc:
         warn(f"Spectral centroid plotting failed: {exc}")

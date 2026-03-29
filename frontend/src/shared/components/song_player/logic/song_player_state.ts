@@ -1,6 +1,6 @@
 import type { SongState, BeatObject } from "../../../transport/protocol.ts";
 import type { Section } from "../types/types.ts";
-import { cleanBeatObjects, normalizeSections, songFingerprint } from "./song_logic.ts";
+import { cleanBeatObjects, isDownbeat, normalizeSections, songFingerprint } from "./song_logic.ts";
 
 type BackendOriginGlobal = typeof globalThis & {
   __BACKEND_HTTP_ORIGIN__?: string;
@@ -13,6 +13,7 @@ export type SongIdentity = {
 
 export type DerivedSongData = {
   label: string;
+  beatObjects: BeatObject[];
   sections: Section[];
   beats: number[];
   downbeats: number[];
@@ -37,7 +38,7 @@ export function deriveSongData(
   const sections = normalizeSections(song.sections);
   const beatObjects = cleanBeatObjects(song.beats);
   const beats = beatObjects.map(b => b.time);
-  const downbeats = beatObjects.filter(b => b.beat === 1).map(b => b.time);
+  const downbeats = beatObjects.filter(isDownbeat).map(b => b.time);
   const songLengthMs = Number(song.length_s ?? 0) * 1000;
   const durationMs = Number.isFinite(songLengthMs) && songLengthMs > 0
     ? Math.max(currentDurationMs, Math.round(songLengthMs))
@@ -45,6 +46,7 @@ export function deriveSongData(
 
   return {
     label: song.filename ? `Song: ${song.filename}` : "Song loaded",
+    beatObjects,
     sections,
     beats,
     downbeats,

@@ -130,6 +130,7 @@ Code is the source of truth.
 | `fixtures_list` | none | returns serialized fixture payloads using current output universe values |
 | `fixtures_get` | `fixture_id` | returns one serialized fixture payload |
 | `chasers_list` | none | returns the currently loaded chaser definitions from `backend/fixtures/chasers.json` |
+| `list_effects` | none | returns canonical effect metadata including `name`, `description`, controlled `tags`, and `schema` for each effect id |
 
 #### Cues
 
@@ -149,18 +150,18 @@ Code is the source of truth.
 | `metadata_get_overview` | `song?` | returns song length/BPM and counts for sections, beats, chords |
 - `metadata_get_sections` | `song?` | returns normalized section rows with resolved `start_bar`, `start_beat`, `end_bar`, and `end_beat` |
 | `metadata_find_section` | `section_name`, `song?` | returns one exact section row by section name |
-| `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered |
+| `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered; each row includes `time`, `bar`, `beat`, optional `bass`/`chord`, and `type` (`beat` or `downbeat`) |
 | `metadata_get_bar_beats` | `song?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns beat rows filtered by musical position |
 | `metadata_find_bar_beat` | `bar`, `beat`, `song?` | returns one exact beat row with its resolved time |
 | `metadata_get_chords` | `song?`, `start_time?`, `end_time?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns chord-change rows parsed from `beats.json`, optionally time-filtered or bar/beat-filtered |
 | `metadata_find_chord` | `chord`, `occurrence?`, `song?` | returns one exact chord occurrence with resolved time and musical position |
-| `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads analyzer `essentia/loudness_envelope.json` and returns averaged window statistics |
+| `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads the analyzer mix loudness artifact referenced from `info.json` and returns averaged window statistics |
 
 #### Transport
 
 | Tool | Arguments | Behavior |
 | --- | --- | --- |
-| `transport_get_cursor` | none | returns current timecode plus nearest resolved `bar`, `beat`, `beat_time_s`, next beat position, and active `section_name` |
+| `transport_get_cursor` | none | returns current timecode plus nearest resolved `bar`, `beat`, `beat_time_s`, next beat position, active `section_name`, and `next_section_name` when the cursor is before the next labeled section |
 
 ## Assistant request context
 
@@ -224,7 +225,7 @@ Notes on `fixture.set_values`:
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
-| `cue.apply_helper` | `helper_id` | validates helper, generates cue entries from song beats, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
+| `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 Notes on cue persistence:
 - Matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) are de-duplicated within `100ms`, keeping the latest write instead of persisting duplicates.
@@ -337,7 +338,15 @@ Top-level state object:
       "capabilities": {"pan_tilt": true, "rgb": false},
       "meta_channels": {},
       "mappings": {},
-      "supported_effects": ["flash", "strobe", "full"]
+      "supported_effects": [
+        {
+          "id": "flash",
+          "name": "Flash",
+          "description": "Hits hard at the start and quickly decays, which suits spikes, accents, and transient energy.",
+          "tags": ["spike", "accent", "hard", "short"],
+          "schema": {"type": "object", "properties": {"channels": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": true}
+        }
+      ]
     }
   },
   "song": {
@@ -379,7 +388,9 @@ Field notes:
 - `song` is `null` when no song is loaded.
 - `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song.
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
-- `fixtures.<id>.supported_effects` lists valid effect names for `fixture.preview_effect` and `cue.add` intents.
+- `fixtures.<id>.supported_effects` lists valid effects as rich metadata objects with `id`, `name`, `description`, `tags`, and `schema`.
+- Frontend consumers should read `fixtures.<id>.supported_effects[].id` as the stable effect identifier and `name` as the display label; treating `supported_effects` as a string id list is invalid.
+- Effect `tags` come from a controlled backend vocabulary for assistant reasoning, including concepts like `rise`, `drop`, `spike`, `soft`, `tension`, `wash`, and `focus`.
 - Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
 - `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet. Each cue entry includes `created_by`.
 - `cue_helpers` lists backend-declared helper definitions for frontend helper execution UI.
@@ -404,7 +415,7 @@ Patch behavior during playback:
 | --- | --- | --- |
 | `move_to` | pan/tilt targets (`pan`/`tilt` u16 or axis byte variants/preset) | interpolates pan/tilt across cue duration |
 | `move_to_poi` | `target_POI` (also accepts `poi` or `POI`) | interpolates toward POI target for this fixture |
-| `seek` | required `subject_POI`, `start_POI`; optional `orbits`, `easing` | schedules dark pre-roll to `start_POI` from the last known pan/tilt using fixture-template `physical_movement` timing, then circles around `subject_POI` and spirals into the subject by cue end while limiting per-frame pan/tilt changes to the fixture's maximum physical travel; recommended easing is `late_focus`, with `balanced`, `linear`, and `early_focus` also supported |
+| `orbit` | required `subject_POI`, `start_POI`; optional `orbits`, `easing` | schedules dark pre-roll to `start_POI` from the last known pan/tilt using fixture-template `physical_movement` timing, then circles around `subject_POI` and spirals into the subject by cue end while limiting per-frame pan/tilt changes to the fixture's maximum physical travel; recommended easing is `late_focus`, with `balanced`, `linear`, and `early_focus` also supported |
 | `strobe` | optional `rate` (Hz) | toggles dimmer only; dedicated fixture `strobe`/`shutter` channels are left unchanged |
 | `full` | none | instant full-on dimmer (+ shutter if available) |
 | `flash` | none | fades dimmer from 255 to 0 over duration |
@@ -415,7 +426,7 @@ Patch behavior during playback:
 
 | Effect | Required/expected `data` keys | Behavior |
 | --- | --- | --- |
-| `flash` | optional `channels` list | fades selected channels (default RGB) |
+| `flash` | optional `channels` list, optional `color`, optional `brightness`/`intensity` | fades selected channels (default RGB). For parcans, `color` sets the RGB target and `brightness`/`intensity` sets the starting flash level before fade-down. |
 | `strobe` | optional `rate` or `speed` | toggles RGB between cached "on" color and off |
 | `fade_in` | any of `red`, `green`, `blue` | interpolates from current RGB to targets |
 | `full` | optional `red`, `green`, `blue` | instant RGB set (default white) |

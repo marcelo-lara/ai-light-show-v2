@@ -4,7 +4,7 @@ from typing import Any, Tuple
 from .sweep_helpers import clamp_unit, cubic_ease_in, cubic_ease_out
 
 
-def apply_seek_easing(progress: float, easing: Any) -> float:
+def apply_orbit_easing(progress: float, easing: Any) -> float:
     t = clamp_unit(progress)
     mode = str(easing or "late_focus").strip().lower()
     if mode == "linear":
@@ -16,7 +16,7 @@ def apply_seek_easing(progress: float, easing: Any) -> float:
     return cubic_ease_in(t)
 
 
-def spiral_seek_position(
+def spiral_orbit_position(
     *,
     start_pan: int,
     start_tilt: int,
@@ -27,7 +27,7 @@ def spiral_seek_position(
     easing: Any,
 ) -> Tuple[int, int]:
     raw_progress = clamp_unit(progress)
-    spiral_progress = apply_seek_easing(raw_progress, easing)
+    spiral_progress = apply_orbit_easing(raw_progress, easing)
     orbit_count = max(0.0, float(orbits or 0.0))
 
     delta_pan = float(start_pan - subject_pan)

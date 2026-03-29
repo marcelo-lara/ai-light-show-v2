@@ -3,7 +3,7 @@ from models.fixtures.fixture import Fixture
 from .set_channels import handle as handle_set_channels
 from .move_to import handle as handle_move_to
 from .move_to_poi import handle as handle_move_to_poi
-from .seek import handle as handle_seek
+from .orbit import handle as handle_orbit
 from .strobe import handle as handle_strobe
 from .full import handle as handle_full
 from .flash import handle as handle_flash
@@ -201,7 +201,7 @@ class MovingHead(Fixture):
             if k in self.channels:
                 self.set_channel_value(k, v)
 
-    def render_effect(
+    def _fallback_render_effect(
         self,
         universe: bytearray,
         *,
@@ -218,7 +218,7 @@ class MovingHead(Fixture):
             "set_channels": handle_set_channels,
             "move_to": handle_move_to,
             "move_to_poi": handle_move_to_poi,
-            "seek": handle_seek,
+            "orbit": handle_orbit,
             "strobe": handle_strobe,
             "full": handle_full,
             "flash": handle_flash,

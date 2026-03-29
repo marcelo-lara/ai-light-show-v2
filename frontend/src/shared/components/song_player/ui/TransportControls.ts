@@ -21,12 +21,14 @@ export function TransportControls(callbacks: {
   const container = document.createElement("div");
   container.className = "song-player-transport";
 
-  const btn = (label: string, iconName: string, onClick: () => void) => {
+  const btn = (label: string, iconName: string, className: string = "", onClick: () => void) => {
     const b = document.createElement("button");
     b.type = "button";
     b.title = label;
     b.setAttribute("aria-label", label);
-    
+    if (className != "")
+      b.className = className;
+
     // @ts-ignore: index access
     const paths = ICON_REGISTRY[iconName];
     if (paths) {
@@ -43,12 +45,12 @@ export function TransportControls(callbacks: {
     return b;
   };
 
-  const prevSectionBtn = btn("Prev Section", "playerPrev", callbacks.onPrevSection);
-  const prevBeatBtn = btn("Prev Beat", "playerPrev", callbacks.onPrevBeat);
-  const stopBtn = btn("Stop", "playerStop", callbacks.onStop);
-  const playPauseBtn = btn("Play", "playerPlay", callbacks.onPlayPause);
-  const nextBeatBtn = btn("Next Beat", "playerNext", callbacks.onNextBeat);
-  const nextSectionBtn = btn("Next Section", "playerNext", callbacks.onNextSection);
+  const prevSectionBtn = btn("Prev Section", "playerPrev", "", callbacks.onPrevSection);
+  const prevBeatBtn = btn("Prev Beat", "playerPrev", "", callbacks.onPrevBeat);
+  const stopBtn = btn("Stop", "playerStop", "", callbacks.onStop);
+  const playPauseBtn = btn("Play", "playerPlay", "play-pause-btn", callbacks.onPlayPause);
+  const nextBeatBtn = btn("Next Beat", "playerNext", "", callbacks.onNextBeat);
+  const nextSectionBtn = btn("Next Section", "playerNext", "", callbacks.onNextSection);
 
   const updatePlayPauseIcon = (playing: boolean) => {
     const iconName = playing ? "playerPause" : "playerPlay";

@@ -20,6 +20,7 @@ export type EffectSchema = {
 	name: string;
 	label: string;
 	params: ParamDef[];
+	defaultDurationBeats?: number;
 	fixtureTypes?: string[]; // restrict to specific fixture types
 };
 
@@ -82,15 +83,16 @@ export const EFFECT_SCHEMAS: Record<string, EffectSchema | EffectSchema[]> = {
 		},
 	],
 	// Moving head effects
-	seek: {
-		name: "seek",
-		label: "Seek",
+	orbit: {
+		name: "orbit",
+		label: "Orbit",
 		params: [
 			{ name: "subject_POI", label: "Subject POI", type: "poi", default: "" },
 			{ name: "start_POI", label: "Start POI", type: "poi", default: "" },
 			{ name: "orbits", label: "Orbits", type: "range", default: 1, min: 0, max: 4, step: 0.25 },
 			{ name: "easing", label: "Spiral Easing", type: "select", default: "late_focus", options: ["late_focus", "balanced", "linear", "early_focus"] },
 		],
+		defaultDurationBeats: 2,
 		fixtureTypes: ["moving_head"],
 	},
 	move_to: {
@@ -151,4 +153,13 @@ export function getDefaultParams(effectName: string, fixtureType?: string): Reco
 		}
 	}
 	return defaults;
+}
+
+export function getDefaultDurationSeconds(effectName: string, bpm: number, fixtureType?: string): number {
+	const schema = getEffectSchema(effectName, fixtureType);
+	const beats = schema?.defaultDurationBeats;
+	if (beats !== undefined && Number.isFinite(bpm) && bpm > 0) {
+		return (beats * 60) / bpm;
+	}
+	return 1;
 }

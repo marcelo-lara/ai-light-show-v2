@@ -30,6 +30,8 @@ This document describes the `analyzer` module: the song analysis scripts, how th
 - Output directory: by default `analyzer/meta/{song_slug}` (configurable via `out_dir`).
 - Temporary working dir: `analyzer/temp_files/{song_slug}` (configurable via `ANALYZER_TEMP_DIR`).
 - Run records and step artifact manifests are written into the song metadata directory (e.g., `run.json`).
+- `info.json` stores Essentia artifacts grouped by part under `artifacts.essentia.{mix|bass|drums|vocals|other}.{feature}`.
+- `hints.json` stores a plain list of song sections with relevant loudness-shape hints. Mix anchors section-level meaning, and stem events are folded in only when they materially support a local `rise`, `drop`, or `sudden_spike`. Stable high-energy sections receive `sustain` hints. The file is referenced by `artifacts.hints_file`.
 - Moises data (`moises/` directory): Exists purely for internal importing or beat-sync comparison purposes within the analyzer module and should never be used as a system-wide source of truth by the UI, Backend, or external systems (like MCP). The unified source of truth for rhythm data output is `analyzer/meta/{song_slug}/beats.json`.
 
 ## Docker & deployment notes
