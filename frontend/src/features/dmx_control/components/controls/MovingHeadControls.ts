@@ -65,6 +65,9 @@ export function MovingHeadControls(fixture: FixtureVM): FixtureControlHandle {
       pan: Number(state.pan ?? 0),
       tilt: Number(state.tilt ?? 0),
     }),
+    onActivatePanTilt: () => {
+      ptControl?.activate();
+    },
     setRefreshHandler: (refresh) => {
       refreshPoiController = refresh;
     },

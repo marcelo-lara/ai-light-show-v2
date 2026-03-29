@@ -1,5 +1,6 @@
 import json
 import asyncio
+from copy import deepcopy
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
@@ -37,13 +38,13 @@ class PoiDatabase:
 
     async def get_all(self) -> List[Dict[str, Any]]:
         async with self.lock:
-            return [dict(poi) for poi in self.pois]
+            return deepcopy(self.pois)
 
     async def get(self, poi_id: str) -> Optional[Dict[str, Any]]:
         async with self.lock:
             for poi in self.pois:
                 if poi.get("id") == poi_id:
-                    return dict(poi)
+                    return deepcopy(poi)
             return None
             
     async def create(self, poi_data: Dict[str, Any]) -> Dict[str, Any]:
