@@ -13,7 +13,6 @@ export function TransportControls(callbacks: {
   prevSectionBtn: HTMLButtonElement;
   prevBeatBtn: HTMLButtonElement;
   stopBtn: HTMLButtonElement;
-  playPauseBtn: HTMLButtonElement;
   nextBeatBtn: HTMLButtonElement;
   nextSectionBtn: HTMLButtonElement;
   updatePlayPauseIcon: (playing: boolean) => void;
@@ -76,7 +75,6 @@ export function TransportControls(callbacks: {
     prevSectionBtn,
     prevBeatBtn,
     stopBtn,
-    playPauseBtn,
     nextBeatBtn,
     nextSectionBtn,
     updatePlayPauseIcon,
