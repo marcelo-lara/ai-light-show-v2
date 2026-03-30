@@ -14,7 +14,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - `src/beat_finder.py`: beat/downbeat extraction.
 - `src/split_stems.py`: Demucs-based stem extraction.
 - `src/essentia_analysis/`: Essentia feature extraction and plotting helpers.
-- `src/song_features/`: synthesizes LLM-facing song features from analyzer artifacts, beat-window stem accents, per-part relative dips, merged section-level low windows, and optional music-model tags.
+- `src/song_features/`: synthesizes LLM-facing song features from analyzer artifacts, beat-window stem accents, per-part relative dips, merged section-level low windows, optional music-model tags, and Essentia TensorFlow model outputs when that runtime is available.
 
 ## Inputs and outputs
 
@@ -107,7 +107,7 @@ docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the P
 
 `info.json` groups Essentia artifacts by part first: `artifacts.essentia.mix.loudness_envelope`, `artifacts.essentia.bass.chroma_hpcp`, and so on. The derived loudness hints file is exposed separately as `artifacts.hints_file`.
 
-`features.json` is additive and analyzer-owned. It records global energy, beat intensity, section-level energy/trend/phrase descriptors, dominant stems, harmonic-change counts, beat-window accents per part, per-part relative dips, merged low windows, and semantic tags when the configured music model can run. Accents are stored with the beat anchor time plus the actual peak time inside that beat window, which lets markdown and downstream cue logic speak in bar/beat-aligned timestamps without losing the frame-level peak detail. Dips mark beat windows that fall below their neighboring bars, and low windows merge adjacent part dips into broader section-level ranges that read closer to how the music actually drops. Time fields are written at two-decimal precision for downstream prompt use. If a feature cannot be identified, the analyzer logs that condition and leaves the corresponding metadata unavailable instead of inventing substitute values.
+`features.json` is additive and analyzer-owned. It records global energy, beat intensity, section-level energy/trend/phrase descriptors, dominant stems, harmonic-change counts, beat-window accents per part, per-part relative dips, merged low windows, semantic tags when the configured music model can run, and explicit attempt metadata for requested Essentia TensorFlow models. The analyzer image installs `essentia-tensorflow` and downloads the published `AudioSet-YAMNet`, `Nsynth instrument`, and `Discogs-EffNet` model assets into `/opt/essentia-models`; if the runtime still cannot execute them, the attempt metadata records the exact missing operator or file. Accents are stored with the beat anchor time plus the actual peak time inside that beat window, which lets markdown and downstream cue logic speak in bar/beat-aligned timestamps without losing the frame-level peak detail. Dips mark beat windows that fall below their neighboring bars, and low windows merge adjacent part dips into broader section-level ranges that read closer to how the music actually drops. Time fields are written at two-decimal precision for downstream prompt use. If a feature cannot be identified, the analyzer logs that condition and leaves the corresponding metadata unavailable instead of inventing substitute values.
 
 `hints.json` is a plain list of song sections. Each section includes its time window and a `hints` array containing relevant `rise`, `drop`, `sustain`, and `sudden_spike` entries. Mix drives section-level meaning, while stems only appear when they materially support a local event.
 
@@ -161,3 +161,7 @@ Event fields:
 - `bass` (string | null): inferred bass note label, or `null` when unavailable.
 - `chord` (string | null): inferred chord label for the mix (for example `Fm`, `C#`, `N`).
 - `type` (string): `downbeat` when `beat == 1`, otherwise `beat`.
+
+## Backlog
+
+- Upgrade the analyzer image to include the CUDA/CuDNN stack expected by the TensorFlow build so Essentia model inference can use the GPU too.

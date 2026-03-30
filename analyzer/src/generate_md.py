@@ -20,6 +20,20 @@ def _time(value: object) -> str:
     return f"{numeric:.2f}"
 
 
+def _relevant_part_names(parts: object, *, limit: int = 2) -> list[str]:
+    if not isinstance(parts, list):
+        return []
+    filtered = [
+        str(part.get("part"))
+        for part in parts
+        if isinstance(part, dict)
+        and isinstance(part.get("part"), str)
+        and part.get("part") != "mix"
+        and float(part.get("share", 0.0) or 0.0) >= 0.08
+    ]
+    return filtered[:limit]
+
+
 def _load_features(meta_dir: Path) -> dict[str, object] | None:
     path = meta_dir / "features.json"
     if not path.exists():
@@ -94,7 +108,7 @@ def _render_section_feature(section: dict[str, object], features: dict[str, obje
     stem_accents = raw_stem_accents if isinstance(raw_stem_accents, list) else []
     raw_low_windows = match.get("low_windows")
     low_windows = raw_low_windows if isinstance(raw_low_windows, list) else []
-    top_parts = ", ".join(str(part.get("part")) for part in dominant_parts[:2] if isinstance(part, dict) and part.get("part"))
+    top_parts = ", ".join(_relevant_part_names(dominant_parts))
     lines: list[str] = []
     if isinstance(match.get("summary"), str) and match.get("summary"):
         lines.append(str(match.get("summary")))

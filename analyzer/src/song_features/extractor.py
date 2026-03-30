@@ -9,6 +9,7 @@ from typing import Any
 
 import librosa
 import numpy as np
+import essentia.standard as es
 
 from src.song_meta import load_json_file, load_list_file, load_sections, song_meta_dir, song_name
 from src.song_features.stem_accents import build_stem_beat_profiles, merge_low_windows, summarize_stem_accents, summarize_stem_dips
@@ -16,6 +17,27 @@ from src.song_features.stem_accents import build_stem_beat_profiles, merge_low_w
 META_PATH = os.environ.get("META_PATH", "/app/meta")
 LOGGER = logging.getLogger(__name__)
 MODEL_ID = os.environ.get("SONG_FEATURES_MODEL_ID", "mtg-upf/discogs-maest-30s-pw-129e")
+ESSENTIA_MODEL_DIR = Path(os.environ.get("ESSENTIA_MODEL_DIR", "/opt/essentia-models"))
+ESSENTIA_MODEL_NAMES = {
+    "audioset_yamnet": "AudioSet-YAMNet",
+    "nsynth_instrument": "Nsynth instrument",
+}
+ESSENTIA_MODEL_REQUIREMENTS = {
+    "audioset_yamnet": ["TensorflowPredictVGGish"],
+    "nsynth_instrument": ["TensorflowPredictEffnetDiscogs", "TensorflowPredict2D"],
+}
+ESSENTIA_MODEL_FILES = {
+    "audioset_yamnet": {
+        "weights": "audioset-yamnet-1.pb",
+        "metadata": "audioset-yamnet-1.json",
+    },
+    "nsynth_instrument": {
+        "embedding_weights": "discogs-effnet-bs64-1.pb",
+        "embedding_metadata": "discogs-effnet-bs64-1.json",
+        "weights": "nsynth_instrument-discogs-effnet-1.pb",
+        "metadata": "nsynth_instrument-discogs-effnet-1.json",
+    },
+}
 _MODEL_CACHE: tuple[Any, Any, int] | None = None
 _MODEL_FAILED = False
 
@@ -174,6 +196,120 @@ def _model_tags(song_path: Path, start_s: float | None = None, end_s: float | No
         return {"available": False, "model_id": MODEL_ID, "tags": []}
 
 
+def _essentia_model_paths(model_id: str) -> dict[str, Path]:
+    return {name: ESSENTIA_MODEL_DIR / filename for name, filename in ESSENTIA_MODEL_FILES.get(model_id, {}).items()}
+
+
+def _extract_label_list(value: Any) -> list[str]:
+    if isinstance(value, list) and value and all(isinstance(item, str) for item in value):
+        return [str(item) for item in value]
+    if isinstance(value, list):
+        candidates = [_extract_label_list(item) for item in value]
+        return max(candidates, key=len, default=[])
+    if isinstance(value, dict):
+        preferred_keys = ("classes", "classes_names", "labels", "label_names", "classes_labels", "classes_text")
+        for key in preferred_keys:
+            if key in value:
+                labels = _extract_label_list(value[key])
+                if labels:
+                    return labels
+        candidates = [_extract_label_list(item) for item in value.values()]
+        return max(candidates, key=len, default=[])
+    return []
+
+
+def _load_labels(metadata_path: Path) -> list[str]:
+    payload = load_json_file(metadata_path)
+    return _extract_label_list(payload)
+
+
+def _top_scored_labels(predictions: Any, labels: list[str], *, limit: int = 5) -> list[dict[str, Any]]:
+    scores = np.asarray(predictions, dtype=float)
+    if scores.size == 0 or not labels:
+        return []
+    if scores.ndim > 1:
+        scores = np.mean(scores, axis=0)
+    scores = scores.reshape(-1)
+    top_count = min(limit, scores.size, len(labels))
+    if top_count <= 0:
+        return []
+    top_indices = np.argsort(scores)[-top_count:][::-1]
+    return [{"label": labels[int(index)], "score": float(scores[int(index)])} for index in top_indices]
+
+
+def _load_audio_segment(song_path: Path, start_s: float | None, end_s: float | None, *, sample_rate: int = 16000) -> np.ndarray:
+    offset = max(float(start_s or 0.0), 0.0)
+    duration = None if end_s is None else max(float(end_s) - offset, 1.0)
+    audio, _ = librosa.load(str(song_path), sr=sample_rate, mono=True, offset=offset, duration=duration)
+    return np.asarray(audio, dtype=np.float32)
+
+
+def _run_essentia_model(model_id: str, song_path: Path, start_s: float | None = None, end_s: float | None = None) -> dict[str, Any]:
+    name = ESSENTIA_MODEL_NAMES[model_id]
+    required_algorithms = ESSENTIA_MODEL_REQUIREMENTS.get(model_id, [])
+    available_algorithms = set(dir(es))
+    missing_algorithms = sorted(algorithm for algorithm in required_algorithms if algorithm not in available_algorithms)
+    paths = _essentia_model_paths(model_id)
+    missing_files = sorted(name for name, path in paths.items() if not path.exists())
+    attempt: dict[str, Any] = {
+        "id": model_id,
+        "name": name,
+        "available": False,
+        "required_algorithms": required_algorithms,
+        "files": {key: str(path) for key, path in paths.items()},
+        "tags": [],
+    }
+    if missing_algorithms:
+        reason = f"missing Essentia runtime support: {', '.join(missing_algorithms)}"
+        LOGGER.warning("Could not run Essentia model %s because the current Essentia build is missing %s", name, ", ".join(missing_algorithms))
+        attempt["reason"] = reason
+        return attempt
+    if missing_files:
+        reason = f"missing model files: {', '.join(missing_files)}"
+        LOGGER.warning("Could not run Essentia model %s because %s", name, reason)
+        attempt["reason"] = reason
+        return attempt
+    audio = _load_audio_segment(song_path, start_s, end_s)
+    if audio.size == 0:
+        attempt["reason"] = "audio segment is empty"
+        return attempt
+    try:
+        if model_id == "audioset_yamnet":
+            labels = _load_labels(paths["metadata"])
+            predictor = getattr(es, "TensorflowPredictVGGish")(graphFilename=str(paths["weights"]), input="melspectrogram", output="activations")
+            predictions = predictor(audio)
+        elif model_id == "nsynth_instrument":
+            labels = _load_labels(paths["metadata"])
+            embedding_predictor = getattr(es, "TensorflowPredictEffnetDiscogs")(graphFilename=str(paths["embedding_weights"]), output="PartitionedCall:1")
+            classifier = getattr(es, "TensorflowPredict2D")(graphFilename=str(paths["weights"]), output="model/Softmax")
+            embeddings = embedding_predictor(audio)
+            predictions = classifier(embeddings)
+        else:
+            attempt["reason"] = "unknown model"
+            return attempt
+        tags = _top_scored_labels(predictions, labels)
+        if not tags:
+            attempt["reason"] = "metadata labels unavailable or empty predictions"
+            return attempt
+        attempt["available"] = True
+        attempt["tags"] = tags
+        return attempt
+    except Exception as exc:
+        LOGGER.warning("Could not run Essentia model %s on %s: %s", name, song_path.name, exc)
+        attempt["reason"] = str(exc)
+        return attempt
+
+
+def _essentia_model_attempts(song_path: Path) -> list[dict[str, Any]]:
+    available_algorithms = set(dir(es))
+    attempts: list[dict[str, Any]] = []
+    for key, name in ESSENTIA_MODEL_NAMES.items():
+        if not ESSENTIA_MODEL_REQUIREMENTS.get(key):
+            LOGGER.warning("Essentia model %s has no configured runtime requirements", name)
+        attempts.append(_run_essentia_model(key, song_path))
+    return attempts
+
+
 def find_song_features(song_path: str | Path, meta_path: str | Path = META_PATH) -> Path | None:
     song_path = Path(song_path).expanduser().resolve()
     meta_dir = song_meta_dir(song_path, meta_path)
@@ -224,6 +360,7 @@ def find_song_features(song_path: str | Path, meta_path: str | Path = META_PATH)
 
     onset_times = np.asarray((mix_rhythm.get("onsets") or {}).get("times") or [], dtype=float)
     global_semantics = _model_tags(song_path)
+    essentia_model_attempts = _essentia_model_attempts(song_path)
     global_stem_accents = summarize_stem_accents(stem_profiles, 0.0, float(times[-1]), max_per_part=8)
     global_stem_dips = summarize_stem_dips(stem_profiles, 0.0, float(times[-1]), max_per_part=8)
     global_low_windows = merge_low_windows(global_stem_dips, max_windows=8)
@@ -301,6 +438,7 @@ def find_song_features(song_path: str | Path, meta_path: str | Path = META_PATH)
             "sections": bool(sections),
             "hints": bool(hint_rows),
             "global_semantics": bool(global_semantics.get("available")),
+            "essentia_models": any(bool(row.get("available")) for row in essentia_model_attempts),
         },
         "global": {
             "duration_s": float(mix_loudness.get("duration", times[-1])),
@@ -323,6 +461,7 @@ def find_song_features(song_path: str | Path, meta_path: str | Path = META_PATH)
             "stem_dips": global_stem_dips,
             "low_windows": global_low_windows,
             "semantic_tags": global_semantics,
+            "essentia_model_attempts": essentia_model_attempts,
         },
         "sections": section_rows,
     }
