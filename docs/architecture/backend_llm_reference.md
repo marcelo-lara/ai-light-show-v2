@@ -150,6 +150,7 @@ Code is the source of truth.
 | --- | --- | --- |
 | `metadata_get_overview` | `song?` | returns song length/BPM and counts for sections, beats, chords |
 | `metadata_get_sections` | `song?` | returns normalized section rows with resolved `start_bar`, `start_beat`, `end_bar`, and `end_beat` |
+| `metadata_get_song_analysis` | `song?`, `section_name?` | returns the backend-normalized song-analysis contract, including per-section dominant parts, per-stem accents, per-stem dips, low windows, and normalized timing |
 | `metadata_get_section_analysis` | `song?`, `section_name?` | returns compact section-analysis summaries for metadata drafting, including mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` |
 | `metadata_find_section` | `section_name`, `song?` | returns one exact section row by section name |
 | `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered; each row includes `time`, `bar`, `beat`, optional `bass`/`chord`, and `type` (`beat` or `downbeat`) |
@@ -227,7 +228,7 @@ Notes on `fixture.set_values`:
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
-| `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
+| `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id. Helper id `song_draft` uses the backend song-analysis contract and active fixture/POI state to build a first-pass show draft. | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 Notes on cue persistence:
 - Matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) are de-duplicated within `100ms`, keeping the latest write instead of persisting duplicates.

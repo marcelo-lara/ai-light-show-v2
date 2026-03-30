@@ -7,6 +7,7 @@ from models.song.beats import Beat
 
 from .downbeats_and_beats import generate_downbeats_and_beats
 from .parcan_echoes import generate_parcan_echoes
+from .song_draft import generate_song_draft
 
 _HELPERS: List[Dict[str, Any]] = [
     {
@@ -33,6 +34,14 @@ _HELPERS: List[Dict[str, Any]] = [
         ],
         "requires_beats": False,
     },
+    {
+        "id": "song_draft",
+        "label": "Song Draft",
+        "description": "Create a draft cue sheet from analyzer beats, sections, and per-stem section features.",
+        "mode": "full_song",
+        "parameters": [],
+        "requires_beats": True,
+    },
 ]
 
 
@@ -54,9 +63,17 @@ def generate_cue_helper_entries(
     beats: List[Beat],
     bpm: float,
     params: Dict[str, Any] | None = None,
+    song: Any | None = None,
+    fixtures: List[Any] | None = None,
+    pois: List[Dict[str, Any]] | None = None,
+    supported_effects=None,
 ) -> List[Dict[str, Any]]:
     if helper_id == "downbeats_and_beats":
         return generate_downbeats_and_beats(beats, bpm)
     if helper_id == "parcan_echoes":
         return generate_parcan_echoes(bpm, params)
+    if helper_id == "song_draft":
+        if song is None or fixtures is None or pois is None or supported_effects is None:
+            raise ValueError("song_draft_requires_context")
+        return generate_song_draft(song, fixtures, pois, supported_effects)
     raise ValueError("unknown_helper_id")

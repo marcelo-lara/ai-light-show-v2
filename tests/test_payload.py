@@ -105,3 +105,6 @@ async def test_frontend_state_includes_parameterized_cue_helpers():
     assert echoes is not None
     assert echoes["mode"] == "parameterized"
     assert any(param["name"] == "start_time_ms" for param in echoes["parameters"])
+    song_draft = next((helper for helper in helpers if helper.get("id") == "song_draft"), None)
+    assert song_draft is not None
+    assert song_draft["mode"] == "full_song"

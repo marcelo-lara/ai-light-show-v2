@@ -149,7 +149,7 @@ Current mounted MCP tools:
 - `songs_list`, `songs_get_details`, `songs_load`
 - `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
 - `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- `metadata_get_overview`, `metadata_get_sections`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
+- `metadata_get_overview`, `metadata_get_sections`, `metadata_get_song_analysis`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - `transport_get_cursor`
 
 Mutation tools schedule websocket patch broadcasts after state changes so browser clients remain synchronized with MCP-originated edits.
@@ -161,7 +161,10 @@ Serialized fixture payloads expose `supported_effects` as rich effect objects wi
 Frontend consumers should treat each `supported_effects[]` entry as a metadata object. `id` is the stable effect identifier for intent payloads and parameter-schema lookup, and `name` is the display label.
 
 `transport_get_cursor` returns the current timecode, nearest and next beat positions, the active `section_name` when the cursor is inside a labeled section, and `next_section_name` when the cursor is before the next section boundary.
+`metadata_get_song_analysis` returns the backend-normalized song-analysis contract used by draft generation. It keeps analyzer-file specifics behind one backend boundary and exposes section timing plus per-stem accents, dips, low windows, and dominant-part summaries.
 `metadata_get_section_analysis` summarizes each section with mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` so the assistant can draft grounded descriptions and hints.
+
+`cue.apply_helper` includes helper id `song_draft`, which generates a backend-owned draft cue sheet from analyzer timing/features and the active rig's supported effects and POI coverage.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.

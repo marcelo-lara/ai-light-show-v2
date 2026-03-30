@@ -63,13 +63,14 @@ Current MCP tools:
 - Songs: `songs_list`, `songs_get_details`, `songs_load`
 - Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
 - Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
+- Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_song_analysis`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - Transport: `transport_get_cursor`
 
 Behavior notes:
 - MCP song and cue mutation tools operate on the same `StateManager` used by websocket clients.
 - MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
 - Metadata tools expose analyzer beat positions as bars and beats, including section start/end positions and exact bar/beat lookup.
+- `metadata_get_song_analysis` returns a backend-owned normalized analysis contract for the current song, including beat availability, section availability, feature availability, normalized section timing, per-section dominant parts, per-stem accents, per-stem dips, and low windows.
 - Loudness summaries are read from the mix `artifacts.essentia` manifest entry for `loudness_envelope` and returned as averaged window statistics.
 - `metadata_get_section_analysis` returns compact section summaries for LLM metadata drafting, combining mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals`.
 - `list_effects` returns canonical effect metadata including effect descriptions, controlled tags, and JSON schemas.
@@ -121,6 +122,7 @@ Patch behavior:
 - `llm.reject_action` dismisses a pending proposal without mutating cues.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from backend-owned helper definitions and upserts them into the cue sheet. Helpers can expose parameter schemas and runtime params.
+- `song_draft` is a backend-owned cue helper that reads analyzer-backed section and per-stem metadata through the backend analysis contract and generates a draft cue sheet using the active fixture inventory and POI availability.
 - `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
@@ -161,6 +163,7 @@ Canonical `state.song.beats[]` rows are analyzer beat events with:
 Cue helpers payload under `state.cue_helpers`:
 - List of helper definitions (`id`, `label`, `description`, `mode`, `parameters[]`) for frontend helper UI.
 - Each helper parameter definition includes schema fields such as `name`, `label`, `type`, `default`, `min`, `max`, `step`, `required`, and optional `options`.
+- Draft generation is exposed as helper id `song_draft`.
 
 MCP cue payloads:
 - `cues_get_sheet` returns the full persisted cue sheet for the current song.
