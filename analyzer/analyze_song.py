@@ -14,6 +14,7 @@ from src.essentia_analysis import analyze_with_essentia, build_loudness_hints
 from src.essentia_analysis.common import is_stem_worth_analyzing
 from src.generate_md import generate_md_file
 from src.moises import import_moises
+from src.song_features import find_song_features
 from src.song_meta import load_json_file as _load_json_file
 from src.song_meta import load_list_file as _load_list_file
 from src.song_meta import load_sections as _load_sections
@@ -437,6 +438,20 @@ def run_generate_md_for(song_path: Path, meta_path: str | Path = META_PATH) -> P
         return None
 
 
+def run_find_song_features_for(song_path: Path, meta_path: str | Path = META_PATH) -> Path | None:
+    print(f"Finding song features for {song_path.name}")
+    try:
+        output_path = find_song_features(song_path, meta_path=meta_path)
+        if output_path is None:
+            warn(f"Could not build song features for {song_path.stem}")
+            return None
+        print("Song feature generation complete. Output:", output_path)
+        return output_path
+    except Exception as e:
+        warn(f"Find song features failed: {e}")
+        return None
+
+
 def analyze_song(
     song_path: str | Path,
     meta_path: str | Path = META_PATH,
@@ -487,11 +502,12 @@ def main() -> int:
     parser.add_argument("--split-stems", action="store_true", help="Run stem splitting")
     parser.add_argument("--beat-finder", action="store_true", help="Run beat finder")
     parser.add_argument("--essentia-analysis", action="store_true", help="Run Essentia analysis")
+    parser.add_argument("--find-song-features", action="store_true", help="Generate song feature metadata")
     parser.add_argument("--import-moises", action="store_true", help="Import Moises chords")
     parser.add_argument("--generate-md", action="store_true", help="Generate markdown from sections metadata")
     args = parser.parse_args()
 
-    if not any([args.split_stems, args.beat_finder, args.essentia_analysis, args.import_moises, args.generate_md]):
+    if not any([args.split_stems, args.beat_finder, args.essentia_analysis, args.find_song_features, args.import_moises, args.generate_md]):
         current_song = resolve_song(args.song)
     else:
         current_song = resolve_song(args.song)
@@ -501,7 +517,7 @@ def main() -> int:
 
     device = autodetect_device()
 
-    if args.split_stems or args.beat_finder or args.essentia_analysis or args.import_moises or args.generate_md:
+    if args.split_stems or args.beat_finder or args.essentia_analysis or args.find_song_features or args.import_moises or args.generate_md:
         if not current_song.exists():
             warn(f"Song file does not exist: {current_song}")
             return 1
@@ -511,6 +527,8 @@ def main() -> int:
             run_beat_finder_for(current_song)
         if args.essentia_analysis:
             run_essentia_analysis_for(current_song)
+        if args.find_song_features:
+            run_find_song_features_for(current_song)
         if args.import_moises:
             run_import_moises_for(current_song)
         if args.generate_md:
@@ -523,9 +541,10 @@ def main() -> int:
         print("1. Split Stems")
         print("2. Beat Finder")
         print("3. Essentia Analysis")
-        print("4. Compare Beat Times")
-        print("5. Import Moises Chords")
-        print("6. Generate MD file")
+        print("4. Find Song Features")
+        print("5. Compare Beat Times")
+        print("6. Import Moises Chords")
+        print("7. Generate MD file")
         print("8. Analyze All Songs")
         print("9. Exit (Esc also exits)")
         choice = input("Choose an option: ").strip()
@@ -556,10 +575,15 @@ def main() -> int:
             if not current_song.exists():
                 warn(f"Current song file does not exist: {current_song}")
                 continue
-            run_compare_beat_times_for(current_song)
+            run_find_song_features_for(current_song)
         elif choice == "5":
-            run_import_moises_for(current_song)
+            if not current_song.exists():
+                warn(f"Current song file does not exist: {current_song}")
+                continue
+            run_compare_beat_times_for(current_song)
         elif choice == "6":
+            run_import_moises_for(current_song)
+        elif choice == "7":
             if not current_song.exists():
                 warn(f"Current song file does not exist: {current_song}")
                 continue

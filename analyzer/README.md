@@ -14,6 +14,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - `src/beat_finder.py`: beat/downbeat extraction.
 - `src/split_stems.py`: Demucs-based stem extraction.
 - `src/essentia_analysis/`: Essentia feature extraction and plotting helpers.
+- `src/song_features/`: synthesizes LLM-facing song features from analyzer artifacts, beat-window stem accents, per-part relative dips, merged section-level low windows, and optional music-model tags.
 
 ## Inputs and outputs
 
@@ -27,6 +28,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable chord data, this file is normalized from `moises/chords.json`.
 - `analyzer/meta/<song>/sections.json`: canonical persisted section list. When `moises/segments.json` exists and `sections.json` is absent, Moises import materializes this file using the analyzer section row shape (`start`, `end`, `label`, optional `description`, optional `hints`) after standalone section-range validation that stays compatible with backend consumers.
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
+- `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, and optional semantic tags from a music audio-classification model.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
 - `analyzer/meta/<song>/essentia/*.svg`: optional plots.
 - `analyzer/meta/<song>/stems/*`: separated stems when stem split is enabled.
@@ -51,6 +53,8 @@ docker compose exec analyzer python analyze_song.py
 
 Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` and runs stem splitting, analyzer beat finding only when usable Moises chord data is absent, Essentia analysis, Moises import when available, and markdown generation for the resulting sections metadata.
 
+Interactive option `4. Find Song Features` builds `features.json` for the selected song after beat and Essentia artifacts exist.
+
 ### CLI mode
 
 ```bash
@@ -73,12 +77,19 @@ docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the P
 
 You can replace the song name with any other song that already has usable `sections.json` data.
 
+To validate feature synthesis from existing analyzer artifacts, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --find-song-features
+```
+
 ### Common CLI flags
 
 - `--song <filename>`: song in `/app/songs`.
 - `--split-stems`: run Demucs separation.
 - `--beat-finder`: run beat/downbeat extraction.
 - `--essentia-analysis`: run Essentia analysis bundle.
+- `--find-song-features`: synthesize LLM-facing feature metadata from analyzer outputs.
 - `--generate-md`: render the per-song markdown summary from `sections.json`.
 
 ## Contract with other modules
@@ -96,6 +107,8 @@ You can replace the song name with any other song that already has usable `secti
 
 `info.json` groups Essentia artifacts by part first: `artifacts.essentia.mix.loudness_envelope`, `artifacts.essentia.bass.chroma_hpcp`, and so on. The derived loudness hints file is exposed separately as `artifacts.hints_file`.
 
+`features.json` is additive and analyzer-owned. It records global energy, beat intensity, section-level energy/trend/phrase descriptors, dominant stems, harmonic-change counts, beat-window accents per part, per-part relative dips, merged low windows, and semantic tags when the configured music model can run. Accents are stored with the beat anchor time plus the actual peak time inside that beat window, which lets markdown and downstream cue logic speak in bar/beat-aligned timestamps without losing the frame-level peak detail. Dips mark beat windows that fall below their neighboring bars, and low windows merge adjacent part dips into broader section-level ranges that read closer to how the music actually drops. Time fields are written at two-decimal precision for downstream prompt use. If a feature cannot be identified, the analyzer logs that condition and leaves the corresponding metadata unavailable instead of inventing substitute values.
+
 `hints.json` is a plain list of song sections. Each section includes its time window and a `hints` array containing relevant `rise`, `drop`, `sustain`, and `sudden_spike` entries. Mix drives section-level meaning, while stems only appear when they materially support a local event.
 
 Stem Essentia files use a consistent `<part>_<feature>.json` and `<part>_<feature>.svg` naming pattern in the song `essentia` directory, while the mix keeps unprefixed filenames like `loudness_envelope.json` and `rhythm.json`.
@@ -105,6 +118,9 @@ Stem Essentia files use a consistent `<part>_<feature>.json` and `<part>_<featur
 
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --essentia-analysis
+```
+```bash
+docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --find-song-features
 ```
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --split-stems
