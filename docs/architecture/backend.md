@@ -82,7 +82,7 @@ Behavior:
 
 - Frontend snapshots and patches include a top-level `analyzer` object.
 - `analyzer` contains analyzer service availability, backend polling state, playback lock state, queue items, and per-status summary counts.
-- Backend relays analyzer queue items exactly as reported by the analyzer service. Interrupted work is re-queued by the analyzer service on its own startup, and pending items render as waiting work in the frontend queue.
+- Backend relays analyzer queue items exactly as reported by the analyzer service. Analyzer startup clears persisted queue items before queue status is served, so backend sees an empty analyzer queue after analyzer restarts.
 - Backend only keeps that analyzer state refreshed while playback is idle and analyzer queue work is active.
 
 ### Section metadata normalization

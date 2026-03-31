@@ -34,7 +34,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - `add_item(...)` stores task parameters and returns `item_id`.
 - `execute_item(item_id)` marks a queued item as `pending`.
 - `process_queue(...)` runs the next pending item only when no item is currently marked `running`, persists the latest callback event in `progress`, and stores the final task result in `last_result`.
-- Analyzer startup re-queues any item left in `running` state, plus any item previously marked `failed` with `Interrupted before completion`, so interrupted work returns to `pending` instead of surfacing as a permanent failure.
+- Analyzer startup clears the persisted queue file before serving HTTP requests or running the worker loop.
 
 ## HTTP service
 

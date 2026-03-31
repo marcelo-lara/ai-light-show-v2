@@ -198,7 +198,7 @@ Code is the source of truth.
 
 Analyzer queue state notes:
 - Backend surfaces analyzer queue item status/progress directly from analyzer HTTP responses under `state.analyzer`.
-- Analyzer startup re-queues interrupted work (`running` items and prior `failed` items with `Interrupted before completion`) back to `pending`, so the frontend should treat that case as waiting work rather than a hard failure.
+- Analyzer startup clears persisted queue items before queue HTTP state is served, so backend should expect an empty analyzer queue after analyzer restarts.
 
 ### Transport intents
 

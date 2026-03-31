@@ -116,6 +116,7 @@ Patch behavior:
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
 - `transport.play` first checks analyzer queue status. If analyzer reports any `running` item, backend emits `transport_play_blocked` and playback does not start.
 - Backend does not keep a standing analyzer poll loop while the queue is empty. Startup performs a one-shot status refresh, and continuous polling begins only when analyzer queue activity is known.
+- Analyzer service startup clears any persisted queue items before it begins serving queue state, so backend sees an empty analyzer queue after analyzer restarts.
 - `analyzer.enqueue` validates `task_type` and `filename`, derives analyzer `song_path` plus `meta_path`, posts a queue item to the analyzer service, and triggers queue-activity polling.
 - `analyzer.execute` posts one queued item to the analyzer service execute endpoint and triggers queue-activity polling so pending/running state is relayed back into `state.analyzer`.
 - `analyzer.execute_all` executes every queue item whose current analyzer status is `queued`, then refreshes analyzer state once.

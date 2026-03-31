@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "analyzer"))
 
 from src import task_queue_api
-from src.task_queue_store import recover_interrupted_items
+from src.task_queue_store import clear_items
 
 
 def test_add_list_execute_and_remove_queue_item(tmp_path: Path):
@@ -100,7 +100,7 @@ def test_process_queue_returns_none_when_running_item_exists(tmp_path: Path):
     assert task_queue_api.process_queue(queue_path) is None
 
 
-def test_recover_interrupted_items_requeues_running_and_interrupted_failed(tmp_path: Path):
+def test_clear_items_empties_queue_file(tmp_path: Path):
     queue_path = tmp_path / "queue.json"
     queue_path.write_text(
         json.dumps(
@@ -142,12 +142,10 @@ def test_recover_interrupted_items_requeues_running_and_interrupted_failed(tmp_p
         encoding="utf-8",
     )
 
-    items = recover_interrupted_items(queue_path)
+    items = clear_items(queue_path)
 
-    assert [item["status"] for item in items] == ["pending", "pending"]
-    assert all(item["error"] is None for item in items)
-    assert all(item["started_at"] is None for item in items)
-    assert all(item["finished_at"] is None for item in items)
+    assert items == []
+    assert task_queue_api.list_items(queue_path) == []
 
 
 def test_add_item_rejects_unknown_task_type(tmp_path: Path):

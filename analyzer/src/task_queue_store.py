@@ -28,27 +28,10 @@ def load_items(queue_path: Path = QUEUE_FILE_PATH) -> list[dict[str, Any]]:
         return payload.get("items", [])
 
 
-def recover_interrupted_items(queue_path: Path = QUEUE_FILE_PATH) -> list[dict[str, Any]]:
+def clear_items(queue_path: Path = QUEUE_FILE_PATH) -> list[dict[str, Any]]:
     with QUEUE_LOCK:
-        items = load_items(queue_path)
-        changed = False
-        timestamp = now_iso()
-        for item in items:
-            is_interrupted_failure = item.get("status") == "failed" and item.get("error") == "Interrupted before completion"
-            if item.get("status") != "running" and not is_interrupted_failure:
-                continue
-            item["status"] = "pending"
-            item["updated_at"] = timestamp
-            item["pending_at"] = item.get("pending_at") or timestamp
-            item["started_at"] = None
-            item["finished_at"] = None
-            item["progress"] = None
-            item["last_result"] = None
-            item["error"] = None
-            changed = True
-        if changed:
-            save_items(items, queue_path)
-        return items
+        save_items([], queue_path)
+        return []
 
 
 def save_items(items: list[dict[str, Any]], queue_path: Path = QUEUE_FILE_PATH) -> None:
