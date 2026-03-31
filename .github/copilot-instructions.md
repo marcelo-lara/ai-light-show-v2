@@ -122,6 +122,8 @@ PYENV_VERSION=ai-light pyenv exec <command>
   - Do not add padding or gap values unless explicitly required by the task or LoFi constraints.
   - In `frontend/src/features`, use shared themed controls from `frontend/src/shared/components/controls` (`Button`, `Dropdown`, `Slider`, `Toggle`, `Input`, `ColorPicker`) instead of creating primitive HTML form elements unless that is strictly necessary for behavior or semantics.
   - Avoid redundant wrappers. Add extra containers only when they are required for layout, accessibility, or behavior.
+  - Put each panel in a dedicated folder named after that panel. Keep panel-local code, helpers, and state next to the panel instead of leaving panel files loose in the feature root.
+  - When a panel or component is used by multiple pages, promote it to a shared component and store it under the appropriate shared folder rather than duplicating page-local implementations.
   - Avoid feature-local custom styling variants for those controls; extend shared control components/tokens when behavior or appearance changes are needed.
   - Keep feature CSS layout-focused; do not style shared control internals from feature files (`.btn`, `.btn-content`, `.input-shell`, `.input-field`, `.dropdown`, `.toggle`, `.slider-row`).
   - Keep state visuals shared: use `.is-active` and `.is-selected` from `frontend/src/app/themes.css`; do not create feature-specific selected/active visual variants.

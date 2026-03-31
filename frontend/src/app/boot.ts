@@ -13,6 +13,7 @@ import {
   resolveActionProposal,
   upsertSystemStatus,
 } from "../features/llm_chat/llm_state.ts";
+import { setSongLoaderSongs } from "../features/song_analysis/song_loader/state.ts";
 
 // If you inject bootstrap JSON in HTML, expose it as window.__BOOTSTRAP_STATE__
 declare global {
@@ -73,6 +74,10 @@ export function boot(ctx: BootContext) {
         applyPatch(m);
       } else if (m.type === "event") {
         const data = (m.data ?? {}) as Record<string, unknown>;
+        if (m.message === "song_list") {
+          setSongLoaderSongs(Array.isArray(data.songs) ? data.songs.filter((song): song is string => typeof song === "string") : []);
+          return;
+        }
         if (data.domain === "llm") {
           if (m.message === "llm_status" && typeof data.request_id === "string" && typeof data.label === "string") {
             upsertSystemStatus(data.request_id, data.label);
@@ -135,6 +140,23 @@ export function boot(ctx: BootContext) {
         }
         if (m.level === "error") {
           addSystemMessage(m.message, "error");
+        }
+        if (m.message === "analyzer_item_enqueued") {
+          addSystemMessage("Analyzer item added to queue.", "info");
+        }
+        if (m.message === "analyzer_item_removed") {
+          addSystemMessage("Analyzer item removed from queue.", "info");
+        }
+        if (m.message === "analyzer_items_removed") {
+          const count = typeof data.count === "number" ? data.count : 0;
+          addSystemMessage(count > 0 ? `Removed ${count} analyzer item${count === 1 ? "" : "s"} from queue.` : "No analyzer items removed.", "info");
+        }
+        if (m.message === "analyzer_item_executed") {
+          addSystemMessage("Analyzer item marked to run.", "info");
+        }
+        if (m.message === "analyzer_items_executed") {
+          const count = typeof data.count === "number" ? data.count : 0;
+          addSystemMessage(count > 0 ? `Queued ${count} analyzer item${count === 1 ? "" : "s"} to run.` : "No queued analyzer items to run.", "info");
         }
         if (m.message === "cue_helper_applied") {
           const data = m.data as { helper_id?: string; generated?: number; replaced?: number; skipped?: number } | undefined;

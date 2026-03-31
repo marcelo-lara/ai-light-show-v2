@@ -42,6 +42,55 @@ class AnalyzerService:
             await self.resume_polling()
         return self.snapshot()
 
+    async def list_items(self) -> list[dict[str, Any]]:
+        return await self._client.list_items()
+
+    async def enqueue_item(self, task_type: str, params: dict[str, Any]) -> dict[str, Any]:
+        result = await self._client.add_item(task_type, params)
+        await self.notify_queue_activity()
+        return result
+
+    async def remove_item(self, item_id: str) -> dict[str, Any]:
+        result = await self._client.remove_item(item_id)
+        await self.refresh()
+        return result
+
+    async def remove_all_items(self) -> dict[str, Any]:
+        items = await self.list_items()
+        removed_ids: list[str] = []
+        for item in items:
+            if item.get("status") == "running":
+                continue
+            item_id = str(item.get("item_id") or "").strip()
+            if not item_id:
+                continue
+            await self._client.remove_item(item_id)
+            removed_ids.append(item_id)
+        await self.refresh()
+        return {"item_ids": removed_ids, "count": len(removed_ids)}
+
+    async def execute_item(self, item_id: str) -> dict[str, Any]:
+        result = await self._client.execute_item(item_id)
+        await self.notify_queue_activity()
+        return result
+
+    async def execute_all_queued(self) -> dict[str, Any]:
+        items = await self.list_items()
+        executed_ids: list[str] = []
+        for item in items:
+            if item.get("status") != "queued":
+                continue
+            item_id = str(item.get("item_id") or "").strip()
+            if not item_id:
+                continue
+            await self._client.execute_item(item_id)
+            executed_ids.append(item_id)
+        if executed_ids:
+            await self.notify_queue_activity()
+        else:
+            await self.refresh()
+        return {"item_ids": executed_ids, "count": len(executed_ids)}
+
     async def refresh(self) -> dict[str, Any]:
         try:
             payload = await self._client.get_status()

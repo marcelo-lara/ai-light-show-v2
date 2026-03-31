@@ -38,6 +38,10 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 6. While playback is idle and analyzer queue work exists, backend polls the analyzer HTTP service and relays queue/runtime state in `state.analyzer`.
 7. MCP clients call backend-owned tools over Streamable HTTP and share the same live runtime state.
 
+Websocket delivery behavior:
+- Snapshot and event sends drop disconnected websocket clients instead of letting send failures tear down the backend request path.
+- The websocket read loop treats the Starlette `WebSocket is not connected` runtime as a disconnect path and always cleans up the client entry.
+
 ## WebSocket protocol essentials
 
 ### Client → Backend
@@ -47,6 +51,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 
 Supported intent names:
 - Song: `song.list`, `song.load`.
+- Analyzer: `analyzer.enqueue`, `analyzer.execute`, `analyzer.execute_all`, `analyzer.remove`, `analyzer.remove_all`.
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
@@ -111,10 +116,16 @@ Patch behavior:
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
 - `transport.play` first checks analyzer queue status. If analyzer reports any `running` item, backend emits `transport_play_blocked` and playback does not start.
 - Backend does not keep a standing analyzer poll loop while the queue is empty. Startup performs a one-shot status refresh, and continuous polling begins only when analyzer queue activity is known.
+- `analyzer.enqueue` validates `task_type` and `filename`, derives analyzer `song_path` plus `meta_path`, posts a queue item to the analyzer service, and triggers queue-activity polling.
+- `analyzer.execute` posts one queued item to the analyzer service execute endpoint and triggers queue-activity polling so pending/running state is relayed back into `state.analyzer`.
+- `analyzer.execute_all` executes every queue item whose current analyzer status is `queued`, then refreshes analyzer state once.
+- `analyzer.remove` deletes one analyzer queue item and refreshes `state.analyzer` immediately.
+- `analyzer.remove_all` deletes every non-running analyzer queue item and refreshes `state.analyzer` immediately.
 - When playback starts, backend sets analyzer playback lock and stops analyzer polling for the full playback window.
 - `transport.pause`, `transport.stop`, and natural playback completion release analyzer playback lock and resume analyzer polling only when queued work is still present.
 - `song.list` emits the currently loadable backend song names without mutating state.
 - `song.load` validates `payload.filename`, loads the selected song into backend state, resets playback to stopped, updates the output universe, and schedules a snapshot/patch broadcast.
+- If a song is present without analyzer `info.json`, backend still loads it and emits fallback metadata (`bpm=0`, `length_s=0`, empty beats, no analysis) instead of failing the load.
 - `songs_load` on the MCP surface applies the same load side effects: load state, stop playback ticker, disable continuous send, push the output universe, then schedule websocket broadcasts.
 - Clients can send `transport.jump_to_section` with `payload.section_index` to seek to the matching section start.
 - Section boundaries and labels are resolved from normalized section fields (`start_s|start`, `end_s|end`, `name|label`).

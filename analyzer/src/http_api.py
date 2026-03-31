@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from .task_queue_api import add_item, execute_item, get_item, list_items, process_queue, remove_item
-from .task_queue_store import QUEUE_FILE_PATH
+from .task_queue_store import QUEUE_FILE_PATH, recover_interrupted_items
 
 
 class QueueItemCreate(BaseModel):
@@ -36,6 +36,7 @@ def create_app(queue_path: Path | None = None, worker_enabled: bool = True, work
         app.state.queue_path = queue_path
         app.state.playback_locked = False
         app.state.worker_task = None
+        recover_interrupted_items(app.state.queue_path)
 
         async def worker_loop() -> None:
             while True:

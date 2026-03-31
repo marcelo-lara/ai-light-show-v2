@@ -49,3 +49,21 @@ def test_http_api_queue_crud_and_playback_lock(tmp_path: Path):
         deleted = client.delete(f"/queue/items/{item_id}")
         assert deleted.status_code == 200
         assert client.get("/queue/items").json()["items"] == []
+
+
+def test_http_api_requeues_interrupted_items_on_startup(tmp_path: Path):
+    queue_path = tmp_path / "queue.json"
+    queue_path.write_text(
+        '{"items":[{"item_id":"one","task_type":"generate-md","params":{"song_path":"/tmp/A.mp3"},"status":"failed","created_at":"2026-03-30T00:00:00Z","updated_at":"2026-03-30T00:00:00Z","queued_at":"2026-03-30T00:00:00Z","pending_at":"2026-03-30T00:00:00Z","started_at":"2026-03-30T00:00:00Z","finished_at":"2026-03-30T00:01:00Z","progress":null,"last_result":null,"error":"Interrupted before completion"}]}'
+        ,
+        encoding="utf-8",
+    )
+    app = create_app(queue_path=queue_path, worker_enabled=False)
+
+    with TestClient(app) as client:
+        listed = client.get("/queue/items")
+        assert listed.status_code == 200
+        items = listed.json()["items"]
+        assert len(items) == 1
+        assert items[0]["status"] == "pending"
+        assert items[0]["error"] is None

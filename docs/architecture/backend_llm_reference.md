@@ -77,7 +77,7 @@ Code is the source of truth.
 | `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canvas debug file writer |
 | `backend/services/cue_helpers/*` | `generate_downbeats_and_beats` | Backend-owned cue helper generation logic |
 | `backend/services/analyzer/service.py` | `AnalyzerService` | Demand-driven analyzer HTTP polling, playback lock coordination, and frontend state relay |
-| `backend/services/analyzer/client.py` | `AnalyzerHttpClient` | HTTP calls to analyzer queue/status and playback-lock endpoints |
+| `backend/services/analyzer/client.py` | `AnalyzerHttpClient` | HTTP calls to analyzer queue status, queue CRUD, execute, and playback-lock endpoints |
 | `backend/store/pois.py` | `PoiDatabase` | POI CRUD + disk sync + runtime target lookup |
 | `backend/store/dmx_canvas.py` | `DMXCanvas` | Packed DMX frame buffer |
 | `backend/services/artnet.py` | `ArtNetService` | UDP Art-Net output |
@@ -184,7 +184,21 @@ Code is the source of truth.
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
 | `song.list` | none | emits `song_list` with backend-discoverable song names from `SongService.list_songs()` | `False` |
-| `song.load` | `filename` | validates the song id, loads the selected song into `StateManager`, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and emits `song_loaded` | `True` on success; else event `song_load_failed` and `False` |
+| `song.load` | `filename` | validates the song id, loads the selected song into `StateManager`, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and emits `song_loaded`. If analyzer `info.json` is missing, backend uses empty fallback metadata instead of failing the load. | `True` on success; else event `song_load_failed` and `False` |
+
+### Analyzer intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `analyzer.enqueue` | `task_type`, `filename?` | validates supported analyzer task type, resolves selected song id to backend `songs_path` and `meta_path`, posts a queue item to the analyzer service, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
+| `analyzer.execute` | `item_id` | posts one queued analyzer item to the analyzer execute endpoint and triggers queue-activity polling | `True` on success; else event `analyzer_execute_failed` and `False` |
+| `analyzer.execute_all` | none | reads analyzer queue items, executes each item with status `queued`, then refreshes analyzer state once | `True` when any queued item was dispatched; else `False` with event `analyzer_items_executed` carrying `count: 0` |
+| `analyzer.remove` | `item_id` | deletes one analyzer queue item and refreshes analyzer state | `True` on success; else event `analyzer_remove_failed` and `False` |
+| `analyzer.remove_all` | none | deletes every analyzer queue item whose status is not `running`, then refreshes analyzer state | `True` when any item was removed; else `False` with event `analyzer_items_removed` carrying `count: 0` |
+
+Analyzer queue state notes:
+- Backend surfaces analyzer queue item status/progress directly from analyzer HTTP responses under `state.analyzer`.
+- Analyzer startup re-queues interrupted work (`running` items and prior `failed` items with `Interrupted before completion`) back to `pending`, so the frontend should treat that case as waiting work rather than a hard failure.
 
 ### Transport intents
 
@@ -276,6 +290,17 @@ Assistant mutation behavior:
 | `info` | `song_list` | `{songs:[...]}` |
 | `info` | `song_loaded` | `{filename}` |
 | `error` | `song_load_failed` | `{reason, filename?, songs?, error?}` |
+| `info` | `analyzer_item_enqueued` | `{task_type, filename, item_id, ok}` |
+| `info` | `analyzer_item_executed` | `{item_id, ok, item}` |
+| `info` | `analyzer_items_executed` | `{item_ids:[...], count}` |
+| `info` | `analyzer_item_removed` | `{item_id, ok}` |
+| `info` | `analyzer_items_removed` | `{item_ids:[...], count}` |
+| `error` | `analyzer_enqueue_failed` | `{reason, task_type?, filename?, songs?, song_path?}` |
+| `error` | `analyzer_execute_failed` | `{reason, item_id?}` |
+| `error` | `analyzer_remove_failed` | `{reason, item_id?}` |
+
+Websocket delivery notes:
+- Snapshot/event send failures caused by disconnected clients are treated as cleanup, not as backend request failures.
 | `error` | `invalid_time_ms` | none |
 | `error` | `song_not_loaded` | none |
 | `error` | `no_sections_available` | none |

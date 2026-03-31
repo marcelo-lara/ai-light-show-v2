@@ -108,3 +108,28 @@ async def test_frontend_state_includes_parameterized_cue_helpers():
     song_draft = next((helper for helper in helpers if helper.get("id") == "song_draft"), None)
     assert song_draft is not None
     assert song_draft["mode"] == "full_song"
+
+
+@pytest.mark.asyncio
+async def test_frontend_state_handles_song_without_info_json(tmp_path: Path):
+    backend_path = Path(__file__).resolve().parents[1] / "backend"
+    songs_path = tmp_path / "songs"
+    cues_path = tmp_path / "cues"
+    meta_path = tmp_path / "meta"
+    songs_path.mkdir()
+    cues_path.mkdir()
+    meta_path.mkdir()
+    (songs_path / "ayuni.mp3").write_bytes(b"")
+
+    sm = StateManager(backend_path, songs_path, cues_path, meta_path)
+    await sm.load_fixtures(backend_path / "fixtures" / "fixtures.json")
+    await sm.load_song("ayuni")
+
+    wm = WebSocketManager(sm, object(), object())
+    payload = await build_frontend_state(wm)
+
+    assert payload["song"]["filename"] == "ayuni"
+    assert payload["song"]["bpm"] == 0.0
+    assert payload["song"]["length_s"] == 0.0
+    assert payload["song"]["beats"] == []
+    assert payload["song"]["analysis"] is None

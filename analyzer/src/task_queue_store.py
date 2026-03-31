@@ -25,15 +25,27 @@ def ensure_queue_file(queue_path: Path = QUEUE_FILE_PATH) -> Path:
 def load_items(queue_path: Path = QUEUE_FILE_PATH) -> list[dict[str, Any]]:
     with QUEUE_LOCK:
         payload = json.loads(ensure_queue_file(queue_path).read_text(encoding="utf-8"))
-        items = payload.get("items", [])
+        return payload.get("items", [])
+
+
+def recover_interrupted_items(queue_path: Path = QUEUE_FILE_PATH) -> list[dict[str, Any]]:
+    with QUEUE_LOCK:
+        items = load_items(queue_path)
         changed = False
+        timestamp = now_iso()
         for item in items:
-            if item.get("status") == "running":
-                item["status"] = "failed"
-                item["updated_at"] = now_iso()
-                item["finished_at"] = item.get("finished_at") or item["updated_at"]
-                item["error"] = "Interrupted before completion"
-                changed = True
+            is_interrupted_failure = item.get("status") == "failed" and item.get("error") == "Interrupted before completion"
+            if item.get("status") != "running" and not is_interrupted_failure:
+                continue
+            item["status"] = "pending"
+            item["updated_at"] = timestamp
+            item["pending_at"] = item.get("pending_at") or timestamp
+            item["started_at"] = None
+            item["finished_at"] = None
+            item["progress"] = None
+            item["last_result"] = None
+            item["error"] = None
+            changed = True
         if changed:
             save_items(items, queue_path)
         return items
