@@ -31,7 +31,7 @@ class _FakeStateManager:
         return {"ok": True, "removed": 5, "remaining": 0}
 
     async def apply_cue_helper(self, helper_id, params=None):
-        if helper_id in {"downbeats_and_beats", "parcan_echoes"}:
+        if helper_id in {"downbeats_and_beats", "parcan_echoes", "song_draft"}:
             return {"ok": True, "generated": 5, "replaced": 2, "skipped": 0}
         return {"ok": False, "reason": "unknown_helper_id", "helper_id": helper_id}
 

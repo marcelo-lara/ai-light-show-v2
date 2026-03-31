@@ -37,7 +37,7 @@ Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`
 | Route id | Sidebar label | View function | Current behavior |
 | --- | --- | --- | --- |
 | `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` with `SongSectionsPanel`, a placeholder cue summary panel, and a placeholder fixture-effects panel |
-| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with the shared chord progression panel and analyzer plot panels |
+| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with `SongLoaderPanel()`, `AnalyzerQueuePanel()`, and analyzer plot panels |
 | `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` with the shared chord progression panel, live cue sheet, effect picker, chaser picker, and cue helpers |
 | `dmx_control` | DMX Control | `DmxControlView()` | Renders fixture grid with dynamic controls |
 
@@ -59,6 +59,8 @@ Backend -> client message types:
 - `event`
 
 Intent names currently emitted by frontend:
+- Song: `song.list`, `song.load`
+- Analyzer: `analyzer.enqueue`, `analyzer.execute`, `analyzer.execute_all`, `analyzer.remove`, `analyzer.remove_all`
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.apply_helper`
@@ -138,8 +140,12 @@ Global bridge fields used across modules:
 - `SongSectionsPanel` highlight rule uses section bounds with a small start-time tolerance (`start_s - 0.01`): active when `timeS > (start_s - 0.01) && timeS < end_s`.
 
 ### Song Analysis
-- `src/features/song_analysis/SongAnalysisView.ts`: composes player with the shared chord progression card and analyzer plot cards.
+- `src/features/song_analysis/SongAnalysisView.ts`: composes player with `SongLoaderPanel()`, `AnalyzerQueuePanel()`, and analyzer plot cards.
 - `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats and analyzer plots from backend state and composes shared song structure data.
+- `src/features/song_analysis/song_loader/SongLoaderPanel.ts`: event-driven available-song list with confirmation before `song.load`.
+- `src/features/song_analysis/song_loader/state.ts`: local song-loader store fed by `song_list` events.
+- `src/features/song_analysis/components/AnalyzerQueuePanel.ts`: analyzer queue panel with per-item run/remove controls plus `Add to queue`, `Run all`, and `Remove All` footer actions.
+- `src/features/song_analysis/analyzer_queue_models.ts`: task labels and queue-state display labels. Pending work and recovered `Interrupted before completion` items render as waiting work instead of failure text.
 - `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel for canonical analyzer beat events, including explicit beat/downbeat type.
 
 `BeatTable.ts` exists but is not mounted by the current `SongAnalysisView()`.
@@ -219,6 +225,8 @@ Use CSS variables from `themes.css` for visual values. Do not hardcode mockup co
 Frontend UI implementation rules:
 - Use shared controls from `src/shared/components/controls` before creating primitive HTML form elements.
 - Avoid redundant wrapper elements; add containers only when they are needed for layout, accessibility, or behavior.
+- Put each panel in a dedicated folder named after that panel, and keep panel-local helpers/state in that folder instead of the feature root.
+- When a panel or component is used by multiple pages, promote it to a shared component and place it in the appropriate shared folder rather than duplicating page-local copies.
 - Keep CSS close to the owning feature or component. Do not use `src/app/themes.css` for feature-specific UI changes.
 - Display song-position and cue-time values in `s.mmm` format consistently across views and controls.
 

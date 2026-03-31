@@ -6,11 +6,12 @@ Code is the source of truth.
 ## Runtime map
 
 1. App bootstrap: `backend/main.py`
-- Creates `StateManager`, `ArtNetService`, `SongService`, `WebSocketManager`.
+- Creates `StateManager`, `ArtNetService`, `SongService`, `WebSocketManager`, and `AnalyzerService`.
 - Creates and mounts the backend MCP server at `/mcp`.
 - Loads POIs and fixtures.
 - Arms fixtures and starts Art-Net send loop.
 - Loads default song (`Yonaka - Seize the Power` if present, else first available).
+- Refreshes analyzer status once at startup and starts analyzer polling only when queue work is present.
 - Mounts songs at `/songs` and exposes websocket endpoint at `/ws`.
 
 2. WebSocket transport: `backend/api/websocket_manager/*`
@@ -75,6 +76,8 @@ Code is the source of truth.
 | `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
 | `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canvas debug file writer |
 | `backend/services/cue_helpers/*` | `generate_downbeats_and_beats` | Backend-owned cue helper generation logic |
+| `backend/services/analyzer/service.py` | `AnalyzerService` | Demand-driven analyzer HTTP polling, playback lock coordination, and frontend state relay |
+| `backend/services/analyzer/client.py` | `AnalyzerHttpClient` | HTTP calls to analyzer queue status, queue CRUD, execute, and playback-lock endpoints |
 | `backend/store/pois.py` | `PoiDatabase` | POI CRUD + disk sync + runtime target lookup |
 | `backend/store/dmx_canvas.py` | `DMXCanvas` | Packed DMX frame buffer |
 | `backend/services/artnet.py` | `ArtNetService` | UDP Art-Net output |
@@ -103,7 +106,7 @@ Code is the source of truth.
 
 2. `patch`
 - Shape: `{"type":"patch","seq":number,"changes":[{"path":[key],"value":...}]}`
-- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
+- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `analyzer`, `pois`, `cues`, `cue_helpers`, `chasers`).
 
 3. `event`
 - Shape: `{"type":"event","level":"info|warning|error","message":string,"data"?:object}`
@@ -150,6 +153,7 @@ Code is the source of truth.
 | --- | --- | --- |
 | `metadata_get_overview` | `song?` | returns song length/BPM and counts for sections, beats, chords |
 | `metadata_get_sections` | `song?` | returns normalized section rows with resolved `start_bar`, `start_beat`, `end_bar`, and `end_beat` |
+| `metadata_get_song_analysis` | `song?`, `section_name?` | returns the backend-normalized song-analysis contract, including per-section dominant parts, per-stem accents, per-stem dips, low windows, and normalized timing |
 | `metadata_get_section_analysis` | `song?`, `section_name?` | returns compact section-analysis summaries for metadata drafting, including mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` |
 | `metadata_find_section` | `section_name`, `song?` | returns one exact section row by section name |
 | `metadata_get_beats` | `song?`, `start_time?`, `end_time?` | returns beat rows from backend metadata, optionally time-filtered; each row includes `time`, `bar`, `beat`, optional `bass`/`chord`, and `type` (`beat` or `downbeat`) |
@@ -180,15 +184,29 @@ Code is the source of truth.
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
 | `song.list` | none | emits `song_list` with backend-discoverable song names from `SongService.list_songs()` | `False` |
-| `song.load` | `filename` | validates the song id, loads the selected song into `StateManager`, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and emits `song_loaded` | `True` on success; else event `song_load_failed` and `False` |
+| `song.load` | `filename` | validates the song id, loads the selected song into `StateManager`, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and emits `song_loaded`. If analyzer `info.json` is missing, backend uses empty fallback metadata instead of failing the load. | `True` on success; else event `song_load_failed` and `False` |
+
+### Analyzer intents
+
+| Intent | Payload keys | Behavior | Returns |
+| --- | --- | --- | --- |
+| `analyzer.enqueue` | `task_type`, `filename?` | validates supported analyzer task type, resolves selected song id to backend `songs_path` and `meta_path`, posts a queue item to the analyzer service, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
+| `analyzer.execute` | `item_id` | posts one queued analyzer item to the analyzer execute endpoint and triggers queue-activity polling | `True` on success; else event `analyzer_execute_failed` and `False` |
+| `analyzer.execute_all` | none | reads analyzer queue items, executes each item with status `queued`, then refreshes analyzer state once | `True` when any queued item was dispatched; else `False` with event `analyzer_items_executed` carrying `count: 0` |
+| `analyzer.remove` | `item_id` | deletes one analyzer queue item and refreshes analyzer state | `True` on success; else event `analyzer_remove_failed` and `False` |
+| `analyzer.remove_all` | none | deletes every analyzer queue item whose status is not `running`, then refreshes analyzer state | `True` when any item was removed; else `False` with event `analyzer_items_removed` carrying `count: 0` |
+
+Analyzer queue state notes:
+- Backend surfaces analyzer queue item status/progress directly from analyzer HTTP responses under `state.analyzer`.
+- Analyzer startup clears persisted queue items before queue HTTP state is served, so backend should expect an empty analyzer queue after analyzer restarts.
 
 ### Transport intents
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `transport.play` | none | `set_playback_state(True)`, start backend playback ticker, enable continuous Art-Net send | `True` |
-| `transport.pause` | none | `set_playback_state(False)`, stop backend playback ticker, disable continuous send | `True` |
-| `transport.stop` | none | pause + stop ticker + seek `0` + blackout output universe + push Art-Net + disable continuous send | `True` |
+| `transport.play` | none | refresh analyzer status; if analyzer reports any `running` item, emit `transport_play_blocked` and return `False`; otherwise set analyzer playback lock, stop analyzer polling, set playback state, start backend playback ticker, and enable continuous Art-Net send | `True` on success, else `False` |
+| `transport.pause` | none | `set_playback_state(False)`, stop backend playback ticker, disable continuous send, release analyzer playback lock, resume analyzer polling only when queued work remains | `True` |
+| `transport.stop` | none | pause + stop ticker + seek `0` + blackout output universe + push Art-Net + disable continuous send + release analyzer playback lock + resume analyzer polling only when queued work remains | `True` |
 | `transport.jump_to_time` | `time_ms`, `sync?` | seek to `max(0, time_ms/1000)` and push output universe; `sync=true` is used by the running browser clock and suppresses websocket patch broadcasts | `True` on user seek, `False` on no-op or `sync=true`, else event `invalid_time_ms` and `False` |
 | `transport.jump_to_section` | `section_index` | sort sections by normalized start (`start_s|start`), seek to selected section start, then push output universe | `True` on valid index; else event `invalid_section_index`/`section_index_out_of_range`/`no_sections_available`/`song_not_loaded` and `False` |
 
@@ -227,7 +245,7 @@ Notes on `fixture.set_values`:
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
-| `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id | `True` on success; else event `cue_helper_apply_failed` and `False` |
+| `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id. Helper id `song_draft` uses the backend song-analysis contract and active fixture/POI state to build a first-pass show draft. | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 Notes on cue persistence:
 - Matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) are de-duplicated within `100ms`, keeping the latest write instead of persisting duplicates.
@@ -272,6 +290,17 @@ Assistant mutation behavior:
 | `info` | `song_list` | `{songs:[...]}` |
 | `info` | `song_loaded` | `{filename}` |
 | `error` | `song_load_failed` | `{reason, filename?, songs?, error?}` |
+| `info` | `analyzer_item_enqueued` | `{task_type, filename, item_id, ok}` |
+| `info` | `analyzer_item_executed` | `{item_id, ok, item}` |
+| `info` | `analyzer_items_executed` | `{item_ids:[...], count}` |
+| `info` | `analyzer_item_removed` | `{item_id, ok}` |
+| `info` | `analyzer_items_removed` | `{item_ids:[...], count}` |
+| `error` | `analyzer_enqueue_failed` | `{reason, task_type?, filename?, songs?, song_path?}` |
+| `error` | `analyzer_execute_failed` | `{reason, item_id?}` |
+| `error` | `analyzer_remove_failed` | `{reason, item_id?}` |
+
+Websocket delivery notes:
+- Snapshot/event send failures caused by disconnected clients are treated as cleanup, not as backend request failures.
 | `error` | `invalid_time_ms` | none |
 | `error` | `song_not_loaded` | none |
 | `error` | `no_sections_available` | none |

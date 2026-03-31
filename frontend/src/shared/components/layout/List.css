@@ -7,16 +7,14 @@
 .o-list-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+  gap: 4px;
   white-space: nowrap;
   transition: color 50ms ease;
 }
 
 .o-list-content {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -24,8 +22,7 @@
 /* Consumers often pass a wrapper div with cells; keep it flex so u-cell flex sizing is effective. */
 .o-list-content > div {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
   flex: 1 1 auto;
 }

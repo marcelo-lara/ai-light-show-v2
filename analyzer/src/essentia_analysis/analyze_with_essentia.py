@@ -7,6 +7,7 @@ from typing import Any, Dict
 import essentia.standard as es
 import numpy as np
 
+from ..progress import ProgressCallback, emit_stage
 from .common import to_jsonable, warn
 from .extract_rhythm_descriptors import extract_rhythm_descriptors
 from .plot_essentia_analysis import (
@@ -24,13 +25,48 @@ def analyze_with_essentia(
     part_name: str,
     sample_rate: int | None = None,
     artifact_file_stems: dict[str, str] | None = None,
+    progress_callback: ProgressCallback | None = None,
 ) -> Dict[str, Any]:
     artifact_file_stems = artifact_file_stems or {}
+    stages = [
+        "Load Audio",
+        "Extract Key",
+        "Extract Rhythm",
+        "Detect Onsets",
+        "Beat Loudness",
+        "Loudness & Envelope",
+        "Chroma HPCP",
+        "Mel Bands",
+        "Spectral Centroid",
+        "Build Artifacts",
+        "Write Rhythm JSON",
+        "Write Loudness Envelope JSON",
+        "Write Chroma HPCP JSON",
+        "Write Mel Bands JSON",
+        "Write Spectral Centroid JSON",
+        "Plot Rhythm",
+        "Plot Loudness Envelope",
+        "Plot Chroma HPCP",
+        "Plot Mel Bands",
+        "Plot Spectral Centroid",
+    ]
+    step_total = len(stages)
+
+    def report(stage: str) -> None:
+        emit_stage(
+            progress_callback,
+            "essentia-analysis",
+            stage,
+            stages.index(stage) + 1,
+            step_total,
+            part_name=part_name,
+        )
 
     def artifact_path(name: str, suffix: str) -> Path:
         file_stem = artifact_file_stems.get(name, name)
         return Path(out_dir) / f"{file_stem}.{suffix}"
 
+    report("Load Audio")
     loader = es.AudioLoader(filename=audio_path)
     audio, sr, *_ = loader()
     duration = len(audio) / sr
@@ -48,6 +84,7 @@ def analyze_with_essentia(
     hop_size = 512
     spectrum_size = (frame_size // 2) + 1
 
+    report("Extract Key")
     key = "unknown"
     scale = "unknown"
     key_strength = 0.0
@@ -57,6 +94,7 @@ def analyze_with_essentia(
     except Exception as exc:
         warn(f"Key extraction failed: {exc}")
 
+    report("Extract Rhythm")
     rhythm_descriptors = extract_rhythm_descriptors(audio)
     beats = np.array(rhythm_descriptors.get("beats_position", []), dtype=np.float32)
     beats_intervals = np.array(rhythm_descriptors.get("bpm_intervals", []), dtype=np.float32)
@@ -64,6 +102,7 @@ def analyze_with_essentia(
     beats_confidence = float(rhythm_descriptors.get("confidence", 0.0))
     downbeats = beats[::4] if len(beats) >= 4 else beats
 
+    report("Detect Onsets")
     onsets = []
     onset_rate_values = []
     try:
@@ -84,6 +123,7 @@ def analyze_with_essentia(
     except Exception as exc:
         warn(f"Onset detection failed: {exc}")
 
+    report("Beat Loudness")
     beat_loudness = []
     rms = es.RMS()
     for i, beat_time in enumerate(beats):
@@ -100,6 +140,7 @@ def analyze_with_essentia(
     windowing = es.Windowing(type="hann")
 
     # Loudness & Envelope
+    report("Loudness & Envelope")
     loudness_values = []
     envelope_values = []
     loudness_alg = es.Loudness()
@@ -109,6 +150,7 @@ def analyze_with_essentia(
         envelope_values.append(to_jsonable(envelope_alg(frame)))
 
     # Chroma HPCP
+    report("Chroma HPCP")
     hpcp_values = []
     spectral_peaks_alg = es.SpectralPeaks(sampleRate=sr)
     hpcp_alg = es.HPCP(size=12, referenceFrequency=440, harmonics=8, minFrequency=40, maxFrequency=5000, sampleRate=sr)
@@ -120,6 +162,7 @@ def analyze_with_essentia(
         hpcp_values.append(to_jsonable(hpcp))
 
     # Mel-Frequency Bands
+    report("Mel Bands")
     mel_bands_values = []
     mel_bands_alg = es.MelBands(numberBands=40, sampleRate=sr, inputSize=spectrum_size)
     for frame in es.FrameGenerator(audio, frameSize=frame_size, hopSize=hop_size, startFromZero=True):
@@ -128,6 +171,7 @@ def analyze_with_essentia(
         mel_bands_values.append(to_jsonable(mel_bands))
 
     # Spectral Centroid
+    report("Spectral Centroid")
     centroid_values = []
     centroid_alg = es.Centroid()
     for frame in es.FrameGenerator(audio, frameSize=frame_size, hopSize=hop_size, startFromZero=True):
@@ -209,13 +253,23 @@ def analyze_with_essentia(
     }
 
     # Write each artifact JSON
+    report("Build Artifacts")
+    write_stages = {
+        "rhythm": "Write Rhythm JSON",
+        "loudness_envelope": "Write Loudness Envelope JSON",
+        "chroma_hpcp": "Write Chroma HPCP JSON",
+        "mel_bands": "Write Mel Bands JSON",
+        "spectral_centroid": "Write Spectral Centroid JSON",
+    }
     for artifact_name, data in artifacts.items():
+        report(write_stages[artifact_name])
         json_path = artifact_path(artifact_name, "json")
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(to_jsonable(data), f, indent=2)
 
     # Plot each artifact
     try:
+        report("Plot Rhythm")
         plot_essentia_analysis(
             audio,
             sr,
@@ -228,6 +282,7 @@ def analyze_with_essentia(
     except Exception as exc:
         warn(f"Rhythm plotting failed: {exc}")
     try:
+        report("Plot Loudness Envelope")
         plot_loudness_envelope(
             artifacts["loudness_envelope"]["times"],
             artifacts["loudness_envelope"]["loudness"],
@@ -237,6 +292,7 @@ def analyze_with_essentia(
     except Exception as exc:
         warn(f"Loudness envelope plotting failed: {exc}")
     try:
+        report("Plot Chroma HPCP")
         plot_chroma_hpcp(
             artifacts["chroma_hpcp"]["times"],
             artifacts["chroma_hpcp"]["hpcp"],
@@ -245,6 +301,7 @@ def analyze_with_essentia(
     except Exception as exc:
         warn(f"Chroma HPCP plotting failed: {exc}")
     try:
+        report("Plot Mel Bands")
         plot_mel_bands(
             artifacts["mel_bands"]["times"],
             artifacts["mel_bands"]["mel_bands"],
@@ -254,6 +311,7 @@ def analyze_with_essentia(
         warn(f"Mel bands plotting failed: {exc}")
         # Create a dummy SVG or skip
     try:
+        report("Plot Spectral Centroid")
         plot_spectral_centroid(
             artifacts["spectral_centroid"]["times"],
             artifacts["spectral_centroid"]["centroid"],

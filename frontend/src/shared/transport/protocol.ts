@@ -49,6 +49,13 @@ export type IntentMsg = {
 };
 
 export type IntentName =
+  | "song.list"
+  | "song.load"
+  | "analyzer.enqueue"
+  | "analyzer.execute"
+  | "analyzer.execute_all"
+  | "analyzer.remove"
+  | "analyzer.remove_all"
   | "transport.play"
   | "transport.pause"
   | "transport.stop"
@@ -93,10 +100,53 @@ export type BackendState = {
   };
   fixtures?: Record<string, FixtureState>;
   song?: SongState | null;
+  analyzer?: AnalyzerState;
   pois?: Poi[];
   cues?: CueEntry[];
   cue_helpers?: CueHelperDefinition[];
   chasers?: ChaserDefinition[];
+};
+
+export type AnalyzerProgress = {
+  task_type?: string;
+  stage?: string;
+  step_current?: number;
+  step_total?: number;
+  message?: string;
+  part_name?: string;
+};
+
+export type AnalyzerQueueItem = {
+  item_id: string;
+  task_type: string;
+  params?: Record<string, unknown>;
+  status: "queued" | "pending" | "running" | "complete" | "failed" | string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  queued_at?: string | null;
+  pending_at?: string | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+  progress?: AnalyzerProgress | null;
+  last_result?: Record<string, unknown> | null;
+  error?: string | null;
+};
+
+export type AnalyzerSummary = {
+  queued?: number;
+  pending?: number;
+  running?: number;
+  complete?: number;
+  failed?: number;
+};
+
+export type AnalyzerState = {
+  available?: boolean;
+  polling?: boolean;
+  playback_locked?: boolean;
+  error?: string | null;
+  items?: AnalyzerQueueItem[];
+  summary?: AnalyzerSummary;
 };
 
 export type CueEntryBase = {

@@ -23,7 +23,6 @@ export type SongPlayerUi = {
 	songLabelEl: HTMLElement;
 	barBeatEl: HTMLElement;
 	positionEl: HTMLElement;
-	playPauseBtn: HTMLButtonElement;
 	updatePlayPauseIcon: (playing: boolean) => void;
 	zoomInput: HTMLInputElement;
 	showRegionsInput: HTMLInputElement;
@@ -43,7 +42,6 @@ export function buildSongPlayerUi(callbacks: SongPlayerUiCallbacks): SongPlayerU
 		container: transportContainer,
 		prevSectionBtn,
 		prevBeatBtn,
-		playPauseBtn,
 		nextBeatBtn,
 		nextSectionBtn,
 		updatePlayPauseIcon,
@@ -89,7 +87,6 @@ export function buildSongPlayerUi(callbacks: SongPlayerUiCallbacks): SongPlayerU
 		songLabelEl: songLabel,
 		barBeatEl,
 		positionEl,
-		playPauseBtn,
 		updatePlayPauseIcon,
 		zoomInput: zoomSlider,
 		showRegionsInput: showSectionsToggle,

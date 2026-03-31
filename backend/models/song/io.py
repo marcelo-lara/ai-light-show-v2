@@ -7,13 +7,21 @@ from .sections import Sections
 
 def load_meta_data(song_dir: Path, song_id: str) -> Meta:
     info_path = song_dir / "info.json"
+    beats_file = str(song_dir / "beats.json")
     if not info_path.exists():
-        raise FileNotFoundError(f"Missing info.json at {info_path}")
+        return Meta(
+            song_name=song_id,
+            bpm=0.0,
+            duration=0.0,
+            beats_file=beats_file,
+            song_key="",
+            artifacts={},
+        )
         
     with open(info_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
         
-    beats_file = data.get("beats_file", str(song_dir / "beats.json"))
+    beats_file = data.get("beats_file", beats_file)
         
     return Meta(
         song_name=data.get("song_name", song_id),

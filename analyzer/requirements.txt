@@ -1,3 +1,6 @@
 demucs
 librosa
 matplotlib
+transformers
+fastapi
+uvicorn[standard]

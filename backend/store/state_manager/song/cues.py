@@ -305,7 +305,16 @@ class StateSongCueMixin:
 
             beats = self.current_song.beats.beats if self.current_song.beats and self.current_song.beats.beats else []
             try:
-                new_entries = generate_cue_helper_entries(helper_id, beats=beats, bpm=bpm, params=params)
+                new_entries = generate_cue_helper_entries(
+                    helper_id,
+                    beats=beats,
+                    bpm=bpm,
+                    params=params,
+                    song=self.current_song,
+                    fixtures=list(self.fixtures),
+                    pois=list(self.pois),
+                    supported_effects=self._fixture_supported_effects,
+                )
             except ValueError as exc:
                 return {"ok": False, "reason": str(exc), "helper_id": helper_id}
 

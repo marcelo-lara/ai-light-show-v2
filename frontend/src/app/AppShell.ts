@@ -19,7 +19,12 @@ type MainViewHandle = {
 };
 
 function staticView(root: HTMLElement): MainViewHandle {
-	return { root };
+	return {
+		root,
+		dispose: () => {
+			(root as unknown as { _cleanup?: () => void })._cleanup?.();
+		},
+	};
 }
 
 function renderMain(): MainViewHandle {

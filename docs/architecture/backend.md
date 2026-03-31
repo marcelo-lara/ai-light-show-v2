@@ -9,7 +9,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 - `backend/api/websocket_manager/endpoint.py`: websocket accept/read loop.
 - `backend/api/websocket_manager/messaging.py`: inbound message handling and event/snapshot sends.
 - `backend/api/websocket_manager/broadcasting.py`: throttled patch broadcasts.
-- `backend/api/intents/*`: intent registry + action handlers (`song`, `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm` domains).
+- `backend/api/intents/*`: intent registry + action handlers (`song`, `analyzer`, `transport`, `fixture`, `cue`, `chaser`, `poi`, `llm` domains).
 - `backend/store/state.py`: compatibility export for `StateManager`, `FPS`, and `MAX_SONG_SECONDS`.
 - `backend/store/state_manager/manager.py`: `StateManager` mixin composition root.
 - `backend/store/state_manager/core/*`: bootstrap, fixture/POI store operations, metadata helpers, render wrappers.
@@ -19,6 +19,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 - `backend/store/dmx_canvas.py`: memory-efficient DMX frame buffer.
 - `backend/store/pois.py`: POI persistence and runtime lookup.
 - `backend/services/artnet.py`: Art-Net sender loop.
+- `backend/services/analyzer/*`: analyzer HTTP client and playback-aware polling/lock coordinator.
 
 Compatibility exports:
 - `backend/api/websocket.py` re-exports websocket manager entrypoints.
@@ -57,16 +58,32 @@ Behavior:
 4. Start Art-Net send loop.
 5. Load default song and pre-render canvas.
 6. Sync initial output universe.
-7. Serve the mounted MCP endpoint from the same process so MCP clients share live backend state.
+7. Refresh analyzer status once at startup, and start analyzer polling only when queue work is present so the idle backend does not keep a standing analyzer poll loop.
+8. Serve the mounted MCP endpoint from the same process so MCP clients share live backend state.
+9. Websocket snapshot/event sends treat write failures as disconnect cleanup, so stale browser sockets are removed instead of surfacing ASGI websocket errors.
 
 ### Playback and time sync
 
 - Browser timeline is the authoritative clock and keeps backend timecode aligned on a short cadence while playback is running, while backend advances playback timecode continuously between sync updates.
 - Song intents: `song.list|load`.
+- Analyzer intents: `analyzer.enqueue|execute|execute_all|remove|remove_all`.
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
+- `transport.play` blocks when analyzer reports any queue item in `running` state.
+- `analyzer.enqueue` and `analyzer.execute` both trigger queue-activity refresh so demand-driven analyzer polling resumes as soon as work is created or scheduled.
+- `analyzer.execute_all` scans the current analyzer queue for `queued` items, posts execute requests for those items, and then refreshes analyzer state.
+- `analyzer.remove_all` scans the current analyzer queue, deletes every non-running item, and then refreshes analyzer state.
+- During playback, backend stops analyzer polling and keeps the analyzer worker locked through the analyzer HTTP runtime.
+- When playback pauses, stops, or naturally reaches song end, backend releases the analyzer playback lock and resumes polling only if queued analyzer work remains.
 - `jump_to_time` seeks and applies nearest precomputed frame.
 - `jump_to_section` resolves `payload.section_index` against sections sorted by normalized start time (`start_s|start`), seeks to the section start time, and applies the nearest precomputed frame.
 - `transport.stop` applies blackout by zeroing output universe before Art-Net update.
+
+### Analyzer relay state
+
+- Frontend snapshots and patches include a top-level `analyzer` object.
+- `analyzer` contains analyzer service availability, backend polling state, playback lock state, queue items, and per-status summary counts.
+- Backend relays analyzer queue items exactly as reported by the analyzer service. Analyzer startup clears persisted queue items before queue status is served, so backend sees an empty analyzer queue after analyzer restarts.
+- Backend only keeps that analyzer state refreshed while playback is idle and analyzer queue work is active.
 
 ### Section metadata normalization
 
@@ -87,6 +104,13 @@ Behavior:
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
 - `song.list` emits an event with the available backend song names and does not broadcast state.
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
+- When analyzer `info.json` is missing for the selected song, `song.load` falls back to empty metadata (`bpm=0`, `duration=0`, default beats path, empty artifacts) so the backend can still load the song and emit a valid snapshot.
+- `analyzer.enqueue` validates `payload.task_type` and selected song id, derives analyzer `song_path` and `meta_path` from backend song paths, posts a new analyzer queue item, and broadcasts the refreshed analyzer snapshot.
+- `analyzer.execute` validates `payload.item_id`, posts one queued item to the analyzer execute endpoint, and broadcasts the refreshed analyzer snapshot.
+- `analyzer.execute_all` executes every queue item currently marked `queued` and broadcasts the refreshed analyzer snapshot.
+- `analyzer.remove` validates `payload.item_id`, deletes that analyzer queue item, and broadcasts the refreshed analyzer snapshot.
+- `analyzer.remove_all` deletes every analyzer queue item except items currently marked `running`, then broadcasts the refreshed analyzer snapshot.
+- Analyzer mutation failures (`enqueue|execute|remove|remove_all`) emit analyzer error events instead of closing the websocket request path.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, and `cue.apply_helper`.
 - The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, and full-sheet replace.
 - The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, section windows with resolved musical positions, and section-analysis summaries for metadata drafting.
@@ -149,7 +173,7 @@ Current mounted MCP tools:
 - `songs_list`, `songs_get_details`, `songs_load`
 - `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
 - `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
-- `metadata_get_overview`, `metadata_get_sections`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
+- `metadata_get_overview`, `metadata_get_sections`, `metadata_get_song_analysis`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - `transport_get_cursor`
 
 Mutation tools schedule websocket patch broadcasts after state changes so browser clients remain synchronized with MCP-originated edits.
@@ -161,7 +185,10 @@ Serialized fixture payloads expose `supported_effects` as rich effect objects wi
 Frontend consumers should treat each `supported_effects[]` entry as a metadata object. `id` is the stable effect identifier for intent payloads and parameter-schema lookup, and `name` is the display label.
 
 `transport_get_cursor` returns the current timecode, nearest and next beat positions, the active `section_name` when the cursor is inside a labeled section, and `next_section_name` when the cursor is before the next section boundary.
+`metadata_get_song_analysis` returns the backend-normalized song-analysis contract used by draft generation. It keeps analyzer-file specifics behind one backend boundary and exposes section timing plus per-stem accents, dips, low windows, and dominant-part summaries.
 `metadata_get_section_analysis` summarizes each section with mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` so the assistant can draft grounded descriptions and hints.
+
+`cue.apply_helper` includes helper id `song_draft`, which generates a backend-owned draft cue sheet from analyzer timing/features and the active rig's supported effects and POI coverage.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.

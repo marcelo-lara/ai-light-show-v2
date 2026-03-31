@@ -34,7 +34,6 @@ export class SongPlayerController {
 
   private barBeatEl: HTMLElement;
   private positionEl: HTMLElement;
-  private playPauseBtn: HTMLButtonElement;
   private updatePlayPauseIcon: (playing: boolean) => void;
   private zoomInput: HTMLInputElement;
   private showRegionsInput: HTMLInputElement;
@@ -88,7 +87,6 @@ export class SongPlayerController {
     this.root = ui.root;
     this.barBeatEl = ui.barBeatEl;
     this.positionEl = ui.positionEl;
-    this.playPauseBtn = ui.playPauseBtn;
     this.updatePlayPauseIcon = ui.updatePlayPauseIcon;
     this.zoomInput = ui.zoomInput;
     this.showRegionsInput = ui.showRegionsInput;
@@ -222,7 +220,7 @@ export class SongPlayerController {
       transportPlay();
     } catch {
       this.isPlaying = false;
-      this.playPauseBtn.textContent = "Play";
+      this.updatePlayPauseIcon(false);
     }
   }
 
@@ -233,7 +231,7 @@ export class SongPlayerController {
     this.waveSurferManager.setTime(0);
     this.localTimeMs = 0;
     this.renderReadout();
-    this.playPauseBtn.textContent = "Play";
+    this.updatePlayPauseIcon(false);
     transportStop();
     this.implicitLoopSectionIndex = null;
   }
