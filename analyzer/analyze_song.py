@@ -13,6 +13,7 @@ from src.beat_finder import find_beats_and_downbeats
 from src.essentia_analysis import analyze_with_essentia, build_loudness_hints
 from src.essentia_analysis.common import is_stem_worth_analyzing
 from src.generate_md import generate_md_file
+from src.musical_structure import find_chords, find_sections
 from src.moises import import_moises
 from src.progress import ProgressCallback, emit_stage
 from src.song_features import find_song_features
@@ -73,6 +74,24 @@ def _merge_json_file(path: Path, updates: dict) -> None:
 
 def _meta_file_path(song_path: str | Path, meta_path: str | Path) -> Path:
     return _song_meta_dir(song_path, meta_path) / "info.json"
+
+
+def _musical_structure_payload(output: dict[str, Any], artifact_key: str) -> dict[str, Any]:
+    return {
+        "method": output.get("method"),
+        "confidence": output.get("confidence"),
+        "attempts": output.get("attempts"),
+        "inputs": output.get("inputs"),
+        "candidates": output.get("candidates"),
+        "artifact": output.get(artifact_key),
+    }
+
+
+def _merge_musical_structure_info(song_path: Path, meta_path: str | Path, key: str, output: dict[str, Any], artifact_key: str) -> None:
+    _merge_json_file(
+        _meta_file_path(song_path, meta_path),
+        {"musical_structure_inference": {key: _musical_structure_payload(output, artifact_key)}},
+    )
 
 
 def _moises_dir(song_path: str | Path, meta_path: str | Path) -> Path:
@@ -500,6 +519,61 @@ def run_generate_md_for(
         return None
 
 
+def run_find_chords_for(
+    song_path: Path,
+    meta_path: str | Path = META_PATH,
+    output_name: str = "beats.json",
+    progress_callback: ProgressCallback | None = None,
+) -> dict[str, Any] | None:
+    print(f"Finding chords for {song_path.name}")
+    step_total = 3
+    try:
+        emit_stage(progress_callback, "find_chords", "Start", 1, step_total)
+        emit_stage(progress_callback, "find_chords", "Infer Chords", 2, step_total)
+        output = find_chords(song_path, meta_path=meta_path, temp_files_root=TEMP_FILES_FOLDER, output_name=output_name)
+        if output is None:
+            warn(f"Could not infer chords for {song_path.stem}")
+            return None
+        _merge_musical_structure_info(song_path, meta_path, "chords", output, "beats_file")
+        if output_name == "beats.json":
+            _merge_json_file(
+                _meta_file_path(song_path, meta_path),
+                {"artifacts": {"beats_file": output["beats_file"]}, "musical_structure_inference": {"chords": {"bass_confidence": output.get("bass_confidence")}}},
+            )
+        emit_stage(progress_callback, "find_chords", "Complete", 3, step_total)
+        print("Chord inference complete. Output:", output["beats_file"])
+        return output
+    except Exception as e:
+        emit_stage(progress_callback, "find_chords", "Failed", step_total, step_total)
+        warn(f"Find chords failed: {e}")
+        return None
+
+
+def run_find_sections_for(
+    song_path: Path,
+    meta_path: str | Path = META_PATH,
+    output_name: str = "sections.json",
+    progress_callback: ProgressCallback | None = None,
+) -> dict[str, Any] | None:
+    print(f"Finding sections for {song_path.name}")
+    step_total = 3
+    try:
+        emit_stage(progress_callback, "find_sections", "Start", 1, step_total)
+        emit_stage(progress_callback, "find_sections", "Infer Sections", 2, step_total)
+        output = find_sections(song_path, meta_path=meta_path, output_name=output_name)
+        if output is None:
+            warn(f"Could not infer sections for {song_path.stem}")
+            return None
+        _merge_musical_structure_info(song_path, meta_path, "sections", output, "sections_file")
+        emit_stage(progress_callback, "find_sections", "Complete", 3, step_total)
+        print("Section inference complete. Output:", output["sections_file"])
+        return output
+    except Exception as e:
+        emit_stage(progress_callback, "find_sections", "Failed", step_total, step_total)
+        warn(f"Find sections failed: {e}")
+        return None
+
+
 def run_find_song_features_for(
     song_path: Path,
     meta_path: str | Path = META_PATH,
@@ -574,11 +648,15 @@ def main() -> int:
     parser.add_argument("--beat-finder", action="store_true", help="Run beat finder")
     parser.add_argument("--essentia-analysis", action="store_true", help="Run Essentia analysis")
     parser.add_argument("--find-song-features", action="store_true", help="Generate song feature metadata")
+    parser.add_argument("--find-chords", action="store_true", help="Infer chord labels onto beats metadata")
+    parser.add_argument("--find-sections", action="store_true", help="Infer song section labels")
     parser.add_argument("--import-moises", action="store_true", help="Import Moises chords")
     parser.add_argument("--generate-md", action="store_true", help="Generate markdown from sections metadata")
+    parser.add_argument("--beats-output-name", type=str, default="beats.json", help="Output file name for chord inference")
+    parser.add_argument("--sections-output-name", type=str, default="sections.json", help="Output file name for section inference")
     args = parser.parse_args()
 
-    if not any([args.split_stems, args.beat_finder, args.essentia_analysis, args.find_song_features, args.import_moises, args.generate_md]):
+    if not any([args.split_stems, args.beat_finder, args.essentia_analysis, args.find_song_features, args.find_chords, args.find_sections, args.import_moises, args.generate_md]):
         current_song = resolve_song(args.song)
     else:
         current_song = resolve_song(args.song)
@@ -588,7 +666,7 @@ def main() -> int:
 
     device = autodetect_device()
 
-    if args.split_stems or args.beat_finder or args.essentia_analysis or args.find_song_features or args.import_moises or args.generate_md:
+    if args.split_stems or args.beat_finder or args.essentia_analysis or args.find_song_features or args.find_chords or args.find_sections or args.import_moises or args.generate_md:
         if not current_song.exists():
             warn(f"Song file does not exist: {current_song}")
             return 1
@@ -600,6 +678,10 @@ def main() -> int:
             run_essentia_analysis_for(current_song)
         if args.find_song_features:
             run_find_song_features_for(current_song)
+        if args.find_chords:
+            run_find_chords_for(current_song, output_name=args.beats_output_name)
+        if args.find_sections:
+            run_find_sections_for(current_song, output_name=args.sections_output_name)
         if args.import_moises:
             run_import_moises_for(current_song)
         if args.generate_md:
@@ -613,13 +695,15 @@ def main() -> int:
         print("2. Beat Finder")
         print("3. Essentia Analysis")
         print("4. Find Song Features")
-        print("5. Compare Beat Times")
-        print("6. Import Moises Chords")
-        print("7. Generate MD file")
-        print("8. Analyze All Songs")
-        print("9. Exit (Esc also exits)")
+        print("5. Find Chords")
+        print("6. Find Sections")
+        print("7. Compare Beat Times")
+        print("8. Import Moises Chords")
+        print("9. Generate MD file")
+        print("10. Analyze All Songs")
+        print("11. Exit (Esc also exits)")
         choice = input("Choose an option: ").strip()
-        if _is_escape_input(choice) or choice == "9":
+        if _is_escape_input(choice) or choice == "11":
             print("Exiting.")
             break
         if choice == "0":
@@ -651,15 +735,25 @@ def main() -> int:
             if not current_song.exists():
                 warn(f"Current song file does not exist: {current_song}")
                 continue
-            run_compare_beat_times_for(current_song)
+            run_find_chords_for(current_song)
         elif choice == "6":
-            run_import_moises_for(current_song)
+            if not current_song.exists():
+                warn(f"Current song file does not exist: {current_song}")
+                continue
+            run_find_sections_for(current_song)
         elif choice == "7":
             if not current_song.exists():
                 warn(f"Current song file does not exist: {current_song}")
                 continue
-            run_generate_md_for(current_song)
+            run_compare_beat_times_for(current_song)
         elif choice == "8":
+            run_import_moises_for(current_song)
+        elif choice == "9":
+            if not current_song.exists():
+                warn(f"Current song file does not exist: {current_song}")
+                continue
+            run_generate_md_for(current_song)
+        elif choice == "10":
             analyze_all_songs(device=device)
         else:
             warn("Invalid choice")

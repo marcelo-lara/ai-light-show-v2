@@ -16,6 +16,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - `src/split_stems.py`: Demucs-based stem extraction.
 - `src/essentia_analysis/`: Essentia feature extraction and plotting helpers.
 - `src/song_features/`: synthesizes LLM-facing song features from analyzer artifacts, beat-window stem accents, per-part relative dips, merged section-level low windows, optional music-model tags, and Essentia TensorFlow model outputs when that runtime is available.
+- `src/musical_structure/`: Hugging Face-backed chord and section inference, comparison helpers, and model registry.
 
 ## Progress callbacks
 
@@ -93,6 +94,18 @@ Interactive option `4. Find Song Features` builds `features.json` for the select
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --essentia-analysis --beat-finder
 ```
 
+To validate chord inference against the canonical Yonaka beat metadata, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --find-chords --beats-output-name test.beats.json
+```
+
+To validate section inference against the canonical Yonaka section metadata, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --find-sections --sections-output-name test.sections.json
+```
+
 To validate Moises import and section/materialized metadata generation, run:
 
 ```bash
@@ -122,7 +135,17 @@ docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the P
 - `--beat-finder`: run beat/downbeat extraction.
 - `--essentia-analysis`: run Essentia analysis bundle.
 - `--find-song-features`: synthesize LLM-facing feature metadata from analyzer outputs.
+- `--find-chords`: run Hugging Face chord inference and write beat-aligned chord labels.
+- `--find-sections`: run Hugging Face section inference and write `sections.json` rows.
 - `--generate-md`: render the per-song markdown summary from `sections.json`.
+
+Chord inference requires an existing `beats.json`. If it is missing, the analyzer warns and returns `None`. Bass inference uses `analyzer/temp_files/htdemucs/<song>/bass.wav` when present; if the bass stem is missing, the analyzer warns and keeps going with mix-only chord inference.
+
+Section inference also requires an existing `beats.json`. If no section models are configured or all configured models fail, the analyzer warns and returns `None`.
+
+Model retries are registry-driven. The analyzer tries the configured candidates in order and stops on the first successful model output. The default chord model is `andrewmcgill04/ast-finetuned-audioset-10-10-0.4593-chordy`. The default section model is `ArseniiChstiakovml/MusicSectionDetection`. Override or extend them through `ANALYZER_FIND_CHORDS_MODELS_JSON` and `ANALYZER_FIND_SECTIONS_MODELS_JSON`.
+
+Every successful chord or section run also updates `info.json` with a `musical_structure_inference` object that records the selected method, confidence summary, candidate attempts, inputs, and output artifact path.
 
 ## Contract with other modules
 

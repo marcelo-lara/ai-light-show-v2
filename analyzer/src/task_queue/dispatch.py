@@ -12,6 +12,8 @@ TASK_TYPES = {
     "beat-finder",
     "essentia-analysis",
     "find-song-features",
+    "find_chords",
+    "find_sections",
     "import-moises",
     "generate-md",
 }
@@ -52,6 +54,12 @@ def run_task(task_type: str, params: dict[str, Any], progress_callback: Progress
         result = analyze_song.run_essentia_analysis_for(song_path, meta_path=meta_path, progress_callback=progress_callback)
     elif task_type == "find-song-features":
         result = analyze_song.run_find_song_features_for(song_path, meta_path=meta_path, progress_callback=progress_callback)
+    elif task_type == "find_chords":
+        output_name = params.get("output_name", "beats.json")
+        result = analyze_song.run_find_chords_for(song_path, meta_path=meta_path, output_name=output_name, progress_callback=progress_callback)
+    elif task_type == "find_sections":
+        output_name = params.get("output_name", "sections.json")
+        result = analyze_song.run_find_sections_for(song_path, meta_path=meta_path, output_name=output_name, progress_callback=progress_callback)
     elif task_type == "import-moises":
         result = analyze_song.run_import_moises_for(song_path, meta_path=meta_path, progress_callback=progress_callback)
     else:
