@@ -11,10 +11,37 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 ## Entry points
 
 - `analyze_song.py`: orchestrates analyzer tasks from CLI/interactive flow.
+- `src/http_api.py`: FastAPI service exposing queue state and playback lock control.
 - `src/beat_finder.py`: beat/downbeat extraction.
 - `src/split_stems.py`: Demucs-based stem extraction.
 - `src/essentia_analysis/`: Essentia feature extraction and plotting helpers.
 - `src/song_features/`: synthesizes LLM-facing song features from analyzer artifacts, beat-window stem accents, per-part relative dips, merged section-level low windows, optional music-model tags, and Essentia TensorFlow model outputs when that runtime is available.
+
+## Progress callbacks
+
+- Analyzer task wrappers in `analyze_song.py` accept an optional `progress_callback` parameter.
+- `src/essentia_analysis/analyze_with_essentia.py` also accepts the same optional callback.
+- The callback receives a dict containing `task_type`, `stage`, `step_current`, `step_total`, `message`, and optional `part_name`.
+- These events report code-stage checkpoints only. They do not report frame counts, percentages, or other data-level progress metrics.
+- Each `analyze_with_essentia(...)` call computes its own ordered stage list and restarts its `step_current/step_total` cycle for that specific part.
+
+## Task queue API
+
+- Queue persistence lives at `analyzer/temp_files/queue.json`.
+- Public Python API lives in `src/task_queue_api.py`.
+- Supported operations are `list_items(...)`, `add_item(...)`, `remove_item(...)`, `execute_item(...)`, and `process_queue(...)`.
+- Queue item statuses are `queued`, `pending`, `running`, `complete`, and `failed`.
+- `add_item(...)` stores task parameters and returns `item_id`.
+- `execute_item(item_id)` marks a queued item as `pending`.
+- `process_queue(...)` runs the next pending item only when no item is currently marked `running`, persists the latest callback event in `progress`, and stores the final task result in `last_result`.
+
+## HTTP service
+
+- The analyzer container serves `src/http_api.py` on port `8100`.
+- The service exposes `GET /health`, `GET /queue/status`, `GET /queue/items`, `GET /queue/items/{item_id}`, `POST /queue/items`, `DELETE /queue/items/{item_id}`, `POST /queue/items/{item_id}/execute`, and `POST /runtime/playback-lock`.
+- `GET /queue/status` returns the persisted queue items, a per-status summary, the current playback lock flag, and whether the in-process worker loop is active.
+- The worker loop processes pending queue items only while playback lock is `false`.
+- Backend is the intended client for this service. It performs a one-shot status refresh at startup, stays idle while the queue is empty, and only polls continuously after queue activity is known. During show playback the backend stops polling and sets playback lock to `true`, so analyzer queue execution is paused until playback ends.
 
 ## Inputs and outputs
 
@@ -44,6 +71,8 @@ Use Docker so dependencies (Essentia/Demucs/toolchain) remain consistent.
 ```bash
 docker compose up analyzer --build
 ```
+
+This starts the HTTP API on `http://localhost:8100` and the queue worker loop inside the analyzer container.
 
 ### Interactive mode
 

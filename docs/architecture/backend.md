@@ -19,6 +19,7 @@ The backend is a FastAPI + asyncio service that owns show state, cue rendering, 
 - `backend/store/dmx_canvas.py`: memory-efficient DMX frame buffer.
 - `backend/store/pois.py`: POI persistence and runtime lookup.
 - `backend/services/artnet.py`: Art-Net sender loop.
+- `backend/services/analyzer/*`: analyzer HTTP client and playback-aware polling/lock coordinator.
 
 Compatibility exports:
 - `backend/api/websocket.py` re-exports websocket manager entrypoints.
@@ -57,16 +58,26 @@ Behavior:
 4. Start Art-Net send loop.
 5. Load default song and pre-render canvas.
 6. Sync initial output universe.
-7. Serve the mounted MCP endpoint from the same process so MCP clients share live backend state.
+7. Refresh analyzer status once at startup, and start analyzer polling only when queue work is present so the idle backend does not keep a standing analyzer poll loop.
+8. Serve the mounted MCP endpoint from the same process so MCP clients share live backend state.
 
 ### Playback and time sync
 
 - Browser timeline is the authoritative clock and keeps backend timecode aligned on a short cadence while playback is running, while backend advances playback timecode continuously between sync updates.
 - Song intents: `song.list|load`.
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
+- `transport.play` blocks when analyzer reports any queue item in `running` state.
+- During playback, backend stops analyzer polling and keeps the analyzer worker locked through the analyzer HTTP runtime.
+- When playback pauses, stops, or naturally reaches song end, backend releases the analyzer playback lock and resumes polling only if queued analyzer work remains.
 - `jump_to_time` seeks and applies nearest precomputed frame.
 - `jump_to_section` resolves `payload.section_index` against sections sorted by normalized start time (`start_s|start`), seeks to the section start time, and applies the nearest precomputed frame.
 - `transport.stop` applies blackout by zeroing output universe before Art-Net update.
+
+### Analyzer relay state
+
+- Frontend snapshots and patches include a top-level `analyzer` object.
+- `analyzer` contains analyzer service availability, backend polling state, playback lock state, queue items, and per-status summary counts.
+- Backend only keeps that analyzer state refreshed while playback is idle and analyzer queue work is active.
 
 ### Section metadata normalization
 

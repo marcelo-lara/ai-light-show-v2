@@ -6,11 +6,12 @@ Code is the source of truth.
 ## Runtime map
 
 1. App bootstrap: `backend/main.py`
-- Creates `StateManager`, `ArtNetService`, `SongService`, `WebSocketManager`.
+- Creates `StateManager`, `ArtNetService`, `SongService`, `WebSocketManager`, and `AnalyzerService`.
 - Creates and mounts the backend MCP server at `/mcp`.
 - Loads POIs and fixtures.
 - Arms fixtures and starts Art-Net send loop.
 - Loads default song (`Yonaka - Seize the Power` if present, else first available).
+- Refreshes analyzer status once at startup and starts analyzer polling only when queue work is present.
 - Mounts songs at `/songs` and exposes websocket endpoint at `/ws`.
 
 2. WebSocket transport: `backend/api/websocket_manager/*`
@@ -75,6 +76,8 @@ Code is the source of truth.
 | `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
 | `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canvas debug file writer |
 | `backend/services/cue_helpers/*` | `generate_downbeats_and_beats` | Backend-owned cue helper generation logic |
+| `backend/services/analyzer/service.py` | `AnalyzerService` | Demand-driven analyzer HTTP polling, playback lock coordination, and frontend state relay |
+| `backend/services/analyzer/client.py` | `AnalyzerHttpClient` | HTTP calls to analyzer queue/status and playback-lock endpoints |
 | `backend/store/pois.py` | `PoiDatabase` | POI CRUD + disk sync + runtime target lookup |
 | `backend/store/dmx_canvas.py` | `DMXCanvas` | Packed DMX frame buffer |
 | `backend/services/artnet.py` | `ArtNetService` | UDP Art-Net output |
@@ -103,7 +106,7 @@ Code is the source of truth.
 
 2. `patch`
 - Shape: `{"type":"patch","seq":number,"changes":[{"path":[key],"value":...}]}`
-- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
+- Current diff granularity is top-level key replacement only (`system`, `playback`, `fixtures`, `song`, `analyzer`, `pois`, `cues`, `cue_helpers`, `chasers`).
 
 3. `event`
 - Shape: `{"type":"event","level":"info|warning|error","message":string,"data"?:object}`
@@ -187,9 +190,9 @@ Code is the source of truth.
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `transport.play` | none | `set_playback_state(True)`, start backend playback ticker, enable continuous Art-Net send | `True` |
-| `transport.pause` | none | `set_playback_state(False)`, stop backend playback ticker, disable continuous send | `True` |
-| `transport.stop` | none | pause + stop ticker + seek `0` + blackout output universe + push Art-Net + disable continuous send | `True` |
+| `transport.play` | none | refresh analyzer status; if analyzer reports any `running` item, emit `transport_play_blocked` and return `False`; otherwise set analyzer playback lock, stop analyzer polling, set playback state, start backend playback ticker, and enable continuous Art-Net send | `True` on success, else `False` |
+| `transport.pause` | none | `set_playback_state(False)`, stop backend playback ticker, disable continuous send, release analyzer playback lock, resume analyzer polling only when queued work remains | `True` |
+| `transport.stop` | none | pause + stop ticker + seek `0` + blackout output universe + push Art-Net + disable continuous send + release analyzer playback lock + resume analyzer polling only when queued work remains | `True` |
 | `transport.jump_to_time` | `time_ms`, `sync?` | seek to `max(0, time_ms/1000)` and push output universe; `sync=true` is used by the running browser clock and suppresses websocket patch broadcasts | `True` on user seek, `False` on no-op or `sync=true`, else event `invalid_time_ms` and `False` |
 | `transport.jump_to_section` | `section_index` | sort sections by normalized start (`start_s|start`), seek to selected section start, then push output universe | `True` on valid index; else event `invalid_section_index`/`section_index_out_of_range`/`no_sections_available`/`song_not_loaded` and `False` |
 

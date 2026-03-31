@@ -32,12 +32,12 @@ def test_run_generate_md_for_writes_song_markdown(tmp_path: Path):
     )
 
 
-def test_main_option_6_calls_markdown_generation(tmp_path: Path, monkeypatch):
+def test_main_option_7_calls_markdown_generation(tmp_path: Path, monkeypatch):
     song_path = tmp_path / "songs" / "Test Song.mp3"
     song_path.parent.mkdir(parents=True)
     song_path.touch()
     calls: list[Path] = []
-    inputs = iter(["6", "9"])
+    inputs = iter(["7", "9"])
 
     monkeypatch.setattr(analyze_song, "resolve_song", lambda song_arg: song_path)
     monkeypatch.setattr(analyze_song, "autodetect_device", lambda: "cpu")

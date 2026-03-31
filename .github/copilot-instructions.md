@@ -1,10 +1,11 @@
 # AI Light Show v2 - Copilot Instructions
 
 ## Development policy
+- **Treat live-show timing as CRITICAL.** When playback is running, design and validate transport/state synchronization to hold drift under `10 ms`; if a change risks exceeding that, prioritize timing correctness over convenience or extra synchronization chatter.
 - **NEVER keep deprecated code.** Remove deprecated helpers and dead code; do not retain compatibility shims.
 - **NEVER prioritize backward compatibility over correctness.** Breaking changes are acceptable when they improve clarity and behavior.
 - **ALWAYS use the `ai-light` Python environment** for local Python development. DO NOT CREATE OTHER ENVIRONMENTS.
-- **Treat live-show timing as critical.** When playback is running, design and validate transport/state synchronization to hold drift under `10 ms`; if a change risks exceeding that, prioritize timing correctness over convenience or extra synchronization chatter.
+
 
 ## LLM code size and quality rules
 - Prefer small files: target `<= 100` lines per file.
@@ -49,6 +50,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - The UI frontend is strictly a backend client. DMX logic is backend-owned.
 - Active frontend routes are `show_control`, `song_analysis`, `show_builder`, and `dmx_control` (see [frontend/src/app/routes.ts](../frontend/src/app/routes.ts)).
 - Analyzer scripts produce metadata under `analyzer/meta/<song>/...`; backend reads from `/app/meta` in Docker.
+- Analyzer queue/runtime control is exposed by the analyzer HTTP service on `http://analyzer:8100`; backend is the only intended client and relays analyzer state to the frontend.
 - LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + backend-mounted MCP surface.
 
 ## Playback model (DMX canvas)
@@ -103,6 +105,8 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - DMX channels are 1-based in fixture/message contracts; runtime storage uses 512-byte arrays.
 - `ArtNetService` sends at `30 FPS` to configured `ARTNET_IP`/`ARTNET_PORT`.
 - Startup arm behavior applies configured fixture arm values.
+- Playback and analyzer execution are mutually exclusive. While playback is running, backend must stop analyzer polling and the analyzer worker must stay playback-locked. If analyzer reports a running job, playback start must be blocked.
+- Backend must not keep a standing analyzer poll loop while the analyzer queue is empty. Analyzer polling should start only after queue activity is known and stop again once the queue returns to an idle state.
 - Whenever fixture effect contracts change, update backend docs and active client integration in the same change.
 - For frontend UI implementation:
   - Prefer flexbox over grid for small/local components.

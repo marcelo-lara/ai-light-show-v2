@@ -9,6 +9,7 @@ from pathlib import Path
 from store.pois import PoiStore
 from store.state import StateManager
 from services.artnet import ArtNetService
+from services.analyzer import AnalyzerService
 from services.assistant import AssistantService
 from services.song_service import SongService
 from services.startup_animation import run_startup_blue_wipe
@@ -50,6 +51,7 @@ async def lifespan(app: FastAPI):
         song_service = SongService(songs_path, meta_path)
         ws_manager = WebSocketManager(state_manager, artnet_service, song_service)
         assistant_service = AssistantService(backend_path)
+        analyzer_service = AnalyzerService()
 
         fixtures_path = backend_path / "fixtures" / "fixtures.json"
         pois_path = backend_path / "fixtures" / "pois.json"
@@ -78,14 +80,18 @@ async def lifespan(app: FastAPI):
         app.state.song_service = song_service
         app.state.ws_manager = ws_manager
         app.state.assistant_service = assistant_service
+        app.state.analyzer_service = analyzer_service
         app.state.backend_mcp = backend_mcp
         ws_manager.assistant_service = assistant_service
+        ws_manager.analyzer_service = analyzer_service
         backend_mcp_runtime.attach(ws_manager, song_service)
+        await analyzer_service.start(ws_manager)
 
         try:
             yield
         finally:
             backend_mcp_runtime.clear()
+            await analyzer_service.stop()
             await ws_manager.stop_playback_ticker()
             try:
                 await artnet_service.blackout()

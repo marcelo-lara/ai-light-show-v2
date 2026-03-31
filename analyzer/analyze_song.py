@@ -14,6 +14,7 @@ from src.essentia_analysis import analyze_with_essentia, build_loudness_hints
 from src.essentia_analysis.common import is_stem_worth_analyzing
 from src.generate_md import generate_md_file
 from src.moises import import_moises
+from src.progress import ProgressCallback, emit_stage
 from src.song_features import find_song_features
 from src.song_meta import load_json_file as _load_json_file
 from src.song_meta import load_list_file as _load_list_file
@@ -279,13 +280,21 @@ def resolve_song(song_arg: str | None, songs_dir: str | Path = SONGS_DIR) -> Opt
     return None
 
 
-def run_split_stems_for(song_path: Path, device: str, meta_path: str | Path = META_PATH) -> Optional[Path]:
+def run_split_stems_for(
+    song_path: Path,
+    device: str,
+    meta_path: str | Path = META_PATH,
+    progress_callback: ProgressCallback | None = None,
+) -> Optional[Path]:
     print(f"Starting split stems for {song_path.name} on device={device}")
+    step_total = 4
     try:
+        emit_stage(progress_callback, "split-stems", "Start", 1, step_total)
         meta_root = Path(meta_path).expanduser().resolve()
         song_meta_dir = _song_meta_dir(song_path, meta_root)
         song_meta_dir.mkdir(parents=True, exist_ok=True)
 
+        emit_stage(progress_callback, "split-stems", "Split Stems", 2, step_total)
         stems_dir, stem_files = split_stems(
             song_path=song_path,
             output_dir=TEMP_FILES_FOLDER,
@@ -293,6 +302,7 @@ def run_split_stems_for(song_path: Path, device: str, meta_path: str | Path = ME
             device=device,
             meta_dir=song_meta_dir,
         )
+        emit_stage(progress_callback, "split-stems", "Write Metadata", 3, step_total)
         _merge_json_file(
             _meta_file_path(song_path, meta_root),
             {
@@ -304,41 +314,62 @@ def run_split_stems_for(song_path: Path, device: str, meta_path: str | Path = ME
                 "stems": stem_files,
             },
         )
+        emit_stage(progress_callback, "split-stems", "Complete", 4, step_total)
         print("Split stems complete. Output:", stems_dir)
         return Path(stems_dir)
     except Exception as e:
+        emit_stage(progress_callback, "split-stems", "Failed", step_total, step_total)
         warn(f"split_stems failed: {e}")
         return None
 
 
-def run_beat_finder_for(song_path: Path, meta_path: str | Path = META_PATH) -> Optional[dict]:
+def run_beat_finder_for(
+    song_path: Path,
+    meta_path: str | Path = META_PATH,
+    progress_callback: ProgressCallback | None = None,
+) -> Optional[dict]:
     print(f"Running beat finder for {song_path.name}")
+    step_total = 4
     try:
+        emit_stage(progress_callback, "beat-finder", "Start", 1, step_total)
         meta_root = Path(meta_path).expanduser().resolve()
         song_meta_dir = _song_meta_dir(song_path, meta_root)
         song_meta_dir.mkdir(parents=True, exist_ok=True)
         if _has_moises_mix_data(song_path, meta_root):
+            emit_stage(progress_callback, "beat-finder", "Import Moises Beats", 2, step_total)
             print(f"Using Moises mix data for beats and chords: {song_path.name}")
             moises_beats = import_moises(song_path.stem, meta_path=meta_root)
             if moises_beats:
+                emit_stage(progress_callback, "beat-finder", "Write Beats", 3, step_total)
                 beats_file = _write_song_beats(song_path, meta_root, moises_beats, "moises")
+                emit_stage(progress_callback, "beat-finder", "Complete", 4, step_total)
                 print("Beat import complete. Beats file:", beats_file)
                 return {"method": "moises", "beat_count": len(moises_beats)}
             warn("Moises mix data was present but unusable; falling back to analyzer beat finder")
 
+        emit_stage(progress_callback, "beat-finder", "Find Beats", 2, step_total)
         beat_data = find_beats_and_downbeats(song_path=song_path)
         normalized_beats = _normalize_analyzer_beats(beat_data)
+        emit_stage(progress_callback, "beat-finder", "Write Beats", 3, step_total)
         beats_file = _write_song_beats(song_path, meta_root, normalized_beats, "analyzer", beat_data)
+        emit_stage(progress_callback, "beat-finder", "Complete", 4, step_total)
         print("Beat finding complete. Beats file:", beats_file)
         return beat_data
     except Exception as e:
+        emit_stage(progress_callback, "beat-finder", "Failed", step_total, step_total)
         warn(f"Beat finder failed: {e}")
         return None
 
 
-def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH) -> Optional[dict]:
+def run_essentia_analysis_for(
+    song_path: Path,
+    meta_path: str | Path = META_PATH,
+    progress_callback: ProgressCallback | None = None,
+) -> Optional[dict]:
     print(f"Running Essentia analysis for {song_path.name}")
+    step_total = 4
     try:
+        emit_stage(progress_callback, "essentia-analysis", "Start", 1, step_total)
         if not song_path.exists() or not song_path.is_file():
             warn(f"Song file does not exist: {song_path}")
             return None
@@ -353,8 +384,14 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
         essentia_dir = song_meta_dir / "essentia"
         essentia_dir.mkdir(parents=True, exist_ok=True)
 
+        def emit_part_stage(event: dict[str, Any]) -> None:
+            if progress_callback is None:
+                return
+            progress_callback(event)
+
         part_name = "mix"
         mix_sample_rate = _read_sample_rate(song_path)
+        emit_stage(progress_callback, "essentia-analysis", "Analyze Mix", 2, step_total, part_name=part_name)
         print(f"Analyzing entire song as part: {part_name}")
         part_artifacts = {
             part_name: analyze_with_essentia(
@@ -363,6 +400,7 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
                 part_name,
                 sample_rate=mix_sample_rate,
                 artifact_file_stems=_artifact_file_stems_for_part(part_name),
+                progress_callback=emit_part_stage,
             )
         }
         rhythm = part_artifacts[part_name].get("rhythm", {}).get("rhythm", {}) if isinstance(part_artifacts[part_name], dict) else {}
@@ -384,6 +422,7 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
                     stem_file = stems_path / f"{stem_name}.wav"
                     if stem_file.exists() and is_stem_worth_analyzing(str(stem_file)):
                         stem_sample_rate = _read_sample_rate(stem_file)
+                        emit_stage(progress_callback, "essentia-analysis", "Analyze Stem", 2, step_total, part_name=stem_name)
                         print(f"Analyzing stem: {stem_name}")
                         stem_artifacts = analyze_with_essentia(
                             str(stem_file),
@@ -391,63 +430,95 @@ def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH
                             stem_name,
                             sample_rate=stem_sample_rate,
                             artifact_file_stems=_artifact_file_stems_for_part(stem_name),
+                            progress_callback=emit_part_stage,
                         )
                         part_artifacts[stem_name] = stem_artifacts
                     else:
                         print(f"Skipping stem: {stem_name} (not worth analyzing)")
 
         hints_path = song_meta_dir / "hints.json"
+        emit_stage(progress_callback, "essentia-analysis", "Write Metadata", 3, step_total)
         _dump_json(hints_path, build_loudness_hints(part_artifacts, _load_sections(song_meta_dir)))
         _merge_json_file(
             meta_file,
             {"artifacts": {"essentia": _build_essentia_manifest(essentia_dir, part_artifacts), "hints_file": str(hints_path)}},
         )
 
+        emit_stage(progress_callback, "essentia-analysis", "Complete", 4, step_total)
         print("Essentia analysis complete.")
         return part_artifacts
     except Exception as e:
+        emit_stage(progress_callback, "essentia-analysis", "Failed", step_total, step_total)
         warn(f"Essentia analysis failed: {e}")
         return None
 
 
-def run_import_moises_for(song_path: Path, meta_path: str | Path = META_PATH) -> None:
+def run_import_moises_for(
+    song_path: Path,
+    meta_path: str | Path = META_PATH,
+    progress_callback: ProgressCallback | None = None,
+) -> None:
     print(f"Running import moises for {song_path.name}")
+    step_total = 4
     try:
+        emit_stage(progress_callback, "import-moises", "Start", 1, step_total)
         meta_root = Path(meta_path).expanduser().resolve()
+        emit_stage(progress_callback, "import-moises", "Import Moises", 2, step_total)
         moises_beats = import_moises(song_path.stem, meta_path=meta_root)
         if not moises_beats:
             warn(f"No usable Moises mix data found for {song_path.name}")
             return
+        emit_stage(progress_callback, "import-moises", "Write Beats", 3, step_total)
         beats_file = _write_song_beats(song_path, meta_root, moises_beats, "moises")
+        emit_stage(progress_callback, "import-moises", "Complete", 4, step_total)
         print("Moises import complete. Beats file:", beats_file)
     except Exception as e:
+        emit_stage(progress_callback, "import-moises", "Failed", step_total, step_total)
         warn(f"Import moises failed: {e}")
 
 
-def run_generate_md_for(song_path: Path, meta_path: str | Path = META_PATH) -> Path | None:
+def run_generate_md_for(
+    song_path: Path,
+    meta_path: str | Path = META_PATH,
+    progress_callback: ProgressCallback | None = None,
+) -> Path | None:
     print(f"Generating markdown file for {song_path.name}")
+    step_total = 3
     try:
+        emit_stage(progress_callback, "generate-md", "Start", 1, step_total)
+        emit_stage(progress_callback, "generate-md", "Generate Markdown", 2, step_total)
         output_path = generate_md_file(song_path, meta_path=meta_path)
         if output_path is None:
             warn(f"No sections metadata found for {song_path.stem}")
             return None
+        emit_stage(progress_callback, "generate-md", "Complete", 3, step_total)
         print("Markdown generation complete. Output:", output_path)
         return output_path
     except Exception as e:
+        emit_stage(progress_callback, "generate-md", "Failed", step_total, step_total)
         warn(f"Generate markdown failed: {e}")
         return None
 
 
-def run_find_song_features_for(song_path: Path, meta_path: str | Path = META_PATH) -> Path | None:
+def run_find_song_features_for(
+    song_path: Path,
+    meta_path: str | Path = META_PATH,
+    progress_callback: ProgressCallback | None = None,
+) -> Path | None:
     print(f"Finding song features for {song_path.name}")
+    step_total = 3
     try:
+        emit_stage(progress_callback, "find-song-features", "Start", 1, step_total)
+        emit_stage(progress_callback, "find-song-features", "Extract Features", 2, step_total)
         output_path = find_song_features(song_path, meta_path=meta_path)
         if output_path is None:
             warn(f"Could not build song features for {song_path.stem}")
             return None
+        emit_stage(progress_callback, "find-song-features", "Complete", 3, step_total)
         print("Song feature generation complete. Output:", output_path)
         return output_path
     except Exception as e:
+        emit_stage(progress_callback, "find-song-features", "Failed", step_total, step_total)
         warn(f"Find song features failed: {e}")
         return None
 

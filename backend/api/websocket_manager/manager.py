@@ -32,6 +32,7 @@ class WebSocketManager:
         self._playback_task: Optional[asyncio.Task] = None
         self._playback_task_running: bool = False
         self.assistant_service = None
+        self.analyzer_service = None
 
     async def start_playback_ticker(self) -> None:
         if self._playback_task and not self._playback_task.done():
@@ -68,6 +69,10 @@ class WebSocketManager:
                 continue
 
             await self.state_manager.advance_timecode(frame_interval)
+            if not await self.state_manager.get_is_playing():
+                if self.analyzer_service is not None:
+                    await self.analyzer_service.unlock_after_playback()
+                continue
             universe = await self.state_manager.get_output_universe()
             await self.artnet_service.update_universe(universe)
             await self._schedule_broadcast()

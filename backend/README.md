@@ -7,6 +7,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - Expose the websocket control plane at `/ws`.
 - Expose a backend-owned MCP tool surface at `/mcp`.
 - Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
+- Relay analyzer queue/runtime state from the analyzer HTTP service under top-level `state.analyzer`.
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
@@ -24,6 +25,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - `store/pois.py`: POI CRUD + persistence.
 - `store/dmx_canvas.py`: packed DMX frame buffer.
 - `services/artnet.py`: UDP Art-Net sender.
+- `services/analyzer/*`: analyzer HTTP client and demand-driven polling coordinator.
 - `services/assistant/*`: assistant profile storage, gateway client, request lifecycle, and confirmation-gated LLM orchestration.
 
 ## Runtime model
@@ -33,7 +35,8 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net packets continuously at `30 FPS`.
 4. Clients send websocket `intent` messages.
 5. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
-6. MCP clients call backend-owned tools over Streamable HTTP and share the same live runtime state.
+6. While playback is idle and analyzer queue work exists, backend polls the analyzer HTTP service and relays queue/runtime state in `state.analyzer`.
+7. MCP clients call backend-owned tools over Streamable HTTP and share the same live runtime state.
 
 ## WebSocket protocol essentials
 
@@ -99,13 +102,17 @@ Assistant event behavior:
 
 Patch behavior:
 - Diffs are currently top-level replacements only.
-- `changes[].path` is one key deep (for example `[`system`]`, `[`fixtures`]`).
+- `changes[].path` is one key deep (for example `[`system`]`, `[`fixtures`]`, `[`analyzer`]`).
 - While playback is `playing`, backend suppresses `fixtures` patches.
 
 ## Playback and editing behavior
 
 - Browser audio timeline keeps backend timecode aligned while playback is running using a short sync cadence, plus immediate sync on play/pause/seek/stop.
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
+- `transport.play` first checks analyzer queue status. If analyzer reports any `running` item, backend emits `transport_play_blocked` and playback does not start.
+- Backend does not keep a standing analyzer poll loop while the queue is empty. Startup performs a one-shot status refresh, and continuous polling begins only when analyzer queue activity is known.
+- When playback starts, backend sets analyzer playback lock and stops analyzer polling for the full playback window.
+- `transport.pause`, `transport.stop`, and natural playback completion release analyzer playback lock and resume analyzer polling only when queued work is still present.
 - `song.list` emits the currently loadable backend song names without mutating state.
 - `song.load` validates `payload.filename`, loads the selected song into backend state, resets playback to stopped, updates the output universe, and schedules a snapshot/patch broadcast.
 - `songs_load` on the MCP surface applies the same load side effects: load state, stop playback ticker, disable continuous send, push the output universe, then schedule websocket broadcasts.
@@ -203,6 +210,8 @@ Default local URL: `http://localhost:5001`.
 - `DEBUG_MODE`: when truthy, `ArtNetService` prints sent DMX channel payloads to stdout and to a file if `DEBUG_FILE` is set.
 - `DEBUG_FILE`: optional path to write Art-Net debug output to a file in addition to stdout.
 - `ASSISTANT_LOG_DIR`: directory for assistant interaction JSONL logs. In Docker Compose this is `/app/logs/assistant`, persisted to `backend/logs/assistant` on the host.
+- `ANALYZER_BASE_URL`: analyzer HTTP service base URL. Docker Compose uses `http://analyzer:8100`.
+- `ANALYZER_POLL_INTERVAL`: idle-time analyzer status polling interval in seconds.
 
 ## LLM Fast Map
 
