@@ -33,6 +33,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - Supported operations are `list_items(...)`, `add_item(...)`, `remove_item(...)`, `execute_item(...)`, and `process_queue(...)`.
 - Queue item statuses are `queued`, `pending`, `running`, `complete`, and `failed`.
 - `add_item(...)` stores task parameters and returns `item_id`.
+  - If the same `task_type` and song (from `song_path`) are already queued/pending/running, it returns the existing `item_id` instead of adding a duplicate.
 - `execute_item(item_id)` marks a queued item as `pending`.
 - `process_queue(...)` runs the next pending item only when no item is currently marked `running`, persists the latest callback event in `progress`, and stores the final task result in `last_result`.
 - Analyzer startup clears the persisted queue file before serving HTTP requests or running the worker loop.
