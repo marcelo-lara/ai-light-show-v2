@@ -5,7 +5,7 @@ from typing import Any
 
 import analyze_song
 
-from .progress import ProgressCallback
+from ..progress import ProgressCallback
 
 TASK_TYPES = {
     "split-stems",

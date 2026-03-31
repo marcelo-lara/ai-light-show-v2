@@ -25,10 +25,11 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - These events report code-stage checkpoints only. They do not report frame counts, percentages, or other data-level progress metrics.
 - Each `analyze_with_essentia(...)` call computes its own ordered stage list and restarts its `step_current/step_total` cycle for that specific part.
 
-## Task queue API
+## Queue package
 
 - Queue persistence lives at `analyzer/temp_files/queue.json`.
-- Public Python API lives in `src/task_queue_api.py`.
+- Queue code lives in the dedicated `src/task_queue/` package.
+- Public Python API is re-exported from `src/task_queue/__init__.py` and implemented in `src/task_queue/api.py`.
 - Supported operations are `list_items(...)`, `add_item(...)`, `remove_item(...)`, `execute_item(...)`, and `process_queue(...)`.
 - Queue item statuses are `queued`, `pending`, `running`, `complete`, and `failed`.
 - `add_item(...)` stores task parameters and returns `item_id`.

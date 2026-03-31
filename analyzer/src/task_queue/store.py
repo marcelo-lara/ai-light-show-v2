@@ -6,7 +6,7 @@ from pathlib import Path
 from threading import RLock
 from typing import Any
 
-QUEUE_FILE_PATH = Path(__file__).resolve().parents[1] / "temp_files" / "queue.json"
+QUEUE_FILE_PATH = Path(__file__).resolve().parents[2] / "temp_files" / "queue.json"
 QUEUE_LOCK = RLock()
 
 

@@ -9,8 +9,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from .task_queue_api import add_item, execute_item, get_item, list_items, process_queue, remove_item
-from .task_queue_store import QUEUE_FILE_PATH, clear_items
+from .task_queue import QUEUE_FILE_PATH, add_item, clear_items, execute_item, get_item, list_items, process_queue, remove_item
 
 
 class QueueItemCreate(BaseModel):
