@@ -1,4 +1,5 @@
 import type { BeatSectionGroup } from "./types.ts";
+import { isDownbeat } from "../song_player/logic/song_logic.ts";
 
 type AppendChordSectionOptions = {
 	activeBeatIndex: number;
@@ -33,7 +34,8 @@ export function appendChordSection(
 		const labelText = displayLabel(beat.chord);
 		const absoluteIndex = options.beatOffset + index;
 		const isActive = absoluteIndex === options.activeBeatIndex;
-		cell.className = `chords-panel-cell${labelText ? "" : " is-empty"}${isActive ? " is-active" : ""}`;
+		const downbeatClass = isDownbeat(beat) ? " downbeat" : "";
+		cell.className = `chords-panel-cell${labelText ? "" : " is-empty"}${isActive ? " is-active" : ""}${downbeatClass}`;
 		cell.textContent = labelText;
 		cell.tabIndex = 0;
 		cell.setAttribute("role", "button");

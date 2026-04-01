@@ -44,6 +44,11 @@
   cursor: pointer;
 }
 
+.chords-panel-cell.downbeat{
+  background-color: var(--border);
+  border-left: 1px solid var(--accent);
+}
+
 @media (max-width: 960px) {
   .chords-panel {
     height: auto;
