@@ -3,6 +3,7 @@ import type { WaveSurferManagerOptions } from "./WaveSurferManager.ts";
 export type WaveCallbacksDeps = {
   setDurationMs: (durationMs: number) => void;
   resetAppliedZoom: () => void;
+  applyZoom: () => void;
   renderReadout: () => void;
   rebuildRegions: () => void;
   setLocalTimeMsFromSeconds: (seconds: number) => void;
@@ -30,6 +31,7 @@ export function buildWaveCallbacks(
     onReady: (durationMs) => {
       deps.setDurationMs(durationMs);
       deps.resetAppliedZoom();
+      deps.applyZoom();
       deps.renderReadout();
       deps.rebuildRegions();
     },

@@ -157,3 +157,47 @@ def test_add_item_rejects_unknown_task_type(tmp_path: Path):
         assert str(exc) == "Unsupported task_type: unknown-task"
     else:
         raise AssertionError("Expected ValueError for unsupported task_type")
+
+
+def test_add_item_deduplicates_same_song_and_task(tmp_path: Path):
+    queue_path = tmp_path / "queue.json"
+
+    first_id = queue_api.add_item(
+        "generate-md",
+        {"song_path": "/tmp/Test Song.mp3", "meta_path": "/tmp/meta"},
+        queue_path=queue_path,
+    )
+
+    second_id = queue_api.add_item(
+        "generate-md",
+        {"song_path": "/tmp/Test Song.mp3", "meta_path": "/tmp/meta"},
+        queue_path=queue_path,
+    )
+
+    assert first_id == second_id
+    assert len(queue_api.list_items(queue_path)) == 1
+
+
+def test_add_item_allows_requeue_after_completion(tmp_path: Path):
+    queue_path = tmp_path / "queue.json"
+
+    first_id = queue_api.add_item(
+        "generate-md",
+        {"song_path": "/tmp/Test Song.mp3", "meta_path": "/tmp/meta"},
+        queue_path=queue_path,
+    )
+
+    items = queue_api.list_items(queue_path)
+    items[0]["status"] = "complete"
+    from analyzer.src.task_queue.store import save_items
+
+    save_items(items, queue_path)
+
+    second_id = queue_api.add_item(
+        "generate-md",
+        {"song_path": "/tmp/Test Song.mp3", "meta_path": "/tmp/meta"},
+        queue_path=queue_path,
+    )
+
+    assert second_id != first_id
+    assert len(queue_api.list_items(queue_path)) == 2

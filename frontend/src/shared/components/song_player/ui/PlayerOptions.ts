@@ -53,10 +53,12 @@ export function ZoomControl(opts: {
 
   const zoom = Slider({
     label: "zoom",
+    showLabel: false,
     min: 1,
     max: 180,
     step: 5,
     value: opts.initialZoom,
+    showValue: false,
     onInput: opts.onZoom,
     className: "song-player-zoom",
   });

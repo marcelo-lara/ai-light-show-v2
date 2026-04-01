@@ -115,6 +115,7 @@ export class SongPlayerController {
         resetAppliedZoom: () => {
           this.appliedZoomValue = null;
         },
+        applyZoom: () => this.applyZoom(),
         renderReadout: () => this.renderReadout(),
         rebuildRegions: () => this.rebuildRegions(),
         setLocalTimeMsFromSeconds: (seconds) => {

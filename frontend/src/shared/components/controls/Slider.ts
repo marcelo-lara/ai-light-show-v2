@@ -1,9 +1,11 @@
 export type SliderProps = {
   label?: string;
+  showLabel?: boolean;
   min: number;
   max: number;
   step: number;
   value: number;
+  showValue?: boolean;
   onInput: (value: number) => void;
   onCommit?: (value: number) => void;
   className?: string;
@@ -17,15 +19,18 @@ export type SliderControl = {
 };
 
 export function Slider(props: SliderProps): SliderControl {
+  const showLabel = props.showLabel ?? true;
+  const showValue = props.showValue ?? true;
+  const hasVisibleLabel = Boolean(props.label && showLabel);
   const container = document.createElement("label");
-  container.className = `slider-row${props.label ? " has-label" : ""}${props.className ? ` ${props.className}` : ""}`;
+  container.className = `slider-row${hasVisibleLabel ? " has-label" : ""}${showValue ? " has-value" : ""}${props.className ? ` ${props.className}` : ""}`;
   let isDragging = false;
   let isEditing = false;
   let editStartValue = String(props.value);
 
-  if (props.label) {
+  if (hasVisibleLabel) {
     const labelText = document.createElement("span");
-    labelText.textContent = props.label;
+    labelText.textContent = props.label ?? "";
     container.appendChild(labelText);
   }
 
@@ -36,22 +41,26 @@ export function Slider(props: SliderProps): SliderControl {
   input.step = String(props.step);
   input.value = String(props.value);
 
-  const valueSlot = document.createElement("div");
-  valueSlot.className = "slider-value-slot";
+  const valueSlot = showValue ? document.createElement("div") : null;
+  if (valueSlot) valueSlot.className = "slider-value-slot";
 
-  const valueDisplay = document.createElement("div");
-  valueDisplay.className = "slider-value";
-  valueDisplay.textContent = String(props.value);
-  valueDisplay.tabIndex = 0;
-  valueDisplay.setAttribute("role", "button");
-  valueDisplay.setAttribute("aria-label", props.label ? `Edit ${props.label} value` : "Edit slider value");
+  const valueDisplay = showValue ? document.createElement("div") : null;
+  if (valueDisplay) {
+    valueDisplay.className = "slider-value";
+    valueDisplay.textContent = String(props.value);
+    valueDisplay.tabIndex = 0;
+    valueDisplay.setAttribute("role", "button");
+    valueDisplay.setAttribute("aria-label", props.label ? `Edit ${props.label} value` : "Edit slider value");
+  }
 
-  const valueInput = document.createElement("input");
-  valueInput.type = "text";
-  valueInput.className = "slider-value-input";
-  valueInput.value = String(props.value);
-  valueInput.inputMode = [props.min, props.max, props.step].some((value) => !Number.isInteger(value)) ? "decimal" : "numeric";
-  valueInput.setAttribute("aria-label", props.label ? `Enter ${props.label} value` : "Enter slider value");
+  const valueInput = showValue ? document.createElement("input") : null;
+  if (valueInput) {
+    valueInput.type = "text";
+    valueInput.className = "slider-value-input";
+    valueInput.value = String(props.value);
+    valueInput.inputMode = [props.min, props.max, props.step].some((value) => !Number.isInteger(value)) ? "decimal" : "numeric";
+    valueInput.setAttribute("aria-label", props.label ? `Enter ${props.label} value` : "Enter slider value");
+  }
 
   const getPrecision = (value: number) => {
     const text = String(value);
@@ -71,8 +80,8 @@ export function Slider(props: SliderProps): SliderControl {
   };
 
   const syncValueText = () => {
-    valueDisplay.textContent = input.value;
-    if (!isEditing) valueInput.value = input.value;
+    if (valueDisplay) valueDisplay.textContent = input.value;
+    if (!isEditing && valueInput) valueInput.value = input.value;
   };
 
   const updateFill = () => {
@@ -83,13 +92,13 @@ export function Slider(props: SliderProps): SliderControl {
 
   const exitEditMode = () => {
     isEditing = false;
-    valueInput.classList.remove("is-editing", "is-invalid");
-    valueDisplay.classList.remove("is-hidden");
-    valueInput.value = input.value;
+    valueInput?.classList.remove("is-editing", "is-invalid");
+    valueDisplay?.classList.remove("is-hidden");
+    if (valueInput) valueInput.value = input.value;
   };
 
   const beginEditMode = () => {
-    if (isDragging || isEditing) return;
+    if (!showValue || isDragging || isEditing || !valueInput || !valueDisplay) return;
     isEditing = true;
     editStartValue = input.value;
     valueInput.value = input.value;
@@ -100,11 +109,13 @@ export function Slider(props: SliderProps): SliderControl {
   };
 
   const discardEdit = () => {
+    if (!valueInput) return;
     valueInput.value = editStartValue;
     exitEditMode();
   };
 
   const commitEdit = () => {
+    if (!valueInput) return;
     const nextValue = Number(valueInput.value.trim());
     if (!Number.isFinite(nextValue)) {
       valueInput.classList.add("is-invalid");
@@ -172,7 +183,7 @@ export function Slider(props: SliderProps): SliderControl {
 
   const onValueInputPointerDown = (event: MouseEvent) => {
     event.preventDefault();
-    valueInput.focus();
+    valueInput?.focus();
   };
 
   input.addEventListener("mousedown", onMouseDown);
@@ -180,20 +191,22 @@ export function Slider(props: SliderProps): SliderControl {
   window.addEventListener("mouseup", endDrag);
   window.addEventListener("touchend", endDrag);
   input.addEventListener("input", onInput);
-  valueDisplay.addEventListener("mousedown", onValueDisplayPointerDown);
-  valueDisplay.addEventListener("click", onValueDisplayClick);
-  valueDisplay.addEventListener("keydown", onValueDisplayKeyDown);
-  valueInput.addEventListener("mousedown", onValueInputPointerDown);
-  valueInput.addEventListener("keydown", onValueInputKeyDown);
-  valueInput.addEventListener("blur", onValueInputBlur);
+  valueDisplay?.addEventListener("mousedown", onValueDisplayPointerDown);
+  valueDisplay?.addEventListener("click", onValueDisplayClick);
+  valueDisplay?.addEventListener("keydown", onValueDisplayKeyDown);
+  valueInput?.addEventListener("mousedown", onValueInputPointerDown);
+  valueInput?.addEventListener("keydown", onValueInputKeyDown);
+  valueInput?.addEventListener("blur", onValueInputBlur);
 
   // Initial fill state
   updateFill();
 
   container.appendChild(input);
-  valueSlot.appendChild(valueDisplay);
-  valueSlot.appendChild(valueInput);
-  container.appendChild(valueSlot);
+  if (valueSlot && valueDisplay && valueInput) {
+    valueSlot.appendChild(valueDisplay);
+    valueSlot.appendChild(valueInput);
+    container.appendChild(valueSlot);
+  }
 
   const setValue = (val: number) => {
     if (!isDragging && !isEditing) {
@@ -208,12 +221,12 @@ export function Slider(props: SliderProps): SliderControl {
     input.removeEventListener("input", onInput);
     window.removeEventListener("mouseup", endDrag);
     window.removeEventListener("touchend", endDrag);
-    valueDisplay.removeEventListener("mousedown", onValueDisplayPointerDown);
-    valueDisplay.removeEventListener("click", onValueDisplayClick);
-    valueDisplay.removeEventListener("keydown", onValueDisplayKeyDown);
-    valueInput.removeEventListener("mousedown", onValueInputPointerDown);
-    valueInput.removeEventListener("keydown", onValueInputKeyDown);
-    valueInput.removeEventListener("blur", onValueInputBlur);
+    valueDisplay?.removeEventListener("mousedown", onValueDisplayPointerDown);
+    valueDisplay?.removeEventListener("click", onValueDisplayClick);
+    valueDisplay?.removeEventListener("keydown", onValueDisplayKeyDown);
+    valueInput?.removeEventListener("mousedown", onValueInputPointerDown);
+    valueInput?.removeEventListener("keydown", onValueInputKeyDown);
+    valueInput?.removeEventListener("blur", onValueInputBlur);
   };
 
   return { root: container, input, setValue, dispose };

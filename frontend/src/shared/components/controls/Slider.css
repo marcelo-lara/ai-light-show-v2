@@ -1,12 +1,20 @@
 .slider-row {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr;
   align-items: center;
   gap: 4px;
 }
 
-.slider-row:not(.has-label) {
+.slider-row.has-label {
+  grid-template-columns: auto 1fr;
+}
+
+.slider-row.has-value {
   grid-template-columns: 1fr auto;
+}
+
+.slider-row.has-label.has-value {
+  grid-template-columns: auto 1fr auto;
 }
 
 .slider-row > span {

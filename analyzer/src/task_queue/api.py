@@ -13,6 +13,16 @@ def list_items(queue_path: Path = QUEUE_FILE_PATH) -> list[dict[str, Any]]:
         return load_items(queue_path)
 
 
+def _normalize_song_path(params: dict[str, Any]) -> str | None:
+    song_path = params.get("song_path")
+    if not song_path:
+        return None
+    try:
+        return str(Path(song_path).expanduser().resolve())
+    except Exception:
+        return str(song_path)
+
+
 def get_item(item_id: str, queue_path: Path = QUEUE_FILE_PATH) -> dict[str, Any] | None:
     with QUEUE_LOCK:
         return next((item for item in load_items(queue_path) if item.get("item_id") == item_id), None)
@@ -23,8 +33,20 @@ def add_item(task_type: str, params: dict[str, Any], queue_path: Path = QUEUE_FI
         if task_type not in TASK_TYPES:
             raise ValueError(f"Unsupported task_type: {task_type}")
         timestamp = now_iso()
-        item_id = uuid4().hex
         items = load_items(queue_path)
+
+        normalized_song_path = _normalize_song_path(params)
+        active_statuses = {"queued", "pending", "running"}
+        for existing in items:
+            if existing.get("task_type") != task_type:
+                continue
+            existing_path = _normalize_song_path(existing.get("params", {}))
+            if normalized_song_path is None or existing_path is None:
+                continue
+            if existing_path == normalized_song_path and existing.get("status") in active_statuses:
+                return existing.get("item_id")
+
+        item_id = uuid4().hex
         items.append(
             {
                 "item_id": item_id,

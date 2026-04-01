@@ -68,7 +68,7 @@ export function buildSongPlayerUi(callbacks: SongPlayerUiCallbacks): SongPlayerU
 	});
 
 	const { container: zoomContainer, zoomSlider, dispose: zoomDispose } = ZoomControl({
-		initialZoom: 40,
+		initialZoom: 1,
 		onZoom: callbacks.onZoom,
 	});
 
