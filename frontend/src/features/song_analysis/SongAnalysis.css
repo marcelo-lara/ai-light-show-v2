@@ -131,6 +131,37 @@
   gap: 0.5rem;
 }
 
+.analyzer-queue-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.analyzer-queue-actions[hidden] {
+  display: none;
+}
+
+.analyzer-queue-task-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 10rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  gap: 0.4rem;
+  padding-right: 0.25rem;
+}
+
+.analyzer-queue-task-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.analyzer-queue-task-detail {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 .song-analysis-footer-actions {
   display: flex;
   justify-content: space-between;

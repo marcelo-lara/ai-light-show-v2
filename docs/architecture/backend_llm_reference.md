@@ -12,6 +12,7 @@ Code is the source of truth.
 - Arms fixtures and starts Art-Net send loop.
 - Loads default song (`Yonaka - Seize the Power` if present, else first available).
 - Refreshes analyzer status once at startup and starts analyzer polling only when queue work is present.
+- Fetches analyzer task metadata at startup so frontend state can expose task selection while the queue is idle.
 - Mounts songs at `/songs` and exposes websocket endpoint at `/ws`.
 
 2. WebSocket transport: `backend/api/websocket_manager/*`
@@ -190,15 +191,20 @@ Code is the source of truth.
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `analyzer.enqueue` | `task_type`, `filename?` | validates supported analyzer task type, resolves selected song id to backend `songs_path` and `meta_path`, posts a queue item to the analyzer service, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
+| `analyzer.enqueue` | `task_type`, `filename?` | validates `task_type` against the analyzer-owned task catalog, resolves selected song id to backend `songs_path` and `meta_path`, posts a queue item to the analyzer service, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
 | `analyzer.execute` | `item_id` | posts one queued analyzer item to the analyzer execute endpoint and triggers queue-activity polling | `True` on success; else event `analyzer_execute_failed` and `False` |
 | `analyzer.execute_all` | none | reads analyzer queue items, executes each item with status `queued`, then refreshes analyzer state once | `True` when any queued item was dispatched; else `False` with event `analyzer_items_executed` carrying `count: 0` |
 | `analyzer.remove` | `item_id` | deletes one analyzer queue item and refreshes analyzer state | `True` on success; else event `analyzer_remove_failed` and `False` |
 | `analyzer.remove_all` | none | deletes every analyzer queue item whose status is not `running`, then refreshes analyzer state | `True` when any item was removed; else `False` with event `analyzer_items_removed` carrying `count: 0` |
 
 Analyzer queue state notes:
+- Backend exposes analyzer-owned task metadata under `state.analyzer.task_types`, with `value`, `label`, and `description` for each supported task type.
 - Backend surfaces analyzer queue item status/progress directly from analyzer HTTP responses under `state.analyzer`.
 - Analyzer startup clears persisted queue items before queue HTTP state is served, so backend should expect an empty analyzer queue after analyzer restarts.
+
+Metadata root notes:
+- Backend resolves metadata from `/app/meta` in Docker.
+- For local development and tests, backend uses `analyzer/meta` when it exists and falls back to `backend/meta` only when no analyzer metadata tree is available.
 
 ### Transport intents
 

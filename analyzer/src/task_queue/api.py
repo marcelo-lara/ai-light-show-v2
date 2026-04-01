@@ -4,13 +4,17 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from .dispatch import TASK_TYPES, run_task
+from .dispatch import TASK_TYPES, list_task_types, run_task
 from .store import QUEUE_FILE_PATH, QUEUE_LOCK, load_items, now_iso, save_items
 
 
 def list_items(queue_path: Path = QUEUE_FILE_PATH) -> list[dict[str, Any]]:
     with QUEUE_LOCK:
         return load_items(queue_path)
+
+
+def get_task_types() -> list[dict[str, str]]:
+    return list_task_types()
 
 
 def _normalize_song_path(params: dict[str, Any]) -> str | None:

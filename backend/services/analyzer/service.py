@@ -8,7 +8,14 @@ from .client import AnalyzerHttpClient
 
 
 def _empty_snapshot() -> dict[str, Any]:
-    return {"available": False, "polling": False, "playback_locked": False, "items": [], "summary": {status: 0 for status in ["queued", "pending", "running", "complete", "failed"]}}
+    return {
+        "available": False,
+        "polling": False,
+        "playback_locked": False,
+        "task_types": [],
+        "items": [],
+        "summary": {status: 0 for status in ["queued", "pending", "running", "complete", "failed"]},
+    }
 
 
 def _has_active_work(snapshot: dict[str, Any]) -> bool:
@@ -27,8 +34,13 @@ class AnalyzerService:
     def snapshot(self) -> dict[str, Any]:
         return dict(self._snapshot)
 
+    def task_types(self) -> list[dict[str, Any]]:
+        task_types = self._snapshot.get("task_types")
+        return list(task_types) if isinstance(task_types, list) else []
+
     async def start(self, manager) -> None:
         self._manager = manager
+        await self.refresh_task_types()
         snapshot = await self.refresh()
         if _has_active_work(snapshot):
             await self.resume_polling()
@@ -37,10 +49,23 @@ class AnalyzerService:
         await self.suspend_polling()
 
     async def notify_queue_activity(self) -> dict[str, Any]:
+        if not self.task_types():
+            await self.refresh_task_types()
         snapshot = await self.refresh()
         if _has_active_work(snapshot):
             await self.resume_polling()
         return self.snapshot()
+
+    async def refresh_task_types(self) -> list[dict[str, Any]]:
+        try:
+            task_types = await self._client.get_task_types()
+        except Exception:
+            return self.task_types()
+        changed = task_types != self.task_types()
+        self._snapshot["task_types"] = task_types
+        if changed and self._manager is not None and self._manager.active_connections:
+            await self._manager._schedule_broadcast()
+        return self.task_types()
 
     async def list_items(self) -> list[dict[str, Any]]:
         return await self._client.list_items()
@@ -94,9 +119,14 @@ class AnalyzerService:
     async def refresh(self) -> dict[str, Any]:
         try:
             payload = await self._client.get_status()
-            next_snapshot = {**payload, "available": True, "polling": self._poll_task is not None and not self._poll_task.done()}
+            next_snapshot = {
+                **payload,
+                "available": True,
+                "polling": self._poll_task is not None and not self._poll_task.done(),
+                "task_types": self.task_types(),
+            }
         except Exception as exc:
-            next_snapshot = {**_empty_snapshot(), "error": str(exc)}
+            next_snapshot = {**_empty_snapshot(), "task_types": self.task_types(), "error": str(exc)}
         changed = next_snapshot != self._snapshot
         self._snapshot = next_snapshot
         if changed and self._manager is not None and self._manager.active_connections:
@@ -130,16 +160,26 @@ class AnalyzerService:
         if int((status.get("summary") or {}).get("running", 0)) > 0:
             return False, status
         if status.get("available"):
-            self._snapshot = {**(await self._client.set_playback_lock(True)), "available": True, "polling": False}
+            self._snapshot = {
+                **(await self._client.set_playback_lock(True)),
+                "available": True,
+                "polling": False,
+                "task_types": self.task_types(),
+            }
         await self.suspend_polling()
         return True, self.snapshot()
 
     async def unlock_after_playback(self) -> None:
         if self._snapshot.get("available"):
             try:
-                self._snapshot = {**(await self._client.set_playback_lock(False)), "available": True, "polling": False}
+                self._snapshot = {
+                    **(await self._client.set_playback_lock(False)),
+                    "available": True,
+                    "polling": False,
+                    "task_types": self.task_types(),
+                }
             except Exception as exc:
-                self._snapshot = {**_empty_snapshot(), "error": str(exc)}
+                self._snapshot = {**_empty_snapshot(), "task_types": self.task_types(), "error": str(exc)}
         if _has_active_work(self._snapshot):
             await self.resume_polling()
         if self._manager is not None and self._manager.active_connections:

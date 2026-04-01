@@ -81,7 +81,7 @@ Behavior:
 ### Analyzer relay state
 
 - Frontend snapshots and patches include a top-level `analyzer` object.
-- `analyzer` contains analyzer service availability, backend polling state, playback lock state, queue items, and per-status summary counts.
+- `analyzer` contains analyzer service availability, backend polling state, playback lock state, analyzer-owned `task_types`, queue items, and per-status summary counts.
 - Backend relays analyzer queue items exactly as reported by the analyzer service. Analyzer startup clears persisted queue items before queue status is served, so backend sees an empty analyzer queue after analyzer restarts.
 - Backend only keeps that analyzer state refreshed while playback is idle and analyzer queue work is active.
 
@@ -105,7 +105,7 @@ Behavior:
 - `song.list` emits an event with the available backend song names and does not broadcast state.
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - When analyzer `info.json` is missing for the selected song, `song.load` falls back to empty metadata (`bpm=0`, `duration=0`, default beats path, empty artifacts) so the backend can still load the song and emit a valid snapshot.
-- `analyzer.enqueue` validates `payload.task_type` and selected song id, derives analyzer `song_path` and `meta_path` from backend song paths, posts a new analyzer queue item, and broadcasts the refreshed analyzer snapshot.
+- `analyzer.enqueue` validates `payload.task_type` against the analyzer-owned task catalog, derives analyzer `song_path` and `meta_path` from backend song paths, posts a new analyzer queue item, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.execute` validates `payload.item_id`, posts one queued item to the analyzer execute endpoint, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.execute_all` executes every queue item currently marked `queued` and broadcasts the refreshed analyzer snapshot.
 - `analyzer.remove` validates `payload.item_id`, deletes that analyzer queue item, and broadcasts the refreshed analyzer snapshot.
@@ -189,6 +189,8 @@ Frontend consumers should treat each `supported_effects[]` entry as a metadata o
 `metadata_get_section_analysis` summarizes each section with mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` so the assistant can draft grounded descriptions and hints.
 
 `cue.apply_helper` includes helper id `song_draft`, which generates a backend-owned draft cue sheet from analyzer timing/features and the active rig's supported effects and POI coverage.
+
+Backend resolves metadata from `/app/meta` in Docker. For local development and tests it uses `analyzer/meta` when that tree exists, and falls back to `backend/meta` only when no analyzer metadata tree is present.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.

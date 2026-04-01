@@ -23,6 +23,14 @@ class AnalyzerHttpClient:
             response.raise_for_status()
             return response.json()
 
+    async def get_task_types(self) -> list[dict[str, Any]]:
+        async with httpx.AsyncClient(timeout=self._status_timeout()) as client:
+            response = await client.get(f"{self.base_url}/task-types")
+            response.raise_for_status()
+            payload = response.json()
+            task_types = payload.get("task_types")
+            return task_types if isinstance(task_types, list) else []
+
     async def set_playback_lock(self, locked: bool) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=self._status_timeout()) as client:
             response = await client.post(f"{self.base_url}/runtime/playback-lock", json={"locked": locked})

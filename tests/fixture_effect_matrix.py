@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from models.song import resolve_meta_root
 from backend.store.state import StateManager
 
 EFFECT_START_S = 1.0
@@ -21,7 +22,7 @@ POIS = [
 def build_state_manager() -> StateManager:
     songs_path = Path("/app/songs") if Path("/app/songs").exists() else BACKEND_PATH / "songs"
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else BACKEND_PATH / "cues"
-    meta_path = Path("/app/meta") if Path("/app/meta").exists() else BACKEND_PATH / "meta"
+    meta_path = resolve_meta_root(BACKEND_PATH)
     return StateManager(BACKEND_PATH, songs_path, cues_path, meta_path)
 
 

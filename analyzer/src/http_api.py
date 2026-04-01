@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from .task_queue import QUEUE_FILE_PATH, add_item, clear_items, execute_item, get_item, list_items, process_queue, remove_item
+from .task_queue import QUEUE_FILE_PATH, add_item, clear_items, execute_item, get_item, get_task_types, list_items, process_queue, remove_item
 
 
 class QueueItemCreate(BaseModel):
@@ -65,6 +65,10 @@ def create_app(queue_path: Path | None = None, worker_enabled: bool = True, work
     @app.get("/health")
     async def health() -> dict[str, Any]:
         return {"ok": True}
+
+    @app.get("/task-types")
+    async def task_types() -> dict[str, Any]:
+        return {"ok": True, "task_types": get_task_types()}
 
     @app.get("/queue/status")
     async def queue_status() -> dict[str, Any]:

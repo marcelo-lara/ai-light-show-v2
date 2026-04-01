@@ -140,11 +140,18 @@ export type AnalyzerSummary = {
   failed?: number;
 };
 
+export type AnalyzerTaskType = {
+  value: string;
+  label: string;
+  description: string;
+};
+
 export type AnalyzerState = {
   available?: boolean;
   polling?: boolean;
   playback_locked?: boolean;
   error?: string | null;
+  task_types?: AnalyzerTaskType[];
   items?: AnalyzerQueueItem[];
   summary?: AnalyzerSummary;
 };

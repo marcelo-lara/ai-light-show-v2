@@ -6,6 +6,7 @@ import os
 import logging
 from contextlib import AsyncExitStack, asynccontextmanager
 from pathlib import Path
+from models.song import resolve_meta_root
 from store.pois import PoiStore
 from store.state import StateManager
 from services.artnet import ArtNetService
@@ -40,7 +41,7 @@ async def lifespan(app: FastAPI):
 
         backend_path = Path(__file__).parent
         songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
-        meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
+        meta_path = resolve_meta_root(backend_path)
         cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
 
         debug_mode = os.getenv("DEBUG_MODE", "0").strip().lower() in {"1", "true", "yes", "on"}
@@ -108,7 +109,7 @@ songs_directory = Path("/app/songs") if Path("/app/songs").exists() else Path(__
 app.mount("/songs", StaticFiles(directory=songs_directory), name="songs")
 
 # Serve analyzer metadata artifacts (plots/chords/json)
-meta_directory = Path("/app/meta") if Path("/app/meta").exists() else Path(__file__).parent / "meta"
+meta_directory = resolve_meta_root(Path(__file__).parent)
 app.mount("/meta", StaticFiles(directory=meta_directory), name="meta")
 
 # CORS for browser-based control clients

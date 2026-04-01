@@ -4,6 +4,7 @@ import pytest
 
 from api.state.build_frontend_state import build_frontend_state
 from api.websocket import WebSocketManager
+from models.song import resolve_meta_root
 from store.state import StateManager
 
 
@@ -13,7 +14,7 @@ async def test_frontend_state_includes_analyzer_snapshot():
     backend_path = workspace_root / "backend"
     songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
-    meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
+    meta_path = resolve_meta_root(backend_path)
 
     state_manager = StateManager(backend_path, songs_path, cues_path, meta_path)
     await state_manager.load_fixtures(backend_path / "fixtures" / "fixtures.json")

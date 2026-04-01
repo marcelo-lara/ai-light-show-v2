@@ -24,6 +24,11 @@ function cleanBeats(song: SongState): BeatObject[] {
 			beat,
 			bass: (row as BeatObject).bass ? String((row as BeatObject).bass) : undefined,
 			chord: (row as BeatObject).chord ? String((row as BeatObject).chord) : undefined,
+			type: (row as BeatObject).type === "beat" || (row as BeatObject).type === "downbeat"
+				? (row as BeatObject).type
+				: beat === 1
+					? "downbeat"
+					: "beat",
 		});
 	}
 

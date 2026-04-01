@@ -31,6 +31,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - Queue persistence lives at `analyzer/temp_files/queue.json`.
 - Queue code lives in the dedicated `src/task_queue/` package.
 - Public Python API is re-exported from `src/task_queue/__init__.py` and implemented in `src/task_queue/api.py`.
+- The task catalog is analyzer-owned in `src/task_queue/dispatch.py`; each task entry includes `value`, `label`, and `description`.
 - Supported operations are `list_items(...)`, `add_item(...)`, `remove_item(...)`, `execute_item(...)`, and `process_queue(...)`.
 - Queue item statuses are `queued`, `pending`, `running`, `complete`, and `failed`.
 - `add_item(...)` stores task parameters and returns `item_id`.
@@ -42,7 +43,8 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 ## HTTP service
 
 - The analyzer container serves `src/http_api.py` on port `8100`.
-- The service exposes `GET /health`, `GET /queue/status`, `GET /queue/items`, `GET /queue/items/{item_id}`, `POST /queue/items`, `DELETE /queue/items/{item_id}`, `POST /queue/items/{item_id}/execute`, and `POST /runtime/playback-lock`.
+- The service exposes `GET /health`, `GET /task-types`, `GET /queue/status`, `GET /queue/items`, `GET /queue/items/{item_id}`, `POST /queue/items`, `DELETE /queue/items/{item_id}`, `POST /queue/items/{item_id}/execute`, and `POST /runtime/playback-lock`.
+- `GET /task-types` returns the analyzer-owned task catalog used by backend validation and the Song Analysis queue UI.
 - `GET /queue/status` returns the persisted queue items, a per-status summary, the current playback lock flag, and whether the in-process worker loop is active.
 - The worker loop processes pending queue items only while playback lock is `false`.
 - Backend is the intended client for this service. It performs a one-shot status refresh at startup, stays idle while the queue is empty, and only polls continuously after queue activity is known. During show playback the backend stops polling and sets playback lock to `true`, so analyzer queue execution is paused until playback ends.

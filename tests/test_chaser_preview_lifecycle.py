@@ -5,6 +5,7 @@ from typing import Any, cast
 import pytest
 
 from backend.models.cues import CueSheet
+from models.song import resolve_meta_root
 from backend.store.state import StateManager
 
 
@@ -16,7 +17,7 @@ def _state_manager() -> StateManager:
     backend_path = workspace_root / "backend"
     songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
-    meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
+    meta_path = resolve_meta_root(backend_path)
     return StateManager(backend_path, songs_path, cues_path, meta_path)
 
 

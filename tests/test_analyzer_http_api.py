@@ -13,6 +13,12 @@ def test_http_api_queue_crud_and_playback_lock(tmp_path: Path):
     app = create_app(queue_path=queue_path, worker_enabled=False)
 
     with TestClient(app) as client:
+        task_types = client.get("/task-types")
+        assert task_types.status_code == 200
+        catalog = task_types.json()["task_types"]
+        assert any(item["value"] == "generate-md" for item in catalog)
+        assert any(item["value"] == "find_sections" for item in catalog)
+
         status = client.get("/queue/status")
         assert status.status_code == 200
         assert status.json()["summary"]["queued"] == 0

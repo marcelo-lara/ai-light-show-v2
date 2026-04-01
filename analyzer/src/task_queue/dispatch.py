@@ -7,16 +7,54 @@ import analyze_song
 
 from ..progress import ProgressCallback
 
-TASK_TYPES = {
-    "split-stems",
-    "beat-finder",
-    "essentia-analysis",
-    "find-song-features",
-    "find_chords",
-    "find_sections",
-    "import-moises",
-    "generate-md",
-}
+TASK_CATALOG = [
+    {
+        "value": "split-stems",
+        "label": "Split Stems",
+        "description": "Extract instrument stems from the song audio.",
+    },
+    {
+        "value": "beat-finder",
+        "label": "Beat Finder",
+        "description": "Detect beat and downbeat timing for the mix.",
+    },
+    {
+        "value": "essentia-analysis",
+        "label": "Essentia Analysis",
+        "description": "Generate Essentia feature JSON and plots.",
+    },
+    {
+        "value": "find-song-features",
+        "label": "Find Song Features",
+        "description": "Synthesize section-level lighting features from analyzer artifacts.",
+    },
+    {
+        "value": "find_chords",
+        "label": "Find Chords",
+        "description": "Infer beat-aligned chord labels with the configured music models.",
+    },
+    {
+        "value": "find_sections",
+        "label": "Find Sections",
+        "description": "Infer song section boundaries with the configured music models.",
+    },
+    {
+        "value": "import-moises",
+        "label": "Import Moises",
+        "description": "Import compatible Moises metadata into canonical analyzer files.",
+    },
+    {
+        "value": "generate-md",
+        "label": "Generate Markdown",
+        "description": "Render a markdown summary from the current song metadata.",
+    },
+]
+
+TASK_TYPES = frozenset(item["value"] for item in TASK_CATALOG)
+
+
+def list_task_types() -> list[dict[str, str]]:
+    return [dict(item) for item in TASK_CATALOG]
 
 
 def _to_jsonable(value: Any) -> Any:

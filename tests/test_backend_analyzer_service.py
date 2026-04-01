@@ -11,9 +11,17 @@ class _Client:
         self.add_calls = []
         self.remove_calls = []
         self.execute_calls = []
+        self.task_type_calls = 0
         self.queued = queued
         self.pending = pending
         self.running = running
+
+    async def get_task_types(self):
+        self.task_type_calls += 1
+        return [
+            {"value": "generate-md", "label": "Generate Markdown", "description": "Generate markdown summary."},
+            {"value": "find_sections", "label": "Find Sections", "description": "Infer song sections."},
+        ]
 
     async def get_status(self):
         return {"ok": True, "playback_locked": False, "polling": True, "items": [], "summary": {"queued": self.queued, "pending": self.pending, "running": self.running, "complete": 0, "failed": 0}}
@@ -70,6 +78,7 @@ async def test_analyzer_service_stays_idle_until_queue_activity(monkeypatch):
 
     await service.start(service._manager)
     assert service.snapshot()["polling"] is False
+    assert service.snapshot()["task_types"][0]["value"] == "generate-md"
 
     service._client.queued = 1
     await service.notify_queue_activity()
@@ -173,3 +182,15 @@ async def test_analyzer_service_remove_all_skips_running_items():
 
     assert result == {"item_ids": ["queued-1", "complete-1"], "count": 2}
     assert service._client.remove_calls == ["queued-1", "complete-1"]
+
+
+@pytest.mark.asyncio
+async def test_analyzer_service_refresh_task_types_updates_snapshot():
+    service = AnalyzerService()
+    service._client = _Client()
+    service._manager = _Manager()
+
+    task_types = await service.refresh_task_types()
+
+    assert task_types[1]["value"] == "find_sections"
+    assert service.snapshot()["task_types"][1]["value"] == "find_sections"

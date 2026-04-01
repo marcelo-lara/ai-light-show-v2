@@ -1,16 +1,15 @@
-import type { AnalyzerProgress, AnalyzerQueueItem } from "../../shared/transport/protocol.ts";
+import type { AnalyzerProgress, AnalyzerQueueItem, AnalyzerTaskType } from "../../shared/transport/protocol.ts";
 
-export const ANALYZER_TASK_OPTIONS = [
-	{ value: "split-stems", label: "Split Stems" },
-	{ value: "beat-finder", label: "Beat Finder" },
-	{ value: "essentia-analysis", label: "Essentia Analysis" },
-	{ value: "find-song-features", label: "Find Song Features" },
-	{ value: "import-moises", label: "Import Moises" },
-	{ value: "generate-md", label: "Generate Markdown" },
-];
+function taskTypeEntry(taskType: string, taskTypes: AnalyzerTaskType[] | null | undefined): AnalyzerTaskType | undefined {
+	return taskTypes?.find((option) => option.value === taskType);
+}
 
-export function analyzerTaskLabel(taskType: string): string {
-	return ANALYZER_TASK_OPTIONS.find((option) => option.value === taskType)?.label ?? taskType;
+export function analyzerTaskLabel(taskType: string, taskTypes: AnalyzerTaskType[] | null | undefined): string {
+	return taskTypeEntry(taskType, taskTypes)?.label ?? taskType;
+}
+
+export function analyzerTaskDescription(taskType: string, taskTypes: AnalyzerTaskType[] | null | undefined): string {
+	return taskTypeEntry(taskType, taskTypes)?.description ?? "";
 }
 
 export function analyzerProgressLabel(progress: AnalyzerProgress | null | undefined): string {

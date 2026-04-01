@@ -15,6 +15,18 @@ class _AnalyzerService:
         self.executed = []
         self.execute_all_calls = 0
         self.remove_all_calls = 0
+        self.task_type_refreshes = 0
+        self._task_types = [
+            {"value": "generate-md", "label": "Generate Markdown", "description": "Generate markdown summary."},
+            {"value": "find_sections", "label": "Find Sections", "description": "Infer song sections."},
+        ]
+
+    def task_types(self):
+        return list(self._task_types)
+
+    async def refresh_task_types(self):
+        self.task_type_refreshes += 1
+        return list(self._task_types)
 
     async def enqueue_item(self, task_type, params):
         self.enqueued.append((task_type, params))
@@ -122,6 +134,22 @@ async def test_enqueue_analyzer_item_handles_service_failure(monkeypatch):
             "error": "enqueue stalled for generate-md:alpha-song",
         },
     )
+
+
+@pytest.mark.asyncio
+async def test_enqueue_analyzer_item_accepts_catalog_task_not_previously_hardcoded(monkeypatch):
+    monkeypatch.setattr("backend.api.intents.analyzer.actions.helpers.Path.exists", lambda self: True)
+    manager = _Manager()
+
+    ok = await enqueue_analyzer_item(manager, {"task_type": "find_sections", "filename": "alpha-song"})
+
+    assert ok is True
+    assert manager.analyzer_service.enqueued == [
+        (
+            "find_sections",
+            {"filename": "alpha-song", "song_path": "/tmp/songs/alpha-song.mp3", "meta_path": "/tmp/meta"},
+        )
+    ]
 
 
 @pytest.mark.asyncio
