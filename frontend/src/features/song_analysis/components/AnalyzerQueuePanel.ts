@@ -113,9 +113,11 @@ export function AnalyzerQueuePanel(): HTMLElement {
 			for (const taskType of taskTypes) {
 				const row = document.createElement("div");
 				row.className = "analyzer-queue-task-item";
+				const description = analyzerTaskDescription(taskType.value, taskTypes);
 				const toggle = Toggle({
 					label: taskType.label,
 					checked: selectedTasks.has(taskType.value),
+					description,
 					onChange: (checked) => {
 						if (checked) selectedTasks.add(taskType.value);
 						else selectedTasks.delete(taskType.value);
@@ -123,8 +125,6 @@ export function AnalyzerQueuePanel(): HTMLElement {
 					},
 				});
 				row.append(toggle.root);
-				const description = analyzerTaskDescription(taskType.value, taskTypes);
-				if (description) row.append(createText("analyzer-queue-task-detail", description));
 				taskList.append(row);
 			}
 		}

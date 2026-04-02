@@ -8,7 +8,7 @@ export interface IconPath {
 	isAccent?: boolean;
 }
 
-export type IconName = "addFile" | "addSong" | "audioScan" | "dashboard" | "delete" | "edit" | "equalizer" | "playerNext" | "playerPause" | "playerPlay" | "playerPrev" | "playerStop" | "preview" | "right" | "waveSignal" | "waveSignalMonitor";
+export type IconName = "addFile" | "addSong" | "audioScan" | "dashboard" | "delete" | "down" | "edit" | "equalizer" | "playerNext" | "playerPause" | "playerPlay" | "playerPrev" | "playerStop" | "preview" | "question" | "right" | "up" | "waveSignal" | "waveSignalMonitor";
 
 export const ICON_REGISTRY: Record<IconName, IconPath[]> = {
 	addFile: [
@@ -44,6 +44,9 @@ export const ICON_REGISTRY: Record<IconName, IconPath[]> = {
 	delete: [
 		{ d: "M12 2a10 10 0 1 1 0 20a10 10 0 1 1 0-20M9 9l6 6M15 9l-6 6" },
 	],
+	down: [
+		{ d: "M398.8,407.1l191.4-191.4,89.9,92.2-276.6,277.3L119.9,301.6l87.5-87.5,191.4,193h0Z" },
+	],
 	edit: [
 		{ d: "M12 20h9M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1l1-4z" },
 	],
@@ -75,8 +78,16 @@ export const ICON_REGISTRY: Record<IconName, IconPath[]> = {
 	preview: [
 		{ d: "M12 2a10 10 0 1 1 0 20a10 10 0 1 1 0-20M12 17V7M8 11l4-4l4 4" },
 	],
+	question: [
+		{ d: "M14.768,0C6.611,0,0,6.609,0,14.768c0,8.155,6.611,14.767,14.768,14.767s14.768-6.612,14.768-14.767   C29.535,6.609,22.924,0,14.768,0z M14.768,27.126c-6.828,0-12.361-5.532-12.361-12.359c0-6.828,5.533-12.362,12.361-12.362   c6.826,0,12.359,5.535,12.359,12.362C27.127,21.594,21.594,27.126,14.768,27.126z" },
+		{ d: "M14.385,19.337c-1.338,0-2.289,0.951-2.289,2.34c0,1.336,0.926,2.339,2.289,2.339c1.414,0,2.314-1.003,2.314-2.339   C16.672,20.288,15.771,19.337,14.385,19.337z" },
+		{ d: "M14.742,6.092c-1.824,0-3.34,0.513-4.293,1.053l0.875,2.804c0.668-0.462,1.697-0.772,2.545-0.772   c1.285,0.027,1.879,0.644,1.879,1.543c0,0.85-0.67,1.697-1.494,2.701c-1.156,1.364-1.594,2.701-1.516,4.012l0.025,0.669h3.42   v-0.463c-0.025-1.158,0.387-2.162,1.311-3.215c0.979-1.08,2.211-2.366,2.211-4.321C19.705,7.968,18.139,6.092,14.742,6.092z" },
+	],
 	right: [
 		{ d: "M9 6l6 6l-6 6" },
+	],
+	up: [
+		{ d: "M401.2,392.2l-191.4,191.4-89.9-92.2L396.5,214.1l283.6,283.6-87.5,87.5-191.4-193Z" },
 	],
 	waveSignal: [
 		{ d: "M1.5,12h3.04c.61,0,1.17-.35,1.44-.89l2.62-5.22c.1-.21.31-.34.55-.34.25,0,.49.16.58.4l4.56,12.14c.09.23.31.38.54.38s.46-.15.54-.38l1.89-5.03c.24-.63.84-1.05,1.51-1.05h3.73" },

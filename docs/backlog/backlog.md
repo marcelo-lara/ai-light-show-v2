@@ -1,6 +1,6 @@
 ## Prioritization
 
-### P0 - Fix breakage and remove duplicated contracts
+### [DONE] P0 - Fix breakage and remove duplicated contracts
 
 #### Backend: Song Draft Helper is failing
 - Fix this first.
