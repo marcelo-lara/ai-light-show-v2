@@ -1,14 +1,13 @@
+from __future__ import annotations
+
 import json
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "analyzer"))
-
 from src.task_queue import api as queue_api
-from src.task_queue.store import clear_items
+from src.task_queue.store import clear_items, save_items
 
 
-def test_add_list_execute_and_remove_queue_item(tmp_path: Path):
+def test_add_list_execute_and_remove_queue_item(tmp_path: Path) -> None:
     queue_path = tmp_path / "queue.json"
 
     item_id = queue_api.add_item(
@@ -29,7 +28,7 @@ def test_add_list_execute_and_remove_queue_item(tmp_path: Path):
     assert queue_api.list_items(queue_path) == []
 
 
-def test_process_queue_runs_pending_item_and_persists_progress(tmp_path: Path, monkeypatch):
+def test_process_queue_runs_pending_item_and_persists_progress(tmp_path: Path, monkeypatch) -> None:
     queue_path = tmp_path / "queue.json"
     item_id = queue_api.add_item(
         "essentia-analysis",
@@ -66,7 +65,7 @@ def test_process_queue_runs_pending_item_and_persists_progress(tmp_path: Path, m
     assert item["last_result"]["ok"] is True
 
 
-def test_process_queue_returns_none_when_running_item_exists(tmp_path: Path):
+def test_process_queue_returns_none_when_running_item_exists(tmp_path: Path) -> None:
     queue_path = tmp_path / "queue.json"
     queue_path.write_text(
         json.dumps(
@@ -100,7 +99,7 @@ def test_process_queue_returns_none_when_running_item_exists(tmp_path: Path):
     assert queue_api.process_queue(queue_path) is None
 
 
-def test_clear_items_empties_queue_file(tmp_path: Path):
+def test_clear_items_empties_queue_file(tmp_path: Path) -> None:
     queue_path = tmp_path / "queue.json"
     queue_path.write_text(
         json.dumps(
@@ -148,7 +147,7 @@ def test_clear_items_empties_queue_file(tmp_path: Path):
     assert queue_api.list_items(queue_path) == []
 
 
-def test_add_item_rejects_unknown_task_type(tmp_path: Path):
+def test_add_item_rejects_unknown_task_type(tmp_path: Path) -> None:
     queue_path = tmp_path / "queue.json"
 
     try:
@@ -159,7 +158,7 @@ def test_add_item_rejects_unknown_task_type(tmp_path: Path):
         raise AssertionError("Expected ValueError for unsupported task_type")
 
 
-def test_add_item_deduplicates_same_song_and_task(tmp_path: Path):
+def test_add_item_deduplicates_same_song_and_task(tmp_path: Path) -> None:
     queue_path = tmp_path / "queue.json"
 
     first_id = queue_api.add_item(
@@ -178,7 +177,7 @@ def test_add_item_deduplicates_same_song_and_task(tmp_path: Path):
     assert len(queue_api.list_items(queue_path)) == 1
 
 
-def test_add_item_allows_requeue_after_completion(tmp_path: Path):
+def test_add_item_allows_requeue_after_completion(tmp_path: Path) -> None:
     queue_path = tmp_path / "queue.json"
 
     first_id = queue_api.add_item(
@@ -189,8 +188,6 @@ def test_add_item_allows_requeue_after_completion(tmp_path: Path):
 
     items = queue_api.list_items(queue_path)
     items[0]["status"] = "complete"
-    from analyzer.src.task_queue.store import save_items
-
     save_items(items, queue_path)
 
     second_id = queue_api.add_item(

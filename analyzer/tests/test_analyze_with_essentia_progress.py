@@ -1,16 +1,15 @@
-import sys
+from __future__ import annotations
+
+import importlib
 from pathlib import Path
 from types import SimpleNamespace
-import importlib
 
 import numpy as np
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "analyzer"))
 
 essentia_module = importlib.import_module("src.essentia_analysis.analyze_with_essentia")
 
 
-def test_analyze_with_essentia_emits_deterministic_stage_events(tmp_path: Path, monkeypatch):
+def test_analyze_with_essentia_emits_deterministic_stage_events(tmp_path: Path, monkeypatch) -> None:
     frames = [np.array([0.1, 0.2], dtype=np.float32), np.array([0.2, 0.3], dtype=np.float32)]
 
     fake_es = SimpleNamespace(

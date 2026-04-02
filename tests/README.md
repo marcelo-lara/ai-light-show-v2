@@ -1,6 +1,6 @@
 # Tests Module (LLM Guide)
 
-Project-level Python tests for backend state/render behavior, websocket intent flows, and file-backed integration checks.
+Project-level Python tests for backend state/render behavior, websocket intent flows, backend-analyzer integration, and file-backed integration checks.
 
 ## Test suite contents
 
@@ -36,6 +36,8 @@ Project-level Python tests for backend state/render behavior, websocket intent f
 ## Test file location policy
 
 - Keep automated Python tests under `tests/`.
+- Keep analyzer-internal tests under `analyzer/tests/`.
+- Keep only backend-facing or cross-module analyzer integration coverage under `tests/`.
 - Do not keep `test_*.py` files at repo root.
 
 ## Run tests

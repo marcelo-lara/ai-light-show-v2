@@ -1,13 +1,13 @@
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "analyzer"))
-
 import analyze_song
 
 
-def test_run_generate_md_for_writes_song_markdown(tmp_path: Path):
+def test_run_generate_md_for_writes_song_markdown(tmp_path: Path) -> None:
     song_path = tmp_path / "songs" / "Test Song.mp3"
     song_path.parent.mkdir(parents=True)
     song_path.touch()
@@ -32,12 +32,12 @@ def test_run_generate_md_for_writes_song_markdown(tmp_path: Path):
     )
 
 
-def test_main_option_7_calls_markdown_generation(tmp_path: Path, monkeypatch):
+def test_main_option_7_calls_markdown_generation(tmp_path: Path, monkeypatch) -> None:
     song_path = tmp_path / "songs" / "Test Song.mp3"
     song_path.parent.mkdir(parents=True)
     song_path.touch()
     calls: list[Path] = []
-    inputs = iter(["7", "9"])
+    inputs = iter(["10", "13"])
 
     monkeypatch.setattr(analyze_song, "resolve_song", lambda song_arg: song_path)
     monkeypatch.setattr(analyze_song, "autodetect_device", lambda: "cpu")
@@ -51,7 +51,7 @@ def test_main_option_7_calls_markdown_generation(tmp_path: Path, monkeypatch):
     assert calls == [song_path]
 
 
-def test_main_generate_md_flag_calls_markdown_generation(tmp_path: Path, monkeypatch):
+def test_main_generate_md_flag_calls_markdown_generation(tmp_path: Path, monkeypatch) -> None:
     song_path = tmp_path / "songs" / "Flag Song.mp3"
     song_path.parent.mkdir(parents=True)
     song_path.touch()
