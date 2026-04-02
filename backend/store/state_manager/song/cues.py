@@ -316,7 +316,11 @@ class StateSongCueMixin:
                     supported_effects=self._fixture_supported_effects,
                 )
             except ValueError as exc:
-                return {"ok": False, "reason": str(exc), "helper_id": helper_id}
+                result = {"ok": False, "reason": str(exc), "helper_id": helper_id}
+                missing_artifacts = getattr(exc, "missing_artifacts", None)
+                if missing_artifacts:
+                    result["missing_artifacts"] = missing_artifacts
+                return result
 
             try:
                 for entry in new_entries:

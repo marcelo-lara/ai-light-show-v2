@@ -335,7 +335,7 @@ Websocket delivery notes:
 | `info` | `cue_updated` | `{ok, entry}` |
 | `error` | `cue_delete_failed` | `{reason}` |
 | `info` | `cue_deleted` | `{ok, entry}` |
-| `error` | `cue_helper_apply_failed` | `{reason, helper_id?}` |
+| `error` | `cue_helper_apply_failed` | `{reason, helper_id?, missing_artifacts?: [{artifact, path}]}` |
 | `info` | `cue_helper_applied` | `{helper_id, generated, replaced, skipped}` |
 | `error` | `chaser_apply_failed` | `{reason, chaser_id?}` |
 | `info` | `chaser_applied` | `{chaser_id, entry}` |

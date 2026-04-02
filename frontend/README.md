@@ -22,6 +22,7 @@ UI layout references live in [../docs/ui/README.md](../docs/ui/README.md).
    - `snapshot`: replace store via `applySnapshot`.
    - `patch`: apply sequence-ordered path/value changes via `applyPatch`.
    - `event`: route LLM streaming chunks/messages to `llm_state`; backend errors become chat system messages.
+  - `cue_helper_apply_failed` for `song_draft` with missing `features.json`: prompt the user to enqueue every analyzer task from the live analyzer task catalog, then send `analyzer.execute_all` when confirmed.
 4. `AppShell.ts` renders `Sidebar + Main + RightPanel`, rerenders on UI/Backend/LLM store updates, and refreshes the singleton song player.
 5. Timecode sync exception: browser playback time is authoritative during playback and syncs via `transport.jump_to_time`.
 

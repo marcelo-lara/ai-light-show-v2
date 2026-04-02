@@ -21,6 +21,22 @@
 - Make queue items scrollable.
 - Dependency: do this after the TASK_TYPES endpoint exists so the UI is backend-driven.
 
+#### Analyzer
+- store bpm value in analyzer/meta/{song}/info.json
+
+#### Feature: Reload song data from disk
+- on 'song-loader-header' add a recycle icon to reload backend data from disk (all metadata to the selected song + refresh song list)
+
+#### Frontend: SongAnalysis > Analyzer Queue
+- show a line (of 1px) at the bottom of each task to show the progress of the task.
+- when a task is marked as "complete" the line should be colored as '--ok', when error as '--err'
+
+#### Frontend: SongAnalysis > Analyzer Queue 
+- UI only: when 'run all' is clicked, close the 'analyzer-queue-actions' subpanel.
+
+#### Frontend: SongAnalysis > Analyzer Queue 
+- "analysis-card analysis-plots" must load ONLY when visible (DO NOT LOAD ALL when the page is selected)
+
 #### Analyzer: Store reference and inference data in dedicated folders
 - Store inferences at `analyzer/meta/{song}/infered/beats.{model_name}.json`.
 - Store references at `analyzer/meta/{song}/reference/beats.json`.

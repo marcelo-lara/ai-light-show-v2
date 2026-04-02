@@ -142,6 +142,7 @@ Patch behavior:
 - `llm.reject_action` dismisses a pending proposal without mutating cues.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from backend-owned helper definitions and upserts them into the cue sheet. Helpers can expose parameter schemas and runtime params.
+- `cue_helper_apply_failed` includes `missing_artifacts` when helper execution fails because analyzer artifact files referenced by the current song are absent, so frontend error surfaces can show the missing filenames and paths.
 - `song_draft` is a backend-owned cue helper that reads analyzer-backed section and per-stem metadata through the backend analysis contract and generates a draft cue sheet using the active fixture inventory and POI availability.
 - `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.

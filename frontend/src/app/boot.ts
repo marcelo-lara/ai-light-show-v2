@@ -1,4 +1,4 @@
-import { initBackendState, applyPatch, applySnapshot } from "../shared/state/backend_state.ts";
+import { initBackendState, applyPatch, applySnapshot, getBackendStore } from "../shared/state/backend_state.ts";
 import { initTheme } from "../shared/state/theme_state.ts";
 import { setWsState } from "../shared/state/ws_state.ts";
 import { WsClient } from "../shared/transport/ws_client.ts";
@@ -13,6 +13,8 @@ import {
   resolveActionProposal,
   upsertSystemStatus,
 } from "../features/llm_chat/llm_state.ts";
+import { ConfirmCancelPrompt } from "../shared/components/feedback/ConfirmCancelPrompt.ts";
+import { enqueueAnalyzerItem, executeAllAnalyzerItems } from "../features/song_analysis/song_analysis_intents.ts";
 import { setSongLoaderSongs } from "../features/song_analysis/song_loader/state.ts";
 
 // If you inject bootstrap JSON in HTML, expose it as window.__BOOTSTRAP_STATE__
@@ -26,8 +28,73 @@ export type BootContext = {
   wsUrl: string; // e.g., "ws://localhost:8000/ws"
 };
 
+type MissingArtifact = {
+  artifact?: string;
+  path?: string;
+};
+
+function formatMissingArtifacts(missingArtifacts: MissingArtifact[]): string {
+  return missingArtifacts
+    .map((artifact) => {
+      const artifactName = typeof artifact?.artifact === "string" ? artifact.artifact : "artifact";
+      const artifactPath = typeof artifact?.path === "string" ? artifact.path : "unknown path";
+      return `${artifactName} (${artifactPath})`;
+    })
+    .join(", ");
+}
+
+function isMissingFeaturesArtifact(missingArtifacts: MissingArtifact[]): boolean {
+  return missingArtifacts.some((artifact) => {
+    if (artifact?.artifact === "features_file") {
+      return true;
+    }
+    return typeof artifact?.path === "string" && artifact.path.endsWith("/features.json");
+  });
+}
+
 export function boot(ctx: BootContext) {
   initTheme(); // apply theme ASAP to avoid FOUC
+  let promptingSongDraftAnalysis = false;
+
+  const promptToQueueAnalyzerTasks = async (helperId: string): Promise<boolean> => {
+    const state = getBackendStore().state;
+    const currentSong = state.song?.filename ?? "";
+    const analyzer = state.analyzer ?? {};
+    const taskTypes = Array.isArray(analyzer.task_types)
+      ? analyzer.task_types.flatMap((taskType) => {
+          if (!taskType || typeof taskType !== "object") {
+            return [];
+          }
+          const value = (taskType as { value?: unknown }).value;
+          return typeof value === "string" ? [value] : [];
+        })
+      : [];
+
+    if (!currentSong || analyzer.available === false || analyzer.playback_locked === true || taskTypes.length === 0) {
+      return false;
+    }
+
+    promptingSongDraftAnalysis = true;
+    try {
+      const confirmed = await ConfirmCancelPrompt({
+        title: "Missing analyzer features",
+        message: `song_draft needs features.json. Add all analyzer queue tasks for ${currentSong} and run all now?`,
+        confirmLabel: "Queue + Run all",
+        cancelLabel: "Cancel",
+      });
+      if (!confirmed) {
+        return false;
+      }
+      for (const taskType of taskTypes) {
+        enqueueAnalyzerItem(taskType, currentSong);
+      }
+      executeAllAnalyzerItems();
+      addSystemMessage(`Queued all analyzer tasks for ${currentSong} and started run all.`, "info");
+      return true;
+    } finally {
+      promptingSongDraftAnalysis = false;
+    }
+  };
 
   try {
     const ws = new URL(ctx.wsUrl);
@@ -137,6 +204,31 @@ export function boot(ctx: BootContext) {
             clearConversationState();
             return;
           }
+        }
+        if (m.message === "cue_helper_apply_failed") {
+          const details = m.data as {
+            helper_id?: string;
+            reason?: string;
+            missing_artifacts?: Array<{ artifact?: string; path?: string }>;
+          } | undefined;
+          const helperId = typeof details?.helper_id === "string" ? details.helper_id : "cue helper";
+          const reason = typeof details?.reason === "string" ? details.reason : "apply_failed";
+          const missingArtifacts = Array.isArray(details?.missing_artifacts) ? details.missing_artifacts : [];
+          if (missingArtifacts.length > 0) {
+            const artifactSummary = formatMissingArtifacts(missingArtifacts);
+            if (helperId === "song_draft" && isMissingFeaturesArtifact(missingArtifacts) && !promptingSongDraftAnalysis) {
+              void promptToQueueAnalyzerTasks(helperId).then((queued) => {
+                if (!queued) {
+                  addSystemMessage(`Failed to apply ${helperId}: missing analyzer artifacts ${artifactSummary}`, "error");
+                }
+              });
+              return;
+            }
+            addSystemMessage(`Failed to apply ${helperId}: missing analyzer artifacts ${artifactSummary}`, "error");
+            return;
+          }
+          addSystemMessage(`Failed to apply ${helperId}: ${reason}`, "error");
+          return;
         }
         if (m.level === "error") {
           addSystemMessage(m.message, "error");

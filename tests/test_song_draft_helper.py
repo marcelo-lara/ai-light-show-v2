@@ -36,3 +36,22 @@ async def test_generate_song_draft_uses_analysis_and_live_rig() -> None:
     assert any(entry["fixture_id"].startswith("parcan_") and entry["effect"] == "flash" for entry in entries)
     fixture_ids = {fixture.id for fixture in state_manager.fixtures}
     assert all(entry["fixture_id"] in fixture_ids for entry in entries)
+
+
+def test_generate_song_draft_reports_missing_artifacts(tmp_path: Path) -> None:
+    meta_path = tmp_path / "meta"
+    song_dir = meta_path / "Test Song"
+    song_dir.mkdir(parents=True)
+    info_path = song_dir / "info.json"
+    info_path.write_text('{"title": "Test Song", "artist": "Test Artist", "duration": 10, "bpm": 120, "artifacts": {}}', encoding="utf-8")
+    (song_dir / "beats.json").write_text('[{"time": 0.0, "beat": 1, "bar": 1}]', encoding="utf-8")
+    (song_dir / "sections.json").write_text('[{"label": "Intro", "start": 0.0, "end": 10.0}]', encoding="utf-8")
+
+    song = Song(song_id="Test Song", base_dir=str(meta_path))
+    with pytest.raises(ValueError, match="features_unavailable") as exc_info:
+        generate_song_draft(song, [], [], lambda _fixture: set())
+
+    assert getattr(exc_info.value, "missing_artifacts") == [
+        {"artifact": "features_file", "path": str(song_dir / "features.json")},
+        {"artifact": "hints_file", "path": str(song_dir / "hints.json")},
+    ]

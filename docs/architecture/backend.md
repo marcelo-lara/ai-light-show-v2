@@ -124,6 +124,7 @@ Behavior:
 - Confirmed assistant mutations are terminal for the current turn: backend applies the action, emits `llm_action_applied`, then emits a backend-generated completion summary and `llm_done` without asking the gateway for another follow-up turn.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
 - `cue.apply_helper` accepts `payload.helper_id` plus optional `payload.params`. Backend validates the helper id, uses helper-owned parameter defaults and validation, then upserts the generated cue rows.
+- `cue_helper_apply_failed` carries `missing_artifacts` when helper execution detects absent analyzer artifact files, allowing frontend error UI to report the exact artifact names and resolved paths.
 - `state.cue_helpers` includes a parameter schema for each helper so the frontend can render helper-specific controls without hardcoded forms.
 - Cue persistence de-duplicates matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) within `100ms`, keeping the latest write even when the duplicate arrives through assistant-confirmed MCP-backed edits.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.

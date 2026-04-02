@@ -182,6 +182,32 @@ async def test_apply_helper_intent_unknown_helper():
 
 
 @pytest.mark.asyncio
+async def test_apply_helper_intent_forwards_missing_artifacts():
+    manager = _FakeManager()
+    manager.state_manager.current_song = type("MockSong", (), {"beats": object()})()
+
+    async def apply_cue_helper(helper_id, params=None):
+        return {
+            "ok": False,
+            "reason": "features_unavailable",
+            "helper_id": helper_id,
+            "missing_artifacts": [
+                {"artifact": "features_file", "path": "/tmp/meta/song/features.json"},
+            ],
+        }
+
+    manager.state_manager.apply_cue_helper = apply_cue_helper
+
+    ok = await apply_helper(manager, {"helper_id": "song_draft"})
+
+    assert ok is False
+    assert manager.events[-1][1] == "cue_helper_apply_failed"
+    assert manager.events[-1][2]["missing_artifacts"] == [
+        {"artifact": "features_file", "path": "/tmp/meta/song/features.json"},
+    ]
+
+
+@pytest.mark.asyncio
 async def test_cue_handlers_map_contains_full_names():
     assert "cue.add" in CUE_HANDLERS
     assert "cue.update" in CUE_HANDLERS
