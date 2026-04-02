@@ -62,7 +62,6 @@ function renderItemRow(item: AnalyzerQueueItem, taskTypes: AnalyzerTaskType[]): 
 		className: `analyzer-queue-row ${item.status}`,
 		content: [main, progressTrack],
 		actions,
-		isActive: item.status === "running" || item.status === "pending",
 	});
 }
 
