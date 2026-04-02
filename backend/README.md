@@ -119,6 +119,7 @@ Patch behavior:
 - `state.analyzer.task_types` exposes the analyzer-owned task catalog with `value`, `label`, and `description` fields for frontend task selection.
 - Analyzer service startup clears any persisted queue items before it begins serving queue state, so backend sees an empty analyzer queue after analyzer restarts.
 - `analyzer.enqueue` validates `task_type` against the analyzer-owned task catalog, derives analyzer `song_path` plus `meta_path`, posts a queue item to the analyzer service, and triggers queue-activity polling.
+- `analyzer.enqueue_full_artifact` derives analyzer `song_path` plus `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue endpoint, and triggers queue-activity polling.
 - `analyzer.execute` posts one queued item to the analyzer service execute endpoint and triggers queue-activity polling so pending/running state is relayed back into `state.analyzer`.
 - `analyzer.execute_all` executes every queue item whose current analyzer status is `queued`, then refreshes analyzer state once.
 - `analyzer.remove` deletes one analyzer queue item and refreshes `state.analyzer` immediately.

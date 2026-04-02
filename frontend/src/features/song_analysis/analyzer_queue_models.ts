@@ -29,3 +29,22 @@ export function analyzerItemDetail(item: AnalyzerQueueItem): string {
 	if (item.status === "pending") return "Waiting...";
 	return "Queued";
 }
+
+export function analyzerItemProgressPercent(item: AnalyzerQueueItem): number {
+	if (item.status === "complete" || item.status === "failed") return 100;
+	if (item.status === "pending") return 12;
+	const stepCurrent = typeof item.progress?.step_current === "number" ? item.progress.step_current : null;
+	const stepTotal = typeof item.progress?.step_total === "number" ? item.progress.step_total : null;
+	if (item.status === "running" && stepCurrent !== null && stepTotal && stepTotal > 0) {
+		return Math.max(8, Math.min(100, (stepCurrent / stepTotal) * 100));
+	}
+	if (item.status === "running") return 24;
+	return 0;
+}
+
+export function analyzerItemProgressTone(item: AnalyzerQueueItem): "idle" | "running" | "complete" | "failed" {
+	if (item.status === "complete") return "complete";
+	if (item.status === "failed") return "failed";
+	if (item.status === "running" || item.status === "pending") return "running";
+	return "idle";
+}

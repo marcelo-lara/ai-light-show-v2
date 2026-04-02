@@ -14,7 +14,7 @@ import {
   upsertSystemStatus,
 } from "../features/llm_chat/llm_state.ts";
 import { ConfirmCancelPrompt } from "../shared/components/feedback/ConfirmCancelPrompt.ts";
-import { enqueueAnalyzerItem, executeAllAnalyzerItems } from "../features/song_analysis/song_analysis_intents.ts";
+import { enqueueAnalyzerFullArtifact } from "../features/song_analysis/song_analysis_intents.ts";
 import { setSongLoaderSongs } from "../features/song_analysis/song_loader/state.ts";
 
 // If you inject bootstrap JSON in HTML, expose it as window.__BOOTSTRAP_STATE__
@@ -60,17 +60,7 @@ export function boot(ctx: BootContext) {
     const state = getBackendStore().state;
     const currentSong = state.song?.filename ?? "";
     const analyzer = state.analyzer ?? {};
-    const taskTypes = Array.isArray(analyzer.task_types)
-      ? analyzer.task_types.flatMap((taskType) => {
-          if (!taskType || typeof taskType !== "object") {
-            return [];
-          }
-          const value = (taskType as { value?: unknown }).value;
-          return typeof value === "string" ? [value] : [];
-        })
-      : [];
-
-    if (!currentSong || analyzer.available === false || analyzer.playback_locked === true || taskTypes.length === 0) {
+    if (!currentSong || analyzer.available === false || analyzer.playback_locked === true) {
       return false;
     }
 
@@ -78,18 +68,15 @@ export function boot(ctx: BootContext) {
     try {
       const confirmed = await ConfirmCancelPrompt({
         title: "Missing analyzer features",
-        message: `song_draft needs features.json. Add all analyzer queue tasks for ${currentSong} and run all now?`,
-        confirmLabel: "Queue + Run all",
+        message: `song_draft needs analyzer artifacts for ${currentSong}. Queue the full analysis playlist now?`,
+        confirmLabel: "Run Full Analysis",
         cancelLabel: "Cancel",
       });
       if (!confirmed) {
         return false;
       }
-      for (const taskType of taskTypes) {
-        enqueueAnalyzerItem(taskType, currentSong);
-      }
-      executeAllAnalyzerItems();
-      addSystemMessage(`Queued all analyzer tasks for ${currentSong} and started run all.`, "info");
+      enqueueAnalyzerFullArtifact(currentSong, true);
+      addSystemMessage(`Queued the analyzer full-artifact playlist for ${currentSong}.`, "info");
       return true;
     } finally {
       promptingSongDraftAnalysis = false;

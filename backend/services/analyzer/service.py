@@ -75,6 +75,11 @@ class AnalyzerService:
         await self.notify_queue_activity()
         return result
 
+    async def enqueue_full_artifact_playlist(self, params: dict[str, Any], activate: bool = True) -> dict[str, Any]:
+        result = await self._client.enqueue_full_artifact_playlist(params, activate=activate)
+        await self.notify_queue_activity()
+        return result
+
     async def remove_item(self, item_id: str) -> dict[str, Any]:
         result = await self._client.remove_item(item_id)
         await self.refresh()

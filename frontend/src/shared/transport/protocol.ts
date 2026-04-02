@@ -52,6 +52,7 @@ export type IntentName =
   | "song.list"
   | "song.load"
   | "analyzer.enqueue"
+  | "analyzer.enqueue_full_artifact"
   | "analyzer.execute"
   | "analyzer.execute_all"
   | "analyzer.remove"

@@ -70,6 +70,7 @@ Behavior:
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
 - `transport.play` blocks when analyzer reports any queue item in `running` state.
 - `analyzer.enqueue` and `analyzer.execute` both trigger queue-activity refresh so demand-driven analyzer polling resumes as soon as work is created or scheduled.
+- `analyzer.enqueue_full_artifact` schedules the analyzer-owned full-artifact playlist through the analyzer queue API and triggers queue-activity refresh immediately.
 - `analyzer.execute_all` scans the current analyzer queue for `queued` items, posts execute requests for those items, and then refreshes analyzer state.
 - `analyzer.remove_all` scans the current analyzer queue, deletes every non-running item, and then refreshes analyzer state.
 - During playback, backend stops analyzer polling and keeps the analyzer worker locked through the analyzer HTTP runtime.
@@ -106,6 +107,7 @@ Behavior:
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - When analyzer `info.json` is missing for the selected song, `song.load` falls back to empty metadata (`bpm=0`, `duration=0`, default beats path, empty artifacts) so the backend can still load the song and emit a valid snapshot.
 - `analyzer.enqueue` validates `payload.task_type` against the analyzer-owned task catalog, derives analyzer `song_path` and `meta_path` from backend song paths, posts a new analyzer queue item, and broadcasts the refreshed analyzer snapshot.
+- `analyzer.enqueue_full_artifact` derives analyzer `song_path` and `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue surface, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.execute` validates `payload.item_id`, posts one queued item to the analyzer execute endpoint, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.execute_all` executes every queue item currently marked `queued` and broadcasts the refreshed analyzer snapshot.
 - `analyzer.remove` validates `payload.item_id`, deletes that analyzer queue item, and broadcasts the refreshed analyzer snapshot.

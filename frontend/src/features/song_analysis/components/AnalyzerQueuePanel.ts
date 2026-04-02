@@ -4,8 +4,8 @@ import { Card } from "../../../shared/components/layout/Card.ts";
 import { List } from "../../../shared/components/layout/List.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../shared/state/backend_state.ts";
 import type { AnalyzerQueueItem, AnalyzerTaskType } from "../../../shared/transport/protocol.ts";
-import { analyzerItemDetail, analyzerProgressLabel, analyzerTaskDescription, analyzerTaskLabel } from "../analyzer_queue_models.ts";
-import { enqueueAnalyzerItem, executeAllAnalyzerItems, executeAnalyzerItem, removeAllAnalyzerItems, removeAnalyzerItem } from "../song_analysis_intents.ts";
+import { analyzerItemDetail, analyzerItemProgressPercent, analyzerItemProgressTone, analyzerProgressLabel, analyzerTaskDescription, analyzerTaskLabel } from "../analyzer_queue_models.ts";
+import { enqueueAnalyzerFullArtifact, enqueueAnalyzerItem, executeAllAnalyzerItems, executeAnalyzerItem, removeAllAnalyzerItems, removeAnalyzerItem } from "../song_analysis_intents.ts";
 
 function createText(className: string, text: string): HTMLSpanElement {
 	const node = document.createElement("span");
@@ -45,6 +45,12 @@ function renderItemRow(item: AnalyzerQueueItem, taskTypes: AnalyzerTaskType[]): 
 	);
 	const progress = analyzerProgressLabel(item.progress);
 	if (progress) main.append(createText("analyzer-queue-row-detail analyzer-queue-row-progress", progress));
+	const progressTrack = document.createElement("div");
+	progressTrack.className = "analyzer-queue-row-status";
+	const progressFill = document.createElement("div");
+	progressFill.className = `analyzer-queue-row-status-fill is-${analyzerItemProgressTone(item)}`;
+	progressFill.style.width = `${analyzerItemProgressPercent(item)}%`;
+	progressTrack.append(progressFill);
 	const actions = document.createElement("div");
 	if (item.status === "queued") {
 		actions.append(Button({ caption: "Run", state: "primary", bindings: { onClick: () => executeAnalyzerItem(item.item_id) } }));
@@ -52,7 +58,7 @@ function renderItemRow(item: AnalyzerQueueItem, taskTypes: AnalyzerTaskType[]): 
 	if (item.status !== "running") {
 		actions.append(Button({ caption: "Remove", bindings: { onClick: () => removeAnalyzerItem(item.item_id) } }));
 	}
-	return List({ className: "analyzer-queue-row", content: main, actions, isActive: item.status === "running" });
+	return List({ className: "analyzer-queue-row", content: [main, progressTrack], actions, isActive: item.status === "running" || item.status === "pending" });
 }
 
 export function AnalyzerQueuePanel(): HTMLElement {
@@ -77,10 +83,11 @@ export function AnalyzerQueuePanel(): HTMLElement {
 	taskList.className = "analyzer-queue-task-list";
 	const footerActions = document.createElement("div");
 	footerActions.className = "song-analysis-footer-actions";
-	const addButton = Button({ caption: "Add to queue", state: "primary" });
+	const fullAnalysisButton = Button({ caption: "Run Full Analysis", state: "primary" });
+	const addButton = Button({ caption: "Add Selected" });
 	const runAllButton = Button({ caption: "Run all" });
 	const removeAllButton = Button({ caption: "Remove All" });
-	actionsPanel.append(taskList, footerActions);
+	actionsPanel.append(fullAnalysisButton, taskList, footerActions);
 	footerActions.append(addButton, runAllButton, removeAllButton);
 	footer.append(actionsToggle, actionsPanel);
 	content.append(header, body, footer);
@@ -95,6 +102,7 @@ export function AnalyzerQueuePanel(): HTMLElement {
 		const summary = typeof analyzer.summary === "object" && analyzer.summary ? analyzer.summary as Record<string, unknown> : undefined;
 		const currentSong = state.song?.filename ?? "";
 		const queuedCount = summaryCount(summary, "queued");
+		const pendingCount = summaryCount(summary, "pending");
 		const runningCount = summaryCount(summary, "running");
 		const removableCount = items.filter((item) => item.status !== "running").length;
 		const taskValues = new Set(taskTypes.map((item) => item.value));
@@ -132,6 +140,21 @@ export function AnalyzerQueuePanel(): HTMLElement {
 			isExpanded = !isExpanded;
 			render();
 		};
+		fullAnalysisButton.disabled = !currentSong || analyzer.available === false || analyzer.playback_locked === true;
+		fullAnalysisButton.title = !currentSong
+			? "Load a song first"
+			: analyzer.available === false
+				? "Analyzer unavailable"
+				: analyzer.playback_locked === true
+					? "Playback is running"
+					: "Queue the analyzer full-artifact playlist and start it immediately";
+		fullAnalysisButton.onclick = () => {
+			if (!currentSong) return;
+			enqueueAnalyzerFullArtifact(currentSong, true);
+			selectedTasks = new Set<string>();
+			isExpanded = false;
+			render();
+		};
 		addButton.disabled = !currentSong || analyzer.available === false || analyzer.playback_locked === true || selectedTasks.size === 0;
 		addButton.title = !currentSong
 			? "Load a song first"
@@ -148,8 +171,12 @@ export function AnalyzerQueuePanel(): HTMLElement {
 			render();
 		};
 		runAllButton.disabled = queuedCount === 0 || analyzer.available === false || analyzer.playback_locked === true;
-		runAllButton.title = runningCount > 0 ? "Worker already active" : queuedCount === 0 ? "No queued items" : "Run all queued items";
-		runAllButton.onclick = () => executeAllAnalyzerItems();
+		runAllButton.title = runningCount > 0 || pendingCount > 0 ? "Worker already active" : queuedCount === 0 ? "No queued items" : "Run all queued items";
+		runAllButton.onclick = () => {
+			executeAllAnalyzerItems();
+			isExpanded = false;
+			render();
+		};
 		removeAllButton.disabled = removableCount === 0 || analyzer.available === false || analyzer.playback_locked === true;
 		removeAllButton.title = removableCount === 0 ? "No removable items" : analyzer.playback_locked === true ? "Playback is running" : analyzer.available === false ? "Analyzer unavailable" : "Remove all non-running items";
 		removeAllButton.onclick = () => removeAllAnalyzerItems();

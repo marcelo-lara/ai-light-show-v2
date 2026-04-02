@@ -192,6 +192,7 @@ Code is the source of truth.
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
 | `analyzer.enqueue` | `task_type`, `filename?` | validates `task_type` against the analyzer-owned task catalog, resolves selected song id to backend `songs_path` and `meta_path`, posts a queue item to the analyzer service, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
+| `analyzer.enqueue_full_artifact` | `filename?`, `activate?` | resolves selected song id to backend `songs_path` and `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue endpoint, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
 | `analyzer.execute` | `item_id` | posts one queued analyzer item to the analyzer execute endpoint and triggers queue-activity polling | `True` on success; else event `analyzer_execute_failed` and `False` |
 | `analyzer.execute_all` | none | reads analyzer queue items, executes each item with status `queued`, then refreshes analyzer state once | `True` when any queued item was dispatched; else `False` with event `analyzer_items_executed` carrying `count: 0` |
 | `analyzer.remove` | `item_id` | deletes one analyzer queue item and refreshes analyzer state | `True` on success; else event `analyzer_remove_failed` and `False` |

@@ -9,6 +9,7 @@ class _Client:
     def __init__(self, queued: int = 0, pending: int = 0, running: int = 0):
         self.lock_calls = []
         self.add_calls = []
+        self.playlist_calls = []
         self.remove_calls = []
         self.execute_calls = []
         self.task_type_calls = 0
@@ -41,6 +42,12 @@ class _Client:
         self.add_calls.append((task_type, params))
         self.queued += 1
         return {"ok": True, "item_id": "item-1"}
+
+    async def enqueue_full_artifact_playlist(self, params, activate=True):
+        self.playlist_calls.append((params, activate))
+        self.pending += 6 if activate else 0
+        self.queued += 6 if not activate else 0
+        return {"ok": True, "playlist": {"playlist": "full-artifact-analyzer"}, "scheduled": [{"item_id": "playlist-1"}]}
 
     async def remove_item(self, item_id):
         self.remove_calls.append(item_id)
@@ -151,6 +158,22 @@ async def test_analyzer_service_enqueue_resumes_polling(monkeypatch):
 
     assert result["item_id"] == "item-1"
     assert service._client.add_calls == [("generate-md", {"song_path": "/tmp/song.mp3"})]
+    assert service.snapshot()["polling"] is True
+
+    await service.suspend_polling()
+
+
+@pytest.mark.asyncio
+async def test_analyzer_service_enqueue_full_artifact_resumes_polling(monkeypatch):
+    service = AnalyzerService()
+    service._client = _Client()
+    service._manager = _Manager()
+    monkeypatch.setattr(service, "_poll_loop", lambda: asyncio.sleep(3600))
+
+    result = await service.enqueue_full_artifact_playlist({"song_path": "/tmp/song.mp3", "meta_path": "/tmp/meta"}, activate=True)
+
+    assert result["playlist"]["playlist"] == "full-artifact-analyzer"
+    assert service._client.playlist_calls == [({"song_path": "/tmp/song.mp3", "meta_path": "/tmp/meta"}, True)]
     assert service.snapshot()["polling"] is True
 
     await service.suspend_polling()

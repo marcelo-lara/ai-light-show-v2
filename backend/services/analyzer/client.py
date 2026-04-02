@@ -54,6 +54,15 @@ class AnalyzerHttpClient:
             response.raise_for_status()
             return response.json()
 
+    async def enqueue_full_artifact_playlist(self, params: dict[str, Any], activate: bool = True) -> dict[str, Any]:
+        async with httpx.AsyncClient(timeout=self._mutation_timeout()) as client:
+            response = await client.post(
+                f"{self.base_url}/queue/playlists/full-artifact",
+                json={**params, "activate": activate},
+            )
+            response.raise_for_status()
+            return response.json()
+
     async def remove_item(self, item_id: str) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=self._mutation_timeout()) as client:
             response = await client.delete(f"{self.base_url}/queue/items/{item_id}")
