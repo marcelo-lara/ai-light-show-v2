@@ -4,7 +4,7 @@ import { Card } from "../../../shared/components/layout/Card.ts";
 import { List } from "../../../shared/components/layout/List.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../shared/state/backend_state.ts";
 import type { AnalyzerQueueItem, AnalyzerTaskType } from "../../../shared/transport/protocol.ts";
-import { analyzerItemDetail, analyzerItemProgressPercent, analyzerItemProgressTone, analyzerProgressLabel, analyzerTaskDescription, analyzerTaskLabel } from "../analyzer_queue_models.ts";
+import { analyzerItemDetail, analyzerItemProgressPercent, analyzerItemProgressTone, analyzerProgressLabel, analyzerTaskDescription, analyzerTaskLabel } from "./models.ts";
 import { enqueueAnalyzerFullArtifact, enqueueAnalyzerItem, executeAllAnalyzerItems, executeAnalyzerItem, removeAllAnalyzerItems, removeAnalyzerItem } from "../song_analysis_intents.ts";
 
 function createText(className: string, text: string): HTMLSpanElement {
@@ -22,10 +22,10 @@ function summaryCount(summary: Record<string, unknown> | undefined, key: string)
 function isAnalyzerTaskType(value: unknown): value is AnalyzerTaskType {
 	return Boolean(
 		value &&
-		typeof value === "object" &&
-		typeof (value as AnalyzerTaskType).value === "string" &&
-		typeof (value as AnalyzerTaskType).label === "string" &&
-		typeof (value as AnalyzerTaskType).description === "string",
+			typeof value === "object" &&
+			typeof (value as AnalyzerTaskType).value === "string" &&
+			typeof (value as AnalyzerTaskType).label === "string" &&
+			typeof (value as AnalyzerTaskType).description === "string",
 	);
 }
 
@@ -58,7 +58,12 @@ function renderItemRow(item: AnalyzerQueueItem, taskTypes: AnalyzerTaskType[]): 
 	if (item.status !== "running") {
 		actions.append(Button({ caption: "Remove", bindings: { onClick: () => removeAnalyzerItem(item.item_id) } }));
 	}
-	return List({ className: "analyzer-queue-row", content: [main, progressTrack], actions, isActive: item.status === "running" || item.status === "pending" });
+	return List({
+		className: `analyzer-queue-row ${item.status}`,
+		content: [main, progressTrack],
+		actions,
+		isActive: item.status === "running" || item.status === "pending",
+	});
 }
 
 export function AnalyzerQueuePanel(): HTMLElement {

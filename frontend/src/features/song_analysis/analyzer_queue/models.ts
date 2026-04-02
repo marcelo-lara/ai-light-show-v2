@@ -1,4 +1,4 @@
-import type { AnalyzerProgress, AnalyzerQueueItem, AnalyzerTaskType } from "../../shared/transport/protocol.ts";
+import type { AnalyzerProgress, AnalyzerQueueItem, AnalyzerTaskType } from "../../../shared/transport/protocol.ts";
 
 function taskTypeEntry(taskType: string, taskTypes: AnalyzerTaskType[] | null | undefined): AnalyzerTaskType | undefined {
 	return taskTypes?.find((option) => option.value === taskType);
