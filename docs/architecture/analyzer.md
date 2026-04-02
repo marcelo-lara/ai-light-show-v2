@@ -1,57 +1,77 @@
 # Analyzer (song analysis) — Architecture
 
-This document describes the `analyzer` module: the song analysis scripts, how they are run manually, and how results are integrated into the backend.
+This document describes the analyzer service, its task execution model, and the artifact contract consumed by backend playback and backend-mounted MCP tools.
 
 ## Location
 
-- Source: `analyzer/` (main script: `analyzer/analyze_song.py`)
-- Output: `analyzer/meta/<song>/info.json` (canonical metadata file)
-- Temporary working dir: `analyzer/temp_files/{song_slug}` (configurable via `ANALYZER_TEMP_DIR`).
+- Source root: `analyzer/`
+- CLI entrypoint: `analyzer/analyze_song.py`
+- HTTP entrypoint: `analyzer/src/runtime/app.py`
+- Canonical outputs: `analyzer/meta/<song>/...`
+- Queue persistence: `analyzer/temp_files/queue.json`
 
 ## Purpose
 
-- Extract deterministic metadata and derived artifacts for each song (stems, beatmaps, spectral features, run records).
-- Produce reproducible JSON metadata under the configured meta directory (default: `analyzer/meta/{song_slug}`).
+- Generate deterministic song-analysis artifacts such as metadata roots, stems, beats, sections, Essentia descriptors, hints, features, and markdown summaries.
+- Execute analyzer-owned tasks through either the CLI flow or the analyzer HTTP queue and playlist surfaces.
+- Present the analyzer as a standalone Docker service that backend calls over HTTP instead of through Python imports.
 
-## API / CLI
+## Module layout
 
-- The pipeline is runnable via the local CLI: `python analyzer/analyze_song.py <song_path>`.
-- To validate Moises import in the container, run `docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --import-moises` or replace the song name with another track that has usable `moises/` data.
-- To validate markdown generation in the container, run `docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --generate-md` or replace the song name with another track that already has usable `sections.json` data.
-- For bulk runs the repository includes convenience scripts under `analyzer/`.
+- `src/api/`: request models and FastAPI route registration.
+- `src/runtime/`: ASGI app entrypoint, worker lifecycle, and progress helpers.
+- `src/storage/`: canonical song metadata path and JSON helpers.
+- `src/engines/`: low-level analysis implementations such as beat finding and stem splitting.
+- `src/tasks/`: analyzer-owned single-purpose task modules with metadata used by CLI, queue, and playlists.
+- `src/task_queue/`: persisted queue operations and queue worker dispatch.
+- `src/playlists/`: analyzer-owned ordered task plans such as the full-artifact playlist.
+- `src/report_tool/`: report generation helpers such as markdown rendering and beat comparison.
+
+## Service model
+
+- The analyzer container serves `src.runtime.app:app` on port `8100`.
+- The FastAPI lifespan owns queue-path resolution, playback lock state, queue startup clearing, and the background worker loop.
+- The worker loop only processes pending items while playback lock is `false`.
+- Backend is the intended client. It reads analyzer task metadata, queue state, and playlist resolution over HTTP and loads generated files from `/app/meta`.
+- `moises/` under `analyzer/meta/<song>/` is external source-of-truth input. Analyzer may normalize it into canonical outputs but must never overwrite or delete those source files.
+
+## Task and playlist flow
+
+- `src/tasks/catalog.py` is the analyzer-owned source of truth for task ids, labels, parameter schemas, prerequisites, outputs, and execution functions.
+- Queue dispatch resolves tasks from that metadata instead of a hand-maintained branch table.
+- The full-artifact playlist lives in `src/playlists/full_artifact.py`.
+- Full-artifact execution selects the analyzer-native or Moises-backed task order from the current song metadata directory.
+- Recommended analyzer-native order: `init-song`, `split-stems`, `beat-finder`, `find-sections`, `essentia-analysis`, `find-song-features`, `generate-md`.
+- Recommended Moises-backed order: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
+
+## Artifact contract
+
+- `info.json`: canonical song metadata root with analyzer-owned artifact references.
+- `beats.json`: canonical beat events used by backend and MCP consumers.
+- `sections.json`: canonical persisted section rows.
+- `hints.json`: section-indexed loudness hints derived from mix and supporting stem evidence.
+- `features.json`: analyzer-owned song and section feature summary for light-show generation.
+- `essentia/*.json` and `essentia/*.svg`: feature time series, descriptors, and optional plots.
+- `stems/*`: Demucs outputs when stem splitting is requested.
+
+## CLI and HTTP surfaces
+
+- CLI orchestration remains in `analyze_song.py` for manual runs and direct task execution.
+- The HTTP service exposes health, task catalog, queue, playback-lock, and playlist endpoints.
+- `POST /queue/playlists/full-artifact` schedules the resolved playlist steps for one song.
+- `POST /playlists/full-artifact/execute` runs the resolved playlist synchronously and returns per-task results.
 
 ## Backend integration
 
-- Backend reads metadata from `/app/meta` (mounted from `analyzer/meta` in Docker).
-- If `/app/meta` is unavailable, backend falls back to local `backend/meta`.
-- Backend accepts `info.json` as canonical, with fallback to legacy filenames like `<song>.json` or per-song directory formats.
-- Metadata is loaded during song load in `StateManager` and exposed through websocket `snapshot` / `patch` state payloads.
+- Backend loads analyzer artifacts from `/app/meta` during song load and relays analyzer queue state under `state.analyzer`.
+- During playback, backend stops analyzer polling and keeps analyzer playback lock enabled so queue execution pauses.
+- Analyzer startup clears persisted queue items before serving requests, so backend observes an empty queue after analyzer restarts.
 
-## Storage & outputs
+## Validation
 
-- Output directory: by default `analyzer/meta/{song_slug}` (configurable via `out_dir`).
-- Temporary working dir: `analyzer/temp_files/{song_slug}` (configurable via `ANALYZER_TEMP_DIR`).
-- Run records and step artifact manifests are written into the song metadata directory (e.g., `run.json`).
-- `info.json` stores Essentia artifacts grouped by part under `artifacts.essentia.{mix|bass|drums|vocals|other}.{feature}`.
-- `sections.json` is the canonical persisted top-level list of section rows. Rows use analyzer-authored fields like `start`, `end`, and `label`, and may also carry `description` and `hints` on the same objects.
-- `hints.json` stores a plain list of song sections with relevant loudness-shape hints. Mix anchors section-level meaning, and stem events are folded in only when they materially support a local `rise`, `drop`, or `sudden_spike`. Stable high-energy sections receive `sustain` hints. The file is referenced by `artifacts.hints_file`.
-- Moises data (`moises/` directory): Exists purely for internal importing or beat-sync comparison purposes within the analyzer module and should never be used as a system-wide source of truth by the UI, Backend, or external systems (like MCP). The unified source of truth for rhythm data output is `analyzer/meta/{song_slug}/beats.json`. When `moises/segments.json` is present and `sections.json` is missing, the analyzer may materialize `sections.json` from those segments, but only after standalone section validation that stays compatible with backend section consumers.
-
-## Docker & deployment notes
-
-- The project `docker-compose.yml` includes an analyzer service for manual runs with GPU access.
-- Environment variables used in analyzer scripts:
-  - `ANALYZER_TEMP_DIR` (optional override)
-
-## Testing & dev
-
-- Unit tests and integration tests validate metadata loading and section save/dirty-state behavior.
-- Tests no longer expect Celery task lifecycle messages; focus on manual metadata production + backend persistence on save.
-
-## Troubleshooting
-
-- Common issues:
-  - Analyzer heavy models: long-running steps may need GPUs; use the analyzer image/runtime configured for `nvidia` if available.
+- Start the analyzer container with `docker compose up analyzer --build`.
+- Run the analyzer-local HTTP and playlist regression suite with `PYTHONPATH=. PYENV_VERSION=ai-light pyenv exec python -m pytest analyzer/tests/test_init_song.py analyzer/tests/test_task_dispatch.py analyzer/tests/test_full_artifact_playlist.py analyzer/tests/test_http_api.py`.
+- For manual validation, run `docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --full-artifact-playlist`.
 
 ---
-Reference: `analyzer/analyze_song.py`, `backend/store/state.py`, `backend/api/websocket_manager/messaging.py`.
+Reference: `analyzer/analyze_song.py`, `analyzer/src/runtime/app.py`, `analyzer/src/tasks/catalog.py`, `analyzer/src/playlists/full_artifact.py`.

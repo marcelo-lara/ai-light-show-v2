@@ -43,3 +43,6 @@ def create_app(queue_path: Path | None = None, worker_enabled: bool = True, work
     app = FastAPI(title="AI Light Show v2 Analyzer", lifespan=lifespan)
     register_routes(app)
     return app
+
+
+app = create_app()

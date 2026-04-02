@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from src.http_api import create_app
+from src.runtime.app import create_app
 
 
 def test_http_api_queue_crud_and_playback_lock(tmp_path: Path) -> None:

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "analyzer"))
 
-from src.http_api import create_app
+from src.runtime.app import create_app
 
 
 def test_http_api_queue_crud_and_playback_lock(tmp_path: Path):

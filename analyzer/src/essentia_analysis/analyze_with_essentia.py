@@ -210,9 +210,8 @@ def analyze_with_essentia(
         },
     }
 
-    # Organize into separate artifacts
     artifacts = {
-        "rhythm": data,  # Keep the old data for compatibility
+        "rhythm": data,
         "loudness_envelope": {
             "part": part_name,
             "sample_rate": sr,

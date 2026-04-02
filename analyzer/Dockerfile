@@ -63,4 +63,4 @@ PY
 COPY src ./src
 RUN mkdir -p ./temp_files
 
-CMD ["uvicorn", "src.http_api:app", "--host", "0.0.0.0", "--port", "8100"]
+CMD ["uvicorn", "src.runtime.app:app", "--host", "0.0.0.0", "--port", "8100"]

@@ -12,17 +12,16 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 ## Entry points
 
 - `analyze_song.py`: orchestrates analyzer tasks from CLI/interactive flow.
-- `src/http_api.py`: FastAPI service exposing queue state and playback lock control.
 - `src/api/`: HTTP request models and route registration for the analyzer service surface.
 - `src/engines/`: low-level analysis implementations such as beat finding and stem splitting.
-- `src/runtime/`: app factory and worker lifecycle bootstrap for the analyzer container.
+- `src/runtime/`: FastAPI app entrypoint, progress helpers, and worker lifecycle bootstrap for the analyzer container.
 - `src/storage/`: song metadata paths and canonical analyzer file helpers.
-- `src/find_beats.py`: beat/downbeat extraction.
-- `src/split_stems.py`: Demucs-based stem extraction.
+- `src/engines/find_beats.py`: beat/downbeat extraction.
+- `src/engines/split_stems.py`: Demucs-based stem extraction.
 - `src/essentia_analysis/`: Essentia feature extraction and plotting helpers.
 - `src/song_features/`: synthesizes LLM-facing song features from analyzer artifacts, beat-window stem accents, per-part relative dips, merged section-level low windows, optional music-model tags, and Essentia TensorFlow model outputs when that runtime is available.
 - `src/musical_structure/`: Hugging Face-backed chord and section inference, comparison helpers, and model registry.
-- `src/tasks/`: analyzer-owned single-purpose task modules used by the CLI, queue worker, and future service playlists.
+- `src/tasks/`: analyzer-owned single-purpose task modules used by the CLI, queue worker, and playlists.
 - `src/report_tool/`: analyzer-owned report and summary generators such as beat comparison and markdown rendering.
 
 ## Service direction
@@ -78,8 +77,8 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 
 ## HTTP service
 
-- The analyzer container serves `src/http_api.py` on port `8100`.
-- The service bootstrap lives in `src/runtime/app.py`, route registration lives in `src/api/routes.py`, and `src/http_api.py` remains the container entry shim.
+- The analyzer container serves `src/runtime/app.py` on port `8100`.
+- The FastAPI app object and app factory live in `src/runtime/app.py`, and route registration lives in `src/api/routes.py`.
 - The service exposes `GET /health`, `GET /task-types`, `GET /task-types/{task_type}`, `GET /queue/status`, `GET /queue/items`, `GET /queue/items/{item_id}`, `POST /queue/items`, `DELETE /queue/items/{item_id}`, `POST /queue/items/{item_id}/execute`, `POST /queue/playlists/full-artifact`, `POST /runtime/playback-lock`, `GET /playlists`, `GET /playlists/full-artifact`, `GET /playlists/full-artifact/metadata`, and `POST /playlists/full-artifact/execute`.
 - `GET /task-types` returns the analyzer-owned task catalog used by backend validation and the Song Analysis queue UI.
 - `GET /task-types/{task_type}` returns the full analyzer-owned schema for one task, including parameter descriptions, prerequisites, outputs, and notes.
@@ -102,7 +101,7 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 
 - `analyzer/meta/<song>/info.json`: canonical song metadata.
 - `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable chord data, this file is normalized from `moises/chords.json`.
-- `analyzer/meta/<song>/sections.json`: canonical persisted section list. When `moises/segments.json` exists and `sections.json` is absent, Moises import materializes this file using the analyzer section row shape (`start`, `end`, `label`, optional `description`, optional `hints`) after standalone section-range validation that stays compatible with backend consumers.
+- `analyzer/meta/<song>/sections.json`: canonical persisted section list. When `moises/segments.json` exists and `sections.json` is absent, Moises import materializes this file using the analyzer section row shape (`start`, `end`, `label`, optional `description`, optional `hints`) after standalone section-range validation used by backend consumers.
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
 - `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, and optional semantic tags from a music audio-classification model.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
