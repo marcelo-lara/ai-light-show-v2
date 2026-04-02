@@ -77,7 +77,6 @@ def _load_moises_beats(path: Path) -> tuple[list[float], int]:
     if not isinstance(payload, list):
         warn(f"Moises beats payload is not a list: {path}")
         return [], 0
-
     values = []
     skipped = 0
     for item in payload:
@@ -85,7 +84,6 @@ def _load_moises_beats(path: Path) -> tuple[list[float], int]:
             skipped += 1
             continue
         values.append(item.get("time"))
-
     beats, malformed = _parse_numeric_list(values, "moises", emit_warn=False)
     skipped += malformed
     if skipped:
@@ -104,7 +102,7 @@ def _load_analyzer_beats(path: Path) -> tuple[list[float], int]:
 
 def _beats_in_window(beats: list[float], start_sec: float, window_sec: float) -> list[float]:
     end_sec = start_sec + window_sec
-    return [t for t in beats if start_sec <= t < end_sec]
+    return [time_value for time_value in beats if start_sec <= time_value < end_sec]
 
 
 def _nearest_delta_seconds(target_time: float, sorted_reference: list[float]) -> Optional[float]:
@@ -123,55 +121,31 @@ def _nearest_delta_seconds(target_time: float, sorted_reference: list[float]) ->
 
 def _window_error_stats(base_beats: list[float], reference_beats: list[float]) -> dict:
     if not base_beats or not reference_beats:
-        return {
-            "count": len(base_beats),
-            "median_error_ms": None,
-            "mean_error_ms": None,
-            "close": None,
-            "computable": False,
-        }
-
+        return {"count": len(base_beats), "median_error_ms": None, "mean_error_ms": None, "close": None, "computable": False}
     deltas = []
     for beat_time in base_beats:
         delta = _nearest_delta_seconds(beat_time, reference_beats)
         if delta is not None:
             deltas.append(delta)
-
     if not deltas:
-        return {
-            "count": len(base_beats),
-            "median_error_ms": None,
-            "mean_error_ms": None,
-            "close": None,
-            "computable": False,
-        }
-
+        return {"count": len(base_beats), "median_error_ms": None, "mean_error_ms": None, "close": None, "computable": False}
     median_error_ms = statistics.median(deltas) * 1000.0
     mean_error_ms = statistics.mean(deltas) * 1000.0
-    return {
-        "count": len(base_beats),
-        "median_error_ms": float(median_error_ms),
-        "mean_error_ms": float(mean_error_ms),
-        "close": median_error_ms <= COMPARE_CLOSE_THRESHOLD_MS,
-        "computable": True,
-    }
+    return {"count": len(base_beats), "median_error_ms": float(median_error_ms), "mean_error_ms": float(mean_error_ms), "close": median_error_ms <= COMPARE_CLOSE_THRESHOLD_MS, "computable": True}
 
 
 def run_compare_beat_times_for(song_path: Path, meta_path: str | Path = META_PATH) -> Optional[dict]:
     meta_root = Path(meta_path).expanduser().resolve()
     song_meta_dir = _song_meta_dir(song_path, meta_root)
-
     essentia_file = song_meta_dir / "essentia" / "rhythm.json"
     moises_file = song_meta_dir / "moises" / "beats.json"
     analyzer_file = song_meta_dir / "beats.json"
-
     required_files = [essentia_file, moises_file, analyzer_file]
     missing_files = [path for path in required_files if not path.exists()]
     if missing_files:
         for path in missing_files:
             warn(f"Missing required beat source file: {path}")
         return None
-
     try:
         essentia_beats, _ = _load_essentia_beats(essentia_file)
         moises_beats, _ = _load_moises_beats(moises_file)
@@ -179,149 +153,65 @@ def run_compare_beat_times_for(song_path: Path, meta_path: str | Path = META_PAT
     except Exception as exc:
         warn(f"Failed to load beat sources: {exc}")
         return None
-
-    source_beats = {
-        "essentia": essentia_beats,
-        "moises": moises_beats,
-        "analyzer": analyzer_beats,
-    }
-
+    source_beats = {"essentia": essentia_beats, "moises": moises_beats, "analyzer": analyzer_beats}
     max_time_candidates = [beats[-1] for beats in source_beats.values() if beats]
     if not max_time_candidates:
         warn("No beats available in any source; cannot compare")
         return None
-
     max_time = max(max_time_candidates)
     window_starts = []
     cursor = 0.0
     while cursor <= max_time:
         window_starts.append(round(cursor, 6))
         cursor += COMPARE_STEP_SECONDS
-
     windows = []
     per_source_window_medians: dict[str, list[float]] = {name: [] for name in source_beats}
-
     for start_sec in window_starts:
         end_sec = start_sec + COMPARE_WINDOW_SECONDS
-        window_source_beats = {
-            name: _beats_in_window(beats, start_sec, COMPARE_WINDOW_SECONDS)
-            for name, beats in source_beats.items()
-        }
-
-        window_entry = {
-            "start_sec": start_sec,
-            "end_sec": end_sec,
-            "sources": {},
-        }
-
+        window_source_beats = {name: _beats_in_window(beats, start_sec, COMPARE_WINDOW_SECONDS) for name, beats in source_beats.items()}
+        window_entry = {"start_sec": start_sec, "end_sec": end_sec, "sources": {}}
         for source_name in source_beats:
             reference = []
             for other_name, beats in window_source_beats.items():
                 if other_name != source_name:
                     reference.extend(beats)
             reference.sort()
-
             stats = _window_error_stats(window_source_beats[source_name], reference)
             window_entry["sources"][source_name] = stats
-            median_ms = stats.get("median_error_ms")
-            if median_ms is not None:
-                per_source_window_medians[source_name].append(float(median_ms))
-
+            if stats["median_error_ms"] is not None:
+                per_source_window_medians[source_name].append(float(stats["median_error_ms"]))
         windows.append(window_entry)
-
-    overall = {}
-    for source_name, median_values in per_source_window_medians.items():
-        if median_values:
-            overall[source_name] = {
-                "window_count": len(median_values),
-                "overall_median_error_ms": float(statistics.median(median_values)),
-                "overall_mean_error_ms": float(statistics.mean(median_values)),
-                "close_window_count": sum(
-                    1
-                    for window in windows
-                    if window["sources"][source_name].get("close") is True
-                ),
-            }
-        else:
-            overall[source_name] = {
-                "window_count": 0,
-                "overall_median_error_ms": None,
-                "overall_mean_error_ms": None,
-                "close_window_count": 0,
-            }
-
-    ranked_sources = sorted(
-        overall.keys(),
-        key=lambda name: (
-            overall[name]["overall_median_error_ms"] is None,
-            overall[name]["overall_median_error_ms"] if overall[name]["overall_median_error_ms"] is not None else float("inf"),
-        ),
-    )
-    winner = None
-    if ranked_sources and overall[ranked_sources[0]]["overall_median_error_ms"] is not None:
-        winner = ranked_sources[0]
-
+    summary = {}
+    for source_name, medians in per_source_window_medians.items():
+        summary[source_name] = {
+            "window_count": len(medians),
+            "median_error_ms": statistics.median(medians) if medians else None,
+            "mean_error_ms": statistics.mean(medians) if medians else None,
+            "close_windows": sum(1 for window in windows if window["sources"][source_name]["close"]),
+            "best": False,
+        }
+    best_source = None
+    best_value = None
+    for source_name, source_summary in summary.items():
+        metric = source_summary["median_error_ms"]
+        if metric is None:
+            continue
+        if best_value is None or metric < best_value:
+            best_value = metric
+            best_source = source_name
+    if best_source is not None:
+        summary[best_source]["best"] = True
     report = {
-        "song": song_path.stem,
-        "config": {
-            "window_seconds": COMPARE_WINDOW_SECONDS,
-            "step_seconds": COMPARE_STEP_SECONDS,
-            "close_threshold_ms": COMPARE_CLOSE_THRESHOLD_MS,
-            "method": COMPARE_METHOD,
-        },
-        "sources": {
-            "essentia": str(essentia_file),
-            "moises": str(moises_file),
-            "analyzer": str(analyzer_file),
-        },
-        "windows": windows,
-        "overall": {
-            "sources": overall,
-            "ranking": ranked_sources,
-            "winner": winner,
-        },
+        "song": Path(song_path).name,
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "method": COMPARE_METHOD,
+        "compare_window_seconds": COMPARE_WINDOW_SECONDS,
+        "compare_step_seconds": COMPARE_STEP_SECONDS,
+        "close_threshold_ms": COMPARE_CLOSE_THRESHOLD_MS,
+        "summary": summary,
+        "windows": windows,
     }
-
     report_file = song_meta_dir / "beat_comparison.json"
     _dump_json(report_file, report)
-
-    print("\nBeat Time Comparison")
-    print(
-        f"Sampling: {COMPARE_WINDOW_SECONDS:.1f}s window every {COMPARE_STEP_SECONDS:.1f}s | "
-        f"close <= {COMPARE_CLOSE_THRESHOLD_MS:.1f}ms"
-    )
-    print("Window        | Essentia       | Moises         | Analyzer")
-    print("--------------+----------------+----------------+----------------")
-    for window in windows:
-        start_sec = window["start_sec"]
-        end_sec = window["end_sec"]
-
-        def _fmt(name: str) -> str:
-            metrics = window["sources"][name]
-            median = metrics.get("median_error_ms")
-            if median is None:
-                return "n/a"
-            close_flag = "Y" if metrics.get("close") else "N"
-            return f"{median:6.1f}ms {close_flag}"
-
-        print(
-            f"{start_sec:6.1f}-{end_sec:6.1f} | "
-            f"{_fmt('essentia'):14} | "
-            f"{_fmt('moises'):14} | "
-            f"{_fmt('analyzer'):14}"
-        )
-
-    print("\nOverall ranking (lower median error is better):")
-    for idx, source_name in enumerate(ranked_sources, start=1):
-        metric = overall[source_name]["overall_median_error_ms"]
-        metric_text = "n/a" if metric is None else f"{metric:.1f}ms"
-        print(f"{idx}. {source_name}: {metric_text}")
-
-    if winner is None:
-        warn("No computable windows were found; winner is null")
-    else:
-        print(f"Winner: {winner}")
-
-    print(f"Saved report: {report_file}")
+    print(f"Beat comparison saved to {report_file}")
     return report

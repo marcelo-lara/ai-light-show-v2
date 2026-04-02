@@ -32,6 +32,26 @@ def get_item(item_id: str, queue_path: Path = QUEUE_FILE_PATH) -> dict[str, Any]
         return next((item for item in load_items(queue_path) if item.get("item_id") == item_id), None)
 
 
+def add_playlist_items(tasks: list[dict[str, Any]], queue_path: Path = QUEUE_FILE_PATH, activate: bool = True) -> list[dict[str, Any]]:
+    scheduled: list[dict[str, Any]] = []
+    for task in tasks:
+        task_type = str(task.get("task_type"))
+        params = task.get("params") if isinstance(task.get("params"), dict) else {}
+        item_id = add_item(task_type, params, queue_path)
+        item = get_item(item_id, queue_path)
+        if activate and item is not None and item.get("status") == "queued":
+            item = execute_item(item_id, queue_path) or get_item(item_id, queue_path)
+        scheduled.append(
+            {
+                "item_id": item_id,
+                "task_type": task_type,
+                "status": None if item is None else item.get("status"),
+                "params": params,
+            }
+        )
+    return scheduled
+
+
 def add_item(task_type: str, params: dict[str, Any], queue_path: Path = QUEUE_FILE_PATH) -> str:
     with QUEUE_LOCK:
         if task_type not in TASK_TYPES:

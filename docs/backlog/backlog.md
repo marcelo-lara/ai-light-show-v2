@@ -51,6 +51,13 @@
 - Rationale: this improves correctness and consistency, but it is a broad contract change that can touch helpers, chasers, rendering, tests, and documentation.
 - Note: treat this as a coordinated backend change, not a quick patch.
 
+#### Backend: Add/Refine base fixture effects
+- Moving heads: orbit 'dim' should be optional (calculate light by default, BUT allow to skip it). The goal is to combine the 'orbit' effect with other lighting patterns.
+
+#### Backend: Add new chasers / Refine current chasers
+- TBD: 'drop', 'slow vocal', 'drop buildup', 'outro hit', 'outro fade', 
+
+
 ### P3 - Improve analyzer model evaluation
 
 #### Analyzer: Chords Finder

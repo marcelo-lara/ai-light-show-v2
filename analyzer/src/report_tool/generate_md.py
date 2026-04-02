@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 
-from src.song_meta import load_sections, song_meta_dir, song_name
+from src.storage.song_meta import load_sections, song_meta_dir, song_name
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")
 
@@ -53,9 +53,7 @@ def _render_feature_summary(features: dict[str, object]) -> list[str]:
     low_windows = raw_low_windows if isinstance(raw_low_windows, list) else []
     lines = ["## Feature Summary", ""]
     if isinstance(energy, dict):
-        lines.append(
-            f"Energy mean {energy.get('mean', 0.0):.3f}, peak {energy.get('peak', 0.0):.3f}, range {energy.get('dynamic_range', 0.0):.3f}."
-        )
+        lines.append(f"Energy mean {energy.get('mean', 0.0):.3f}, peak {energy.get('peak', 0.0):.3f}, range {energy.get('dynamic_range', 0.0):.3f}.")
     if isinstance(tags, list) and tags:
         label_text = ", ".join(str(tag.get("label")) for tag in tags[:5] if isinstance(tag, dict) and tag.get("label"))
         if label_text:
@@ -91,10 +89,7 @@ def _render_section_feature(section: dict[str, object], features: dict[str, obje
     raw_sections = features.get("sections")
     feature_sections = raw_sections if isinstance(raw_sections, list) else []
     match = next(
-        (
-            row for row in feature_sections
-            if isinstance(row, dict) and row.get("name") == section["name"] and row.get("start_s") == section["start_s"]
-        ),
+        (row for row in feature_sections if isinstance(row, dict) and row.get("name") == section["name"] and row.get("start_s") == section["start_s"]),
         None,
     )
     if not isinstance(match, dict):
@@ -113,9 +108,7 @@ def _render_section_feature(section: dict[str, object], features: dict[str, obje
     if isinstance(match.get("summary"), str) and match.get("summary"):
         lines.append(str(match.get("summary")))
     if isinstance(energy, dict):
-        lines.append(
-            f"Energy: {energy.get('level', 'unknown')} with {energy.get('trend', 'unknown')} trend, peak {energy.get('peak', 0.0):.3f}."
-        )
+        lines.append(f"Energy: {energy.get('level', 'unknown')} with {energy.get('trend', 'unknown')} trend, peak {energy.get('peak', 0.0):.3f}.")
     if top_parts:
         lines.append(f"Dominant parts: {top_parts}.")
     if phrases:
@@ -179,7 +172,6 @@ def main() -> int:
     parser.add_argument("song_path", type=str, help="Path to the source song file")
     parser.add_argument("--meta-path", type=str, default=META_PATH, help="Path to the analyzer meta root")
     args = parser.parse_args()
-
     output_path = generate_md_file(args.song_path, meta_path=args.meta_path)
     if output_path is None:
         print(f"No sections metadata found for {Path(args.song_path).stem}")

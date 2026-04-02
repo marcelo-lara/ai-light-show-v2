@@ -11,7 +11,7 @@ import librosa
 import numpy as np
 import essentia.standard as es
 
-from src.song_meta import load_json_file, load_list_file, load_sections, song_meta_dir, song_name
+from src.storage.song_meta import load_json_file, load_list_file, load_sections, song_meta_dir, song_name
 from src.song_features.stem_accents import build_stem_beat_profiles, merge_low_windows, summarize_stem_accents, summarize_stem_dips
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")

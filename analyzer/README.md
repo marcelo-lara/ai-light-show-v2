@@ -7,16 +7,50 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - Generate beat/downbeat timing and musical descriptors.
 - Produce per-song metadata under `analyzer/meta/<song>/`.
 - Feed timing/feature truth to backend and its mounted MCP tools.
+- Act as a standalone Docker service whose clients submit analyzer tasks and consume analyzer artifacts over stable service boundaries.
 
 ## Entry points
 
 - `analyze_song.py`: orchestrates analyzer tasks from CLI/interactive flow.
 - `src/http_api.py`: FastAPI service exposing queue state and playback lock control.
-- `src/beat_finder.py`: beat/downbeat extraction.
+- `src/api/`: HTTP request models and route registration for the analyzer service surface.
+- `src/engines/`: low-level analysis implementations such as beat finding and stem splitting.
+- `src/runtime/`: app factory and worker lifecycle bootstrap for the analyzer container.
+- `src/storage/`: song metadata paths and canonical analyzer file helpers.
+- `src/find_beats.py`: beat/downbeat extraction.
 - `src/split_stems.py`: Demucs-based stem extraction.
 - `src/essentia_analysis/`: Essentia feature extraction and plotting helpers.
 - `src/song_features/`: synthesizes LLM-facing song features from analyzer artifacts, beat-window stem accents, per-part relative dips, merged section-level low windows, optional music-model tags, and Essentia TensorFlow model outputs when that runtime is available.
 - `src/musical_structure/`: Hugging Face-backed chord and section inference, comparison helpers, and model registry.
+- `src/tasks/`: analyzer-owned single-purpose task modules used by the CLI, queue worker, and future service playlists.
+- `src/report_tool/`: analyzer-owned report and summary generators such as beat comparison and markdown rendering.
+
+## Service direction
+
+- Treat the analyzer as a standalone Docker service, not as a backend-owned internal module.
+- Backend is a client of the analyzer HTTP API, queue surface, and generated artifact contract.
+- Favor analyzer-owned task metadata and filesystem contracts that can move to another repository without requiring cross-repo Python imports.
+- Treat `moises/` as an external source of truth. Analyzer tasks may read and normalize Moises data into canonical analyzer outputs, but they must never overwrite or delete files inside `analyzer/meta/<song>/moises/`.
+
+## Task dependencies and outcomes
+
+| Task | Inputs | Outputs | Notes |
+|---|---|---|---|
+| `init-song` | source song path | `info.json` root | Creates only `song_name`, `song_path`, and `artifacts`.
+| `split-stems` | source song path | `stems/*`, updated `info.json` | Initializes song metadata before writing derived fields.
+| `beat-finder` | source song path, optional Moises files | `beats.json`, updated `info.json` | Imports Moises beats when usable chord data exists; otherwise runs analyzer beat detection.
+| `import-moises` | `moises/chords.json` | `beats.json`, optional `sections.json` | Normalizes Moises beat rows and materializes sections from Moises segments when available, without modifying the original Moises files.
+| `essentia-analysis` | source song path, optional stems | `essentia/*.json`, `essentia/*.svg`, `hints.json`, updated `info.json` | Builds section-indexed hints when sections exist; otherwise falls back to a single song-wide section.
+| `find_chords` | `beats.json` | updated beats output, updated `info.json` | Optional beat enrichment step.
+| `find_sections` | `beats.json` | `sections.json`, updated `info.json` | Produces canonical persisted song sections.
+| `find-song-features` | `info.json`, `beats.json`, `essentia` mix artifacts | `features.json`, updated `info.json` | Also uses `sections.json` and `hints.json` when present.
+| `generate-md` | `sections.json`, optional `features.json` | `<song>.md` | Terminal presentation artifact.
+
+Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find-sections`, `essentia-analysis`, `find-song-features`, `generate-md`.
+
+Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
+
+The executable full-artifact playlist lives in `src/playlists/full_artifact.py` and selects the analyzer-native or Moises-backed path from current song metadata.
 
 ## Progress callbacks
 
@@ -32,6 +66,8 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 - Queue code lives in the dedicated `src/task_queue/` package.
 - Public Python API is re-exported from `src/task_queue/__init__.py` and implemented in `src/task_queue/api.py`.
 - The task catalog is analyzer-owned in `src/task_queue/dispatch.py`; each task entry includes `value`, `label`, and `description`.
+- The queue catalog is sourced from analyzer task metadata in `src/tasks/catalog.py` rather than a hand-maintained dispatch branch table.
+- The task catalog now includes `init-song`, which creates the canonical song metadata root before downstream tasks merge derived fields.
 - Supported operations are `list_items(...)`, `add_item(...)`, `remove_item(...)`, `execute_item(...)`, and `process_queue(...)`.
 - Queue item statuses are `queued`, `pending`, `running`, `complete`, and `failed`.
 - `add_item(...)` stores task parameters and returns `item_id`.
@@ -43,10 +79,17 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 ## HTTP service
 
 - The analyzer container serves `src/http_api.py` on port `8100`.
-- The service exposes `GET /health`, `GET /task-types`, `GET /queue/status`, `GET /queue/items`, `GET /queue/items/{item_id}`, `POST /queue/items`, `DELETE /queue/items/{item_id}`, `POST /queue/items/{item_id}/execute`, and `POST /runtime/playback-lock`.
+- The service bootstrap lives in `src/runtime/app.py`, route registration lives in `src/api/routes.py`, and `src/http_api.py` remains the container entry shim.
+- The service exposes `GET /health`, `GET /task-types`, `GET /task-types/{task_type}`, `GET /queue/status`, `GET /queue/items`, `GET /queue/items/{item_id}`, `POST /queue/items`, `DELETE /queue/items/{item_id}`, `POST /queue/items/{item_id}/execute`, `POST /queue/playlists/full-artifact`, `POST /runtime/playback-lock`, `GET /playlists`, `GET /playlists/full-artifact`, `GET /playlists/full-artifact/metadata`, and `POST /playlists/full-artifact/execute`.
 - `GET /task-types` returns the analyzer-owned task catalog used by backend validation and the Song Analysis queue UI.
+- `GET /task-types/{task_type}` returns the full analyzer-owned schema for one task, including parameter descriptions, prerequisites, outputs, and notes.
 - `GET /queue/status` returns the persisted queue items, a per-status summary, the current playback lock flag, and whether the in-process worker loop is active.
 - The worker loop processes pending queue items only while playback lock is `false`.
+- `POST /queue/playlists/full-artifact` enqueues the resolved playlist steps for one song and can mark them pending immediately so the worker loop can execute them without client-side per-task queue choreography.
+- `GET /playlists` lists analyzer-owned playlist definitions.
+- `GET /playlists/full-artifact` returns the resolved analyzer-native or Moises-backed task order for one song.
+- `GET /playlists/full-artifact/metadata` returns the static playlist schema, parameters, variants, and produced artifacts without resolving a specific song.
+- `POST /playlists/full-artifact/execute` runs that playlist synchronously through analyzer-owned task modules and returns the per-task results.
 - Backend is the intended client for this service. It performs a one-shot status refresh at startup, stays idle while the queue is empty, and only polls continuously after queue activity is known. During show playback the backend stops polling and sets playback lock to `true`, so analyzer queue execution is paused until playback ends.
 
 ## Inputs and outputs
@@ -94,6 +137,18 @@ Interactive option `4. Find Song Features` builds `features.json` for the select
 
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --essentia-analysis --beat-finder
+```
+
+To run the executable full-artifact playlist for one song, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Armin - Revolution.mp3" --full-artifact-playlist
+```
+
+To initialize the canonical song metadata root without running analysis, run:
+
+```bash
+docker compose exec analyzer python -m src.tasks.init_song "/app/songs/Armin - Revolution.mp3"
 ```
 
 To validate chord inference against the canonical Yonaka beat metadata, run:

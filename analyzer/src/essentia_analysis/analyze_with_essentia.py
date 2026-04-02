@@ -7,7 +7,7 @@ from typing import Any, Dict
 import essentia.standard as es
 import numpy as np
 
-from ..progress import ProgressCallback, emit_stage
+from ..runtime.progress import ProgressCallback, emit_stage
 from .common import to_jsonable, warn
 from .extract_rhythm_descriptors import extract_rhythm_descriptors
 from .plot_essentia_analysis import (
