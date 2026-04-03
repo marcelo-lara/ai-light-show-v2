@@ -1,26 +1,60 @@
-# Show External Cue Creation Guide
+# Show External Cue Creation Guide For LLMs
 
-This guide captures the repo-specific knowledge needed to author light show cues in this project without re-learning the system every session.
+This document is the generic authoring guide for language models working in this repo. Use it to create new shows, refine existing shows, and keep the planning and cue artifacts aligned.
 
-## What A Cue File Is
+## Goal
 
-- Cue sheets live in `backend/cues/<Song Name>.json`.
-- A cue file is a JSON array.
-- Each item is either:
-  - an effect cue entry:
-    - `time`
-    - `fixture_id`
-    - `effect`
-    - `duration`
-    - `data`
-    - optional `created_by`
-  - or a chaser cue entry:
-    - `time`
-    - `chaser_id`
-    - `data` with `repetitions`
-    - optional `created_by`
+For any song, produce:
 
-Example effect entry:
+- a planning brief at `analyzer/meta/<Song>/<Song>.md`
+- a cue sheet at `backend/cues/<Song>.json`
+
+The planning brief explains the creative plan. The cue sheet implements it.
+
+## Required Iteration Behavior
+
+When refining an existing song:
+
+- always update `analyzer/meta/<Song>/<Song>.md`
+- always update `backend/cues/<Song>.json`
+- update this guide when a rule becomes reusable across songs
+- clear the cue time window for the section being rebuilt before recreating that section
+
+Do not stack new ideas on top of stale cues for the same section.
+
+## Core Files To Read First
+
+- Fixtures: [fixtures.json](/home/darkangel/ai-light-show-v2/backend/fixtures/fixtures.json)
+- POIs: [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json)
+- Chasers: [chasers.json](/home/darkangel/ai-light-show-v2/backend/fixtures/chasers.json)
+- Song beats: `analyzer/meta/<Song>/beats.json`
+- Song sections: `analyzer/meta/<Song>/sections.json`
+- Optional song metadata:
+  - `analyzer/meta/<Song>/info.json`
+  - `analyzer/meta/<Song>/features.json`
+  - `analyzer/meta/<Song>/hints.json`
+  - `analyzer/meta/<Song>/*_loudness_envelope.json`
+
+If timing matters, trust `beats.json` and `sections.json` first. If motion and emotional rise/fall matter, also inspect `*_loudness_envelope.json`.
+
+## Deliverables
+
+### 1. Planning Brief
+
+Create `analyzer/meta/<Song>/<Song>.md` with:
+
+- feature summary
+- high-level visual strategy
+- fixture intentions
+- section-by-section plan
+- loudness, dip, build, and drop observations
+- any song-specific rules that should guide later cue edits
+
+### 2. Cue Sheet
+
+Create or update `backend/cues/<Song>.json` as a JSON array of cue entries.
+
+Each cue is usually:
 
 ```json
 {
@@ -33,50 +67,22 @@ Example effect entry:
 }
 ```
 
-Example chaser entry:
+Chaser entries are also allowed:
 
 ```json
 {
   "time": 6.7,
-  "chaser_id": "yonaka_intro",
+  "chaser_id": "example_chaser",
   "data": {
     "repetitions": 4
   },
-  "created_by": "chaser:yonaka_intro"
+  "created_by": "chaser:example"
 }
 ```
 
-## Core Files To Read First
+## Fixture Inventory
 
-- Fixtures: [fixtures.json](/home/darkangel/ai-light-show-v2/backend/fixtures/fixtures.json)
-- POIs: [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json)
-- Chasers: [chasers.json](/home/darkangel/ai-light-show-v2/backend/fixtures/chasers.json)
-- Song beat/chord map: `analyzer/meta/<Song>/beats.json`
-- Song sections: `analyzer/meta/<Song>/sections.json`
-- Song planning note target: `analyzer/meta/<Song>/<Song>.md`
-- Cue target: `backend/cues/<Song>.json`
-
-For timing-heavy work, `beats.json` and `sections.json` are the most important sources.
-
-## Required Outputs
-
-When building a show from scratch, create both of these deliverables:
-
-- a planning brief at `analyzer/meta/<Song>/<Song>.md`
-- the cue sheet at `backend/cues/<Song>.json`
-
-The planning brief should capture:
-
-- the high-level visual plan
-- fixture-type intentions
-- section-by-section strategy
-- any important loudness, rise, or drop findings that should shape later cue work
-
-The cue sheet should implement that plan in actual cues.
-
-## Current Fixture Inventory
-
-Current fixed ids from [fixtures.json](/home/darkangel/ai-light-show-v2/backend/fixtures/fixtures.json):
+Current fixture ids from [fixtures.json](/home/darkangel/ai-light-show-v2/backend/fixtures/fixtures.json):
 
 - `head_el150`
 - `mini_beam_prism_l`
@@ -86,36 +92,23 @@ Current fixed ids from [fixtures.json](/home/darkangel/ai-light-show-v2/backend/
 - `parcan_pl`
 - `parcan_pr`
 
-Practical grouping:
+Practical groups:
 
-- Moving head:
-  - `head_el150`
-- Prism moving heads:
-  - `mini_beam_prism_l`
-  - `mini_beam_prism_r`
-- Inner RGB parcans:
-  - `parcan_l`
-  - `parcan_r`
-- Outer proton parcans:
-  - `parcan_pl`
-  - `parcan_pr`
+- `head_el150`: phrase narrator
+- `mini_beam_prism_l`, `mini_beam_prism_r`: energy, drops, room focus
+- `parcan_l`, `parcan_r`: inner rhythmic detail
+- `parcan_pl`, `parcan_pr`: wider stage reinforcement
 
-Useful left/right groups:
+Useful side groups:
 
-- Left side:
-  - `mini_beam_prism_l`
-  - `parcan_l`
-  - `parcan_pl`
-- Right side:
-  - `mini_beam_prism_r`
-  - `parcan_r`
-  - `parcan_pr`
+- left: `mini_beam_prism_l`, `parcan_l`, `parcan_pl`
+- right: `mini_beam_prism_r`, `parcan_r`, `parcan_pr`
 
-## POI Reality Check
+## POI Rules
 
-Do not guess POI coverage. Read [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json) and use the actual stored pan/tilt mappings.
+Do not guess POIs. Read [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json) and only use mapped POIs for the target fixture.
 
-Current named room POIs with fixture mappings:
+Common named room POIs:
 
 - `piano`
 - `table`
@@ -125,7 +118,7 @@ Current named room POIs with fixture mappings:
 - `wall`
 - `ceiling_station`
 
-Current cardinal reference POIs:
+Cardinal reference POIs:
 
 - `ref_0_0_0`
 - `ref_1_0_0`
@@ -136,116 +129,96 @@ Current cardinal reference POIs:
 - `ref_1_1_1`
 - `ref_0_1_1`
 
-Practical authoring rule:
+Practical usage:
 
-- If a user asks to use more POIs, check `pois.json` first instead of assuming coverage.
-- The named room POIs are good for storytelling and scene focus.
-- The cardinal `ref_x_y_z` POIs are good spatial anchors when you want motion to feel more intentional or extreme.
-- Use cardinal `ref_x_y_z` POIs as preferred start points for `orbit` and `sweep` when you want to emphasize those effects.
-- This is not a strict rule: use them as an emphasis tool, not as a mandatory starting point for every motion effect.
+- named room POIs are best for storytelling and room focus
+- `ref_x_y_z` POIs are best for deliberate sweeps, orbits, and spatially bold motion
+- prefer `ref_x_y_z` starts for `sweep` and `orbit` when you want the movement itself to read clearly
+- for grounded or voice-led motion, prefer lower-plane `z=0` POIs when the mapping supports it
 
-## Effects That Matter Most In Practice
+## Effects You Will Use Most
 
-Commonly useful effects in this project:
+Most useful effects:
 
+- `set_channels`
 - `flash`
 - `full`
-- `fade_out`
 - `fade_in`
+- `fade_out`
 - `blackout`
-- `set_channels`
 - `move_to_poi`
 - `orbit`
 - `sweep`
 
-### Practical effect behavior notes
+Practical notes:
 
-`flash`
+### `set_channels`
 
-- Best for punchy accents.
-- On RGB fixtures, `data.color` works.
-- On moving heads, `flash` mainly drives intensity; color wheel still needs separate `set_channels`.
+- use it to set wheel color, prism state, gobo, dim floor, shutter, or other non-positional channels
+- on moving heads, use `set_channels` before `flash` when the color or gobo matters
 
-`set_channels`
+### `flash`
 
-- This is the main tool for moving-head color/prism/gobo setup.
-- Use it before a flash if you need:
-  - prism on/off/rotate
-  - color wheel changes
-  - dim floor changes
-  - gobo selection
+- use for impacts and rhythmic punctuation
+- on RGB fixtures, color can be set directly in the flash payload when supported
+- on moving heads, do not rely on `flash` alone for color changes
 
-`move_to_poi`
+### `move_to_poi`
 
-- Use for direct fixture-to-POI positioning.
-- Only valid when the target fixture actually has that POI mapped.
-- Prism movement is mechanically slow: plan around roughly 2 seconds for full-range pan travel and 1 second for full-range tilt travel.
-- Use `move_to_poi` as a pre-roll tool when the next visual moment depends on being in position on time.
+- use for direct positioning and pre-roll
+- only use valid mapped POIs
+- prism fixtures are mechanically slow, so pre-position them before the hit
 
-`orbit` and `sweep`
+### `sweep` and `orbit`
 
-- Good for longer EL-150 phrase motion.
-- If you want the motion to read bigger and more deliberate, consider starting from a cardinal `ref_x_y_z` POI first.
-- Use this especially for section openings, instrumental lifts, and other “show the movement” moments.
-- Do not force this on every motion phrase; named room POIs can still be better for narrative focus.
-- For prism fixtures, movement effects should not be shorter than 2 seconds.
-- More broadly, avoid authoring movement moments that are faster than the rig can physically resolve.
-- Avoid overlapping multiple pan/tilt effects on the same moving head at the same timestamp unless you intentionally want one to win.
+- use sweep mainly on `head_el150`, and orbit on `mini_beam_prism_l` and `mini_beam_prism_r` for phrase motion
+- these are best for section openings, vocal phrasing, instrumental arcs, and deliberate movement moments
+- avoid piling multiple pan/tilt actions on the same fixture at the same timestamp unless one is intentionally replacing another
 
-`fade_out`
+### `fade_out`
 
-- Good for true release moments.
-- Be careful with prism fixtures: if the creative note says “keep them alive,” a `fade_out` may kill too much presence.
-- In practice, a low `set_channels` dim floor can be better than `fade_out`.
+- use for true release, closure, or intentional space
+- avoid overusing it on prisms when the creative direction is “stay alive but restrained”
 
-## Prism Meta-Channel Knowledge
+## Mechanical Timing Rules
 
-From the mini beam fixture definition:
+- build timing from actual beat timestamps, not guessed BPM math
+- prism travel needs time
+- assume roughly 2 seconds for full pan travel and 1 second for full tilt travel on prism fixtures
+- do not author prism movement phrases shorter than 2 seconds unless the move is very small
+- if a hit depends on a prism landing somewhere, schedule the `move_to_poi` early
 
-- `prism: 0` = off
-- `prism: 130` = on
-- `prism: 200` = rotate
+## Color And Channel Knowledge
 
-This is important:
+### Mini Beam Prism
 
-- If you want static split beams, use `130`.
-- If you want aggressive high-energy prism motion, use `200`.
-- Use `set_channels` to switch between those values.
-
-Example:
-
-```json
-{
-  "time": 84.18,
-  "fixture_id": "mini_beam_prism_l",
-  "effect": "set_channels",
-  "duration": 0.0,
-  "data": {
-    "channels": {
-      "color": 55,
-      "prism": 200,
-      "dim": 240,
-      "strobe": 0
-    }
-  }
-}
-```
-
-## Color Mapping Knowledge
-
-Mini beam prism color wheel useful values:
+Useful color wheel values:
 
 - `55` = blue
 - `65` = indigo
 - `15` = red
 
-Head EL-150 color wheel useful values:
+Prism channel values:
+
+- `0` = off
+- `130` = on
+- `200` = rotate
+
+Practical guidance:
+
+- use `130` for static split-beam texture
+- use `200` for stronger high-energy motion
+- blue/indigo palettes work especially well on the prisms
+
+### Head EL-150
+
+Useful color wheel values:
 
 - `150` = blue
 - `175` = red
 - `75` = purple
 
-Head EL-150 gobo wheel current values:
+Current gobo wheel values:
 
 - `0` = `Open`
 - `12` = `Tunnel`
@@ -256,262 +229,202 @@ Head EL-150 gobo wheel current values:
 - `72` = `Tribal`
 - `84` = `Slashes`
 
-In practice:
+Practical guidance:
 
-- Use `55` / `150` for blue
-- Use `65` for prism indigo
-- Use `15` / `175` for red
-- EL-150 does not have a true indigo slot, so purple is the closest wheel mood
-- On `head_el150`, prefer only the `open` or `tunnel` gobo wheels unless a song-specific note explicitly asks for another gobo
-- `Tunnel` now maps to `12`, not `25`
+- prefer only `Open` or `Tunnel` unless a song-specific note explicitly asks for another gobo
+- `Tunnel` is `12`, not `25`
+- EL-150 has no true indigo wheel slot, so purple is the closest moody companion to prism indigo
 
-## Timing Workflow
+### RGB And Proton Parcans
 
-When writing a show from metadata:
+Generic guidance:
 
-1. Read `sections.json`
-2. Read `beats.json`
-3. Extract:
-   - section starts/ends
-   - bar starts
-   - exact beat timestamps
-   - chord changes if relevant
-4. Build cue timing from actual timestamps, not from guessed BPM math alone
+- choose parcan colors as analogous companions to the prism palette
+- if prisms live in blue / indigo, keep parcans in blue / indigo / azure territory
+- if prisms live in pink / magenta / indigo, keep parcans adjacent rather than fighting the palette
 
-Preferred timing anchors:
+## Generic Creative Translation Rules
 
-- For arrangement logic:
-  - section starts from `sections.json`
-- For beat-accurate cueing:
-  - exact beat times from `beats.json`
-- For repeated motifs:
-  - map by `bar` and `beat`, not by rough seconds
+Translate song analysis into fixture behavior like this:
 
-Mechanical timing rule:
+- low energy bars: dimmer, slower, more spacious
+- rising bars: brighter, more assertive, more open
+- drops: remove energy before the hit, then release it decisively
+- vocal-led sections: fewer hits, slower motion, more focus
+- electronic or instrumental sections: more kinetic, more rhythmic, more extroverted
 
-- Prism fixtures need travel time.
-- Assume about 2 seconds for full pan travel and about 1 second for full tilt travel.
-- Use earlier `move_to_poi` entries as pre-roll if a hit depends on the prism landing at a target.
-- Do not make movement-based prism effects shorter than 2 seconds.
+Useful fixture roles:
 
-## Chaser Format
+- prisms: impact, drop language, emotional release
+- `head_el150`: phrase narrator, glue, section transitions
+- inner parcans: chatter, syncopation, stereo detail
+- outer parcans: width, weight, downbeat reinforcement
 
-Chasers live in [chasers.json](/home/darkangel/ai-light-show-v2/backend/fixtures/chasers.json).
+## How To Build A Show
 
-Schema shape:
+Use this order:
 
-```json
-{
-  "id": "example_id",
-  "name": "Readable Name",
-  "description": "What the chaser does",
-  "effects": [
-    {
-      "beat": 0.0,
-      "fixture_id": "parcan_l",
-      "effect": "flash",
-      "duration": 1.0,
-      "data": {}
-    }
-  ]
-}
-```
+1. Read fixture and POI definitions.
+2. Read `sections.json` and `beats.json`.
+3. Read the song metadata files that matter for energy, loudness, or hints.
+4. Write the planning brief in `analyzer/meta/<Song>/<Song>.md`.
+5. Decide the palette and recurring motion language.
+6. Decide which ideas belong in raw cues and which belong in chasers.
+7. Build the cue sheet in `backend/cues/<Song>.json`.
+8. Validate JSON.
+9. Spot-check exact timestamps, especially the ones the user called out.
 
-Notes:
+## Section Identity Patterns
 
-- `beat` is an offset inside the chaser pattern.
-- `duration` is also in beats.
-- Chaser cycle length is inferred from the maximum `beat + duration`.
-- This means long trailing effects can accidentally stretch the chaser cycle.
+### Voice-Driven Sections
 
-Practical consequence:
-
-- If you want a chaser to loop every 4 bars, watch the final event duration carefully.
-
-## Reusable Authoring Pattern
-
-When building a song from scratch, use this order:
-
-1. Establish fixture groups
-2. Check POI coverage
-3. Read beat and section metadata
-4. Create `analyzer/meta/<Song>/<Song>.md` with the high-level show brief
-5. Decide the recurring motif
-6. Decide what belongs in:
-   - raw cues
-   - reusable chasers
-7. Author the cue sheet in `backend/cues/<Song>.json`
-8. Author the intro first
-9. Validate JSON
-10. Spot-check exact timestamps the user cares about
-
-## What Worked Well For Yonaka - Seize the Power
-
-For this system, a good intro authoring strategy was:
-
-- use actual beat timestamps
-- use alternating left/right prism flashes
-- pair each prism hit with opposite-side parcans
-- use blue wheel/color as the anchor
-- keep a low prism dim floor when the creative note says “don’t disappear”
-- use a stronger overlapping “double punch” for cycle anchors
-- save the repeated motif as a chaser once the pattern stabilizes
-
-For the full-song Yonaka pass, these approaches also worked well:
-
-- treat section changes as explicit events with a short blackout just before the new section hit
-- let the chorus and drop moments push prism rotation harder than the surrounding phrases
-- use `move_to_poi` as true pre-roll for prism drops instead of trying to arrive exactly on the hit
-- for the strongest drops, put both prisms on `table` in full white with `prism: 200` before the hit, then switch to `prism: 0` at the drop while fading over about 1 second
-- use a fade-to-black pseudo pre-drop sentence when a vocal or arrangement line needs negative space before the next impact
-- slow prism call-response motion reads better in instrumental sections than constant flash spam
-- parcan walking patterns across left/right fixtures work well for short build sections and can create motion without overusing moving heads
-
-## Drop Prep Pattern
-
-When a notable drop is led by a short vocal-only window, prefer this authoring sentence:
-
-- clear the cue time window for that lead-in and rebuild it as one phrase
-- start dimming the room several bars before the drop if the arrangement thins out early
-- black out or fade out all fixtures except `head_el150`
-- let `head_el150` carry the vocal phrase alone at about half intensity
-- use `tunnel` gobo on `head_el150` for that vocal-only tension unless the user asks for a different texture
-- at the drop bar, let both prism fixtures begin with a full white flash before the rest of the electronic energy widens again
-
-Practical use:
-
-- if the user points to bars like `43 -> 46` and says the room should empty out for vocals, treat that as a section-level rebuild, not a tiny additive tweak
-- keep the pre-drop negative space intentional so the white prism hit feels earned
-
-## Section Identity Pattern
-
-When a song brief says a section is voice-driven rather than beat-driven, reflect that in the cue language:
+When a section is voice-driven rather than beat-driven:
 
 - keep motion slower and more phrase-based
-- reduce flash density and avoid treating every beat like a hit
-- prefer lower-plane `z=0` POIs for moving-head storytelling when the note calls for grounded or voice-led motion
-- let `head_el150` carry the phrasing while prisms stay elegant and supportive
-- when the phrase is strongly vocal-led, give all moving heads one shared anchor POI
+- reduce flash density
+- prefer grounded `z=0` moving-head ideas when possible
+- let `head_el150` carry the sentence while prisms support it elegantly
+
+For strongly vocal-led phrases:
+
+- give all moving heads one shared anchor POI
 - use that anchor as the same `start_POI` or the same `target_POI`
-- from that shared anchor, let the moving heads either converge into one POI or diverge outward to different POIs
-- make the phrase readable: give the shared anchor at least one clear phrase before you split it
-- avoid half-split targeting that does not clearly read as either a converge phrase or a diverge phrase
-- when tightening an existing show, rebuild the whole moving-head phrase window so every phrase point commits to the same anchor logic
+- choose one of two clear reads:
+  - `converge`: all moving heads go to the same POI
+  - `diverge`: the phrase starts from the same anchor, then the moving heads split outward
+- make the phrase readable: let the anchor idea land clearly before changing it
+- avoid half-split targeting that does not read cleanly as converge or diverge
+- if tightening an existing show, rebuild the whole moving-head phrase window so the anchor logic is consistent through the phrase
 
-When a song brief marks a specific bar as a high-energy ignition:
+### High-Energy Ignition Bars
 
-- start the pre-drop about `2` bars earlier unless the song note says otherwise
-- use those two bars to compress the room and simplify the rhythm
-- let the ignition bar reopen the rig with the moving fixtures leading the release
-- if that ignition bar starts an outro, let it land with full energy first, then release afterward rather than fading immediately
+When a section or bar is marked as a major hit:
 
-## Outro Closure Pattern
+- start the pre-drop about 2 bars earlier unless the song note says otherwise
+- use those bars to simplify the room and compress the rhythm
+- let the moving fixtures lead the reopening on the ignition bar
+- allow prisms to get brighter, wider, or more rotational than the surrounding material
 
-For every song, treat the final ending sentence as a required rule:
+### Loudness Envelope Rule
+
+If `*_loudness_envelope.json` shows a drop-then-rise pattern, treat it as a likely emotional cue point:
+
+- on the drop bar, thin the room and reduce motion density
+- on the explode bar, let prisms and `head_el150` drive the release first
+- then let the parcans widen and reinforce it
+
+## Reusable Winning Patterns
+
+### Drop Prep Pattern
+
+When a notable drop is led by a short vocal-only or low-density window:
+
+- clear that window and rebuild it as one phrase
+- start dimming several bars before the hit if the arrangement already thins out
+- black out or fade out almost everything except `head_el150`
+- let `head_el150` carry the line at about half intensity
+- prefer `Tunnel` on `head_el150` for that tension phase
+- at the drop bar, let both prisms start with a strong white hit before the wider rig opens again
+
+### Outro Closure Pattern
+
+For every song:
 
 - on the outro or end-of-song release, point the moving heads to `table`
-- use `fade_out` for the closing release
-- the closing `fade_out` must be at least `1` second long
-- if the section is being refined, clear that ending cue window first and rebuild it cleanly
+- close with `fade_out`
+- make the closing `fade_out` at least 1 second long
+- if refining the ending, clear that ending window first and rebuild it cleanly
 
 Practical note:
 
-- for this rig, the "point to `table` and fade" rule mainly applies to `head_el150`, `mini_beam_prism_l`, and `mini_beam_prism_r`
-- parcans do not use POIs, so they only need the closing `fade_out` part of the sentence
+- the POI part mainly applies to `head_el150`, `mini_beam_prism_l`, and `mini_beam_prism_r`
+- parcans only need the closing fade behavior
 
-## Final Yonaka Handoff Notes
+### Color Palette Pattern
 
-These are show-specific notes from the final refinement pass for `Yonaka - Seize the Power`:
+When choosing colors:
 
-- do not use `inblue_desk` in this show
-- do not use `dark_desk` in this show
-- prefer `table`, `sofa`, `wall`, `piano`, `ceiling_station`, and the cardinal `ref_x_y_z` anchors instead
-- if a future refinement adds new prism drop moments, reuse the same winning drop recipe:
-  - pre-roll both prisms to `table`
-  - pre-roll parcans to full fade_out
-  - hold full white with prism on before the hit
-  - at the hit, turn off prism and fade intensity for about 2 second
-- if a phrase around `112s` feels too busy, preserve the pseudo pre-drop behavior:
-  - both prisms to `table`
-  - fade the scene toward black
-  - resume only after the drop handoff
+- choose the main palette from the prism wheel first
+- then choose analogous colors for the parcans
+- save white for punctuation, drops, and endings
 
-## Common Gotchas
+## Chasers
 
-### 1. Root-owned cue files
+Chasers live in [chasers.json](/home/darkangel/ai-light-show-v2/backend/fixtures/chasers.json).
 
-Some cue files may be owned by `root` while the directory is writable.
+Important schema facts:
 
-If direct write fails with permission denied:
+- chaser `effects[].beat` is an offset inside the pattern
+- chaser `effects[].duration` is also in beats
+- the total cycle length is inferred from the largest `beat + duration`
 
-- generate the replacement file elsewhere in the workspace
-- remove the root-owned file
-- move the regenerated file into place
+Use chasers when:
 
-Do not assume normal overwrite will work.
+- a repeated motif stabilizes across several bars
+- the pattern is truly reusable
 
-### 2. `flash` is not enough for moving-head color
+Prefer raw cues when:
 
-If you need a prism or moving head to flash in blue/red/indigo:
+- the section has unique phrasing
+- the motion or energy shape changes bar by bar
 
-- set the wheel color first with `set_channels`
-- then trigger `flash`
+## Common Mistakes
 
-### 3. POI assumptions break easily
+### 1. Guessing POI coverage
 
-Before using `move_to_poi`, confirm the fixture has that POI in `pois.json`.
+Always verify POIs in [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json).
 
-### 4. Prism presence vs release
+### 2. Using `flash` without setting moving-head color first
 
-If the user says the prisms feel “too dim too much time,” check for:
+If a moving head must flash in a specific color, set the wheel first with `set_channels`.
 
-- `fade_out` entries on prism fixtures
-- `set_channels` dim floors that are too low
+### 3. Making prism movement too fast
 
-Sometimes a better solution is:
+Prisms need travel time. Pre-roll the move.
 
-- keep `dim: 10` or higher when not blacked out
-- reserve true `fade_out` for actual endings/releases
+### 4. Leaving old cues alive after a rebuild
+
+If you refine a section but do not clear its old cues first, stale motion or pre-rolls may fight the new idea.
 
 ### 5. Duplicate same-time entries
 
-When repeatedly editing cues by script, it is easy to stack multiple flashes for the same fixture/time.
+Scripted edits can accidentally stack multiple entries for the same `time + fixture_id + effect`. Inspect key timestamps after big changes.
 
-Always inspect key timestamps after big changes.
+### 6. Killing prism presence by mistake
 
-### 6. Old pre-rolls can conflict with new drop logic
+If the note is “restrained” rather than “gone,” a low dim floor may be better than `fade_out`.
 
-When refining a section late in the process, older `move_to_poi` entries may still be active at the same timestamp.
+### 7. Root-owned cue files
 
-This matters most on drop setups:
+If direct overwrite fails because the file is owned by `root`:
 
-- confirm there is only one intended pre-roll destination per fixture
-- especially re-check prism pre-rolls when switching a drop to `table`
+- write a replacement file elsewhere
+- remove the old file
+- move the new one into place
 
 ## Minimal Verification Checklist
 
-After any cue or chaser change:
+After any meaningful change:
 
-1. Run JSON validation
-2. Inspect exact requested timestamps
-3. Confirm fixture ids are real
-4. Confirm POIs are valid for the target fixture
-5. Confirm prism values are intentional:
-   - `0`
-   - `130`
-   - `200`
+1. Validate JSON.
+2. Inspect the exact timestamps the user cared about.
+3. Confirm fixture ids are real.
+4. Confirm POIs are valid for each target fixture.
+5. Confirm prism values are intentional: `0`, `130`, or `200`.
+6. Check for duplicate same-time `fixture_id + effect` entries.
+7. Confirm the ending obeys the `table + fade_out >= 1s` rule.
 
-## Recommended Future Session Prompting
+## Default LLM Authoring Contract
 
-If a future session is asked to build a show, the fastest start is:
+If you are the model creating or refining a show:
 
-- read this guide
-- inspect:
-  - [fixtures.json](/home/darkangel/ai-light-show-v2/backend/fixtures/fixtures.json)
-  - [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json)
-  - [chasers.json](/home/darkangel/ai-light-show-v2/backend/fixtures/chasers.json)
-  - `analyzer/meta/<Song>/beats.json`
-  - `analyzer/meta/<Song>/sections.json`
-- then author from real beat times, not guesses
+- read the song metadata before writing cues
+- write the planning brief before or alongside the cue sheet
+- use real timestamps
+- keep fixture roles distinct
+- let low-energy parts breathe
+- make rises and drops legible
+- update the song brief when the creative direction changes
+- update this guide when you discover a rule that should apply to future songs
 
-That avoids almost all of the re-discovery work.
+This avoids rediscovering the same workflow every session.
