@@ -11,7 +11,7 @@ class AnalyzerHttpClient:
 
     @staticmethod
     def _status_timeout() -> httpx.Timeout:
-        return httpx.Timeout(5.0)
+        return httpx.Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0)
 
     @staticmethod
     def _mutation_timeout() -> httpx.Timeout:

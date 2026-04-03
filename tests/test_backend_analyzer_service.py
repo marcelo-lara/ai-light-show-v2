@@ -13,6 +13,8 @@ class _Client:
         self.remove_calls = []
         self.execute_calls = []
         self.task_type_calls = 0
+        self.status_failures = 0
+        self.status_payloads = None
         self.queued = queued
         self.pending = pending
         self.running = running
@@ -25,6 +27,14 @@ class _Client:
         ]
 
     async def get_status(self):
+        if self.status_payloads is not None:
+            payload = self.status_payloads.pop(0)
+            if isinstance(payload, Exception):
+                raise payload
+            return payload
+        if self.status_failures > 0:
+            self.status_failures -= 1
+            raise RuntimeError("analyzer unavailable")
         return {"ok": True, "playback_locked": False, "polling": True, "items": [], "summary": {"queued": self.queued, "pending": self.pending, "running": self.running, "complete": 0, "failed": 0}}
 
     async def set_playback_lock(self, locked: bool):
@@ -177,6 +187,51 @@ async def test_analyzer_service_enqueue_full_artifact_resumes_polling(monkeypatc
     assert service.snapshot()["polling"] is True
 
     await service.suspend_polling()
+
+
+@pytest.mark.asyncio
+async def test_analyzer_service_queue_activity_keeps_polling_on_refresh_failure(monkeypatch):
+    service = AnalyzerService()
+    service._client = _Client()
+    service._client.status_failures = 1
+    service._manager = _Manager()
+    monkeypatch.setattr(service, "_poll_loop", lambda: asyncio.sleep(3600))
+
+    await service.enqueue_full_artifact_playlist({"song_path": "/tmp/song.mp3", "meta_path": "/tmp/meta"}, activate=True)
+
+    assert service.snapshot()["available"] is False
+    assert service.snapshot()["polling"] is True
+
+    await service.suspend_polling()
+
+
+@pytest.mark.asyncio
+async def test_analyzer_service_poll_loop_retries_until_status_recovers():
+    service = AnalyzerService()
+    service._client = _Client()
+    service._client.status_payloads = [
+        {"ok": True, "playback_locked": False, "polling": True, "items": [], "summary": {"queued": 1, "pending": 0, "running": 0, "complete": 0, "failed": 0}},
+        RuntimeError("analyzer unavailable"),
+        {"ok": True, "playback_locked": False, "polling": False, "items": [], "summary": {"queued": 0, "pending": 0, "running": 0, "complete": 1, "failed": 0}},
+    ]
+    service._manager = _Manager()
+    service._poll_interval = 0
+    service._snapshot = {
+        "available": True,
+        "polling": False,
+        "playback_locked": False,
+        "task_types": [],
+        "items": [],
+        "summary": {"queued": 1, "pending": 0, "running": 0, "complete": 0, "failed": 0},
+    }
+    service._retry_until_available = True
+
+    await service.resume_polling()
+    await asyncio.wait_for(service._poll_task, timeout=1)
+
+    assert service.snapshot()["available"] is True
+    assert service.snapshot()["polling"] is False
+    assert service.snapshot()["summary"]["complete"] == 1
 
 
 @pytest.mark.asyncio

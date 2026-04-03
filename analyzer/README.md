@@ -89,13 +89,13 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 - `GET /playlists/full-artifact` returns the resolved analyzer-native or Moises-backed task order for one song.
 - `GET /playlists/full-artifact/metadata` returns the static playlist schema, parameters, variants, and produced artifacts without resolving a specific song.
 - `POST /playlists/full-artifact/execute` runs that playlist synchronously through analyzer-owned task modules and returns the per-task results.
-- Backend is the intended client for this service. It performs a one-shot status refresh at startup, stays idle while the queue is empty, and only polls continuously after queue activity is known. During show playback the backend stops polling and sets playback lock to `true`, so analyzer queue execution is paused until playback ends.
+- Backend is the intended client for this service. It performs a one-shot status refresh at startup, stays idle while the queue is empty, and only polls continuously after queue activity is known. If status requests fail while the backend is already tracking queued or running analyzer work, it keeps retrying until `GET /queue/status` responds again. During show playback the backend stops polling and sets playback lock to `true`, so analyzer queue execution is paused until playback ends.
 
 ## Inputs and outputs
 
 ### Input sources
 
-- Song files from `/app/songs` in Docker (mapped from `backend/songs`).
+- Song files from `/app/songs` in Docker (mapped from `analyzer/songs`).
 
 ### Output structure
 

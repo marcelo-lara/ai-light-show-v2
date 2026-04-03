@@ -41,7 +41,7 @@ The UI must support a production workflow from preparation to show execution wit
 - Provide a song and generated analysis metadata before editing/programming.
 
 ### Required conditions
-- Song file exists in `/backend/songs`.
+- Song file exists in `analyzer/songs`.
 - Analyzer script has produced metadata used by UI pages.
 
 ### UI behavior

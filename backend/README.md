@@ -115,7 +115,7 @@ Patch behavior:
 - Browser audio timeline keeps backend timecode aligned while playback is running using a short sync cadence, plus immediate sync on play/pause/seek/stop.
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
 - `transport.play` first checks analyzer queue status. If analyzer reports any `running` item, backend emits `transport_play_blocked` and playback does not start.
-- Backend does not keep a standing analyzer poll loop while the queue is empty. Startup performs a one-shot status refresh, fetches analyzer task metadata once, and continuous polling begins only when analyzer queue activity is known.
+- Backend does not keep a standing analyzer poll loop while the queue is empty. Startup performs a one-shot status refresh, fetches analyzer task metadata once, and continuous polling begins only when analyzer queue activity is known. If analyzer status fetches fail while queued or running work is still being tracked, backend keeps retrying until the analyzer status endpoint responds again.
 - `state.analyzer.task_types` exposes the analyzer-owned task catalog with `value`, `label`, and `description` fields for frontend task selection.
 - Analyzer service startup clears any persisted queue items before it begins serving queue state, so backend sees an empty analyzer queue after analyzer restarts.
 - `analyzer.enqueue` validates `task_type` against the analyzer-owned task catalog, derives analyzer `song_path` plus `meta_path`, posts a queue item to the analyzer service, and triggers queue-activity polling.
@@ -166,7 +166,7 @@ Patch behavior:
 - Fixture templates: `backend/fixtures/fixture.<type>.<model>.json`
 - POIs: `backend/fixtures/pois.json`
 - Cues: `backend/cues/{song}.json`
-- Songs: `backend/songs/*.mp3`
+- Songs: `analyzer/songs/*.mp3` locally, mounted at `/app/songs` in Docker
 - Metadata root in Docker: `/app/meta` (fallback local: `analyzer/meta`, else `backend/meta`)
 - Static routes: `/songs/*` for audio and `/meta/*` for analyzer artifacts (SVG/JSON).
 

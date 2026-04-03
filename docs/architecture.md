@@ -35,6 +35,8 @@ AI Light Show v2 is split into six primary modules:
 5. Analyzer writes song metadata and backend reads it from `/app/meta` in Docker.
 6. Backend exposes mounted MCP tools and the agent gateway forwards LLM tool calls.
 
+Song audio files live under `analyzer/songs` locally and are mounted into backend and analyzer containers at `/app/songs`.
+
 ### Real-time playback loop
 
 1. Browser-owned player controls real audio playback and local timecode progression.

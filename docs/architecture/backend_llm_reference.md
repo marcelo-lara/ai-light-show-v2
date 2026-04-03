@@ -207,6 +207,10 @@ Metadata root notes:
 - Backend resolves metadata from `/app/meta` in Docker.
 - For local development and tests, backend uses `analyzer/meta` when it exists and falls back to `backend/meta` only when no analyzer metadata tree is available.
 
+Songs root notes:
+- Backend resolves song audio from `/app/songs` in Docker.
+- For local development and tests, backend uses `analyzer/songs`.
+
 ### Transport intents
 
 | Intent | Payload keys | Behavior | Returns |

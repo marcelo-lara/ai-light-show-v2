@@ -30,6 +30,7 @@ class AnalyzerService:
         self._snapshot = _empty_snapshot()
         self._poll_task: asyncio.Task | None = None
         self._manager = None
+        self._retry_until_available = False
 
     def snapshot(self) -> dict[str, Any]:
         return dict(self._snapshot)
@@ -49,10 +50,11 @@ class AnalyzerService:
         await self.suspend_polling()
 
     async def notify_queue_activity(self) -> dict[str, Any]:
+        self._retry_until_available = True
         if not self.task_types():
             await self.refresh_task_types()
         snapshot = await self.refresh()
-        if _has_active_work(snapshot):
+        if self._should_poll(snapshot):
             await self.resume_polling()
         return self.snapshot()
 
@@ -122,16 +124,28 @@ class AnalyzerService:
         return {"item_ids": executed_ids, "count": len(executed_ids)}
 
     async def refresh(self) -> dict[str, Any]:
+        was_polling = self._poll_task is not None and not self._poll_task.done()
+        previous_snapshot = self._snapshot
         try:
             payload = await self._client.get_status()
+            self._retry_until_available = _has_active_work(payload)
             next_snapshot = {
                 **payload,
                 "available": True,
-                "polling": self._poll_task is not None and not self._poll_task.done(),
+                "polling": was_polling,
                 "task_types": self.task_types(),
             }
         except Exception as exc:
-            next_snapshot = {**_empty_snapshot(), "task_types": self.task_types(), "error": str(exc)}
+            should_retry = self._should_poll(previous_snapshot)
+            next_snapshot = {
+                **_empty_snapshot(),
+                "task_types": self.task_types(),
+                "error": str(exc),
+                "items": list(previous_snapshot.get("items") or []) if should_retry else [],
+                "playback_locked": bool(previous_snapshot.get("playback_locked", False)) if should_retry else False,
+                "polling": was_polling and should_retry,
+                "summary": dict(previous_snapshot.get("summary") or {}) if should_retry else _empty_snapshot()["summary"],
+            }
         changed = next_snapshot != self._snapshot
         self._snapshot = next_snapshot
         if changed and self._manager is not None and self._manager.active_connections:
@@ -154,7 +168,7 @@ class AnalyzerService:
             return
         if self._manager is not None and await self._manager.state_manager.get_is_playing():
             return
-        if not _has_active_work(self._snapshot):
+        if not self._should_poll():
             self._snapshot["polling"] = False
             return
         self._poll_task = asyncio.create_task(self._poll_loop())
@@ -185,7 +199,8 @@ class AnalyzerService:
                 }
             except Exception as exc:
                 self._snapshot = {**_empty_snapshot(), "task_types": self.task_types(), "error": str(exc)}
-        if _has_active_work(self._snapshot):
+        self._retry_until_available = _has_active_work(self._snapshot)
+        if self._should_poll():
             await self.resume_polling()
         if self._manager is not None and self._manager.active_connections:
             await self._manager._schedule_broadcast()
@@ -193,8 +208,12 @@ class AnalyzerService:
     async def _poll_loop(self) -> None:
         while True:
             snapshot = await self.refresh()
-            if not _has_active_work(snapshot):
+            if not self._should_poll(snapshot):
                 self._poll_task = None
                 self._snapshot["polling"] = False
                 return
             await asyncio.sleep(self._poll_interval)
+
+    def _should_poll(self, snapshot: dict[str, Any] | None = None) -> bool:
+        current_snapshot = self._snapshot if snapshot is None else snapshot
+        return self._retry_until_available or _has_active_work(current_snapshot)

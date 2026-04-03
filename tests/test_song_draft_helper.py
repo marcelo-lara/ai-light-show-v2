@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from models.song import Song, resolve_meta_root
+from models.song import Song, resolve_meta_root, resolve_songs_root
 from services.cue_helpers.song_draft import generate_song_draft
 from store.state import StateManager
 
@@ -21,7 +21,7 @@ def test_resolve_meta_root_prefers_local_analyzer_metadata(tmp_path: Path, monke
 async def test_generate_song_draft_uses_analysis_and_live_rig() -> None:
     workspace_root = Path(__file__).resolve().parents[1]
     backend_path = workspace_root / "backend"
-    songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
+    songs_path = resolve_songs_root(backend_path)
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
     meta_path = resolve_meta_root(backend_path)
     state_manager = StateManager(backend_path, songs_path, cues_path, meta_path)

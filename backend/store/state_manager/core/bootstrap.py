@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from models.fixtures.fixture import Fixture
-from models.song import resolve_meta_root
+from models.song import resolve_meta_root, resolve_songs_root
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.pois import PoiStore
 
@@ -17,7 +17,7 @@ class StateCoreBootstrapMixin:
         meta_path: Optional[Path] = None,
     ):
         self.backend_path = backend_path
-        self.songs_path = songs_path or backend_path / "songs"
+        self.songs_path = songs_path or resolve_songs_root(backend_path)
         self.cues_path = cues_path or backend_path / "cues"
         self.meta_path = meta_path or resolve_meta_root(backend_path)
         self.lock = asyncio.Lock()

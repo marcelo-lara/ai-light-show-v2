@@ -84,7 +84,7 @@ Behavior:
 - Frontend snapshots and patches include a top-level `analyzer` object.
 - `analyzer` contains analyzer service availability, backend polling state, playback lock state, analyzer-owned `task_types`, queue items, and per-status summary counts.
 - Backend relays analyzer queue items exactly as reported by the analyzer service. Analyzer startup clears persisted queue items before queue status is served, so backend sees an empty analyzer queue after analyzer restarts.
-- Backend only keeps that analyzer state refreshed while playback is idle and analyzer queue work is active.
+- Backend only keeps that analyzer state refreshed while playback is idle and analyzer queue work is active. If analyzer status becomes temporarily unavailable during tracked queue activity, backend keeps retrying until the analyzer status endpoint recovers, then stops polling once the queue is idle again.
 
 ### Section metadata normalization
 
@@ -194,6 +194,8 @@ Frontend consumers should treat each `supported_effects[]` entry as a metadata o
 `cue.apply_helper` includes helper id `song_draft`, which generates a backend-owned draft cue sheet from analyzer timing/features and the active rig's supported effects and POI coverage.
 
 Backend resolves metadata from `/app/meta` in Docker. For local development and tests it uses `analyzer/meta` when that tree exists, and falls back to `backend/meta` only when no analyzer metadata tree is present.
+
+Backend resolves song audio from `/app/songs` in Docker. For local development and tests it uses `analyzer/songs`.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.
