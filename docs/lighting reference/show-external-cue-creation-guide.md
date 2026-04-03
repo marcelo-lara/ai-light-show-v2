@@ -53,9 +53,26 @@ Example chaser entry:
 - Chasers: [chasers.json](/home/darkangel/ai-light-show-v2/backend/fixtures/chasers.json)
 - Song beat/chord map: `analyzer/meta/<Song>/beats.json`
 - Song sections: `analyzer/meta/<Song>/sections.json`
+- Song planning note target: `analyzer/meta/<Song>/<Song>.md`
 - Cue target: `backend/cues/<Song>.json`
 
 For timing-heavy work, `beats.json` and `sections.json` are the most important sources.
+
+## Required Outputs
+
+When building a show from scratch, create both of these deliverables:
+
+- a planning brief at `analyzer/meta/<Song>/<Song>.md`
+- the cue sheet at `backend/cues/<Song>.json`
+
+The planning brief should capture:
+
+- the high-level visual plan
+- fixture-type intentions
+- section-by-section strategy
+- any important loudness, rise, or drop findings that should shape later cue work
+
+The cue sheet should implement that plan in actual cues.
 
 ## Current Fixture Inventory
 
@@ -228,12 +245,25 @@ Head EL-150 color wheel useful values:
 - `175` = red
 - `75` = purple
 
+Head EL-150 gobo wheel current values:
+
+- `0` = `Open`
+- `12` = `Tunnel`
+- `24` = `BigOval`
+- `36` = `SmallOval`
+- `48` = `Squares`
+- `60` = `Shapes`
+- `72` = `Tribal`
+- `84` = `Slashes`
+
 In practice:
 
 - Use `55` / `150` for blue
 - Use `65` for prism indigo
 - Use `15` / `175` for red
 - EL-150 does not have a true indigo slot, so purple is the closest wheel mood
+- On `head_el150`, prefer only the `open` or `tunnel` gobo wheels unless a song-specific note explicitly asks for another gobo
+- `Tunnel` now maps to `12`, not `25`
 
 ## Timing Workflow
 
@@ -305,13 +335,15 @@ When building a song from scratch, use this order:
 1. Establish fixture groups
 2. Check POI coverage
 3. Read beat and section metadata
-4. Decide the recurring motif
-5. Decide what belongs in:
+4. Create `analyzer/meta/<Song>/<Song>.md` with the high-level show brief
+5. Decide the recurring motif
+6. Decide what belongs in:
    - raw cues
    - reusable chasers
-6. Author the intro first
-7. Validate JSON
-8. Spot-check exact timestamps the user cares about
+7. Author the cue sheet in `backend/cues/<Song>.json`
+8. Author the intro first
+9. Validate JSON
+10. Spot-check exact timestamps the user cares about
 
 ## What Worked Well For Yonaka - Seize the Power
 
@@ -334,6 +366,36 @@ For the full-song Yonaka pass, these approaches also worked well:
 - use a fade-to-black pseudo pre-drop sentence when a vocal or arrangement line needs negative space before the next impact
 - slow prism call-response motion reads better in instrumental sections than constant flash spam
 - parcan walking patterns across left/right fixtures work well for short build sections and can create motion without overusing moving heads
+
+## Drop Prep Pattern
+
+When a notable drop is led by a short vocal-only window, prefer this authoring sentence:
+
+- clear the cue time window for that lead-in and rebuild it as one phrase
+- start dimming the room several bars before the drop if the arrangement thins out early
+- black out or fade out all fixtures except `head_el150`
+- let `head_el150` carry the vocal phrase alone at about half intensity
+- use `tunnel` gobo on `head_el150` for that vocal-only tension unless the user asks for a different texture
+- at the drop bar, let both prism fixtures begin with a full white flash before the rest of the electronic energy widens again
+
+Practical use:
+
+- if the user points to bars like `43 -> 46` and says the room should empty out for vocals, treat that as a section-level rebuild, not a tiny additive tweak
+- keep the pre-drop negative space intentional so the white prism hit feels earned
+
+## Outro Closure Pattern
+
+For every song, treat the final ending sentence as a required rule:
+
+- on the outro or end-of-song release, point the moving heads to `table`
+- use `fade_out` for the closing release
+- the closing `fade_out` must be at least `1` second long
+- if the section is being refined, clear that ending cue window first and rebuild it cleanly
+
+Practical note:
+
+- for this rig, the "point to `table` and fade" rule mainly applies to `head_el150`, `mini_beam_prism_l`, and `mini_beam_prism_r`
+- parcans do not use POIs, so they only need the closing `fade_out` part of the sentence
 
 ## Final Yonaka Handoff Notes
 

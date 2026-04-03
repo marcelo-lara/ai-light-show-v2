@@ -70,6 +70,7 @@ export type IntentName =
   | "cue.update"
   | "cue.delete"
   | "cue.clear"
+  | "cue.reload"
   | "cue.apply_helper"
   | "chaser.apply"
   | "chaser.preview"

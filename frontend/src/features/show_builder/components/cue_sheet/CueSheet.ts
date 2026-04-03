@@ -1,8 +1,9 @@
 import { Card } from "../../../../shared/components/layout/Card.ts";
+import { Button } from "../../../../shared/components/controls/Button.ts";
 import { ConfirmCancelPrompt } from "../../../../shared/components/feedback/ConfirmCancelPrompt.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
-import { deleteCue, previewChaser } from "../../cue_intents.ts";
+import { deleteCue, previewChaser, reloadCueSheet } from "../../cue_intents.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { transportJumpToTime } from "../../../../shared/transport/transport_intents.ts";
 import {
@@ -28,9 +29,21 @@ export function CueSheet(): HTMLElement {
 	eyebrow.textContent = "Cue Sheet";
 
 	title.append(eyebrow);
+	const headerMeta = document.createElement("div");
+	headerMeta.className = "cue-sheet-header-meta";
+	const reloadButton = Button({
+		caption: "Reload",
+		bindings: {
+			title: "Reload cue sheet from disk",
+			onClick: () => {
+				reloadCueSheet();
+			},
+		},
+	});
 	const count = document.createElement("span");
 	count.className = "cue-sheet-header-count";
-	header.append(title, count);
+	headerMeta.append(reloadButton, count);
+	header.append(title, headerMeta);
 
 	const listContainer = document.createElement("div");
 	listContainer.className = "cue-sheet-list o-list";
@@ -70,9 +83,11 @@ export function CueSheet(): HTMLElement {
 	}
 
 	function renderList(): void {
+		const state = getBackendStore().state;
 		const cues = getCues();
 		const currentTime = findCurrentCueTime(cues, getTimeMs());
 		const signature = cueSignature(cues);
+		reloadButton.disabled = Boolean(state.system?.edit_lock) || !state.song?.filename;
 		count.textContent = `${cues.length} ${cues.length === 1 ? "cue" : "cues"}`;
 
 		if (signature !== lastCueSignature) {

@@ -73,5 +73,13 @@
 - Moving heads: orbit 'dim' should be optional (calculate light by default, BUT allow to skip it). The goal is to combine the 'orbit' effect with other lighting patterns.
 
 ### Backend: Add new chasers / Refine current chasers
-- TBD: 'drop', 'slow vocal', 'drop buildup', 'outro hit', 'outro fade', 
+- TBD: 
+  - 'ba-bum ... rest': a heartbeat like effect.
+  - 'drop-and-explode': dim out to blackout, and at the end (drop) dim to full.
+  - 'vocal-stage-fade': From Xs to just before Ys, mini_beam_prism_l now moves to piano, mini_beam_prism_r moves to sofa, and both fade out across that vocal tail level. 
+  - 'drop'
+  - 'slow vocal'
+  - 'drop buildup'
+  - 'outro hit'
+  - 'outro fade', 
 

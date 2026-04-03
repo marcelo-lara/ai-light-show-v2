@@ -55,6 +55,7 @@ Supported intent names:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
+- Cue reload: `cue.reload`.
 - Cue helpers: `cue.apply_helper` with `helper_id` plus optional `params`.
 - Chaser: `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, `chaser.list`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
@@ -137,6 +138,7 @@ Patch behavior:
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
 - `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
 - `cue.clear_all` removes every entry from the current cue sheet.
+- `cue.reload` re-reads `backend/cues/{song}.json` for the current song, validates the external file contents, rebuilds the pre-rendered DMX canvas, and broadcasts the refreshed cue list.
 - Cue writes de-duplicate identical effect rows (`fixture_id` + `effect`) and identical chaser rows (`chaser_id`) within a `100ms` window; the latest write replaces the earlier row instead of appending a duplicate.
 - `llm.send_prompt` starts an assistant request through the backend-owned assistant service. The assistant service loads a named prompt profile, includes recent per-client chat history from the current websocket session, forwards the request to the agent gateway, relays streamed model output to the requesting websocket client, and pauses write-capable tool calls at the proposal stage.
 - `llm.confirm_action` applies a proposed cue or chaser mutation after explicit user confirmation, schedules a broadcast for the resulting state change, and then emits a backend-generated completion summary for that executed action.

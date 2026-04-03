@@ -113,11 +113,12 @@ Behavior:
 - `analyzer.remove` validates `payload.item_id`, deletes that analyzer queue item, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.remove_all` deletes every analyzer queue item except items currently marked `running`, then broadcasts the refreshed analyzer snapshot.
 - Analyzer mutation failures (`enqueue|execute|remove|remove_all`) emit analyzer error events instead of closing the websocket request path.
-- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, and `cue.apply_helper`.
+- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, `cue.reload`, and `cue.apply_helper`.
 - The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, and full-sheet replace.
 - The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, section windows with resolved musical positions, and section-analysis summaries for metadata drafting.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - `cue.clear_all` removes every cue entry from the current song and persists the empty cue sheet.
+- `cue.reload` re-reads the current song cue file from disk, validates the mixed cue rows against the active fixture and chaser inventory, and rebuilds the pre-rendered DMX canvas.
 - LLM chat is backend-owned through `services/assistant/*`: prompt profiles are loaded there, requests are relayed to the agent gateway, and assistant websocket events are targeted to the requesting client instead of globally broadcast.
 - The assistant service keeps recent per-client user and assistant turns for the lifetime of the websocket session and includes them in later `llm.send_prompt` requests.
 - The default assistant prompt profile prefers grounded timing answers in `bar.beat (seconds)` form when both values are available, and it avoids repeating the loaded song name unless the user explicitly asks for it.

@@ -256,6 +256,7 @@ Notes on `fixture.set_values`:
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
+| `cue.reload` | none | re-reads the current song cue file from disk, validates the external rows against the active fixture and chaser inventory, re-renders the DMX canvas, and refreshes the frontend cue list | `True` on success; else event `cue_reload_failed` and `False` |
 | `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id. Helper id `song_draft` uses the backend song-analysis contract and active fixture/POI state to build a first-pass show draft. | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 Notes on cue persistence:
