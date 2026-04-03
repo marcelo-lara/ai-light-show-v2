@@ -383,6 +383,28 @@ Practical use:
 - if the user points to bars like `43 -> 46` and says the room should empty out for vocals, treat that as a section-level rebuild, not a tiny additive tweak
 - keep the pre-drop negative space intentional so the white prism hit feels earned
 
+## Section Identity Pattern
+
+When a song brief says a section is voice-driven rather than beat-driven, reflect that in the cue language:
+
+- keep motion slower and more phrase-based
+- reduce flash density and avoid treating every beat like a hit
+- prefer lower-plane `z=0` POIs for moving-head storytelling when the note calls for grounded or voice-led motion
+- let `head_el150` carry the phrasing while prisms stay elegant and supportive
+- when the phrase is strongly vocal-led, give all moving heads one shared anchor POI
+- use that anchor as the same `start_POI` or the same `target_POI`
+- from that shared anchor, let the moving heads either converge into one POI or diverge outward to different POIs
+- make the phrase readable: give the shared anchor at least one clear phrase before you split it
+- avoid half-split targeting that does not clearly read as either a converge phrase or a diverge phrase
+- when tightening an existing show, rebuild the whole moving-head phrase window so every phrase point commits to the same anchor logic
+
+When a song brief marks a specific bar as a high-energy ignition:
+
+- start the pre-drop about `2` bars earlier unless the song note says otherwise
+- use those two bars to compress the room and simplify the rhythm
+- let the ignition bar reopen the rig with the moving fixtures leading the release
+- if that ignition bar starts an outro, let it land with full energy first, then release afterward rather than fading immediately
+
 ## Outro Closure Pattern
 
 For every song, treat the final ending sentence as a required rule:
