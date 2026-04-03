@@ -25,18 +25,20 @@ def test_run_beat_finder_uses_moises_mix_data(tmp_path: Path, monkeypatch, capsy
 
     result = analyze_song.run_beat_finder_for(song_path, meta_path=meta_root)
 
-    beats_payload = json.loads((meta_root / "Test Song" / "beats.json").read_text(encoding="utf-8"))
+    beats_payload = json.loads((meta_root / "Test Song" / "reference" / "beats.json").read_text(encoding="utf-8"))
     info_payload = json.loads((meta_root / "Test Song" / "info.json").read_text(encoding="utf-8"))
     assert result is not None
     assert result["method"] == "moises"
     assert result["beat_count"] == 2
-    assert result["beats_file"].endswith("/Test Song/beats.json")
+    assert result["beats_file"].endswith("/Test Song/reference/beats.json")
     assert beats_payload == [
         {"time": 1.001, "beat": 1, "bar": 1, "bass": "F", "chord": "Fm", "type": "downbeat"},
         {"time": 1.5, "beat": 2, "bar": 1, "bass": None, "chord": None, "type": "beat"},
     ]
-    assert info_payload["beats_source"] == "moises"
+    assert info_payload["beats_source"] == "reference"
+    assert info_payload["beats_file"].endswith("/Test Song/reference/beats.json")
     assert info_payload["artifacts"]["chords_file"].endswith("/Test Song/moises/chords.json")
+    assert info_payload["artifacts"]["reference_beats_file"].endswith("/Test Song/reference/beats.json")
     assert "Using Moises mix data for beats and chords" in capsys.readouterr().out
 
 
@@ -53,11 +55,11 @@ def test_run_beat_finder_falls_back_without_moises_chords(tmp_path: Path, monkey
 
     result = analyze_song.run_beat_finder_for(song_path, meta_path=meta_root)
 
-    beats_payload = json.loads((meta_root / "Test Song" / "beats.json").read_text(encoding="utf-8"))
+    beats_payload = json.loads((meta_root / "Test Song" / "inferred" / "beats.librosa.json").read_text(encoding="utf-8"))
     assert result is not None
     assert result["beats"] == [1.0, 1.5]
     assert result["downbeats"] == [1.0]
-    assert result["beats_file"].endswith("/Test Song/beats.json")
+    assert result["beats_file"].endswith("/Test Song/inferred/beats.librosa.json")
     assert beats_payload == [
         {"time": 1.0, "beat": 1, "bar": 1, "bass": None, "chord": None, "type": "downbeat"},
         {"time": 1.5, "beat": 2, "bar": 1, "bass": None, "chord": None, "type": "beat"},

@@ -5,9 +5,42 @@ from .meta import Meta
 from .beats import Beats, Beat
 from .sections import Sections
 
+
+def _is_supported_beats_path(path: Path) -> bool:
+    return path.parent.name in {"reference", "inferred"}
+
+
+def _resolve_meta_path(path: Path, song_dir: Path) -> Path:
+    if path.exists() or not path.is_absolute():
+        return path
+    try:
+        relative = path.relative_to("/app/meta")
+    except ValueError:
+        return path
+    return song_dir.parent / relative
+
+
+def resolve_beats_file(song_dir: Path, info_data: Dict[str, Any] | None = None) -> str:
+    default_path = str(song_dir / "reference" / "beats.json")
+    if not isinstance(info_data, dict):
+        return default_path
+    beats_file = info_data.get("beats_file")
+    if isinstance(beats_file, str) and beats_file:
+        beats_path = _resolve_meta_path(Path(beats_file), song_dir)
+        if _is_supported_beats_path(beats_path):
+            return str(beats_path)
+    artifacts = info_data.get("artifacts")
+    if isinstance(artifacts, dict):
+        artifact_beats_file = artifacts.get("beats_file")
+        if isinstance(artifact_beats_file, str) and artifact_beats_file:
+            beats_path = _resolve_meta_path(Path(artifact_beats_file), song_dir)
+            if _is_supported_beats_path(beats_path):
+                return str(beats_path)
+    return default_path
+
 def load_meta_data(song_dir: Path, song_id: str) -> Meta:
     info_path = song_dir / "info.json"
-    beats_file = str(song_dir / "beats.json")
+    beats_file = resolve_beats_file(song_dir)
     if not info_path.exists():
         return Meta(
             song_name=song_id,
@@ -20,8 +53,7 @@ def load_meta_data(song_dir: Path, song_id: str) -> Meta:
         
     with open(info_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-        
-    beats_file = data.get("beats_file", beats_file)
+    beats_file = resolve_beats_file(song_dir, data)
         
     return Meta(
         song_name=data.get("song_name", song_id),
@@ -44,7 +76,7 @@ def load_beats_data(beats_file: str) -> Beats:
                     beat_list.append(Beat(**item))
             else:
                 # Fallback for old schema, but we are hard-breaking
-                raise ValueError(f"Invalid beats.json format at {beats_path}: expected list of beat objects")
+                raise ValueError(f"Invalid beats format at {beats_path}: expected list of beat objects")
     
     return Beats(beats=beat_list)
 

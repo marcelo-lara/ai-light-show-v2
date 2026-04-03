@@ -5,15 +5,19 @@
   - load the mp3 to get duration.
   - use a minimal model to get estimated bpm.
 
-### Stereo Analysis
-- Analyze Left and Right channels to annotate significative diferences
-  - notable example: 'Best Friend - Sofi Tukker', from 0.0 to 18.11 cymbals on the left channel, echoes and low frequencies on the right.
-
 ### Analyzer: Store reference and inference data in dedicated folders
 - Store inferences at `analyzer/meta/{song}/infered/beats.{model_name}.json`.
 - Store references at `analyzer/meta/{song}/reference/beats.json`.
 - Keep references read-only and treat them as human-validated comparison data.
 - Rationale: this is the foundation for comparing model outputs and choosing winners without overwriting canonical data.
+
+### Find Chords Patterns
+- If beats.json has chords data: find chord patterns and group them as chord_pattern.
+  - use "Pet Shop Boys - I'm not scared" as example: "Cm-Fm-Cm-Fm" -> pattern A, "Ab-Bb-Cm-Ab-Bb-Cm" -> pattern B (there are 5 patterns in this song)
+
+### Stereo Analysis
+- Analyze Left and Right channels to annotate significative diferences
+  - notable example: 'Best Friend - Sofi Tukker', from 0.0 to 18.11 cymbals on the left channel, echoes and low frequencies on the right.
 
 ### Analyzer: Chords Finder
 - Try alternative models and keep the best-performing winner.

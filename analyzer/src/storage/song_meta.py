@@ -25,18 +25,85 @@ def song_meta_dir(song_path: str | Path, meta_path: str | Path) -> Path:
     return Path(meta_path).expanduser().resolve() / song_name(song_path)
 
 
+def reference_dir(song_path: str | Path, meta_path: str | Path) -> Path:
+    return song_meta_dir(song_path, meta_path) / "reference"
+
+
+def inferred_dir(song_path: str | Path, meta_path: str | Path) -> Path:
+    return song_meta_dir(song_path, meta_path) / "inferred"
+
+
+def reference_beats_path(song_path: str | Path, meta_path: str | Path) -> Path:
+    return reference_dir(song_path, meta_path) / "beats.json"
+
+
+def inferred_beats_path(song_path: str | Path, meta_path: str | Path, model_name: str) -> Path:
+    return inferred_dir(song_path, meta_path) / f"beats.{model_name}.json"
+
+
 def info_path(song_path: str | Path, meta_path: str | Path) -> Path:
     return song_meta_dir(song_path, meta_path) / "info.json"
 
 
-def initialize_song_info(song_path: str | Path, meta_path: str | Path) -> Path:
+def load_song_info(song_path: str | Path, meta_path: str | Path) -> dict[str, Any]:
+    path = info_path(song_path, meta_path)
+    if not path.exists():
+        return {}
+    payload = load_json_file(path)
+    return payload if isinstance(payload, dict) else {}
+
+
+def _is_supported_beats_path(path: Path) -> bool:
+    return path.parent.name in {"reference", "inferred"}
+
+
+def _resolve_meta_path(path: Path, meta_path: str | Path) -> Path:
+    if path.exists() or not path.is_absolute():
+        return path
+    try:
+        relative = path.relative_to("/app/meta")
+    except ValueError:
+        return path
+    return Path(meta_path).expanduser().resolve() / relative
+
+
+def canonical_beats_path(song_path: str | Path, meta_path: str | Path) -> Path:
+    info_payload = load_song_info(song_path, meta_path)
+    beats_file = info_payload.get("beats_file")
+    if isinstance(beats_file, str) and beats_file:
+        beats_path = _resolve_meta_path(Path(beats_file), meta_path)
+        if _is_supported_beats_path(beats_path):
+            return beats_path
+    artifacts = info_payload.get("artifacts")
+    if isinstance(artifacts, dict):
+        artifact_beats_file = artifacts.get("beats_file")
+        if isinstance(artifact_beats_file, str) and artifact_beats_file:
+            beats_path = _resolve_meta_path(Path(artifact_beats_file), meta_path)
+            if _is_supported_beats_path(beats_path):
+                return beats_path
+    reference_path = reference_beats_path(song_path, meta_path)
+    if reference_path.exists():
+        return reference_path
+    inferred_paths = sorted(inferred_dir(song_path, meta_path).glob("beats.*.json"))
+    if inferred_paths:
+        return inferred_paths[0]
+    return reference_path
+
+
+def initialize_song_info(song_path: str | Path, meta_path: str | Path, *, bpm: float | None = None, duration: float | None = None) -> Path:
     song_file = Path(song_path).expanduser().resolve()
     meta_dir = song_meta_dir(song_file, meta_path)
     meta_dir.mkdir(parents=True, exist_ok=True)
     path = info_path(song_file, meta_path)
     if path.exists():
         return path
-    payload = {"song_name": song_file.stem, "song_path": str(song_file), "artifacts": {}}
+    payload = {
+        "song_name": song_file.stem,
+        "song_path": str(song_file),
+        "bpm": round(float(bpm), 3) if bpm is not None else 0.0,
+        "duration": round(float(duration), 3) if duration is not None else 0.0,
+        "artifacts": {},
+    }
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return path
 

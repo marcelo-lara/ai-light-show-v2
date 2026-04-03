@@ -67,7 +67,7 @@ def find_sections(song_path: str | Path, meta_path: str | Path, output_name: str
     song_file = Path(song_path).expanduser().resolve()
     beats = load_beats(song_file, meta_path)
     if not beats:
-        LOGGER.warning("Missing beats.json for %s", song_file.name)
+        LOGGER.warning("Missing canonical beats for %s", song_file.name)
         return None
     section_candidates = models_for("find_sections")
     if not section_candidates:

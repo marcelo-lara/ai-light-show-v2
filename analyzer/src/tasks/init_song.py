@@ -5,14 +5,28 @@ import os
 from pathlib import Path
 from typing import Any
 
+from ..engines.find_beats import analyze_audio_timing
 from ..runtime.progress import ProgressCallback
-from src.storage.song_meta import initialize_song_info, load_json_file, song_meta_dir
+from src.storage.song_meta import info_path, initialize_song_info, load_json_file, song_meta_dir
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")
 
 
 def init_song(song_path: str | Path, meta_path: str | Path) -> Path:
-    return initialize_song_info(song_path, meta_path)
+    song_file = Path(song_path).expanduser().resolve()
+    if info_path(song_file, meta_path).exists() or not song_file.exists() or song_file.stat().st_size == 0:
+        timing = {"tempo_bpm": 0.0, "duration": 0.0}
+    else:
+        try:
+            timing = analyze_audio_timing(song_file)
+        except Exception:
+            timing = {"tempo_bpm": 0.0, "duration": 0.0}
+    return initialize_song_info(
+        song_file,
+        meta_path,
+        bpm=float(timing.get("tempo_bpm") or 0.0),
+        duration=float(timing.get("duration") or 0.0),
+    )
 
 
 def init_song_payload(song_path: str | Path, meta_path: str | Path) -> dict[str, str]:

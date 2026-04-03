@@ -21,7 +21,7 @@ FULL_ARTIFACT_PLAYLIST_METADATA = {
         {"value": "full-artifact-analyzer", "description": "Analyzer-native path that computes beats and sections internally."},
         {"value": "full-artifact-moises", "description": "Moises-backed path that normalizes external Moises metadata without modifying moises/ inputs."},
     ],
-    "produces": ["info.json", "beats.json", "sections.json", "hints.json", "features.json", "essentia artifacts", "stems", "song markdown summary"],
+    "produces": ["info.json", "reference/beats.json or inferred/beats.<model>.json", "sections.json", "hints.json", "features.json", "essentia artifacts", "stems", "song markdown summary"],
 }
 
 

@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from src.storage.song_meta import inferred_dir, reference_beats_path
+
 META_PATH = "/app/meta"
 COMPARE_WINDOW_SECONDS = 4.0
 COMPARE_STEP_SECONDS = 30.0
@@ -93,11 +95,21 @@ def _load_moises_beats(path: Path) -> tuple[list[float], int]:
 
 def _load_analyzer_beats(path: Path) -> tuple[list[float], int]:
     payload = _load_json_file(path)
-    beats = payload.get("beats", []) if isinstance(payload, dict) else []
-    if not isinstance(beats, list):
+    if not isinstance(payload, list):
         warn(f"Analyzer beats payload is not a list: {path}")
         return [], 0
-    return _parse_numeric_list(beats, "analyzer")
+    values = []
+    skipped = 0
+    for item in payload:
+        if not isinstance(item, dict) or "time" not in item:
+            skipped += 1
+            continue
+        values.append(item.get("time"))
+    beats, malformed = _parse_numeric_list(values, "analyzer", emit_warn=False)
+    skipped += malformed
+    if skipped:
+        warn(f"analyzer: skipped {skipped} malformed beat entries")
+    return beats, skipped
 
 
 def _beats_in_window(beats: list[float], start_sec: float, window_sec: float) -> list[float]:
@@ -138,9 +150,10 @@ def run_compare_beat_times_for(song_path: Path, meta_path: str | Path = META_PAT
     meta_root = Path(meta_path).expanduser().resolve()
     song_meta_dir = _song_meta_dir(song_path, meta_root)
     essentia_file = song_meta_dir / "essentia" / "rhythm.json"
-    moises_file = song_meta_dir / "moises" / "beats.json"
-    analyzer_file = song_meta_dir / "beats.json"
-    required_files = [essentia_file, moises_file, analyzer_file]
+    reference_file = reference_beats_path(song_path, meta_root)
+    inferred_files = sorted((inferred_dir(song_path, meta_root)).glob("beats.*.json"))
+    analyzer_file = inferred_files[0] if inferred_files else inferred_dir(song_path, meta_root) / "beats.librosa.json"
+    required_files = [essentia_file, reference_file, analyzer_file]
     missing_files = [path for path in required_files if not path.exists()]
     if missing_files:
         for path in missing_files:
@@ -148,12 +161,12 @@ def run_compare_beat_times_for(song_path: Path, meta_path: str | Path = META_PAT
         return None
     try:
         essentia_beats, _ = _load_essentia_beats(essentia_file)
-        moises_beats, _ = _load_moises_beats(moises_file)
+        reference_beats, _ = _load_moises_beats(reference_file)
         analyzer_beats, _ = _load_analyzer_beats(analyzer_file)
     except Exception as exc:
         warn(f"Failed to load beat sources: {exc}")
         return None
-    source_beats = {"essentia": essentia_beats, "moises": moises_beats, "analyzer": analyzer_beats}
+    source_beats = {"essentia": essentia_beats, "reference": reference_beats, "analyzer": analyzer_beats}
     max_time_candidates = [beats[-1] for beats in source_beats.values() if beats]
     if not max_time_candidates:
         warn("No beats available in any source; cannot compare")

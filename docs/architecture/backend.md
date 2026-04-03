@@ -95,7 +95,8 @@ Behavior:
 
 ### Beat metadata normalization
 
-- Canonical `beats.json` rows are exposed through `state.song.beats` and MCP metadata tools.
+- Canonical beat rows are exposed through `state.song.beats` and MCP metadata tools.
+- Backend resolves the active beats file from analyzer `info.json.beats_file` or `artifacts.beats_file`; valid canonical locations are `reference/beats.json` and `inferred/beats.<model>.json` under the song metadata directory.
 - Beat rows always serialize `time`, `bar`, `beat`, optional `bass`/`chord`, and `type`.
 - `type` is `downbeat` when `beat == 1`, otherwise `beat`.
 
@@ -105,7 +106,7 @@ Behavior:
 - `fixture.set_arm` updates per-fixture arm state cache used in frontend payload.
 - `song.list` emits an event with the available backend song names and does not broadcast state.
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
-- When analyzer `info.json` is missing for the selected song, `song.load` falls back to empty metadata (`bpm=0`, `duration=0`, default beats path, empty artifacts) so the backend can still load the song and emit a valid snapshot.
+- When analyzer `info.json` is missing for the selected song, `song.load` falls back to empty metadata (`bpm=0`, `duration=0`, empty beats path, empty artifacts) so the backend can still load the song and emit a valid snapshot.
 - `analyzer.enqueue` validates `payload.task_type` against the analyzer-owned task catalog, derives analyzer `song_path` and `meta_path` from backend song paths, posts a new analyzer queue item, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.enqueue_full_artifact` derives analyzer `song_path` and `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue surface, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.execute` validates `payload.item_id`, posts one queued item to the analyzer execute endpoint, and broadcasts the refreshed analyzer snapshot.

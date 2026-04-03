@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from src.storage.song_meta import load_list_file, song_meta_dir
+from src.storage.song_meta import canonical_beats_path, inferred_dir, load_list_file, song_meta_dir
 
 TIME_KEYS = {"time", "start", "end"}
 
@@ -30,7 +30,11 @@ def meta_dir(song_path: str | Path, meta_path: str | Path) -> Path:
 
 
 def beats_path(song_path: str | Path, meta_path: str | Path, output_name: str = "beats.json") -> Path:
-    return meta_dir(song_path, meta_path) / output_name
+    if output_name == "beats.json":
+        return canonical_beats_path(song_path, meta_path)
+    path = inferred_dir(song_path, meta_path) / output_name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def sections_path(song_path: str | Path, meta_path: str | Path, output_name: str = "sections.json") -> Path:

@@ -6,7 +6,7 @@ from typing import Any
 
 import librosa
 
-from ..storage.song_meta import initialize_song_info, load_list_file, song_meta_dir
+from ..storage.song_meta import inferred_beats_path, initialize_song_info, load_list_file, reference_beats_path, song_meta_dir
 
 
 def warn(message: str) -> None:
@@ -85,31 +85,52 @@ def normalize_analyzer_beats(beat_data: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def write_song_beats(song_path: Path, meta_root: Path, beats: list[dict[str, Any]], source: str, beat_data: dict[str, Any] | None = None) -> Path:
-    beats_file = song_meta_dir(song_path, meta_root) / "beats.json"
+    default_model = "librosa" if source == "analyzer" else source
+    model_name = str((beat_data or {}).get("method") or default_model).replace(" ", "_")
+    reference_file = reference_beats_path(song_path, meta_root)
+    if source == "moises":
+        beats_file = reference_file
+    else:
+        beats_file = inferred_beats_path(song_path, meta_root, model_name)
+    beats_file.parent.mkdir(parents=True, exist_ok=True)
     annotated_beats = [{**beat_event, "type": "downbeat" if beat_event.get("beat") == 1 else "beat"} for beat_event in beats]
     dump_json(beats_file, annotated_beats)
-    artifacts = {"beats_file": str(beats_file)}
+    reference_exists = reference_file.exists()
+    canonical_file = reference_file if source == "moises" or reference_exists else beats_file
+    artifacts: dict[str, Any] = {"beats_file": str(canonical_file)}
+    if source == "moises":
+        artifacts["reference_beats_file"] = str(beats_file)
+    else:
+        artifacts["inferred_beats_files"] = {model_name: str(beats_file)}
     moises_chords_file = song_meta_dir(song_path, meta_root) / "moises" / "chords.json"
     if source == "moises" and moises_chords_file.exists():
         artifacts["chords_file"] = str(moises_chords_file)
+    info_updates: dict[str, Any] = {
+        "song_name": song_path.stem,
+        "song_path": str(song_path),
+        "beats_file": str(canonical_file),
+        "beats_source": "reference" if reference_exists or source == "moises" else source,
+        "beat_tracking": {
+            "method": source,
+            "tempo_bpm": (beat_data or {}).get("tempo_bpm"),
+            "sample_rate": (beat_data or {}).get("sample_rate"),
+            "beat_count": len(annotated_beats),
+            "downbeat_count": sum(1 for beat in annotated_beats if beat.get("beat") == 1),
+            "beat_strength_mean": (beat_data or {}).get("beat_strength_mean"),
+            "downbeat_strength_mean": (beat_data or {}).get("downbeat_strength_mean"),
+            "meter_assumption": (beat_data or {}).get("meter_assumption", "4/4"),
+        },
+        "artifacts": artifacts,
+    }
+    tempo_bpm = (beat_data or {}).get("tempo_bpm")
+    if tempo_bpm is not None:
+        info_updates["bpm"] = tempo_bpm
+    duration = (beat_data or {}).get("duration")
+    if duration is not None:
+        info_updates["duration"] = duration
     merge_json_file(
         meta_file_path(song_path, meta_root),
-        {
-            "song_name": song_path.stem,
-            "song_path": str(song_path),
-            "beats_source": source,
-            "beat_tracking": {
-                "method": source,
-                "tempo_bpm": (beat_data or {}).get("tempo_bpm"),
-                "sample_rate": (beat_data or {}).get("sample_rate"),
-                "beat_count": len(annotated_beats),
-                "downbeat_count": sum(1 for beat in annotated_beats if beat.get("beat") == 1),
-                "beat_strength_mean": (beat_data or {}).get("beat_strength_mean"),
-                "downbeat_strength_mean": (beat_data or {}).get("downbeat_strength_mean"),
-                "meter_assumption": (beat_data or {}).get("meter_assumption", "4/4"),
-            },
-            "artifacts": artifacts,
-        },
+        info_updates,
     )
     return beats_file
 

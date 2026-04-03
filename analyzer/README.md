@@ -35,14 +35,14 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 
 | Task | Inputs | Outputs | Notes |
 |---|---|---|---|
-| `init-song` | source song path | `info.json` root | Creates only `song_name`, `song_path`, and `artifacts`.
+| `init-song` | source song path | `info.json` root | Creates `song_name`, `song_path`, top-level `bpm`, top-level `duration`, and `artifacts`.
 | `split-stems` | source song path | `stems/*`, updated `info.json` | Initializes song metadata before writing derived fields.
-| `beat-finder` | source song path, optional Moises files | `beats.json`, updated `info.json` | Imports Moises beats when usable chord data exists; otherwise runs analyzer beat detection.
-| `import-moises` | `moises/chords.json` | `beats.json`, optional `sections.json` | Normalizes Moises beat rows and materializes sections from Moises segments when available, without modifying the original Moises files.
+| `beat-finder` | source song path, optional Moises files | `reference/beats.json` or `inferred/beats.<model>.json`, updated `info.json` | Imports Moises beats when usable chord data exists; otherwise runs analyzer beat detection.
+| `import-moises` | `moises/chords.json` | `reference/beats.json`, optional `sections.json` | Normalizes Moises beat rows and materializes sections from Moises segments when available, without modifying the original Moises files.
 | `essentia-analysis` | source song path, optional stems | `essentia/*.json`, `essentia/*.svg`, `hints.json`, updated `info.json` | Builds section-indexed hints when sections exist; otherwise falls back to a single song-wide section.
-| `find_chords` | `beats.json` | updated beats output, updated `info.json` | Optional beat enrichment step.
-| `find_sections` | `beats.json` | `sections.json`, updated `info.json` | Produces canonical persisted song sections.
-| `find-song-features` | `info.json`, `beats.json`, `essentia` mix artifacts | `features.json`, updated `info.json` | Also uses `sections.json` and `hints.json` when present.
+| `find_chords` | canonical beats | updated beats output, updated `info.json` | Optional beat enrichment step.
+| `find_sections` | canonical beats | `sections.json`, updated `info.json` | Produces canonical persisted song sections.
+| `find-song-features` | `info.json`, canonical beats, `essentia` mix artifacts | `features.json`, updated `info.json` | Also uses `sections.json` and `hints.json` when present.
 | `generate-md` | `sections.json`, optional `features.json` | `<song>.md` | Terminal presentation artifact.
 
 Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find-sections`, `essentia-analysis`, `find-song-features`, `generate-md`.
@@ -99,8 +99,9 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 
 ### Output structure
 
-- `analyzer/meta/<song>/info.json`: canonical song metadata.
-- `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable chord data, this file is normalized from `moises/chords.json`.
+- `analyzer/meta/<song>/info.json`: canonical song metadata, including top-level `bpm`, top-level `duration`, and the active canonical beats path in `beats_file`.
+- `analyzer/meta/<song>/reference/beats.json`: human-validated canonical beat events used by backend consumers when available.
+- `analyzer/meta/<song>/inferred/beats.<model>.json`: model-generated beat outputs kept separate from canonical reference data.
 - `analyzer/meta/<song>/sections.json`: canonical persisted section list. When `moises/segments.json` exists and `sections.json` is absent, Moises import materializes this file using the analyzer section row shape (`start`, `end`, `label`, optional `description`, optional `hints`) after standalone section-range validation used by backend consumers.
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
 - `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, and optional semantic tags from a music audio-classification model.
@@ -195,9 +196,9 @@ docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the P
 - `--find-sections`: run Hugging Face section inference and write `sections.json` rows.
 - `--generate-md`: render the per-song markdown summary from `sections.json`.
 
-Chord inference requires an existing `beats.json`. If it is missing, the analyzer warns and returns `None`. Bass inference uses `analyzer/temp_files/htdemucs/<song>/bass.wav` when present; if the bass stem is missing, the analyzer warns and keeps going with mix-only chord inference.
+Chord inference requires canonical beats from `info.json` or `reference/beats.json`. If they are missing, the analyzer warns and returns `None`. Bass inference uses `analyzer/temp_files/htdemucs/<song>/bass.wav` when present; if the bass stem is missing, the analyzer warns and keeps going with mix-only chord inference.
 
-Section inference also requires an existing `beats.json`. If no section models are configured or all configured models fail, the analyzer warns and returns `None`.
+Section inference also requires canonical beats. If no section models are configured or all configured models fail, the analyzer warns and returns `None`.
 
 Model retries are registry-driven. The analyzer tries the configured candidates in order and stops on the first successful model output. The default chord model is `andrewmcgill04/ast-finetuned-audioset-10-10-0.4593-chordy`. The default section model is `ArseniiChstiakovml/MusicSectionDetection`. Override or extend them through `ANALYZER_FIND_CHORDS_MODELS_JSON` and `ANALYZER_FIND_SECTIONS_MODELS_JSON`.
 
@@ -247,9 +248,9 @@ Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable J
 
 ## Appendix
 
-### Beats.json file
+### Canonical beats file
 
-`beats.json` is an array of beat events:
+The active beats file recorded in `info.json.beats_file` is an array of beat events. Canonical human-backed beats live at `reference/beats.json`, while model outputs live under `inferred/`:
 
 ```json
 [

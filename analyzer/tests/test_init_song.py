@@ -18,6 +18,8 @@ def test_init_song_creates_minimal_info_root(tmp_path: Path) -> None:
     assert json.loads(info_file.read_text(encoding="utf-8")) == {
         "song_name": "Alpha",
         "song_path": str(song_path.resolve()),
+        "bpm": 0.0,
+        "duration": 0.0,
         "artifacts": {},
     }
 
