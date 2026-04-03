@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-from src.song_meta import load_json_file
+from src.storage.song_meta import load_json_file
 
 PARTS = ("vocals", "drums", "bass", "other")
 

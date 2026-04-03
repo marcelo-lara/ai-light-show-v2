@@ -4,13 +4,17 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from .dispatch import TASK_TYPES, run_task
+from .dispatch import TASK_TYPES, list_task_types, run_task
 from .store import QUEUE_FILE_PATH, QUEUE_LOCK, load_items, now_iso, save_items
 
 
 def list_items(queue_path: Path = QUEUE_FILE_PATH) -> list[dict[str, Any]]:
     with QUEUE_LOCK:
         return load_items(queue_path)
+
+
+def get_task_types() -> list[dict[str, str]]:
+    return list_task_types()
 
 
 def _normalize_song_path(params: dict[str, Any]) -> str | None:
@@ -26,6 +30,26 @@ def _normalize_song_path(params: dict[str, Any]) -> str | None:
 def get_item(item_id: str, queue_path: Path = QUEUE_FILE_PATH) -> dict[str, Any] | None:
     with QUEUE_LOCK:
         return next((item for item in load_items(queue_path) if item.get("item_id") == item_id), None)
+
+
+def add_playlist_items(tasks: list[dict[str, Any]], queue_path: Path = QUEUE_FILE_PATH, activate: bool = True) -> list[dict[str, Any]]:
+    scheduled: list[dict[str, Any]] = []
+    for task in tasks:
+        task_type = str(task.get("task_type"))
+        params = task.get("params") if isinstance(task.get("params"), dict) else {}
+        item_id = add_item(task_type, params, queue_path)
+        item = get_item(item_id, queue_path)
+        if activate and item is not None and item.get("status") == "queued":
+            item = execute_item(item_id, queue_path) or get_item(item_id, queue_path)
+        scheduled.append(
+            {
+                "item_id": item_id,
+                "task_type": task_type,
+                "status": None if item is None else item.get("status"),
+                "params": params,
+            }
+        )
+    return scheduled
 
 
 def add_item(task_type: str, params: dict[str, Any], queue_path: Path = QUEUE_FILE_PATH) -> str:

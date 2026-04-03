@@ -105,14 +105,18 @@ def test_ws_song_list_and_load(monkeypatch):
             )
             assert load_event["data"] == {"filename": "beta-song"}
 
-            ws.send_json({"type": "hello"})
-            refreshed = _read_until_type(ws, "snapshot")
+            patch = _read_until(ws, lambda message: message.get("type") == "patch")
+            changes = {tuple(change["path"]): change["value"] for change in patch["changes"]}
 
-            assert refreshed["state"]["song"]["filename"] == "beta-song"
-            assert refreshed["state"]["song"]["bpm"] == 140.0
-            assert refreshed["state"]["song"]["beats"] == [
+            assert changes[("song",)]["filename"] == "beta-song"
+            assert changes[("song",)]["bpm"] == 140.0
+            assert changes[("song",)]["beats"] == [
                 {"time": 0.0, "beat": 1, "bar": 0, "bass": None, "chord": None, "type": "downbeat"},
                 {"time": 0.5, "beat": 2, "bar": 0, "bass": None, "chord": None, "type": "beat"},
             ]
-            assert refreshed["state"]["playback"]["time_ms"] == 0
-            assert refreshed["state"]["cues"][0]["fixture_id"] == "fixture-b"
+            assert changes[("playback",)]["time_ms"] == 0
+            assert changes[("cues",)][0]["fixture_id"] == "fixture-b"
+
+            ws.send_json({"type": "hello"})
+            refreshed = _read_until_type(ws, "snapshot")
+            assert refreshed["state"]["song"]["filename"] == "beta-song"

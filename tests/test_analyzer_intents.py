@@ -1,6 +1,7 @@
 import pytest
 
 from backend.api.intents.analyzer.actions.enqueue import enqueue_analyzer_item
+from backend.api.intents.analyzer.actions.enqueue_full_artifact import enqueue_full_artifact_playlist
 from backend.api.intents.analyzer.actions.execute import execute_analyzer_item
 from backend.api.intents.analyzer.actions.execute_all import execute_all_analyzer_items
 from backend.api.intents.analyzer.actions.remove import remove_analyzer_item
@@ -15,10 +16,27 @@ class _AnalyzerService:
         self.executed = []
         self.execute_all_calls = 0
         self.remove_all_calls = 0
+        self.playlist_enqueued = []
+        self.task_type_refreshes = 0
+        self._task_types = [
+            {"value": "generate-md", "label": "Generate Markdown", "description": "Generate markdown summary."},
+            {"value": "find_sections", "label": "Find Sections", "description": "Infer song sections."},
+        ]
+
+    def task_types(self):
+        return list(self._task_types)
+
+    async def refresh_task_types(self):
+        self.task_type_refreshes += 1
+        return list(self._task_types)
 
     async def enqueue_item(self, task_type, params):
         self.enqueued.append((task_type, params))
         return {"ok": True, "item_id": "item-1"}
+
+    async def enqueue_full_artifact_playlist(self, params, activate=True):
+        self.playlist_enqueued.append((params, activate))
+        return {"ok": True, "playlist": {"playlist": "full-artifact-analyzer"}, "scheduled": [{"item_id": "item-1"}], "count": 1}
 
     async def remove_item(self, item_id):
         self.removed.append(item_id)
@@ -43,6 +61,9 @@ class _FailingAnalyzerService(_AnalyzerService):
 
     async def execute_item(self, item_id):
         raise TimeoutError(f"execute stalled for {item_id}")
+
+    async def enqueue_full_artifact_playlist(self, params, activate=True):
+        raise TimeoutError(f"playlist stalled for {params['filename']}")
 
 
 class _SongService:
@@ -125,6 +146,66 @@ async def test_enqueue_analyzer_item_handles_service_failure(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_enqueue_analyzer_item_accepts_catalog_task_not_previously_hardcoded(monkeypatch):
+    monkeypatch.setattr("backend.api.intents.analyzer.actions.helpers.Path.exists", lambda self: True)
+    manager = _Manager()
+
+    ok = await enqueue_analyzer_item(manager, {"task_type": "find_sections", "filename": "alpha-song"})
+
+    assert ok is True
+    assert manager.analyzer_service.enqueued == [
+        (
+            "find_sections",
+            {"filename": "alpha-song", "song_path": "/tmp/songs/alpha-song.mp3", "meta_path": "/tmp/meta"},
+        )
+    ]
+
+
+@pytest.mark.asyncio
+async def test_enqueue_full_artifact_playlist_uses_song_resolution(monkeypatch):
+    monkeypatch.setattr("backend.api.intents.analyzer.actions.helpers.Path.exists", lambda self: True)
+    manager = _Manager()
+
+    ok = await enqueue_full_artifact_playlist(manager, {"filename": "alpha-song", "activate": True})
+
+    assert ok is True
+    assert manager.analyzer_service.playlist_enqueued == [
+        (
+            {"filename": "alpha-song", "song_path": "/tmp/songs/alpha-song.mp3", "meta_path": "/tmp/meta"},
+            True,
+        )
+    ]
+    assert manager.events[-1] == (
+        "info",
+        "analyzer_playlist_enqueued",
+        {
+            "playlist": "full-artifact",
+            "filename": "alpha-song",
+            "activate": True,
+            "resolved_playlist": {"playlist": "full-artifact-analyzer"},
+            "ok": True,
+            "scheduled": [{"item_id": "item-1"}],
+            "count": 1,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_enqueue_full_artifact_playlist_handles_service_failure(monkeypatch):
+    monkeypatch.setattr("backend.api.intents.analyzer.actions.helpers.Path.exists", lambda self: True)
+    manager = _Manager(analyzer_service=_FailingAnalyzerService())
+
+    ok = await enqueue_full_artifact_playlist(manager, {"filename": "alpha-song"})
+
+    assert ok is False
+    assert manager.events[-1] == (
+        "error",
+        "analyzer_enqueue_failed",
+        {"reason": "request_failed", "playlist": "full-artifact", "filename": "alpha-song", "error": "playlist stalled for alpha-song"},
+    )
+
+
+@pytest.mark.asyncio
 async def test_remove_and_execute_analyzer_item_emit_events():
     manager = _Manager()
 
@@ -189,6 +270,7 @@ async def test_remove_all_analyzer_items_emits_event():
 
 def test_analyzer_handlers_map_contains_full_names():
     assert "analyzer.enqueue" in ANALYZER_HANDLERS
+    assert "analyzer.enqueue_full_artifact" in ANALYZER_HANDLERS
     assert "analyzer.remove" in ANALYZER_HANDLERS
     assert "analyzer.remove_all" in ANALYZER_HANDLERS
     assert "analyzer.execute" in ANALYZER_HANDLERS

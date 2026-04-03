@@ -1,51 +1,66 @@
 import { Card } from "../../../shared/components/layout/Card.ts";
 import { List } from "../../../shared/components/layout/List.ts";
+import { getBackendStore, subscribeBackendStore } from "../../../shared/state/backend_state.ts";
+import type { CueEntry } from "../../../shared/transport/protocol.ts";
+import { formatCueLabel, getChaserById, isChaserCue, isEffectCue } from "../../show_builder/cue_utils.ts";
+import { findCurrentCueTime, formatCueTime } from "../../show_builder/components/cue_sheet/format.ts";
 
-type CueSection = {
-  time: string;
-  name: string;
-  chasers: number;
-  effects: number;
-};
+function cueLabel(cue: CueEntry): string {
+  if (isEffectCue(cue)) return formatCueLabel(cue.effect);
+  const chaser = getChaserById(getBackendStore().state.chasers ?? [], cue.chaser_id);
+  return chaser?.name ?? formatCueLabel(cue.chaser_id);
+}
 
-const CUES: CueSection[] = [
-  { time: "0.00", name: "Intro", chasers: 2, effects: 5 },
-  { time: "12.00", name: "Verse A", chasers: 5, effects: 0 },
-  { time: "18.00", name: "Verse A", chasers: 5, effects: 0 },
-  { time: "24.21", name: "Drop", chasers: 0, effects: 8 },
-  { time: "24.70", name: "Verse B", chasers: 4, effects: 1 },
-];
+function cueMeta(cue: CueEntry): string {
+  if (isEffectCue(cue)) return formatCueLabel(cue.fixture_id);
+  return "Chaser";
+}
 
 export function CueSheetPanel(): HTMLElement {
   const content = document.createElement("div");
   content.className = "show-control-body";
   const list = document.createElement("div");
   list.className = "show-control-list o-list";
-
-  for (const cue of CUES) {
-    const time = document.createElement("span");
-    time.className = "u-cell u-cell-time";
-    time.textContent = cue.time;
-
-    const title = document.createElement("span");
-    title.className = "cue-sheet-title u-cell u-cell-effect";
-    title.textContent = cue.name;
-
-    const meta = document.createElement("span");
-    meta.className = "cue-sheet-meta muted";
-    meta.textContent = `chasers:${cue.chasers} effects:${cue.effects}`;
-
-    const contentCells = document.createElement("div");
-    contentCells.append(time, title, meta);
-
-    const row = List({
-      className: "cue-sheet-row",
-      content: contentCells,
-      isActive: cue.time === "0.00",
-    });
-    list.appendChild(row);
-  }
   content.appendChild(list);
 
-  return Card(content, { variant: "outlined", className: "show-control-panel" });
+  const render = () => {
+    const state = getBackendStore().state;
+    const cues = state.cues ?? [];
+    const activeTime = findCurrentCueTime(cues, state.playback?.time_ms ?? 0);
+    list.replaceChildren();
+
+    if (cues.length === 0) {
+      const empty = document.createElement("span");
+      empty.className = "show-control-label u-cell u-cell-effect";
+      empty.textContent = "No cues loaded";
+      list.appendChild(List({ className: "cue-sheet-row", content: empty, isActive: true }));
+      return;
+    }
+
+    for (const cue of cues) {
+      const time = document.createElement("span");
+      time.className = "u-cell u-cell-time";
+      time.textContent = formatCueTime(cue.time);
+
+      const title = document.createElement("span");
+      title.className = "cue-sheet-title u-cell u-cell-effect";
+      title.textContent = cueLabel(cue);
+
+      const meta = document.createElement("span");
+      meta.className = "cue-sheet-meta muted";
+      meta.textContent = cueMeta(cue);
+
+      list.appendChild(List({
+        className: "cue-sheet-row",
+        content: [time, title, meta],
+        isActive: activeTime !== null && Math.abs(cue.time - activeTime) < 1e-6,
+        title: JSON.stringify(cue.data ?? {}),
+      }));
+    }
+  };
+
+  render();
+  const card = Card(content, { variant: "outlined", className: "show-control-panel" });
+  (card as unknown as { _cleanup: () => void })._cleanup = subscribeBackendStore(render);
+  return card;
 }

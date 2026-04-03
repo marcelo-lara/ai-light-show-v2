@@ -284,6 +284,12 @@
   min-width: 0;
 }
 
+.cue-sheet-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .cue-sheet-header-eyebrow,
 .cue-sheet-empty-eyebrow {
   margin: 0;

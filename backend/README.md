@@ -7,7 +7,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - Expose the websocket control plane at `/ws`.
 - Expose a backend-owned MCP tool surface at `/mcp`.
 - Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
-- Relay analyzer queue/runtime state from the analyzer HTTP service under top-level `state.analyzer`.
+- Relay analyzer queue/runtime state and analyzer-owned task metadata from the analyzer HTTP service under top-level `state.analyzer`.
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
@@ -55,6 +55,7 @@ Supported intent names:
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
+- Cue reload: `cue.reload`.
 - Cue helpers: `cue.apply_helper` with `helper_id` plus optional `params`.
 - Chaser: `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, `chaser.list`.
 - POI: `poi.create`, `poi.update`, `poi.delete`, `poi.update_fixture_target`.
@@ -115,9 +116,11 @@ Patch behavior:
 - Browser audio timeline keeps backend timecode aligned while playback is running using a short sync cadence, plus immediate sync on play/pause/seek/stop.
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
 - `transport.play` first checks analyzer queue status. If analyzer reports any `running` item, backend emits `transport_play_blocked` and playback does not start.
-- Backend does not keep a standing analyzer poll loop while the queue is empty. Startup performs a one-shot status refresh, and continuous polling begins only when analyzer queue activity is known.
+- Backend does not keep a standing analyzer poll loop while the queue is empty. Startup performs a one-shot status refresh, fetches analyzer task metadata once, and continuous polling begins only when analyzer queue activity is known. If analyzer status fetches fail while queued or running work is still being tracked, backend keeps retrying until the analyzer status endpoint responds again.
+- `state.analyzer.task_types` exposes the analyzer-owned task catalog with `value`, `label`, and `description` fields for frontend task selection.
 - Analyzer service startup clears any persisted queue items before it begins serving queue state, so backend sees an empty analyzer queue after analyzer restarts.
-- `analyzer.enqueue` validates `task_type` and `filename`, derives analyzer `song_path` plus `meta_path`, posts a queue item to the analyzer service, and triggers queue-activity polling.
+- `analyzer.enqueue` validates `task_type` against the analyzer-owned task catalog, derives analyzer `song_path` plus `meta_path`, posts a queue item to the analyzer service, and triggers queue-activity polling.
+- `analyzer.enqueue_full_artifact` derives analyzer `song_path` plus `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue endpoint, and triggers queue-activity polling.
 - `analyzer.execute` posts one queued item to the analyzer service execute endpoint and triggers queue-activity polling so pending/running state is relayed back into `state.analyzer`.
 - `analyzer.execute_all` executes every queue item whose current analyzer status is `queued`, then refreshes analyzer state once.
 - `analyzer.remove` deletes one analyzer queue item and refreshes `state.analyzer` immediately.
@@ -135,12 +138,14 @@ Patch behavior:
 - Cue edits support add/update/delete by index via `cue.add`, `cue.update`, and `cue.delete` intents.
 - `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
 - `cue.clear_all` removes every entry from the current cue sheet.
+- `cue.reload` re-reads `backend/cues/{song}.json` for the current song, validates the external file contents, rebuilds the pre-rendered DMX canvas, and broadcasts the refreshed cue list.
 - Cue writes de-duplicate identical effect rows (`fixture_id` + `effect`) and identical chaser rows (`chaser_id`) within a `100ms` window; the latest write replaces the earlier row instead of appending a duplicate.
 - `llm.send_prompt` starts an assistant request through the backend-owned assistant service. The assistant service loads a named prompt profile, includes recent per-client chat history from the current websocket session, forwards the request to the agent gateway, relays streamed model output to the requesting websocket client, and pauses write-capable tool calls at the proposal stage.
 - `llm.confirm_action` applies a proposed cue or chaser mutation after explicit user confirmation, schedules a broadcast for the resulting state change, and then emits a backend-generated completion summary for that executed action.
 - `llm.reject_action` dismisses a pending proposal without mutating cues.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from backend-owned helper definitions and upserts them into the cue sheet. Helpers can expose parameter schemas and runtime params.
+- `cue_helper_apply_failed` includes `missing_artifacts` when helper execution fails because analyzer artifact files referenced by the current song are absent, so frontend error surfaces can show the missing filenames and paths.
 - `song_draft` is a backend-owned cue helper that reads analyzer-backed section and per-stem metadata through the backend analysis contract and generates a draft cue sheet using the active fixture inventory and POI availability.
 - `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
@@ -163,8 +168,8 @@ Patch behavior:
 - Fixture templates: `backend/fixtures/fixture.<type>.<model>.json`
 - POIs: `backend/fixtures/pois.json`
 - Cues: `backend/cues/{song}.json`
-- Songs: `backend/songs/*.mp3`
-- Metadata root in Docker: `/app/meta` (fallback local: `backend/meta`)
+- Songs: `analyzer/songs/*.mp3` locally, mounted at `/app/songs` in Docker
+- Metadata root in Docker: `/app/meta` (fallback local: `analyzer/meta`, else `backend/meta`)
 - Static routes: `/songs/*` for audio and `/meta/*` for analyzer artifacts (SVG/JSON).
 
 Song payload fields under `state.song`:

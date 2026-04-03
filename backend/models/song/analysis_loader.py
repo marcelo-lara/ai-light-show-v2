@@ -9,11 +9,28 @@ from .analysis_files import attach_section_positions, load_json, normalize_secti
 TModel = TypeVar("TModel", StemAccent, StemDip)
 
 
-def build_song_analysis(song) -> SongAnalysis:
+def resolve_analysis_artifact_paths(song) -> dict[str, Path]:
     meta_root = Path(song.base_dir)
     artifacts = getattr(song.meta, "artifacts", {}) or {}
-    features_path = resolve_meta_path(meta_root, str(artifacts.get("features_file") or ""), song.song_id, "features.json")
-    hints_path = resolve_meta_path(meta_root, str(artifacts.get("hints_file") or ""), song.song_id, "hints.json")
+    return {
+        "features_file": resolve_meta_path(meta_root, str(artifacts.get("features_file") or ""), song.song_id, "features.json"),
+        "hints_file": resolve_meta_path(meta_root, str(artifacts.get("hints_file") or ""), song.song_id, "hints.json"),
+    }
+
+
+def collect_missing_analysis_artifacts(song) -> list[dict[str, str]]:
+    missing: list[dict[str, str]] = []
+    for artifact, path in resolve_analysis_artifact_paths(song).items():
+        if path.exists():
+            continue
+        missing.append({"artifact": artifact, "path": str(path)})
+    return missing
+
+
+def build_song_analysis(song) -> SongAnalysis:
+    artifact_paths = resolve_analysis_artifact_paths(song)
+    features_path = artifact_paths["features_file"]
+    hints_path = artifact_paths["hints_file"]
     features_payload = load_json(features_path)
     hints_payload = load_json(hints_path)
     feature_sections = index_sections((features_payload or {}).get("sections") or [])

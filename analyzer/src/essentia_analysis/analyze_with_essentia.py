@@ -7,7 +7,7 @@ from typing import Any, Dict
 import essentia.standard as es
 import numpy as np
 
-from ..progress import ProgressCallback, emit_stage
+from ..runtime.progress import ProgressCallback, emit_stage
 from .common import to_jsonable, warn
 from .extract_rhythm_descriptors import extract_rhythm_descriptors
 from .plot_essentia_analysis import (
@@ -210,9 +210,8 @@ def analyze_with_essentia(
         },
     }
 
-    # Organize into separate artifacts
     artifacts = {
-        "rhythm": data,  # Keep the old data for compatibility
+        "rhythm": data,
         "loudness_envelope": {
             "part": part_name,
             "sample_rate": sr,

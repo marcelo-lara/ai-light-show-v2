@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from models.song import build_song_analysis
+from models.song.analysis_loader import collect_missing_analysis_artifacts
 from services.cue_helpers.song_draft.fixture_roles import resolve_fixture_roles, select_orbit_pair
 from services.cue_helpers.song_draft.patterns import accent_times, beat_duration_s, section_palette
 
@@ -14,7 +15,9 @@ def generate_song_draft(song, fixtures: list[Any], pois: list[dict[str, Any]], s
     if not analysis.sections_available:
         raise ValueError("sections_unavailable")
     if not analysis.features_available:
-        raise ValueError("features_unavailable")
+        error = ValueError("features_unavailable")
+        setattr(error, "missing_artifacts", collect_missing_analysis_artifacts(song))
+        raise error
     roles = resolve_fixture_roles(fixtures, pois, supported_effects)
     entries = [{"time": 0.0, "fixture_id": fixture_id, "effect": "blackout", "duration": 0.0, "data": {}} for fixture_id in roles["pars"] + roles["movers"]]
     for section in analysis.sections:

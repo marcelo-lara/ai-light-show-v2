@@ -70,6 +70,7 @@ Behavior:
 - Transport intents: `transport.play|pause|stop|jump_to_time|jump_to_section`.
 - `transport.play` blocks when analyzer reports any queue item in `running` state.
 - `analyzer.enqueue` and `analyzer.execute` both trigger queue-activity refresh so demand-driven analyzer polling resumes as soon as work is created or scheduled.
+- `analyzer.enqueue_full_artifact` schedules the analyzer-owned full-artifact playlist through the analyzer queue API and triggers queue-activity refresh immediately.
 - `analyzer.execute_all` scans the current analyzer queue for `queued` items, posts execute requests for those items, and then refreshes analyzer state.
 - `analyzer.remove_all` scans the current analyzer queue, deletes every non-running item, and then refreshes analyzer state.
 - During playback, backend stops analyzer polling and keeps the analyzer worker locked through the analyzer HTTP runtime.
@@ -81,9 +82,9 @@ Behavior:
 ### Analyzer relay state
 
 - Frontend snapshots and patches include a top-level `analyzer` object.
-- `analyzer` contains analyzer service availability, backend polling state, playback lock state, queue items, and per-status summary counts.
+- `analyzer` contains analyzer service availability, backend polling state, playback lock state, analyzer-owned `task_types`, queue items, and per-status summary counts.
 - Backend relays analyzer queue items exactly as reported by the analyzer service. Analyzer startup clears persisted queue items before queue status is served, so backend sees an empty analyzer queue after analyzer restarts.
-- Backend only keeps that analyzer state refreshed while playback is idle and analyzer queue work is active.
+- Backend only keeps that analyzer state refreshed while playback is idle and analyzer queue work is active. If analyzer status becomes temporarily unavailable during tracked queue activity, backend keeps retrying until the analyzer status endpoint recovers, then stops polling once the queue is idle again.
 
 ### Section metadata normalization
 
@@ -105,17 +106,19 @@ Behavior:
 - `song.list` emits an event with the available backend song names and does not broadcast state.
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - When analyzer `info.json` is missing for the selected song, `song.load` falls back to empty metadata (`bpm=0`, `duration=0`, default beats path, empty artifacts) so the backend can still load the song and emit a valid snapshot.
-- `analyzer.enqueue` validates `payload.task_type` and selected song id, derives analyzer `song_path` and `meta_path` from backend song paths, posts a new analyzer queue item, and broadcasts the refreshed analyzer snapshot.
+- `analyzer.enqueue` validates `payload.task_type` against the analyzer-owned task catalog, derives analyzer `song_path` and `meta_path` from backend song paths, posts a new analyzer queue item, and broadcasts the refreshed analyzer snapshot.
+- `analyzer.enqueue_full_artifact` derives analyzer `song_path` and `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue surface, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.execute` validates `payload.item_id`, posts one queued item to the analyzer execute endpoint, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.execute_all` executes every queue item currently marked `queued` and broadcasts the refreshed analyzer snapshot.
 - `analyzer.remove` validates `payload.item_id`, deletes that analyzer queue item, and broadcasts the refreshed analyzer snapshot.
 - `analyzer.remove_all` deletes every analyzer queue item except items currently marked `running`, then broadcasts the refreshed analyzer snapshot.
 - Analyzer mutation failures (`enqueue|execute|remove|remove_all`) emit analyzer error events instead of closing the websocket request path.
-- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, and `cue.apply_helper`.
+- Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, `cue.reload`, and `cue.apply_helper`.
 - The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, and full-sheet replace.
 - The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, section windows with resolved musical positions, and section-analysis summaries for metadata drafting.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - `cue.clear_all` removes every cue entry from the current song and persists the empty cue sheet.
+- `cue.reload` re-reads the current song cue file from disk, validates the mixed cue rows against the active fixture and chaser inventory, and rebuilds the pre-rendered DMX canvas.
 - LLM chat is backend-owned through `services/assistant/*`: prompt profiles are loaded there, requests are relayed to the agent gateway, and assistant websocket events are targeted to the requesting client instead of globally broadcast.
 - The assistant service keeps recent per-client user and assistant turns for the lifetime of the websocket session and includes them in later `llm.send_prompt` requests.
 - The default assistant prompt profile prefers grounded timing answers in `bar.beat (seconds)` form when both values are available, and it avoids repeating the loaded song name unless the user explicitly asks for it.
@@ -124,6 +127,7 @@ Behavior:
 - Confirmed assistant mutations are terminal for the current turn: backend applies the action, emits `llm_action_applied`, then emits a backend-generated completion summary and `llm_done` without asking the gateway for another follow-up turn.
 - Cue helper definitions are exposed in `state.cue_helpers` and helper execution is backend-owned.
 - `cue.apply_helper` accepts `payload.helper_id` plus optional `payload.params`. Backend validates the helper id, uses helper-owned parameter defaults and validation, then upserts the generated cue rows.
+- `cue_helper_apply_failed` carries `missing_artifacts` when helper execution detects absent analyzer artifact files, allowing frontend error UI to report the exact artifact names and resolved paths.
 - `state.cue_helpers` includes a parameter schema for each helper so the frontend can render helper-specific controls without hardcoded forms.
 - Cue persistence de-duplicates matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) within `100ms`, keeping the latest write even when the duplicate arrives through assistant-confirmed MCP-backed edits.
 - Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
@@ -189,6 +193,10 @@ Frontend consumers should treat each `supported_effects[]` entry as a metadata o
 `metadata_get_section_analysis` summarizes each section with mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals` so the assistant can draft grounded descriptions and hints.
 
 `cue.apply_helper` includes helper id `song_draft`, which generates a backend-owned draft cue sheet from analyzer timing/features and the active rig's supported effects and POI coverage.
+
+Backend resolves metadata from `/app/meta` in Docker. For local development and tests it uses `analyzer/meta` when that tree exists, and falls back to `backend/meta` only when no analyzer metadata tree is present.
+
+Backend resolves song audio from `/app/songs` in Docker. For local development and tests it uses `analyzer/songs`.
 
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.

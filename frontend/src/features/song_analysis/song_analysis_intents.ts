@@ -34,6 +34,15 @@ export function enqueueAnalyzerItem(taskType: string, filename: string) {
 	});
 }
 
+export function enqueueAnalyzerFullArtifact(filename: string, activate = true) {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "analyzer.enqueue_full_artifact",
+		payload: { filename, activate },
+	});
+}
+
 export function removeAnalyzerItem(itemId: string) {
 	wsSend({
 		type: "intent",

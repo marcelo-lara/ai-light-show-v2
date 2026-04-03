@@ -3,7 +3,7 @@ import { SongPlayer } from "../../shared/components/song_player/SongPlayer.ts";
 import { Columns } from "../../shared/components/layout/Columns.ts";
 import { Cards } from "../../shared/components/layout/Cards.ts";
 import { SongLoaderPanel } from "./song_loader/SongLoaderPanel.ts";
-import { AnalyzerQueuePanel } from "./components/AnalyzerQueuePanel.ts";
+import { AnalyzerQueuePanel } from "./analyzer_queue/AnalyzerQueuePanel.ts";
 import { getSongAnalysisData } from "./song_analysis_state.ts";
 
 export function SongAnalysisView(): HTMLElement {

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from api.intents.fixture.actions.set_values import set_values
+from models.song import resolve_meta_root, resolve_songs_root
 from store.state import StateManager
 
 
@@ -20,9 +21,9 @@ async def test_set_values_u8_u16_and_enum_paths():
     workspace_root = Path(__file__).resolve().parents[1]
     backend_path = workspace_root / "backend"
 
-    songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
+    songs_path = resolve_songs_root(backend_path)
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
-    meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
+    meta_path = resolve_meta_root(backend_path)
 
     sm = StateManager(backend_path, songs_path, cues_path, meta_path)
     await sm.load_fixtures(backend_path / "fixtures" / "fixtures.json")
@@ -71,9 +72,9 @@ async def test_set_values_accepts_rgb_hex_and_mapped_name_for_parcan_rgb():
     workspace_root = Path(__file__).resolve().parents[1]
     backend_path = workspace_root / "backend"
 
-    songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
+    songs_path = resolve_songs_root(backend_path)
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
-    meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
+    meta_path = resolve_meta_root(backend_path)
 
     sm = StateManager(backend_path, songs_path, cues_path, meta_path)
     await sm.load_fixtures(backend_path / "fixtures" / "fixtures.json")
@@ -120,9 +121,9 @@ async def test_set_values_rejects_direct_rgb_channels_for_parcan_rgb():
     workspace_root = Path(__file__).resolve().parents[1]
     backend_path = workspace_root / "backend"
 
-    songs_path = Path("/app/songs") if Path("/app/songs").exists() else backend_path / "songs"
+    songs_path = resolve_songs_root(backend_path)
     cues_path = Path("/app/cues") if Path("/app/cues").exists() else backend_path / "cues"
-    meta_path = Path("/app/meta") if Path("/app/meta").exists() else backend_path / "meta"
+    meta_path = resolve_meta_root(backend_path)
 
     sm = StateManager(backend_path, songs_path, cues_path, meta_path)
     await sm.load_fixtures(backend_path / "fixtures" / "fixtures.json")

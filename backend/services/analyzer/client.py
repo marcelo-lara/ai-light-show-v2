@@ -11,7 +11,7 @@ class AnalyzerHttpClient:
 
     @staticmethod
     def _status_timeout() -> httpx.Timeout:
-        return httpx.Timeout(5.0)
+        return httpx.Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0)
 
     @staticmethod
     def _mutation_timeout() -> httpx.Timeout:
@@ -22,6 +22,14 @@ class AnalyzerHttpClient:
             response = await client.get(f"{self.base_url}/queue/status")
             response.raise_for_status()
             return response.json()
+
+    async def get_task_types(self) -> list[dict[str, Any]]:
+        async with httpx.AsyncClient(timeout=self._status_timeout()) as client:
+            response = await client.get(f"{self.base_url}/task-types")
+            response.raise_for_status()
+            payload = response.json()
+            task_types = payload.get("task_types")
+            return task_types if isinstance(task_types, list) else []
 
     async def set_playback_lock(self, locked: bool) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=self._status_timeout()) as client:
@@ -42,6 +50,15 @@ class AnalyzerHttpClient:
             response = await client.post(
                 f"{self.base_url}/queue/items",
                 json={"task_type": task_type, "params": params},
+            )
+            response.raise_for_status()
+            return response.json()
+
+    async def enqueue_full_artifact_playlist(self, params: dict[str, Any], activate: bool = True) -> dict[str, Any]:
+        async with httpx.AsyncClient(timeout=self._mutation_timeout()) as client:
+            response = await client.post(
+                f"{self.base_url}/queue/playlists/full-artifact",
+                json={**params, "activate": activate},
             )
             response.raise_for_status()
             return response.json()

@@ -12,6 +12,7 @@ Code is the source of truth.
 - Arms fixtures and starts Art-Net send loop.
 - Loads default song (`Yonaka - Seize the Power` if present, else first available).
 - Refreshes analyzer status once at startup and starts analyzer polling only when queue work is present.
+- Fetches analyzer task metadata at startup so frontend state can expose task selection while the queue is idle.
 - Mounts songs at `/songs` and exposes websocket endpoint at `/ws`.
 
 2. WebSocket transport: `backend/api/websocket_manager/*`
@@ -190,15 +191,25 @@ Code is the source of truth.
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `analyzer.enqueue` | `task_type`, `filename?` | validates supported analyzer task type, resolves selected song id to backend `songs_path` and `meta_path`, posts a queue item to the analyzer service, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
+| `analyzer.enqueue` | `task_type`, `filename?` | validates `task_type` against the analyzer-owned task catalog, resolves selected song id to backend `songs_path` and `meta_path`, posts a queue item to the analyzer service, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
+| `analyzer.enqueue_full_artifact` | `filename?`, `activate?` | resolves selected song id to backend `songs_path` and `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue endpoint, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
 | `analyzer.execute` | `item_id` | posts one queued analyzer item to the analyzer execute endpoint and triggers queue-activity polling | `True` on success; else event `analyzer_execute_failed` and `False` |
 | `analyzer.execute_all` | none | reads analyzer queue items, executes each item with status `queued`, then refreshes analyzer state once | `True` when any queued item was dispatched; else `False` with event `analyzer_items_executed` carrying `count: 0` |
 | `analyzer.remove` | `item_id` | deletes one analyzer queue item and refreshes analyzer state | `True` on success; else event `analyzer_remove_failed` and `False` |
 | `analyzer.remove_all` | none | deletes every analyzer queue item whose status is not `running`, then refreshes analyzer state | `True` when any item was removed; else `False` with event `analyzer_items_removed` carrying `count: 0` |
 
 Analyzer queue state notes:
+- Backend exposes analyzer-owned task metadata under `state.analyzer.task_types`, with `value`, `label`, and `description` for each supported task type.
 - Backend surfaces analyzer queue item status/progress directly from analyzer HTTP responses under `state.analyzer`.
 - Analyzer startup clears persisted queue items before queue HTTP state is served, so backend should expect an empty analyzer queue after analyzer restarts.
+
+Metadata root notes:
+- Backend resolves metadata from `/app/meta` in Docker.
+- For local development and tests, backend uses `analyzer/meta` when it exists and falls back to `backend/meta` only when no analyzer metadata tree is available.
+
+Songs root notes:
+- Backend resolves song audio from `/app/songs` in Docker.
+- For local development and tests, backend uses `analyzer/songs`.
 
 ### Transport intents
 
@@ -245,6 +256,7 @@ Notes on `fixture.set_values`:
 | `cue.delete` | `index` | validates index, deletes cue entry, persists to disk | `True` on success; else event `cue_delete_failed` and `False` |
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
+| `cue.reload` | none | re-reads the current song cue file from disk, validates the external rows against the active fixture and chaser inventory, re-renders the DMX canvas, and refreshes the frontend cue list | `True` on success; else event `cue_reload_failed` and `False` |
 | `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id. Helper id `song_draft` uses the backend song-analysis contract and active fixture/POI state to build a first-pass show draft. | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 Notes on cue persistence:
@@ -329,7 +341,7 @@ Websocket delivery notes:
 | `info` | `cue_updated` | `{ok, entry}` |
 | `error` | `cue_delete_failed` | `{reason}` |
 | `info` | `cue_deleted` | `{ok, entry}` |
-| `error` | `cue_helper_apply_failed` | `{reason, helper_id?}` |
+| `error` | `cue_helper_apply_failed` | `{reason, helper_id?, missing_artifacts?: [{artifact, path}]}` |
 | `info` | `cue_helper_applied` | `{helper_id, generated, replaced, skipped}` |
 | `error` | `chaser_apply_failed` | `{reason, chaser_id?}` |
 | `info` | `chaser_applied` | `{chaser_id, entry}` |

@@ -59,6 +59,29 @@ class StateSongCueMixin:
             self.current_frame_index = self._time_to_frame_index(self.timecode)
             self._apply_canvas_frame_to_output(self.current_frame_index)
 
+    async def reload_cue_sheet_from_disk(self) -> Dict[str, Any]:
+        async with self.lock:
+            song_filename = getattr(self.cue_sheet, "song_filename", None) or getattr(self.current_song, "song_id", None)
+            if not song_filename:
+                return {"ok": False, "reason": "no_song_loaded"}
+
+            current_cue_sheet = self.cue_sheet
+            next_cue_sheet = load_cue_sheet(self.cues_path, song_filename)
+            try:
+                self.cue_sheet = next_cue_sheet
+                self._validate_cue_sheet()
+            except ValueError as exc:
+                self.cue_sheet = current_cue_sheet
+                return {"ok": False, "reason": str(exc), "song_filename": song_filename}
+
+            self._refresh_canvas_after_cue_change()
+            return {
+                "ok": True,
+                "song_filename": song_filename,
+                "count": len(self.cue_sheet.entries),
+                "entries": self.get_cue_entries(),
+            }
+
     async def add_cue_entry(self, timecode: float, name: Optional[str] = None) -> List[CueEntry]:
         async with self.lock:
             if not self.cue_sheet:
@@ -316,7 +339,11 @@ class StateSongCueMixin:
                     supported_effects=self._fixture_supported_effects,
                 )
             except ValueError as exc:
-                return {"ok": False, "reason": str(exc), "helper_id": helper_id}
+                result = {"ok": False, "reason": str(exc), "helper_id": helper_id}
+                missing_artifacts = getattr(exc, "missing_artifacts", None)
+                if missing_artifacts:
+                    result["missing_artifacts"] = missing_artifacts
+                return result
 
             try:
                 for entry in new_entries:

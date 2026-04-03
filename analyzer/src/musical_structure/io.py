@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from src.song_meta import load_list_file, song_meta_dir
+from src.storage.song_meta import load_list_file, song_meta_dir
 
 TIME_KEYS = {"time", "start", "end"}
 

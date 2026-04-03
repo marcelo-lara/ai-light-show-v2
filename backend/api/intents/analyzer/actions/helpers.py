@@ -4,23 +4,20 @@ from pathlib import Path
 from typing import Any, Dict, Tuple
 
 
-SUPPORTED_TASK_TYPES = {
-    "split-stems",
-    "beat-finder",
-    "essentia-analysis",
-    "find-song-features",
-    "import-moises",
-    "generate-md",
-}
-
-
-def validate_task_type(payload: Dict[str, Any]) -> Tuple[str | None, Dict[str, Any] | None]:
+def task_type_from_payload(payload: Dict[str, Any]) -> Tuple[str | None, Dict[str, Any] | None]:
     task_type = str(payload.get("task_type") or "").strip()
     if not task_type:
         return None, {"reason": "missing_task_type"}
-    if task_type not in SUPPORTED_TASK_TYPES:
-        return None, {"reason": "unsupported_task_type", "task_type": task_type}
     return task_type, None
+
+
+def is_supported_task_type(task_type: str, task_types: list[dict[str, Any]]) -> bool:
+    supported = {
+        str(item.get("value") or "").strip()
+        for item in task_types
+        if isinstance(item, dict) and str(item.get("value") or "").strip()
+    }
+    return task_type in supported
 
 
 def resolve_song_params(manager, payload: Dict[str, Any]) -> Tuple[dict[str, Any] | None, Dict[str, Any] | None]:

@@ -52,6 +52,7 @@ export type IntentName =
   | "song.list"
   | "song.load"
   | "analyzer.enqueue"
+  | "analyzer.enqueue_full_artifact"
   | "analyzer.execute"
   | "analyzer.execute_all"
   | "analyzer.remove"
@@ -69,6 +70,7 @@ export type IntentName =
   | "cue.update"
   | "cue.delete"
   | "cue.clear"
+  | "cue.reload"
   | "cue.apply_helper"
   | "chaser.apply"
   | "chaser.preview"
@@ -140,11 +142,18 @@ export type AnalyzerSummary = {
   failed?: number;
 };
 
+export type AnalyzerTaskType = {
+  value: string;
+  label: string;
+  description: string;
+};
+
 export type AnalyzerState = {
   available?: boolean;
   polling?: boolean;
   playback_locked?: boolean;
   error?: string | null;
+  task_types?: AnalyzerTaskType[];
   items?: AnalyzerQueueItem[];
   summary?: AnalyzerSummary;
 };

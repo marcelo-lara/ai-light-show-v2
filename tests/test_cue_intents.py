@@ -4,6 +4,7 @@ from backend.api.intents.cue.actions.apply_helper import apply_helper
 from backend.api.intents.cue.actions.clear import clear_cue
 from backend.api.intents.cue.actions.clear_all import clear_all_cues
 from backend.api.intents.cue.actions.delete import delete_cue
+from backend.api.intents.cue.actions.reload import reload_cue_sheet
 from backend.api.intents.cue.actions.update import update_cue
 from backend.api.intents.cue.handlers import CUE_HANDLERS
 
@@ -29,6 +30,9 @@ class _FakeStateManager:
 
     async def clear_all_cue_entries(self):
         return {"ok": True, "removed": 5, "remaining": 0}
+
+    async def reload_cue_sheet_from_disk(self):
+        return {"ok": True, "count": 4, "song_filename": "alpha"}
 
     async def apply_cue_helper(self, helper_id, params=None):
         if helper_id in {"downbeats_and_beats", "parcan_echoes", "song_draft"}:
@@ -86,6 +90,16 @@ async def test_clear_all_cues_intent_success():
     assert manager.events[-1][1] == "cue_cleared"
     assert manager.events[-1][2]["removed"] == 5
     assert manager.events[-1][2]["remaining"] == 0
+
+
+@pytest.mark.asyncio
+async def test_reload_cue_sheet_intent_success():
+    manager = _FakeManager()
+
+    ok = await reload_cue_sheet(manager, {})
+
+    assert ok is True
+    assert manager.events[-1] == ("info", "cue_reloaded", {"ok": True, "count": 4, "song_filename": "alpha"})
 
 
 @pytest.mark.asyncio
@@ -182,10 +196,37 @@ async def test_apply_helper_intent_unknown_helper():
 
 
 @pytest.mark.asyncio
+async def test_apply_helper_intent_forwards_missing_artifacts():
+    manager = _FakeManager()
+    manager.state_manager.current_song = type("MockSong", (), {"beats": object()})()
+
+    async def apply_cue_helper(helper_id, params=None):
+        return {
+            "ok": False,
+            "reason": "features_unavailable",
+            "helper_id": helper_id,
+            "missing_artifacts": [
+                {"artifact": "features_file", "path": "/tmp/meta/song/features.json"},
+            ],
+        }
+
+    manager.state_manager.apply_cue_helper = apply_cue_helper
+
+    ok = await apply_helper(manager, {"helper_id": "song_draft"})
+
+    assert ok is False
+    assert manager.events[-1][1] == "cue_helper_apply_failed"
+    assert manager.events[-1][2]["missing_artifacts"] == [
+        {"artifact": "features_file", "path": "/tmp/meta/song/features.json"},
+    ]
+
+
+@pytest.mark.asyncio
 async def test_cue_handlers_map_contains_full_names():
     assert "cue.add" in CUE_HANDLERS
     assert "cue.update" in CUE_HANDLERS
     assert "cue.delete" in CUE_HANDLERS
     assert "cue.clear" in CUE_HANDLERS
     assert "cue.clear_all" in CUE_HANDLERS
+    assert "cue.reload" in CUE_HANDLERS
     assert "cue.apply_helper" in CUE_HANDLERS

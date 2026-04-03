@@ -1,6 +1,6 @@
 import { Card } from "../../../shared/components/layout/Card.ts";
 import { List } from "../../../shared/components/layout/List.ts";
-import { getBackendStore } from "../../../shared/state/backend_state.ts";
+import { getBackendStore, subscribeBackendStore } from "../../../shared/state/backend_state.ts";
 import { transportJumpToSection } from "../../../shared/transport/transport_intents.ts";
 import type { SongSection } from "../../../shared/transport/protocol.ts";
 
@@ -29,44 +29,49 @@ function activeSectionIndex(sections: SongSection[], timeMs: number | undefined)
 }
 
 export function SongSectionsPanel(): HTMLElement {
-  const store = getBackendStore();
   const content = document.createElement("div");
   content.className = "show-control-body";
 
   const list = document.createElement("div");
   list.className = "show-control-list o-list";
+  content.appendChild(list);
 
-  const sections = normalizedSections(store.state.song?.sections);
-  const highlightedIndex = activeSectionIndex(sections, store.state.playback?.time_ms);
-  for (const [index, section] of sections.entries()) {
-    const isActive = index === highlightedIndex;
+  const render = () => {
+    const state = getBackendStore().state;
+    const sections = normalizedSections(state.song?.sections);
+    const highlightedIndex = activeSectionIndex(sections, state.playback?.time_ms);
+    list.replaceChildren();
 
-    const time = document.createElement("span");
-    time.className = "show-control-time u-cell u-cell-time";
-    time.textContent = formatSectionStart(section.start_s);
+    for (const [index, section] of sections.entries()) {
+      const isActive = index === highlightedIndex;
 
-    const name = document.createElement("span");
-    name.className = "show-control-label u-cell u-cell-effect";
-    name.textContent = section.name;
+      const time = document.createElement("span");
+      time.className = "show-control-time u-cell u-cell-time";
+      time.textContent = formatSectionStart(section.start_s);
 
-    const item = List({
-      className: "show-control-row",
-      content: [time, name],
-      isActive,
-    });
-    item.tabIndex = 0;
-    item.setAttribute("role", "button");
-    item.onclick = () => transportJumpToSection(index);
-    item.onkeydown = (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      transportJumpToSection(index);
-    };
+      const name = document.createElement("span");
+      name.className = "show-control-label u-cell u-cell-effect";
+      name.textContent = section.name;
 
-    list.appendChild(item);
-  }
+      const item = List({
+        className: "show-control-row",
+        content: [time, name],
+        isActive,
+      });
+      item.tabIndex = 0;
+      item.setAttribute("role", "button");
+      item.onclick = () => transportJumpToSection(index);
+      item.onkeydown = (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        transportJumpToSection(index);
+      };
 
-  if (sections.length === 0) {
+      list.appendChild(item);
+    }
+
+    if (sections.length > 0) return;
+
     const time = document.createElement("span");
     time.className = "show-control-time u-cell u-cell-time";
     time.textContent = "--.--";
@@ -81,8 +86,10 @@ export function SongSectionsPanel(): HTMLElement {
       isActive: true,
     });
     list.appendChild(item);
-  }
+  };
 
-  content.appendChild(list);
-  return Card(content, { variant: "outlined", className: "show-control-panel" });
+  render();
+  const card = Card(content, { variant: "outlined", className: "show-control-panel" });
+  (card as unknown as { _cleanup: () => void })._cleanup = subscribeBackendStore(render);
+  return card;
 }

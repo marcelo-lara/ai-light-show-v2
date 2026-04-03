@@ -22,6 +22,7 @@ async def build_frontend_state(manager) -> Dict[str, Any]:
         "available": False,
         "polling": False,
         "playback_locked": is_playing,
+        "task_types": [],
         "items": [],
         "summary": {status: 0 for status in ["queued", "pending", "running", "complete", "failed"]},
     }

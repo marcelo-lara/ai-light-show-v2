@@ -94,6 +94,15 @@ export function clearCues(fromTime = 0, toTime?: number) {
 	});
 }
 
+export function reloadCueSheet() {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "cue.reload",
+		payload: {},
+	});
+}
+
 export function applyCueHelper(helperId: string, params: Record<string, unknown> = {}) {
 	wsSend({
 		type: "intent",

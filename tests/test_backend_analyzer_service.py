@@ -9,13 +9,32 @@ class _Client:
     def __init__(self, queued: int = 0, pending: int = 0, running: int = 0):
         self.lock_calls = []
         self.add_calls = []
+        self.playlist_calls = []
         self.remove_calls = []
         self.execute_calls = []
+        self.task_type_calls = 0
+        self.status_failures = 0
+        self.status_payloads = None
         self.queued = queued
         self.pending = pending
         self.running = running
 
+    async def get_task_types(self):
+        self.task_type_calls += 1
+        return [
+            {"value": "generate-md", "label": "Generate Markdown", "description": "Generate markdown summary."},
+            {"value": "find_sections", "label": "Find Sections", "description": "Infer song sections."},
+        ]
+
     async def get_status(self):
+        if self.status_payloads is not None:
+            payload = self.status_payloads.pop(0)
+            if isinstance(payload, Exception):
+                raise payload
+            return payload
+        if self.status_failures > 0:
+            self.status_failures -= 1
+            raise RuntimeError("analyzer unavailable")
         return {"ok": True, "playback_locked": False, "polling": True, "items": [], "summary": {"queued": self.queued, "pending": self.pending, "running": self.running, "complete": 0, "failed": 0}}
 
     async def set_playback_lock(self, locked: bool):
@@ -33,6 +52,12 @@ class _Client:
         self.add_calls.append((task_type, params))
         self.queued += 1
         return {"ok": True, "item_id": "item-1"}
+
+    async def enqueue_full_artifact_playlist(self, params, activate=True):
+        self.playlist_calls.append((params, activate))
+        self.pending += 6 if activate else 0
+        self.queued += 6 if not activate else 0
+        return {"ok": True, "playlist": {"playlist": "full-artifact-analyzer"}, "scheduled": [{"item_id": "playlist-1"}]}
 
     async def remove_item(self, item_id):
         self.remove_calls.append(item_id)
@@ -70,6 +95,7 @@ async def test_analyzer_service_stays_idle_until_queue_activity(monkeypatch):
 
     await service.start(service._manager)
     assert service.snapshot()["polling"] is False
+    assert service.snapshot()["task_types"][0]["value"] == "generate-md"
 
     service._client.queued = 1
     await service.notify_queue_activity()
@@ -148,6 +174,67 @@ async def test_analyzer_service_enqueue_resumes_polling(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_analyzer_service_enqueue_full_artifact_resumes_polling(monkeypatch):
+    service = AnalyzerService()
+    service._client = _Client()
+    service._manager = _Manager()
+    monkeypatch.setattr(service, "_poll_loop", lambda: asyncio.sleep(3600))
+
+    result = await service.enqueue_full_artifact_playlist({"song_path": "/tmp/song.mp3", "meta_path": "/tmp/meta"}, activate=True)
+
+    assert result["playlist"]["playlist"] == "full-artifact-analyzer"
+    assert service._client.playlist_calls == [({"song_path": "/tmp/song.mp3", "meta_path": "/tmp/meta"}, True)]
+    assert service.snapshot()["polling"] is True
+
+    await service.suspend_polling()
+
+
+@pytest.mark.asyncio
+async def test_analyzer_service_queue_activity_keeps_polling_on_refresh_failure(monkeypatch):
+    service = AnalyzerService()
+    service._client = _Client()
+    service._client.status_failures = 1
+    service._manager = _Manager()
+    monkeypatch.setattr(service, "_poll_loop", lambda: asyncio.sleep(3600))
+
+    await service.enqueue_full_artifact_playlist({"song_path": "/tmp/song.mp3", "meta_path": "/tmp/meta"}, activate=True)
+
+    assert service.snapshot()["available"] is False
+    assert service.snapshot()["polling"] is True
+
+    await service.suspend_polling()
+
+
+@pytest.mark.asyncio
+async def test_analyzer_service_poll_loop_retries_until_status_recovers():
+    service = AnalyzerService()
+    service._client = _Client()
+    service._client.status_payloads = [
+        {"ok": True, "playback_locked": False, "polling": True, "items": [], "summary": {"queued": 1, "pending": 0, "running": 0, "complete": 0, "failed": 0}},
+        RuntimeError("analyzer unavailable"),
+        {"ok": True, "playback_locked": False, "polling": False, "items": [], "summary": {"queued": 0, "pending": 0, "running": 0, "complete": 1, "failed": 0}},
+    ]
+    service._manager = _Manager()
+    service._poll_interval = 0
+    service._snapshot = {
+        "available": True,
+        "polling": False,
+        "playback_locked": False,
+        "task_types": [],
+        "items": [],
+        "summary": {"queued": 1, "pending": 0, "running": 0, "complete": 0, "failed": 0},
+    }
+    service._retry_until_available = True
+
+    await service.resume_polling()
+    await asyncio.wait_for(service._poll_task, timeout=1)
+
+    assert service.snapshot()["available"] is True
+    assert service.snapshot()["polling"] is False
+    assert service.snapshot()["summary"]["complete"] == 1
+
+
+@pytest.mark.asyncio
 async def test_analyzer_service_execute_all_runs_queued_only(monkeypatch):
     service = AnalyzerService()
     service._client = _Client(queued=1, running=1)
@@ -173,3 +260,15 @@ async def test_analyzer_service_remove_all_skips_running_items():
 
     assert result == {"item_ids": ["queued-1", "complete-1"], "count": 2}
     assert service._client.remove_calls == ["queued-1", "complete-1"]
+
+
+@pytest.mark.asyncio
+async def test_analyzer_service_refresh_task_types_updates_snapshot():
+    service = AnalyzerService()
+    service._client = _Client()
+    service._manager = _Manager()
+
+    task_types = await service.refresh_task_types()
+
+    assert task_types[1]["value"] == "find_sections"
+    assert service.snapshot()["task_types"][1]["value"] == "find_sections"

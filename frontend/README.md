@@ -22,6 +22,7 @@ UI layout references live in [../docs/ui/README.md](../docs/ui/README.md).
    - `snapshot`: replace store via `applySnapshot`.
    - `patch`: apply sequence-ordered path/value changes via `applyPatch`.
    - `event`: route LLM streaming chunks/messages to `llm_state`; backend errors become chat system messages.
+  - `cue_helper_apply_failed` for `song_draft` with missing `features.json`: prompt the user to enqueue every analyzer task from the live analyzer task catalog, then send `analyzer.execute_all` when confirmed.
 4. `AppShell.ts` renders `Sidebar + Main + RightPanel`, rerenders on UI/Backend/LLM store updates, and refreshes the singleton song player.
 5. Timecode sync exception: browser playback time is authoritative during playback and syncs via `transport.jump_to_time`.
 
@@ -144,7 +145,7 @@ Global bridge fields used across modules:
 - `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats and analyzer plots from backend state and composes shared song structure data.
 - `src/features/song_analysis/song_loader/SongLoaderPanel.ts`: event-driven available-song list with confirmation before `song.load`.
 - `src/features/song_analysis/song_loader/state.ts`: local song-loader store fed by `song_list` events.
-- `src/features/song_analysis/components/AnalyzerQueuePanel.ts`: analyzer queue panel with per-item run/remove controls plus `Add to queue`, `Run all`, and `Remove All` footer actions.
+- `src/features/song_analysis/components/AnalyzerQueuePanel.ts`: analyzer queue panel with a collapsible backend-driven task checklist, a `Run Full Analysis` action that schedules the analyzer-owned full-artifact playlist, per-item run/remove controls, and manual queue controls for selected tasks.
 - `src/features/song_analysis/analyzer_queue_models.ts`: task labels and queue-state display labels. Pending work and recovered `Interrupted before completion` items render as waiting work instead of failure text.
 - `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel for canonical analyzer beat events, including explicit beat/downbeat type.
 

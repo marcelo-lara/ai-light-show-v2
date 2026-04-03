@@ -6,7 +6,7 @@ For implemented backend contracts, see `docs/architecture/backend_llm_reference.
 ## Workflow
 
 ### Preparation (outside the UI)
-- The user add a song into /backend/songs
+- The user add a song into analyzer/songs
 - The user executes the /analyzer/analyze_song.py
 - When complete: the user start the flow from the UI.
 

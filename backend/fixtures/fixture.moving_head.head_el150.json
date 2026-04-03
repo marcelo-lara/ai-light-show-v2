@@ -77,13 +77,13 @@
 		},
 		"gobo": {
 			"0": "Open",
-			"25": "Tunnel",
-			"50": "BigOval",
-			"75": "SmallOval",
-			"100": "Squares",
-			"125": "Shapes",
-			"150": "Tribal",
-			"175": "Slashes"
+			"12": "Tunnel",
+			"24": "BigOval",
+			"36": "SmallOval",
+			"48": "Squares",
+			"60": "Shapes",
+			"72": "Tribal",
+			"84": "Slashes"
 		}
 	}
 }
