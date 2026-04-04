@@ -143,16 +143,16 @@ def read_sample_rate(audio_path: str | Path) -> int | None:
         return None
 
 
-def build_essentia_manifest(essentia_dir: Path, part_artifacts: dict[str, dict[str, Any]], features: tuple[str, ...]) -> dict[str, Any]:
+def build_essentia_manifest(essentia_dir: Path, part_artifacts: dict[str, dict[str, Any]], features: tuple[str, ...], *, include_plots: bool = False) -> dict[str, Any]:
     manifest: dict[str, Any] = {}
     for part_name, artifacts in part_artifacts.items():
         manifest[part_name] = {}
         for artifact_name in artifacts:
             file_stem = artifact_name if part_name == "mix" else f"{part_name}_{artifact_name}"
-            manifest[part_name][artifact_name] = {
-                "json": str(essentia_dir / f"{file_stem}.json"),
-                "svg": str(essentia_dir / f"{file_stem}.svg"),
-            }
+            payload = {"json": str(essentia_dir / f"{file_stem}.json")}
+            if include_plots:
+                payload["svg"] = str(essentia_dir / f"{file_stem}.svg")
+            manifest[part_name][artifact_name] = payload
     return manifest
 
 

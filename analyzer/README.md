@@ -39,7 +39,7 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 | `split-stems` | source song path | `stems/*`, updated `info.json` | Initializes song metadata before writing derived fields.
 | `beat-finder` | source song path, optional Moises files | `reference/beats.json` or `inferred/beats.<model>.json`, updated `info.json` | Imports Moises beats when usable chord data exists; otherwise runs analyzer beat detection.
 | `import-moises` | `moises/chords.json` | `reference/beats.json`, optional `sections.json` | Normalizes Moises beat rows and materializes sections from Moises segments when available, without modifying the original Moises files.
-| `essentia-analysis` | source song path, optional stems | `essentia/*.json`, `essentia/*.svg`, `hints.json`, updated `info.json` | Builds section-indexed hints when sections exist; otherwise falls back to a single song-wide section.
+| `essentia-analysis` | source song path, optional stems | `essentia/*.json`, optional `essentia/*.svg`, `hints.json`, updated `info.json` | Builds section-indexed hints when sections exist; otherwise falls back to a single song-wide section. Plot generation is disabled by default and enabled explicitly when needed.
 | `find_chords` | canonical beats | updated beats output, updated `info.json` | Optional beat enrichment step.
 | `find-chord-patterns` | canonical beats with chord labels | `chord_patterns.json` when repeating progressions are found, updated `info.json` | Uses bar-aware windows, prefers 4-bar progressions, compares seventh chords as triads, and tolerates up to 3 beat-level mismatches on patterns longer than 2 bars.
 | `find-stem-patterns` | stem `loudness_envelope` artifacts, optional `chord_patterns.json` | `stem_patterns.json` when repeating stem profiles are found, updated `info.json` | Tries chord-pattern occurrence windows first, then falls back to repeated signal windows from the stem envelopes and does not require beat alignment.
@@ -111,7 +111,7 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
 - `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, optional semantic tags from a music audio-classification model, and `global.stereo_analysis` for notable mix and stem stereo differences.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
-- `analyzer/meta/<song>/essentia/*.svg`: optional plots.
+- `analyzer/meta/<song>/essentia/*.svg`: optional plots generated only when Essentia plotting is explicitly enabled.
 - `analyzer/meta/<song>/stems/*`: separated stems when stem split is enabled.
 
 Backend and MCP treat this folder as read-only input data.
@@ -216,6 +216,7 @@ docker compose exec analyzer python analyze_song.py --song "Best Friend - Sofi T
 - `--split-stems`: run Demucs separation.
 - `--beat-finder`: run beat/downbeat extraction.
 - `--essentia-analysis`: run Essentia analysis bundle.
+- `--essentia-plots`: generate Essentia SVG plots when running Essentia analysis.
 - `--find-song-features`: synthesize LLM-facing feature metadata from analyzer outputs.
 - `--stereo-analysis`: append only notable stereo differences to `features.json` for the mix and available stems.
 - `--find-chords`: run Hugging Face chord inference and write beat-aligned chord labels.
@@ -253,7 +254,7 @@ Every successful chord or section run also updates `info.json` with a `musical_s
 
 `hints.json` is a plain list of song sections. Each section includes its time window and a `hints` array containing relevant `rise`, `drop`, `sustain`, and `sudden_spike` entries. Mix drives section-level meaning, while stems only appear when they materially support a local event.
 
-Stem Essentia files use a consistent `<part>_<feature>.json` and `<part>_<feature>.svg` naming pattern in the song `essentia` directory, while the mix keeps unprefixed filenames like `loudness_envelope.json` and `rhythm.json`.
+Stem Essentia JSON files use a consistent `<part>_<feature>.json` naming pattern in the song `essentia` directory, while the mix keeps unprefixed filenames like `loudness_envelope.json` and `rhythm.json`. When plotting is enabled, the matching SVG files are written with the same stem naming pattern.
 
 
 ## Verification

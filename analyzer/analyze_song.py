@@ -84,8 +84,8 @@ def run_beat_finder_for(song_path: Path, meta_path: str | Path = META_PATH, prog
     return run_find_beats_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
 
 
-def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> dict[str, Any] | None:
-    return run_essentia_analysis_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
+def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH, generate_plots: bool = False, progress_callback=None) -> dict[str, Any] | None:
+    return run_essentia_analysis_task({"song_path": str(song_path), "meta_path": str(meta_path), "generate_plots": generate_plots}, progress_callback=progress_callback)
 
 
 def run_import_moises_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> dict[str, Any] | None:
@@ -159,6 +159,7 @@ def main() -> int:
     parser.add_argument("--split-stems", action="store_true", help="Run stem splitting")
     parser.add_argument("--beat-finder", action="store_true", help="Run beat finder")
     parser.add_argument("--essentia-analysis", action="store_true", help="Run Essentia analysis")
+    parser.add_argument("--essentia-plots", action="store_true", help="Generate Essentia SVG plots when running Essentia analysis")
     parser.add_argument("--find-song-features", action="store_true", help="Generate song feature metadata")
     parser.add_argument("--stereo-analysis", action="store_true", help="Annotate notable stereo differences into features.json")
     parser.add_argument("--find-chords", action="store_true", help="Infer chord labels onto beats metadata")
@@ -204,7 +205,7 @@ def main() -> int:
         if args.beat_finder:
             run_beat_finder_for(current_song)
         if args.essentia_analysis:
-            run_essentia_analysis_for(current_song)
+            run_essentia_analysis_for(current_song, generate_plots=args.essentia_plots)
         if args.find_song_features:
             run_find_song_features_for(current_song)
         if args.stereo_analysis:
