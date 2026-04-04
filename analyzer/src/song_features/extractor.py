@@ -45,6 +45,20 @@ _MODEL_FAILED = False
 TIME_KEYS = {"time", "start_s", "end_s", "peak_time", "duration_s"}
 
 
+def release_model_cache() -> None:
+    global _MODEL_CACHE
+    _MODEL_CACHE = None
+    try:
+        import gc
+        import torch
+
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        return
+
+
 def _round_floats(value: Any, *, key: str | None = None) -> Any:
     if isinstance(value, float):
         return round(value, 2 if key in TIME_KEYS else 3)

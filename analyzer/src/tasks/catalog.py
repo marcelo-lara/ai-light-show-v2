@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from ..runtime.model_cleanup import release_model_memory
 from ..runtime.progress import ProgressCallback
 from . import init_song
 from .essentia_analysis import TASK as ESSENTIA_ANALYSIS_TASK
@@ -76,4 +77,7 @@ def run_registered_task(task_type: str, params: dict[str, Any], progress_callbac
     if not song_path:
         raise ValueError("Missing required parameter: song_path")
     params = {**params, "song_path": str(Path(song_path).expanduser().resolve())}
-    return task["runner"](params, progress_callback=progress_callback)
+    try:
+        return task["runner"](params, progress_callback=progress_callback)
+    finally:
+        release_model_memory()

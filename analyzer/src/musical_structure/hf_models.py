@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+import gc
 from pathlib import Path
 from typing import Any
 
@@ -8,10 +8,30 @@ import librosa
 
 from .registry import ModelCandidate
 
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
 _AUDIO_CACHE: dict[str, tuple[object, object, int, dict[int, str]]] = {}
 _REMOTE_CACHE: dict[str, object] = {}
+
+
+def release_model_caches() -> None:
+    _AUDIO_CACHE.clear()
+    _REMOTE_CACHE.clear()
+    gc.collect()
+    _clear_cuda_cache()
+
+
+def _is_cuda_oom(error: Exception) -> bool:
+    message = str(error).lower()
+    return "cuda out of memory" in message or "cuda error: out of memory" in message
+
+
+def _clear_cuda_cache() -> None:
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        return
 
 
 def _confidence_summary(scores: list[float]) -> dict[str, float | int] | None:
@@ -46,12 +66,14 @@ def _load_remote_model(candidate: ModelCandidate) -> object:
     from transformers import AutoModel
 
     model = AutoModel.from_pretrained(candidate.model_id, trust_remote_code=candidate.trust_remote_code)
-    if hasattr(model, "to"):
-        model.to("cpu")
     if hasattr(model, "eval"):
         model.eval()
     _REMOTE_CACHE[candidate.model_id] = model
     return model
+
+
+def _run_remote_sections(model: object, audio_path: Path, *, return_segments: bool) -> Any:
+    return model(audio_file=str(audio_path), return_segments=return_segments)
 
 
 def predict_windows(candidate: ModelCandidate, audio_path: Path, windows: list[tuple[float, float, float]]) -> dict[str, Any]:
@@ -85,7 +107,15 @@ def predict_sections(candidate: ModelCandidate, audio_path: Path) -> dict[str, A
     if candidate.loader != "remote-segmentation":
         raise RuntimeError(f"Unsupported section loader: {candidate.loader}")
     model = _load_remote_model(candidate)
-    segments_output = model(audio_file=str(audio_path), return_segments=True)
+    try:
+        segments_output = _run_remote_sections(model, audio_path, return_segments=True)
+    except Exception as exc:
+        if not _is_cuda_oom(exc):
+            raise
+        _clear_cuda_cache()
+        _REMOTE_CACHE.pop(candidate.model_id, None)
+        model = _load_remote_model(candidate)
+        segments_output = _run_remote_sections(model, audio_path, return_segments=True)
     segments = getattr(segments_output, "segments", segments_output)
     items = list(segments) if isinstance(segments, list) else []
     if not items:
@@ -94,7 +124,7 @@ def predict_sections(candidate: ModelCandidate, audio_path: Path) -> dict[str, A
     try:
         import torch
 
-        raw_output = model(audio_file=str(audio_path), return_segments=False)
+        raw_output = _run_remote_sections(model, audio_path, return_segments=False)
         class_logits = getattr(raw_output, "class_logits", None)
         if class_logits is not None:
             probs = torch.softmax(class_logits, dim=-1)

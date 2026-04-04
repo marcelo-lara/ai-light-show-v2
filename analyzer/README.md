@@ -220,6 +220,8 @@ Section inference also requires canonical beats. If no section models are config
 
 Model retries are registry-driven. The analyzer tries the configured candidates in order and stops on the first successful model output. The default chord model is `andrewmcgill04/ast-finetuned-audioset-10-10-0.4593-chordy`. The default section model is `ArseniiChstiakovml/MusicSectionDetection`. Override or extend them through `ANALYZER_FIND_CHORDS_MODELS_JSON` and `ANALYZER_FIND_SECTIONS_MODELS_JSON`.
 
+Analyzer task execution also releases cached Hugging Face models and flushes Python/CUDA memory after each task completes. This keeps Demucs, musical-structure inference, and semantic feature tagging from holding GPU memory across task boundaries.
+
 Every successful chord or section run also updates `info.json` with a `musical_structure_inference` object that records the selected method, confidence summary, candidate attempts, inputs, and output artifact path.
 
 ## Contract with other modules
