@@ -23,6 +23,7 @@ def test_build_full_artifact_playlist_for_analyzer_song(tmp_path: Path) -> None:
         "essentia-analysis",
         "find-song-features",
         "find-chord-patterns",
+        "find-stem-patterns",
         "generate-md",
     ]
 
@@ -46,6 +47,7 @@ def test_build_full_artifact_playlist_for_moises_song(tmp_path: Path) -> None:
         "essentia-analysis",
         "find-song-features",
         "find-chord-patterns",
+        "find-stem-patterns",
         "generate-md",
     ]
 
@@ -68,6 +70,7 @@ def test_build_full_artifact_playlist_for_moises_song_without_segments(tmp_path:
         "essentia-analysis",
         "find-song-features",
         "find-chord-patterns",
+        "find-stem-patterns",
         "generate-md",
     ]
 

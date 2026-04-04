@@ -9,6 +9,7 @@ def test_task_catalog_includes_init_song() -> None:
     task_types = {item["value"] for item in list_task_types()}
     assert "init-song" in task_types
     assert "find-chord-patterns" in task_types
+    assert "find-stem-patterns" in task_types
 
 
 def test_run_task_init_song_returns_metadata_payload(tmp_path: Path) -> None:
