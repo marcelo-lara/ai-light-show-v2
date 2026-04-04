@@ -4,6 +4,17 @@ from typing import Any, Tuple
 from .sweep_helpers import clamp_unit, cubic_ease_in, cubic_ease_out
 
 
+def orbit_writes_dimmer(payload: dict[str, Any]) -> bool:
+    raw = payload.get("write_dimmer")
+    if raw is None:
+        raw = payload.get("dimmer")
+    if raw is None:
+        return True
+    if isinstance(raw, bool):
+        return raw
+    return str(raw).strip().lower() not in {"0", "false", "off", "no"}
+
+
 def apply_orbit_easing(progress: float, easing: Any) -> float:
     t = clamp_unit(progress)
     mode = str(easing or "late_focus").strip().lower()

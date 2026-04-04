@@ -132,8 +132,9 @@ Cardinal reference POIs:
 Practical usage:
 
 - named room POIs are best for storytelling and room focus
-- `ref_x_y_z` POIs are best for deliberate sweeps, orbits, and spatially bold motion
+- `ref_x_y_z` POIs are best for deliberate sweeps, circles, orbits, and spatially bold motion
 - prefer `ref_x_y_z` starts for `sweep` and `orbit` when you want the movement itself to read clearly
+- `circle` depends on POI `location` data plus `ref_x_y_z` references, so keep its `target_poi` on a real room POI and let the reference cube define the motion geometry
 - for grounded or voice-led motion, prefer lower-plane `z=0` POIs when the mapping supports it
 
 ## Effects You Will Use Most
@@ -147,7 +148,9 @@ Most useful effects:
 - `fade_out`
 - `blackout`
 - `move_to_poi`
+- `circle`
 - `orbit`
+- `orbit_out`
 - `sweep`
 
 Practical notes:
@@ -169,11 +172,29 @@ Practical notes:
 - only use valid mapped POIs
 - prism fixtures are mechanically slow, so pre-position them before the hit
 
+### `circle`
+
+- use it when you want moving heads to orbit around a room focus in world space rather than drawing a DMX-space circle
+- required payload: `target_poi`, `radius`
+- optional payload: `orbits`
+- `target_poi` should usually be a named room POI with a real `location`; the reference cube POIs drive the interpolation behind the scenes
+- keep `radius` modest so the motion reads as a controlled ring around the subject rather than a full-room sweep
+- `circle` is motion-first: if the fixture should stay visibly on while moving, the show designer must author the dimmer behavior separately with `set_channels`, `full`, `fade_in`, `flash`, or overlapping cues
+
 ### `sweep` and `orbit`
 
 - use sweep mainly on `head_el150`, and orbit on `mini_beam_prism_l` and `mini_beam_prism_r` for phrase motion
 - these are best for section openings, vocal phrasing, instrumental arcs, and deliberate movement moments
 - avoid piling multiple pan/tilt actions on the same fixture at the same timestamp unless one is intentionally replacing another
+- `orbit` accepts `write_dimmer: false` when you want the movement to layer under another lighting pattern without forcing a blackout/preroll dim change
+- when `write_dimmer: false`, the motion effect will not manage brightness for you; keeping the beam visible during travel is the show designer's responsibility
+
+### `orbit_out`
+
+- use it as the inverse of `orbit`: start on the subject and spiral back out toward `start_POI`
+- it uses the same payload shape as `orbit`: `subject_POI`, `start_POI`, optional `orbits`, optional `easing`, optional `write_dimmer`
+- this is useful for releases, phrase exits, or taking focus away from a vocal anchor without a hard snap
+- like `orbit`, `orbit_out` may be used as motion-only by disabling dimmer writes, which means the show designer must pair it with intentional dimmer cues if light should remain present during the move
 
 ### `fade_out`
 

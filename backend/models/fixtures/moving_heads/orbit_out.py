@@ -13,6 +13,6 @@ def handle(self, universe: bytearray, frame_index: int, start_frame: int, end_fr
         fps,
         data,
         render_state,
-        outward=False,
-        state_prefix="orbit",
+        outward=True,
+        state_prefix="orbit_out",
     )

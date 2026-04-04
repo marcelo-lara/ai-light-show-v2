@@ -13,7 +13,8 @@
 
 ### Find Chords Patterns
 - If beats.json has chords data: find chord patterns and group them as chord_pattern.
-  - use "Pet Shop Boys - I'm not scared" as example: "Cm-Fm-Cm-Fm" -> pattern A, "Ab-Bb-Cm-Ab-Bb-Cm" -> pattern B (there are 5 patterns in this song)
+  - use "Pet Shop Boys - I'm not scared" as example: "Cm|Fm|Cm|Fm" -> pattern A, "Ab-Bb|Cm|Ab-Bb|Cm" -> pattern B (there are 5 patterns in this song)
+  - save these patterns in "analyzer/meta/{song}/chord_patterns.json" and add a reference to it in "analyzer/meta/{song}/info.json" (artifacts section)
 
 ### Stereo Analysis
 - Analyze Left and Right channels to annotate significative diferences
@@ -78,6 +79,8 @@
 
 ### Backend: Add new chasers / Refine current chasers
 - TBD: 
+  - effect 'circle': move moving heads around a POI. Parameters should be target_poi and radius. (calculate a circle based on cardinal references to estimate pan/tilt values using geometry, not just pan/tilt circles)
+  - effect 'orbit_out': read 'orbit' to make the opposite direction (leave dimmer optional)
   - 'ba-bum ... rest': a heartbeat like effect.
   - 'drop-and-explode': dim out to blackout, and at the end (drop) dim to full.
   - 'vocal-stage-fade': From Xs to just before Ys, mini_beam_prism_l now moves to piano, mini_beam_prism_r moves to sofa, and both fade out across that vocal tail level. 

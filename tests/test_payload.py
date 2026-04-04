@@ -46,6 +46,7 @@ async def test_fixture_payload_shape():
     assert mover is not None
     assert [effect["id"] for effect in mover["supported_effects"]] == [
         "blackout",
+        "circle",
         "fade_in",
         "fade_out",
         "flash",
@@ -53,10 +54,15 @@ async def test_fixture_payload_shape():
         "move_to",
         "move_to_poi",
         "orbit",
+        "orbit_out",
         "set_channels",
         "strobe",
         "sweep",
     ]
+    orbit = next(effect for effect in mover["supported_effects"] if effect["id"] == "orbit")
+    assert orbit["schema"]["properties"]["write_dimmer"]["type"] == "boolean"
+    circle = next(effect for effect in mover["supported_effects"] if effect["id"] == "circle")
+    assert circle["schema"]["required"] == ["target_poi", "radius"]
     sweep = next(effect for effect in mover["supported_effects"] if effect["id"] == "sweep")
     assert sweep["tags"] == ["movement", "tension", "long", "soft"]
 
