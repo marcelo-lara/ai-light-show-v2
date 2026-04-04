@@ -167,6 +167,13 @@ Practical notes:
 - use for impacts and rhythmic punctuation
 - on RGB fixtures, color can be set directly in the flash payload when supported
 - on moving heads, do not rely on `flash` alone for color changes
+- if the fixture should feel continuously present through a harmonic section, do not fake that with repeated flashes; use held color states and reserve `flash` for actual accents
+
+### `full` and `fade_in` on RGB fixtures
+
+- use `full` to establish a sustained RGB bed at the start of a harmonic window
+- use `fade_in` on the final beat before the next chord when the room should glide into the new color instead of snapping or flashing
+- when using this pattern, clear any older per-beat RGB flash cues from the rebuilt time window so the sustained bed remains the only active parcan language
 
 ### `move_to_poi`
 
@@ -399,6 +406,8 @@ Important schema facts:
 - chaser `effects[].beat` is an offset inside the pattern
 - chaser `effects[].duration` is also in beats
 - the total cycle length is inferred from the largest `beat + duration`
+- always calculate that cycle length before using a chaser as a bar-aligned motif; some chasers intentionally spill past beat 4, so only use them when that non-bar loop length is part of the design
+- if the motif needs a breath before the next repetition, end the pattern with an explicit fade or reset so the inferred cycle length lands exactly on the intended beat boundary
 
 Use chasers when:
 

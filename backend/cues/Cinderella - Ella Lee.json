@@ -8948,46 +8948,98 @@
   {
     "time": 148.58,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 18,
+      "green": 64,
+      "blue": 104
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 148.58,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 34,
+      "green": 96,
+      "blue": 146
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 149.54,
+    "time": 148.58,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 48,
+      "green": 118,
+      "blue": 164
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 149.54,
+    "time": 148.58,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 24,
+      "green": 76,
+      "blue": 122
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
+  },
+  {
+    "time": 150.02,
+    "fixture_id": "parcan_l",
+    "effect": "fade_in",
+    "duration": 0.46,
+    "data": {
+      "red": 54,
+      "green": 20,
+      "blue": 118
+    },
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
+  },
+  {
+    "time": 150.02,
+    "fixture_id": "parcan_pl",
+    "effect": "fade_in",
+    "duration": 0.46,
+    "data": {
+      "red": 86,
+      "green": 30,
+      "blue": 160
+    },
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
+  },
+  {
+    "time": 150.02,
+    "fixture_id": "parcan_pr",
+    "effect": "fade_in",
+    "duration": 0.46,
+    "data": {
+      "red": 112,
+      "green": 42,
+      "blue": 182
+    },
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
+  },
+  {
+    "time": 150.02,
+    "fixture_id": "parcan_r",
+    "effect": "fade_in",
+    "duration": 0.46,
+    "data": {
+      "red": 66,
+      "green": 24,
+      "blue": 132
+    },
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 150.48,
@@ -9079,92 +9131,52 @@
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
   },
   {
-    "time": 150.48,
+    "time": 153.82,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 28,
+      "green": 12,
+      "blue": 92
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 150.48,
+    "time": 153.82,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 46,
+      "green": 20,
+      "blue": 126
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 151.44,
+    "time": 153.82,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 64,
+      "green": 28,
+      "blue": 148
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 151.44,
+    "time": 153.82,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 36,
+      "green": 16,
+      "blue": 104
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 152.4,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 152.4,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 153.34,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 153.34,
-    "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 154.3,
@@ -9272,180 +9284,148 @@
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
   },
   {
-    "time": 154.3,
+    "time": 157.64,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.46,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 96,
+      "green": 30,
+      "blue": 86
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 154.3,
+    "time": 157.64,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.46,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 138,
+      "green": 42,
+      "blue": 118
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 155.24,
+    "time": 157.64,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.46,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 164,
+      "green": 54,
+      "blue": 138
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 155.24,
+    "time": 157.64,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.46,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 110,
+      "green": 34,
+      "blue": 96
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 156.2,
+    "time": 159.52,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 74,
+      "green": 44,
+      "blue": 124
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 156.2,
+    "time": 159.52,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 108,
+      "green": 60,
+      "blue": 166
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 157.14,
+    "time": 159.52,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 136,
+      "green": 74,
+      "blue": 188
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 157.14,
+    "time": 159.52,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 84,
+      "green": 50,
+      "blue": 138
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 158.1,
+    "time": 161.42,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 28,
+      "green": 12,
+      "blue": 92
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 158.1,
+    "time": 161.42,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 46,
+      "green": 20,
+      "blue": 126
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 159.04,
+    "time": 161.42,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 64,
+      "green": 28,
+      "blue": 148
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 159.04,
+    "time": 161.42,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 36,
+      "green": 16,
+      "blue": 104
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 160.0,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 160.0,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 160.96,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 160.96,
-    "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 161.9,
@@ -9553,46 +9533,50 @@
   {
     "time": 161.9,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.6000000000000001
+      "red": 28,
+      "green": 12,
+      "blue": 92
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 161.9,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.18,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.68
+      "red": 46,
+      "green": 20,
+      "blue": 126
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 161.9,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.18,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.68
+      "red": 64,
+      "green": 28,
+      "blue": 148
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 161.9,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.6000000000000001
+      "red": 36,
+      "green": 16,
+      "blue": 104
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 162.38,
@@ -16127,90 +16111,98 @@
   {
     "time": 238.08,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 18,
+      "green": 64,
+      "blue": 104
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 238.08,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 34,
+      "green": 96,
+      "blue": 146
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 239.04,
+    "time": 238.08,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 48,
+      "green": 118,
+      "blue": 164
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 239.04,
+    "time": 238.08,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 24,
+      "green": 76,
+      "blue": 122
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 240.0,
+    "time": 241.42,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 54,
+      "green": 20,
+      "blue": 118
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 240.0,
+    "time": 241.42,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 86,
+      "green": 30,
+      "blue": 160
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 240.94,
+    "time": 241.42,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 112,
+      "green": 42,
+      "blue": 182
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 240.94,
+    "time": 241.42,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 66,
+      "green": 24,
+      "blue": 132
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 241.9,
@@ -16302,92 +16294,52 @@
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
   },
   {
-    "time": 241.9,
+    "time": 245.24,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.46,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 28,
+      "green": 12,
+      "blue": 92
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 241.9,
+    "time": 245.24,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.46,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 46,
+      "green": 20,
+      "blue": 126
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 242.84,
+    "time": 245.24,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.46,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 64,
+      "green": 28,
+      "blue": 148
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 242.84,
+    "time": 245.24,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.46,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 36,
+      "green": 16,
+      "blue": 104
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 243.8,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 243.8,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 244.76,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 244.76,
-    "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 245.7,
@@ -16495,92 +16447,52 @@
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
   },
   {
-    "time": 245.7,
+    "time": 249.02,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.5,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 96,
+      "green": 30,
+      "blue": 86
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 245.7,
+    "time": 249.02,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.5,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 138,
+      "green": 42,
+      "blue": 118
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 246.66,
+    "time": 249.02,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.5,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 164,
+      "green": 54,
+      "blue": 138
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 246.66,
+    "time": 249.02,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.5,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 110,
+      "green": 34,
+      "blue": 96
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 247.62,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 247.62,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 248.56,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 248.56,
-    "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 249.52,
@@ -16672,92 +16584,52 @@
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
   },
   {
-    "time": 249.52,
+    "time": 252.84,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.5,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
+      "red": 18,
+      "green": 64,
+      "blue": 104
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 249.52,
+    "time": 252.84,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.5,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
+      "red": 34,
+      "green": 96,
+      "blue": 146
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 250.46,
+    "time": 252.84,
     "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "fade_in",
+    "duration": 0.5,
     "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
+      "red": 48,
+      "green": 118,
+      "blue": 164
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
-    "time": 250.46,
+    "time": 252.84,
     "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "fade_in",
+    "duration": 0.5,
     "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
+      "red": 24,
+      "green": 76,
+      "blue": 122
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 251.42,
-    "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#D84BFF",
-      "brightness": 0.28
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 251.42,
-    "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.36000000000000004
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 252.38,
-    "fixture_id": "parcan_pr",
-    "effect": "flash",
-    "duration": 0.16,
-    "data": {
-      "color": "#6A5CFF",
-      "brightness": 0.26
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
-  },
-  {
-    "time": 252.38,
-    "fixture_id": "parcan_r",
-    "effect": "flash",
-    "duration": 0.14,
-    "data": {
-      "color": "#C78BFF",
-      "brightness": 0.2
-    },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 253.34,
@@ -16867,24 +16739,50 @@
   {
     "time": 253.34,
     "fixture_id": "parcan_l",
-    "effect": "flash",
-    "duration": 0.14,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#D84BFF",
-      "brightness": 0.3
+      "red": 18,
+      "green": 64,
+      "blue": 104
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 253.34,
     "fixture_id": "parcan_pl",
-    "effect": "flash",
-    "duration": 0.16,
+    "effect": "full",
+    "duration": 0.0,
     "data": {
-      "color": "#FF4FA3",
-      "brightness": 0.38
+      "red": 34,
+      "green": 96,
+      "blue": 146
     },
-    "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
+  },
+  {
+    "time": 253.34,
+    "fixture_id": "parcan_pr",
+    "effect": "full",
+    "duration": 0.0,
+    "data": {
+      "red": 48,
+      "green": 118,
+      "blue": 164
+    },
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
+  },
+  {
+    "time": 253.34,
+    "fixture_id": "parcan_r",
+    "effect": "full",
+    "duration": 0.0,
+    "data": {
+      "red": 24,
+      "green": 76,
+      "blue": 122
+    },
+    "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
   },
   {
     "time": 254.28,
