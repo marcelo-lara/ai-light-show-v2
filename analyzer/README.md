@@ -45,11 +45,12 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 | `find-stem-patterns` | stem `loudness_envelope` artifacts, optional `chord_patterns.json` | `stem_patterns.json` when repeating stem profiles are found, updated `info.json` | Tries chord-pattern occurrence windows first, then falls back to repeated signal windows from the stem envelopes and does not require beat alignment.
 | `find_sections` | canonical beats | `sections.json`, updated `info.json` | Produces canonical persisted song sections.
 | `find-song-features` | `info.json`, canonical beats, `essentia` mix artifacts | `features.json`, updated `info.json` | Also uses `sections.json` and `hints.json` when present.
+| `stereo-analysis` | `features.json`, source song path, optional stems | updated `features.json` | Adds only notable stereo differences for the mix and available stems using the fixed tag vocabulary `attack_left`, `attack_right`, `echo_left`, `echo_right`, `low_end_left`, `low_end_right`, `percussion_left`, `percussion_right`, `ambience_left`, `ambience_right`, `split_texture`, `centered`. |
 | `generate-md` | `sections.json`, optional `features.json` | `<song>.md` | Terminal presentation artifact.
 
-Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find_chords`, `find-sections`, `essentia-analysis`, `find-song-features`, `find-chord-patterns`, `find-stem-patterns`, `generate-md`.
+Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find_chords`, `find-sections`, `essentia-analysis`, `find-song-features`, `stereo-analysis`, `find-chord-patterns`, `find-stem-patterns`, `generate-md`.
 
-Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `find-chord-patterns`, `find-stem-patterns`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
+Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `stereo-analysis`, `find-chord-patterns`, `find-stem-patterns`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
 
 The executable full-artifact playlist lives in `src/playlists/full_artifact.py` and selects the analyzer-native or Moises-backed path from current song metadata.
 
@@ -108,7 +109,7 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 - `analyzer/meta/<song>/stem_patterns.json`: grouped per-stem loudness and envelope profiles that try chord-pattern occurrence windows first and fall back to repeated signal windows when chord patterns are absent or unhelpful.
 - `analyzer/meta/<song>/sections.json`: canonical persisted section list. When `moises/segments.json` exists and `sections.json` is absent, Moises import materializes this file using the analyzer section row shape (`start`, `end`, `label`, optional `description`, optional `hints`) after standalone section-range validation used by backend consumers.
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
-- `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, and optional semantic tags from a music audio-classification model.
+- `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, optional semantic tags from a music audio-classification model, and `global.stereo_analysis` for notable mix and stem stereo differences.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
 - `analyzer/meta/<song>/essentia/*.svg`: optional plots.
 - `analyzer/meta/<song>/stems/*`: separated stems when stem split is enabled.
@@ -133,9 +134,11 @@ This starts the HTTP API on `http://localhost:8100` and the queue worker loop in
 docker compose exec analyzer python analyze_song.py
 ```
 
-Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` and runs stem splitting, analyzer beat finding only when usable Moises chord data is absent, Essentia analysis, Moises import when available, and markdown generation for the resulting sections metadata.
+Interactive option `15. Analyze All Songs` traverses every song in `/app/songs` and runs the full analyzer task playlist for each song.
 
 Interactive option `4. Find Song Features` builds `features.json` for the selected song after beat and Essentia artifacts exist.
+
+Interactive option `6. Stereo Analysis` adds notable stereo differences into the existing `features.json` after feature synthesis has completed.
 
 ### CLI mode
 
@@ -201,6 +204,12 @@ To validate feature synthesis from existing analyzer artifacts, run:
 docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --find-song-features
 ```
 
+To validate notable stereo analysis from existing features and available stems, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Best Friend - Sofi Tukker.mp3" --stereo-analysis
+```
+
 ### Common CLI flags
 
 - `--song <filename>`: song in `/app/songs`.
@@ -208,6 +217,7 @@ docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the P
 - `--beat-finder`: run beat/downbeat extraction.
 - `--essentia-analysis`: run Essentia analysis bundle.
 - `--find-song-features`: synthesize LLM-facing feature metadata from analyzer outputs.
+- `--stereo-analysis`: append only notable stereo differences to `features.json` for the mix and available stems.
 - `--find-chords`: run Hugging Face chord inference and write beat-aligned chord labels.
 - `--find-chord-patterns`: group repeating chord progressions from canonical beats and write `chord_patterns.json` when usable repeats exist.
 - `--find-stem-patterns`: group repeating stem loudness and envelope profiles, trying chord-pattern occurrence windows first and falling back to repeated signal windows, and write `stem_patterns.json` when usable repeats exist.
@@ -239,7 +249,7 @@ Every successful chord or section run also updates `info.json` with a `musical_s
 
 `info.json` groups Essentia artifacts by part first: `artifacts.essentia.mix.loudness_envelope`, `artifacts.essentia.bass.chroma_hpcp`, and so on. The derived loudness hints file is exposed separately as `artifacts.hints_file`.
 
-`features.json` is additive and analyzer-owned. It records global energy, beat intensity, section-level energy/trend/phrase descriptors, dominant stems, harmonic-change counts, beat-window accents per part, per-part relative dips, merged low windows, semantic tags when the configured music model can run, and explicit attempt metadata for requested Essentia TensorFlow models. The analyzer image installs `essentia-tensorflow` and downloads the published `AudioSet-YAMNet`, `Nsynth instrument`, and `Discogs-EffNet` model assets into `/opt/essentia-models`; if the runtime still cannot execute them, the attempt metadata records the exact missing operator or file. Accents are stored with the beat anchor time plus the actual peak time inside that beat window, which lets markdown and downstream cue logic speak in bar/beat-aligned timestamps without losing the frame-level peak detail. Dips mark beat windows that fall below their neighboring bars, and low windows merge adjacent part dips into broader section-level ranges that read closer to how the music actually drops. Time fields are written at two-decimal precision for downstream prompt use. If a feature cannot be identified, the analyzer logs that condition and leaves the corresponding metadata unavailable instead of inventing substitute values.
+`features.json` is additive and analyzer-owned. It records global energy, beat intensity, section-level energy/trend/phrase descriptors, dominant stems, harmonic-change counts, beat-window accents per part, per-part relative dips, merged low windows, semantic tags when the configured music model can run, explicit attempt metadata for requested Essentia TensorFlow models, and `global.stereo_analysis` for only the notable stereo asymmetries that matter for prompt-time musical interpretation. Stereo analysis does not dump per-window traces. It stores a sparse `notable_events` list with `start_s`, `end_s`, `source`, `dominant_side`, `intensity`, `confidence`, `frequency_focus`, and a controlled `tags` list chosen only from the fixed vocabulary. The analyzer image installs `essentia-tensorflow` and downloads the published `AudioSet-YAMNet`, `Nsynth instrument`, and `Discogs-EffNet` model assets into `/opt/essentia-models`; if the runtime still cannot execute them, the attempt metadata records the exact missing operator or file. Accents are stored with the beat anchor time plus the actual peak time inside that beat window, which lets markdown and downstream cue logic speak in bar/beat-aligned timestamps without losing the frame-level peak detail. Dips mark beat windows that fall below their neighboring bars, and low windows merge adjacent part dips into broader section-level ranges that read closer to how the music actually drops. Time fields are written at two-decimal precision for downstream prompt use. If a feature cannot be identified, the analyzer logs that condition and leaves the corresponding metadata unavailable instead of inventing substitute values.
 
 `hints.json` is a plain list of song sections. Each section includes its time window and a `hints` array containing relevant `rise`, `drop`, `sustain`, and `sudden_spike` entries. Mix drives section-level meaning, while stems only appear when they materially support a local event.
 

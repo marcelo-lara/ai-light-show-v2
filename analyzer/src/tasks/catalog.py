@@ -16,6 +16,7 @@ from .find_stem_patterns import TASK as FIND_STEM_PATTERNS_TASK
 from .generate_md import TASK as GENERATE_MD_TASK
 from .import_moises_task import TASK as IMPORT_MOISES_TASK
 from .split_stems import TASK as SPLIT_STEMS_TASK
+from .stereo_analysis import TASK as STEREO_ANALYSIS_TASK
 
 def _param(name: str, description: str, *, required: bool = True, default: Any = None) -> dict[str, Any]:
     payload = {"name": name, "description": description, "required": required}
@@ -48,6 +49,7 @@ TASK_DEFINITIONS = [
     _task(FIND_BEATS_TASK, requires=["source song path", "info.json root"], produces=["reference/beats.json or inferred/beats.<model>.json", "info.json beat metadata"], notes=["Uses Moises beat source when compatible Moises chord data exists."]),
     _task(ESSENTIA_ANALYSIS_TASK, requires=["source song path", "info.json root"], produces=["essentia json artifacts", "essentia svg plots", "hints.json", "info.json essentia manifest"], notes=["Reads stems when present. Hints stay analyzer-owned even when supported by Moises-derived sections."]),
     _task(FIND_SONG_FEATURES_TASK, requires=["info.json", "canonical beats", "essentia mix artifacts"], produces=["features.json", "info.json feature summary"], notes=["Also uses sections.json and hints.json when present."]),
+    _task(STEREO_ANALYSIS_TASK, requires=["features.json", "source song path", "optional stems"], produces=["features.json stereo_analysis payload"], notes=["Adds only notable stereo differences for the mix and available stems using a fixed tag vocabulary."]),
     _task(FIND_CHORDS_TASK, requires=["canonical beats"], produces=["beat-aligned chord metadata", "info.json musical structure metadata"], notes=["Optional enrichment step."]),
     _task(FIND_CHORD_PATTERNS_TASK, requires=["canonical beats with chord labels"], produces=["chord_patterns.json when repeating progressions are found", "info.json artifact reference"], notes=["Uses bar-aware windows, treats seventh chords as triads for comparison, and tolerates small beat-level chord noise on patterns longer than two bars."]),
     _task(FIND_STEM_PATTERNS_TASK, requires=["chord_patterns.json", "stem loudness_envelope artifacts"], produces=["stem_patterns.json when repeating stem profiles are found", "info.json artifact reference"], notes=["Uses chord pattern occurrence windows first, then derives per-stem loudness and envelope profiles without beat alignment."]),

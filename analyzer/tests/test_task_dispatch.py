@@ -11,6 +11,7 @@ from src.tasks.catalog import run_registered_task
 def test_task_catalog_includes_init_song() -> None:
     task_types = {item["value"] for item in list_task_types()}
     assert "init-song" in task_types
+    assert "stereo-analysis" in task_types
     assert "find-chord-patterns" in task_types
     assert "find-stem-patterns" in task_types
 

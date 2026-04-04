@@ -13,6 +13,7 @@ def emit_stage(
     step_total: int,
     part_name: str | None = None,
 ) -> None:
+    print(f"{task_type} - {stage} ({step_current}/{step_total})")       
     if progress_callback is None:
         return
     event: dict[str, Any] = {
