@@ -31,11 +31,13 @@ Do not stack new ideas on top of stale cues for the same section.
 - Song sections: `analyzer/meta/<Song>/sections.json`
 - Optional song metadata:
   - `analyzer/meta/<Song>/info.json`
+  - `analyzer/meta/<Song>/chord_patterns.json`
   - `analyzer/meta/<Song>/features.json`
   - `analyzer/meta/<Song>/hints.json`
   - `analyzer/meta/<Song>/*_loudness_envelope.json`
 
 If timing matters, trust `beats.json` and `sections.json` first. If motion and emotional rise/fall matter, also inspect `*_loudness_envelope.json`.
+If harmonic repetition matters, inspect `chord_patterns.json` before inventing your own progression map.
 
 ## Deliverables
 
@@ -274,6 +276,14 @@ Translate song analysis into fixture behavior like this:
 - vocal-led sections: fewer hits, slower motion, more focus
 - electronic or instrumental sections: more kinetic, more rhythmic, more extroverted
 
+If `chord_patterns.json` exists, use it to stabilize the visual language:
+
+- repeated chord patterns should usually produce repeated visual phrases unless the section notes give a clear reason to break that symmetry
+- let the strongest recurring pattern define the section's default loop language for motion, color, or impact density
+- use pattern changes as likely cue points for palette shifts, fixture-role swaps, or phrase resets
+- if two sections share the same chord pattern but differ in energy, keep the structural idea related while changing brightness, density, width, or motion size
+- do not infer a more complicated harmonic story than the artifact supports; when `chord_patterns.json` is absent, fall back to `beats.json`, `sections.json`, and other analyzer metadata
+
 Useful fixture roles:
 
 - prisms: impact, drop language, emotional release
@@ -287,7 +297,7 @@ Use this order:
 
 1. Read fixture and POI definitions.
 2. Read `sections.json` and `beats.json`.
-3. Read the song metadata files that matter for energy, loudness, or hints.
+3. Read the song metadata files that matter for energy, loudness, harmony, or hints.
 4. Write the planning brief in `analyzer/meta/<Song>/<Song>.md`.
 5. Decide the palette and recurring motion language.
 6. Decide which ideas belong in raw cues and which belong in chasers.
@@ -333,6 +343,17 @@ If `*_loudness_envelope.json` shows a drop-then-rise pattern, treat it as a like
 - on the drop bar, thin the room and reduce motion density
 - on the explode bar, let prisms and `head_el150` drive the release first
 - then let the parcans widen and reinforce it
+
+### Chord Pattern Rule
+
+If `chord_patterns.json` is available:
+
+- treat each recurring chord pattern as a candidate visual phrase unit
+- prefer reusing one readable cue idea across repeated occurrences of the same pattern instead of rebuilding every bar from scratch
+- when a pattern spans multiple bars, make the lighting phrase read across the whole pattern window rather than only on downbeats
+- let pattern boundaries help decide where to reset motion, change POIs, rotate prism state, or swap between narration and rhythmic detail
+- if a pattern repeats under different section energy, evolve the same idea rather than replacing it with unrelated motion
+- if the artifact shows only short or weak patterns, do not force a loop; use sections and loudness as the stronger guide
 
 ## Reusable Winning Patterns
 
@@ -383,6 +404,7 @@ Use chasers when:
 
 - a repeated motif stabilizes across several bars
 - the pattern is truly reusable
+- `chord_patterns.json` confirms a harmonic phrase that should recur with the same visual grammar
 
 Prefer raw cues when:
 

@@ -7,6 +7,7 @@ from ..runtime.progress import ProgressCallback
 from . import init_song
 from .essentia_analysis import TASK as ESSENTIA_ANALYSIS_TASK
 from .find_beats import TASK as FIND_BEATS_TASK
+from .find_chord_patterns import TASK as FIND_CHORD_PATTERNS_TASK
 from .find_chords import TASK as FIND_CHORDS_TASK
 from .find_sections import TASK as FIND_SECTIONS_TASK
 from .find_song_features import TASK as FIND_SONG_FEATURES_TASK
@@ -46,6 +47,7 @@ TASK_DEFINITIONS = [
     _task(ESSENTIA_ANALYSIS_TASK, requires=["source song path", "info.json root"], produces=["essentia json artifacts", "essentia svg plots", "hints.json", "info.json essentia manifest"], notes=["Reads stems when present. Hints stay analyzer-owned even when supported by Moises-derived sections."]),
     _task(FIND_SONG_FEATURES_TASK, requires=["info.json", "canonical beats", "essentia mix artifacts"], produces=["features.json", "info.json feature summary"], notes=["Also uses sections.json and hints.json when present."]),
     _task(FIND_CHORDS_TASK, requires=["canonical beats"], produces=["beat-aligned chord metadata", "info.json musical structure metadata"], notes=["Optional enrichment step."]),
+    _task(FIND_CHORD_PATTERNS_TASK, requires=["canonical beats with chord labels"], produces=["chord_patterns.json when repeating progressions are found", "info.json artifact reference"], notes=["Uses bar-aware windows, treats seventh chords as triads for comparison, and tolerates small beat-level chord noise on patterns longer than two bars."]),
     _task(FIND_SECTIONS_TASK, requires=["canonical beats"], produces=["sections.json", "info.json musical structure metadata"], notes=["Used when analyzer must infer sections or when Moises segments are unavailable."]),
     _task(IMPORT_MOISES_TASK, requires=["moises/chords.json"], produces=["reference/beats.json", "optional sections.json", "info.json beat metadata"], notes=["Moises files are external source-of-truth inputs and are never overwritten or deleted."]),
     _task(GENERATE_MD_TASK, requires=["sections.json"], produces=["song markdown summary"], notes=["Uses features.json when available."]),

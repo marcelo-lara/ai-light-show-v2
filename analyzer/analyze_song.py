@@ -11,6 +11,7 @@ from src.tasks import init_song as init_song_task
 from src.tasks.common import autodetect_device, warn
 from src.tasks.essentia_analysis import run as run_essentia_analysis_task
 from src.tasks.find_beats import run as run_find_beats_task
+from src.tasks.find_chord_patterns import run as run_find_chord_patterns_task
 from src.tasks.find_chords import run as run_find_chords_task
 from src.tasks.find_sections import run as run_find_sections_task
 from src.tasks.find_song_features import run as run_find_song_features_task
@@ -97,6 +98,10 @@ def run_find_chords_for(song_path: Path, meta_path: str | Path = META_PATH, outp
     return run_find_chords_task({"song_path": str(song_path), "meta_path": str(meta_path), "output_name": output_name}, progress_callback=progress_callback)
 
 
+def run_find_chord_patterns_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> dict[str, Any]:
+    return run_find_chord_patterns_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
+
+
 def run_find_sections_for(song_path: Path, meta_path: str | Path = META_PATH, output_name: str = "sections.json", progress_callback=None) -> dict[str, Any] | None:
     return run_find_sections_task({"song_path": str(song_path), "meta_path": str(meta_path), "output_name": output_name}, progress_callback=progress_callback)
 
@@ -146,6 +151,7 @@ def main() -> int:
     parser.add_argument("--essentia-analysis", action="store_true", help="Run Essentia analysis")
     parser.add_argument("--find-song-features", action="store_true", help="Generate song feature metadata")
     parser.add_argument("--find-chords", action="store_true", help="Infer chord labels onto beats metadata")
+    parser.add_argument("--find-chord-patterns", action="store_true", help="Group repeating chord progressions from canonical beat metadata")
     parser.add_argument("--find-sections", action="store_true", help="Infer song section labels")
     parser.add_argument("--import-moises", action="store_true", help="Import Moises chords")
     parser.add_argument("--generate-md", action="store_true", help="Generate markdown from sections metadata")
@@ -166,6 +172,7 @@ def main() -> int:
             args.essentia_analysis,
             args.find_song_features,
             args.find_chords,
+            args.find_chord_patterns,
             args.find_sections,
             args.import_moises,
             args.generate_md,
@@ -188,6 +195,8 @@ def main() -> int:
             run_find_song_features_for(current_song)
         if args.find_chords:
             run_find_chords_for(current_song, output_name=args.beats_output_name)
+        if args.find_chord_patterns:
+            run_find_chord_patterns_for(current_song)
         if args.find_sections:
             run_find_sections_for(current_song, output_name=args.sections_output_name)
         if args.import_moises:
@@ -207,15 +216,16 @@ def main() -> int:
         print("4. Essentia Analysis")
         print("5. Find Song Features")
         print("6. Find Chords")
-        print("7. Find Sections")
-        print("8. Compare Beat Times")
-        print("9. Import Moises Chords")
-        print("10. Generate MD file")
-        print("11. Full Artifact Playlist")
-        print("12. Analyze All Songs")
-        print("13. Exit (Esc also exits)")
+        print("7. Find Chord Patterns")
+        print("8. Find Sections")
+        print("9. Compare Beat Times")
+        print("10. Import Moises Chords")
+        print("11. Generate MD file")
+        print("12. Full Artifact Playlist")
+        print("13. Analyze All Songs")
+        print("14. Exit (Esc also exits)")
         choice = input("Choose an option: ").strip()
-        if _is_escape_input(choice) or choice == "13":
+        if _is_escape_input(choice) or choice == "14":
             print("Exiting.")
             break
         if choice == "0":
@@ -235,16 +245,18 @@ def main() -> int:
         elif choice == "6":
             run_find_chords_for(current_song)
         elif choice == "7":
-            run_find_sections_for(current_song)
+            run_find_chord_patterns_for(current_song)
         elif choice == "8":
-            run_compare_beat_times_for(current_song)
+            run_find_sections_for(current_song)
         elif choice == "9":
-            run_import_moises_for(current_song)
+            run_compare_beat_times_for(current_song)
         elif choice == "10":
-            run_generate_md_for(current_song)
+            run_import_moises_for(current_song)
         elif choice == "11":
-            run_full_artifact_playlist_for(current_song, device=device)
+            run_generate_md_for(current_song)
         elif choice == "12":
+            run_full_artifact_playlist_for(current_song, device=device)
+        elif choice == "13":
             analyze_all_songs(device=device)
         else:
             warn("Invalid choice")

@@ -112,7 +112,7 @@ def test_http_api_queue_full_artifact_playlist(tmp_path: Path) -> None:
         assert queued.status_code == 200
         payload = queued.json()
         assert payload["playlist"]["playlist"] == "full-artifact-analyzer"
-        assert [item["task_type"] for item in payload["scheduled"]][:4] == ["init-song", "split-stems", "beat-finder", "find_sections"]
+        assert [item["task_type"] for item in payload["scheduled"]][:5] == ["init-song", "split-stems", "beat-finder", "find_chords", "find_sections"]
         assert all(item["status"] == "pending" for item in payload["scheduled"])
 
 

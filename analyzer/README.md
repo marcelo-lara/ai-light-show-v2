@@ -41,13 +41,14 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 | `import-moises` | `moises/chords.json` | `reference/beats.json`, optional `sections.json` | Normalizes Moises beat rows and materializes sections from Moises segments when available, without modifying the original Moises files.
 | `essentia-analysis` | source song path, optional stems | `essentia/*.json`, `essentia/*.svg`, `hints.json`, updated `info.json` | Builds section-indexed hints when sections exist; otherwise falls back to a single song-wide section.
 | `find_chords` | canonical beats | updated beats output, updated `info.json` | Optional beat enrichment step.
+| `find-chord-patterns` | canonical beats with chord labels | `chord_patterns.json` when repeating progressions are found, updated `info.json` | Uses bar-aware windows, prefers 4-bar progressions, compares seventh chords as triads, and tolerates up to 3 beat-level mismatches on patterns longer than 2 bars.
 | `find_sections` | canonical beats | `sections.json`, updated `info.json` | Produces canonical persisted song sections.
 | `find-song-features` | `info.json`, canonical beats, `essentia` mix artifacts | `features.json`, updated `info.json` | Also uses `sections.json` and `hints.json` when present.
 | `generate-md` | `sections.json`, optional `features.json` | `<song>.md` | Terminal presentation artifact.
 
-Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find-sections`, `essentia-analysis`, `find-song-features`, `generate-md`.
+Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find_chords`, `find-sections`, `essentia-analysis`, `find-song-features`, `find-chord-patterns`, `generate-md`.
 
-Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
+Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `find-chord-patterns`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
 
 The executable full-artifact playlist lives in `src/playlists/full_artifact.py` and selects the analyzer-native or Moises-backed path from current song metadata.
 
@@ -102,6 +103,7 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 - `analyzer/meta/<song>/info.json`: canonical song metadata, including top-level `bpm`, top-level `duration`, and the active canonical beats path in `beats_file`.
 - `analyzer/meta/<song>/reference/beats.json`: human-validated canonical beat events used by backend consumers when available.
 - `analyzer/meta/<song>/inferred/beats.<model>.json`: model-generated beat outputs kept separate from canonical reference data.
+- `analyzer/meta/<song>/chord_patterns.json`: grouped repeating harmonic progressions with bar and time occurrence spans when canonical beats contain usable chord labels.
 - `analyzer/meta/<song>/sections.json`: canonical persisted section list. When `moises/segments.json` exists and `sections.json` is absent, Moises import materializes this file using the analyzer section row shape (`start`, `end`, `label`, optional `description`, optional `hints`) after standalone section-range validation used by backend consumers.
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
 - `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, and optional semantic tags from a music audio-classification model.
@@ -157,6 +159,12 @@ To validate chord inference against the canonical Yonaka beat metadata, run:
 docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --find-chords --beats-output-name test.beats.json
 ```
 
+To validate chord pattern grouping from canonical beat metadata, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Pet Shop Boys - I'm not scared.mp3" --find-chord-patterns
+```
+
 To validate section inference against the canonical Yonaka section metadata, run:
 
 ```bash
@@ -193,6 +201,7 @@ docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the P
 - `--essentia-analysis`: run Essentia analysis bundle.
 - `--find-song-features`: synthesize LLM-facing feature metadata from analyzer outputs.
 - `--find-chords`: run Hugging Face chord inference and write beat-aligned chord labels.
+- `--find-chord-patterns`: group repeating chord progressions from canonical beats and write `chord_patterns.json` when usable repeats exist.
 - `--find-sections`: run Hugging Face section inference and write `sections.json` rows.
 - `--generate-md`: render the per-song markdown summary from `sections.json`.
 
