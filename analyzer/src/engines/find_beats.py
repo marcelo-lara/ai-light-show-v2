@@ -14,6 +14,22 @@ def _tempo_to_float(tempo: float | np.ndarray) -> float:
     return float(tempo)
 
 
+def analyze_audio_timing(song_path: str | Path) -> dict[str, float | int]:
+    song_path = Path(song_path).expanduser().resolve()
+    if not song_path.exists():
+        raise FileNotFoundError(f"Song file not found: {song_path}")
+    y, sr = librosa.load(str(song_path), sr=None, mono=True)
+    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+    tempo, beat_frames = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr, units="frames")
+    duration = float(librosa.get_duration(y=y, sr=sr))
+    return {
+        "tempo_bpm": _tempo_to_float(tempo),
+        "duration": duration,
+        "sample_rate": int(sr),
+        "beat_count": int(np.asarray(beat_frames, dtype=int).size),
+    }
+
+
 def find_beats_and_downbeats(song_path: str | Path) -> dict:
     song_path = Path(song_path).expanduser().resolve()
     if not song_path.exists():
@@ -45,6 +61,7 @@ def find_beats_and_downbeats(song_path: str | Path) -> dict:
     return {
         "method": "librosa",
         "tempo_bpm": _tempo_to_float(tempo),
+        "duration": float(librosa.get_duration(y=y, sr=sr)),
         "sample_rate": int(sr),
         "beats": [float(time_value) for time_value in beat_times],
         "downbeats": [float(time_value) for time_value in downbeat_times],

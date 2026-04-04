@@ -33,7 +33,7 @@ def test_find_chords_cli() -> None:
         check=True,
     )
     song_dir = analyzer_dir / "meta" / "Yonaka - Seize the Power"
-    comparison = compare_beats(song_dir / "beats.json", song_dir / "test.beats.json")
-    dump_json(song_dir / "test.beats.compare.json", comparison)
-    assert (song_dir / "test.beats.json").exists()
+    comparison = compare_beats(song_dir / "reference" / "beats.json", song_dir / "inferred" / "test.beats.json")
+    dump_json(song_dir / "inferred" / "test.beats.compare.json", comparison)
+    assert (song_dir / "inferred" / "test.beats.json").exists()
     assert 0.0 <= float(comparison["error_rate"]) <= 1.0

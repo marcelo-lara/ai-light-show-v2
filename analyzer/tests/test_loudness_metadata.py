@@ -22,12 +22,13 @@ def test_run_essentia_analysis_registers_dotted_stem_loudness_files(tmp_path: Pa
     song_meta_dir.mkdir(parents=True)
     (song_meta_dir / "info.json").write_text(json.dumps({"stems_dir": str(stems_dir), "stems": stems}), encoding="utf-8")
 
-    def fake_analyze(audio_path: str, out_dir: str, part_name: str, sample_rate: int = 44100, artifact_file_stems=None, progress_callback=None):
+    def fake_analyze(audio_path: str, out_dir: str, part_name: str, sample_rate: int = 44100, artifact_file_stems=None, generate_plots: bool = False, progress_callback=None):
         artifact_file_stems = artifact_file_stems or {}
         for artifact_name in ["rhythm", "loudness_envelope"]:
             file_stem = artifact_file_stems.get(artifact_name, artifact_name)
             (Path(out_dir) / f"{file_stem}.json").write_text("{}", encoding="utf-8")
-            (Path(out_dir) / f"{file_stem}.svg").write_text("<svg />", encoding="utf-8")
+            if generate_plots:
+                (Path(out_dir) / f"{file_stem}.svg").write_text("<svg />", encoding="utf-8")
         return {"rhythm": {"rhythm": {"bpm": 120.0}}, "loudness_envelope": {"part": part_name}}
 
     monkeypatch.setattr(essentia_task_module, "analyze_with_essentia", fake_analyze)
@@ -41,14 +42,12 @@ def test_run_essentia_analysis_registers_dotted_stem_loudness_files(tmp_path: Pa
     essentia_artifacts = info_payload["artifacts"]["essentia"]
     assert (essentia_dir / "loudness_envelope.json").exists()
     assert (essentia_dir / "bass_loudness_envelope.json").exists()
-    assert (essentia_dir / "bass_loudness_envelope.svg").exists()
-    assert (essentia_dir / "drums_loudness_envelope.svg").exists()
     assert essentia_artifacts["mix"]["loudness_envelope"]["json"].endswith("/loudness_envelope.json")
-    assert essentia_artifacts["mix"]["loudness_envelope"]["svg"].endswith("/loudness_envelope.svg")
     assert essentia_artifacts["bass"]["loudness_envelope"]["json"].endswith("/bass_loudness_envelope.json")
-    assert essentia_artifacts["bass"]["loudness_envelope"]["svg"].endswith("/bass_loudness_envelope.svg")
     assert essentia_artifacts["drums"]["loudness_envelope"]["json"].endswith("/drums_loudness_envelope.json")
-    assert essentia_artifacts["drums"]["loudness_envelope"]["svg"].endswith("/drums_loudness_envelope.svg")
+    assert "svg" not in essentia_artifacts["mix"]["loudness_envelope"]
+    assert "svg" not in essentia_artifacts["bass"]["loudness_envelope"]
+    assert "svg" not in essentia_artifacts["drums"]["loudness_envelope"]
 
 
 def test_run_essentia_analysis_probes_sample_rate_before_analysis(tmp_path: Path, monkeypatch) -> None:
@@ -62,13 +61,12 @@ def test_run_essentia_analysis_probes_sample_rate_before_analysis(tmp_path: Path
 
     captured_calls: list[tuple[str, int | None]] = []
 
-    def fake_analyze(audio_path: str, out_dir: str, part_name: str, sample_rate: int | None = None, artifact_file_stems=None, progress_callback=None):
+    def fake_analyze(audio_path: str, out_dir: str, part_name: str, sample_rate: int | None = None, artifact_file_stems=None, generate_plots: bool = False, progress_callback=None):
         captured_calls.append((part_name, sample_rate))
         artifact_file_stems = artifact_file_stems or {}
         for artifact_name in ["rhythm", "loudness_envelope"]:
             file_stem = artifact_file_stems.get(artifact_name, artifact_name)
             (Path(out_dir) / f"{file_stem}.json").write_text("{}", encoding="utf-8")
-            (Path(out_dir) / f"{file_stem}.svg").write_text("<svg />", encoding="utf-8")
         return {"rhythm": {"rhythm": {"bpm": 120.0}}, "loudness_envelope": {"part": part_name}}
 
     monkeypatch.setattr(essentia_task_module, "analyze_with_essentia", fake_analyze)
@@ -91,15 +89,15 @@ def test_run_essentia_analysis_emits_wrapper_and_part_progress(tmp_path: Path, m
 
     events: list[dict] = []
 
-    def fake_analyze(audio_path: str, out_dir: str, part_name: str, sample_rate: int | None = None, artifact_file_stems=None, progress_callback=None):
+    def fake_analyze(audio_path: str, out_dir: str, part_name: str, sample_rate: int | None = None, artifact_file_stems=None, generate_plots: bool = False, progress_callback=None):
         if progress_callback is not None:
             progress_callback(
                 {
                     "task_type": "essentia-analysis",
                     "stage": "Loudness & Envelope",
                     "step_current": 6,
-                    "step_total": 20,
-                    "message": "essentia-analysis [6/20] Loudness & Envelope",
+                    "step_total": 15,
+                    "message": "essentia-analysis [6/15] Loudness & Envelope",
                     "part_name": part_name,
                 }
             )
@@ -107,7 +105,6 @@ def test_run_essentia_analysis_emits_wrapper_and_part_progress(tmp_path: Path, m
         for artifact_name in ["rhythm", "loudness_envelope"]:
             file_stem = artifact_file_stems.get(artifact_name, artifact_name)
             (Path(out_dir) / f"{file_stem}.json").write_text("{}", encoding="utf-8")
-            (Path(out_dir) / f"{file_stem}.svg").write_text("<svg />", encoding="utf-8")
         return {"rhythm": {"rhythm": {"bpm": 120.0}}, "loudness_envelope": {"part": part_name}}
 
     monkeypatch.setattr(essentia_task_module, "analyze_with_essentia", fake_analyze)

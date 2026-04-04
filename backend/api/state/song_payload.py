@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import quote
 
 from models.song.artifacts import build_essentia_plot_descriptors
+from models.song.io import resolve_beats_file
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def pick_numeric_list(*candidates: Any) -> List[float]:
     return []
 
 def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
-    """Parse chords from the analyzer beats.json format"""
+    """Parse chords from the analyzer canonical beats format"""
     try:
         payload = json.loads(chords_path.read_text())
     except Exception:
@@ -44,7 +45,7 @@ def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
         for row in payload[:8]
         if isinstance(row, dict)
     ]
-    logger.debug("[SONG_PAYLOAD] beats.json sample %s -> %s", chords_path, raw_sample)
+    logger.debug("[SONG_PAYLOAD] beats sample %s -> %s", chords_path, raw_sample)
 
     picked: List[Dict[str, Any]] = []
     previous_label = ""
@@ -115,7 +116,7 @@ def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[st
             svg_url = f"/meta/{'/'.join(quote(part) for part in mapped_path_parts)}"
         plots.append({"id": str(plot["id"]), "title": str(plot["title"]), "svg_url": svg_url})
 
-    chords_path = meta_root / song_filename / "beats.json"
+    chords_path = Path(resolve_beats_file(meta_root / song_filename, info_data))
     chords = parse_chords(chords_path) if chords_path.exists() else []
     logger.debug(
         "[SONG_PAYLOAD] analysis payload for %s -> chords=%s first=%s",

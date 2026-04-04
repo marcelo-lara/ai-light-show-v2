@@ -129,7 +129,7 @@ Patch behavior:
 - `transport.pause`, `transport.stop`, and natural playback completion release analyzer playback lock and resume analyzer polling only when queued work is still present.
 - `song.list` emits the currently loadable backend song names without mutating state.
 - `song.load` validates `payload.filename`, loads the selected song into backend state, resets playback to stopped, updates the output universe, and schedules a snapshot/patch broadcast.
-- If a song is present without analyzer `info.json`, backend still loads it and emits fallback metadata (`bpm=0`, `length_s=0`, empty beats, no analysis) instead of failing the load.
+- If a song is present without analyzer `info.json`, backend still loads it and emits fallback metadata (`bpm=0`, `length_s=0`, empty beats, no analysis) instead of failing the load. When `info.json` exists, backend resolves beats from `info.json.beats_file` or `artifacts.beats_file`, which should point at `reference/beats.json` or `inferred/beats.<model>.json`.
 - `songs_load` on the MCP surface applies the same load side effects: load state, stop playback ticker, disable continuous send, push the output universe, then schedule websocket broadcasts.
 - Clients can send `transport.jump_to_section` with `payload.section_index` to seek to the matching section start.
 - Section boundaries and labels are resolved from normalized section fields (`start_s|start`, `end_s|end`, `name|label`).

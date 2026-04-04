@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import quote
 
 from models.song.artifacts import build_essentia_plot_descriptors
+from models.song.io import resolve_beats_file
 
 
 def _normalize_sections(raw_sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -99,7 +100,7 @@ def _build_plots(song, meta_root: Path) -> List[Dict[str, Any]]:
 def build_song_details(song, meta_root: Path) -> Dict[str, Any]:
     beats = [beat.model_dump() for beat in song.beats.beats]
     sections = _attach_section_positions(_normalize_sections(song.sections.sections), beats)
-    chords = _parse_chords(meta_root / song.song_id / "beats.json")
+    chords = _parse_chords(Path(resolve_beats_file(meta_root / song.song_id, song.meta.model_dump())))
     analysis: Optional[Dict[str, Any]] = None
     plots = _build_plots(song, meta_root)
     if plots or chords:

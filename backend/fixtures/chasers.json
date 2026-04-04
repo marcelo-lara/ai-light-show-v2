@@ -113,6 +113,81 @@
     ]
   },
   {
+    "id": "parcan_heartbeat",
+    "name": "Parcan heartbeat",
+    "description": "A two-beat lub-dub motif for the parcans: left pair on the pulse, right pair as the answer, then a brief breath before the next cycle.",
+    "effects": [
+      {
+        "beat": 0.0,
+        "fixture_id": "parcan_l",
+        "effect": "flash",
+        "duration": 0.14,
+        "data": {
+          "color": "#281C90",
+          "brightness": 0.48
+        }
+      },
+      {
+        "beat": 0.0,
+        "fixture_id": "parcan_pl",
+        "effect": "flash",
+        "duration": 0.16,
+        "data": {
+          "color": "#2E3CCC",
+          "brightness": 0.7
+        }
+      },
+      {
+        "beat": 0.5,
+        "fixture_id": "parcan_pr",
+        "effect": "flash",
+        "duration": 0.16,
+        "data": {
+          "color": "#5C30D0",
+          "brightness": 0.588
+        }
+      },
+      {
+        "beat": 0.5,
+        "fixture_id": "parcan_r",
+        "effect": "flash",
+        "duration": 0.14,
+        "data": {
+          "color": "#3A1C92",
+          "brightness": 0.403
+        }
+      },
+      {
+        "beat": 1.84,
+        "fixture_id": "parcan_l",
+        "effect": "fade_out",
+        "duration": 0.16,
+        "data": {}
+      },
+      {
+        "beat": 1.84,
+        "fixture_id": "parcan_pl",
+        "effect": "fade_out",
+        "duration": 0.16,
+        "data": {}
+      },
+      {
+        "beat": 1.84,
+        "fixture_id": "parcan_pr",
+        "effect": "fade_out",
+        "duration": 0.16,
+        "data": {}
+      },
+      {
+        "beat": 1.84,
+        "fixture_id": "parcan_r",
+        "effect": "fade_out",
+        "duration": 0.16,
+        "data": {}
+      }
+    ]
+  },
+  {
     "id": "yonaka_intro",
     "name": "Yonaka Intro",
     "description": "Four-bar intro motif: left/right prism plus opposite parcans, with a double-punch on the cycle start.",

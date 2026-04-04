@@ -11,12 +11,15 @@ from src.tasks import init_song as init_song_task
 from src.tasks.common import autodetect_device, warn
 from src.tasks.essentia_analysis import run as run_essentia_analysis_task
 from src.tasks.find_beats import run as run_find_beats_task
+from src.tasks.find_chord_patterns import run as run_find_chord_patterns_task
 from src.tasks.find_chords import run as run_find_chords_task
 from src.tasks.find_sections import run as run_find_sections_task
 from src.tasks.find_song_features import run as run_find_song_features_task
+from src.tasks.find_stem_patterns import run as run_find_stem_patterns_task
 from src.tasks.generate_md import run as run_generate_md_task
 from src.tasks.import_moises_task import run as run_import_moises_task
 from src.tasks.split_stems import run as run_split_stems_task
+from src.tasks.stereo_analysis import run as run_stereo_analysis_task
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")
 SONGS_DIR = os.environ.get("SONGS_DIR", "/app/songs")
@@ -81,8 +84,8 @@ def run_beat_finder_for(song_path: Path, meta_path: str | Path = META_PATH, prog
     return run_find_beats_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
 
 
-def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> dict[str, Any] | None:
-    return run_essentia_analysis_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
+def run_essentia_analysis_for(song_path: Path, meta_path: str | Path = META_PATH, generate_plots: bool = False, progress_callback=None) -> dict[str, Any] | None:
+    return run_essentia_analysis_task({"song_path": str(song_path), "meta_path": str(meta_path), "generate_plots": generate_plots}, progress_callback=progress_callback)
 
 
 def run_import_moises_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> dict[str, Any] | None:
@@ -97,12 +100,24 @@ def run_find_chords_for(song_path: Path, meta_path: str | Path = META_PATH, outp
     return run_find_chords_task({"song_path": str(song_path), "meta_path": str(meta_path), "output_name": output_name}, progress_callback=progress_callback)
 
 
+def run_find_chord_patterns_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> dict[str, Any]:
+    return run_find_chord_patterns_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
+
+
+def run_find_stem_patterns_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> dict[str, Any]:
+    return run_find_stem_patterns_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
+
+
 def run_find_sections_for(song_path: Path, meta_path: str | Path = META_PATH, output_name: str = "sections.json", progress_callback=None) -> dict[str, Any] | None:
     return run_find_sections_task({"song_path": str(song_path), "meta_path": str(meta_path), "output_name": output_name}, progress_callback=progress_callback)
 
 
 def run_find_song_features_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> Path | None:
     return run_find_song_features_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
+
+
+def run_stereo_analysis_for(song_path: Path, meta_path: str | Path = META_PATH, progress_callback=None) -> dict[str, Any] | None:
+    return run_stereo_analysis_task({"song_path": str(song_path), "meta_path": str(meta_path)}, progress_callback=progress_callback)
 
 
 def run_full_artifact_playlist_for(song_path: Path, meta_path: str | Path = META_PATH, device: str | None = None, progress_callback=None) -> dict[str, Any]:
@@ -144,8 +159,12 @@ def main() -> int:
     parser.add_argument("--split-stems", action="store_true", help="Run stem splitting")
     parser.add_argument("--beat-finder", action="store_true", help="Run beat finder")
     parser.add_argument("--essentia-analysis", action="store_true", help="Run Essentia analysis")
+    parser.add_argument("--essentia-plots", action="store_true", help="Generate Essentia SVG plots when running Essentia analysis")
     parser.add_argument("--find-song-features", action="store_true", help="Generate song feature metadata")
+    parser.add_argument("--stereo-analysis", action="store_true", help="Annotate notable stereo differences into features.json")
     parser.add_argument("--find-chords", action="store_true", help="Infer chord labels onto beats metadata")
+    parser.add_argument("--find-chord-patterns", action="store_true", help="Group repeating chord progressions from canonical beat metadata")
+    parser.add_argument("--find-stem-patterns", action="store_true", help="Group repeating stem loudness and envelope profiles using chord pattern windows")
     parser.add_argument("--find-sections", action="store_true", help="Infer song section labels")
     parser.add_argument("--import-moises", action="store_true", help="Import Moises chords")
     parser.add_argument("--generate-md", action="store_true", help="Generate markdown from sections metadata")
@@ -165,7 +184,10 @@ def main() -> int:
             args.beat_finder,
             args.essentia_analysis,
             args.find_song_features,
+            args.stereo_analysis,
             args.find_chords,
+            args.find_chord_patterns,
+            args.find_stem_patterns,
             args.find_sections,
             args.import_moises,
             args.generate_md,
@@ -183,11 +205,17 @@ def main() -> int:
         if args.beat_finder:
             run_beat_finder_for(current_song)
         if args.essentia_analysis:
-            run_essentia_analysis_for(current_song)
+            run_essentia_analysis_for(current_song, generate_plots=args.essentia_plots)
         if args.find_song_features:
             run_find_song_features_for(current_song)
+        if args.stereo_analysis:
+            run_stereo_analysis_for(current_song)
         if args.find_chords:
             run_find_chords_for(current_song, output_name=args.beats_output_name)
+        if args.find_chord_patterns:
+            run_find_chord_patterns_for(current_song)
+        if args.find_stem_patterns:
+            run_find_stem_patterns_for(current_song)
         if args.find_sections:
             run_find_sections_for(current_song, output_name=args.sections_output_name)
         if args.import_moises:
@@ -206,16 +234,19 @@ def main() -> int:
         print("3. Beat Finder")
         print("4. Essentia Analysis")
         print("5. Find Song Features")
-        print("6. Find Chords")
-        print("7. Find Sections")
-        print("8. Compare Beat Times")
-        print("9. Import Moises Chords")
-        print("10. Generate MD file")
-        print("11. Full Artifact Playlist")
-        print("12. Analyze All Songs")
-        print("13. Exit (Esc also exits)")
+        print("6. Stereo Analysis")
+        print("7. Find Chords")
+        print("8. Find Chord Patterns")
+        print("9. Find Stem Patterns")
+        print("10. Find Sections")
+        print("11. Compare Beat Times")
+        print("12. Import Moises Chords")
+        print("13. Generate MD file")
+        print("14. Full Artifact Playlist")
+        print("15. Analyze All Songs")
+        print("16. Exit (Esc also exits)")
         choice = input("Choose an option: ").strip()
-        if _is_escape_input(choice) or choice == "13":
+        if _is_escape_input(choice) or choice == "16":
             print("Exiting.")
             break
         if choice == "0":
@@ -233,18 +264,24 @@ def main() -> int:
         elif choice == "5":
             run_find_song_features_for(current_song)
         elif choice == "6":
-            run_find_chords_for(current_song)
+            run_stereo_analysis_for(current_song)
         elif choice == "7":
-            run_find_sections_for(current_song)
+            run_find_chords_for(current_song)
         elif choice == "8":
-            run_compare_beat_times_for(current_song)
+            run_find_chord_patterns_for(current_song)
         elif choice == "9":
-            run_import_moises_for(current_song)
+            run_find_stem_patterns_for(current_song)
         elif choice == "10":
-            run_generate_md_for(current_song)
+            run_find_sections_for(current_song)
         elif choice == "11":
-            run_full_artifact_playlist_for(current_song, device=device)
+            run_compare_beat_times_for(current_song)
         elif choice == "12":
+            run_import_moises_for(current_song)
+        elif choice == "13":
+            run_generate_md_for(current_song)
+        elif choice == "14":
+            run_full_artifact_playlist_for(current_song, device=device)
+        elif choice == "15":
             analyze_all_songs(device=device)
         else:
             warn("Invalid choice")

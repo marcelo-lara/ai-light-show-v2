@@ -18,9 +18,13 @@ def test_build_full_artifact_playlist_for_analyzer_song(tmp_path: Path) -> None:
         "init-song",
         "split-stems",
         "beat-finder",
+        "find_chords",
         "find_sections",
         "essentia-analysis",
         "find-song-features",
+        "stereo-analysis",
+        "find-chord-patterns",
+        "find-stem-patterns",
         "generate-md",
     ]
 
@@ -43,6 +47,9 @@ def test_build_full_artifact_playlist_for_moises_song(tmp_path: Path) -> None:
         "import-moises",
         "essentia-analysis",
         "find-song-features",
+        "stereo-analysis",
+        "find-chord-patterns",
+        "find-stem-patterns",
         "generate-md",
     ]
 
@@ -64,6 +71,9 @@ def test_build_full_artifact_playlist_for_moises_song_without_segments(tmp_path:
         "find_sections",
         "essentia-analysis",
         "find-song-features",
+        "stereo-analysis",
+        "find-chord-patterns",
+        "find-stem-patterns",
         "generate-md",
     ]
 
@@ -86,7 +96,7 @@ def test_execute_full_artifact_playlist_stops_on_failure(monkeypatch, tmp_path: 
     result = execute_full_artifact_playlist(song_path, tmp_path / "meta", device="cpu")
 
     assert result["status"] == "failed"
-    assert calls == ["init-song", "split-stems", "beat-finder", "find_sections"]
+    assert calls == ["init-song", "split-stems", "beat-finder", "find_chords", "find_sections"]
 
 
 def test_import_moises_preserves_source_files(tmp_path: Path) -> None:

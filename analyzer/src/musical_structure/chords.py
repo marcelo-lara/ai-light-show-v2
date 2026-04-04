@@ -72,7 +72,7 @@ def find_chords(
     song_file = Path(song_path).expanduser().resolve()
     beats = load_beats(song_file, meta_path)
     if not beats:
-        LOGGER.warning("Missing beats.json for %s", song_file.name)
+        LOGGER.warning("Missing canonical beats for %s", song_file.name)
         return None
     chord_candidates = models_for("find_chords")
     if not chord_candidates:

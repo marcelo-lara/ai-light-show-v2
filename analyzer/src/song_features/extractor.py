@@ -11,7 +11,7 @@ import librosa
 import numpy as np
 import essentia.standard as es
 
-from src.storage.song_meta import load_json_file, load_list_file, load_sections, song_meta_dir, song_name
+from src.storage.song_meta import canonical_beats_path, load_json_file, load_list_file, load_sections, song_meta_dir, song_name
 from src.song_features.stem_accents import build_stem_beat_profiles, merge_low_windows, summarize_stem_accents, summarize_stem_dips
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")
@@ -43,6 +43,20 @@ _MODEL_FAILED = False
 
 
 TIME_KEYS = {"time", "start_s", "end_s", "peak_time", "duration_s"}
+
+
+def release_model_cache() -> None:
+    global _MODEL_CACHE
+    _MODEL_CACHE = None
+    try:
+        import gc
+        import torch
+
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        return
 
 
 def _round_floats(value: Any, *, key: str | None = None) -> Any:
@@ -324,7 +338,7 @@ def find_song_features(song_path: str | Path, meta_path: str | Path = META_PATH)
         LOGGER.warning("Missing required Essentia mix artifacts for %s", song_path.name)
         return None
 
-    beats = load_list_file(meta_dir / "beats.json")
+    beats = load_list_file(canonical_beats_path(song_path, meta_path))
     sections = load_sections(meta_dir)
     hint_rows = load_list_file(meta_dir / "hints.json")
     stem_profiles = build_stem_beat_profiles(meta_dir, beats)

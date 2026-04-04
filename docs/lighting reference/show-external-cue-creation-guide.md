@@ -31,11 +31,13 @@ Do not stack new ideas on top of stale cues for the same section.
 - Song sections: `analyzer/meta/<Song>/sections.json`
 - Optional song metadata:
   - `analyzer/meta/<Song>/info.json`
+  - `analyzer/meta/<Song>/chord_patterns.json`
   - `analyzer/meta/<Song>/features.json`
   - `analyzer/meta/<Song>/hints.json`
   - `analyzer/meta/<Song>/*_loudness_envelope.json`
 
 If timing matters, trust `beats.json` and `sections.json` first. If motion and emotional rise/fall matter, also inspect `*_loudness_envelope.json`.
+If harmonic repetition matters, inspect `chord_patterns.json` before inventing your own progression map.
 
 ## Deliverables
 
@@ -132,8 +134,9 @@ Cardinal reference POIs:
 Practical usage:
 
 - named room POIs are best for storytelling and room focus
-- `ref_x_y_z` POIs are best for deliberate sweeps, orbits, and spatially bold motion
+- `ref_x_y_z` POIs are best for deliberate sweeps, circles, orbits, and spatially bold motion
 - prefer `ref_x_y_z` starts for `sweep` and `orbit` when you want the movement itself to read clearly
+- `circle` depends on POI `location` data plus `ref_x_y_z` references, so keep its `target_poi` on a real room POI and let the reference cube define the motion geometry
 - for grounded or voice-led motion, prefer lower-plane `z=0` POIs when the mapping supports it
 
 ## Effects You Will Use Most
@@ -147,7 +150,9 @@ Most useful effects:
 - `fade_out`
 - `blackout`
 - `move_to_poi`
+- `circle`
 - `orbit`
+- `orbit_out`
 - `sweep`
 
 Practical notes:
@@ -162,6 +167,13 @@ Practical notes:
 - use for impacts and rhythmic punctuation
 - on RGB fixtures, color can be set directly in the flash payload when supported
 - on moving heads, do not rely on `flash` alone for color changes
+- if the fixture should feel continuously present through a harmonic section, do not fake that with repeated flashes; use held color states and reserve `flash` for actual accents
+
+### `full` and `fade_in` on RGB fixtures
+
+- use `full` to establish a sustained RGB bed at the start of a harmonic window
+- use `fade_in` on the final beat before the next chord when the room should glide into the new color instead of snapping or flashing
+- when using this pattern, clear any older per-beat RGB flash cues from the rebuilt time window so the sustained bed remains the only active parcan language
 
 ### `move_to_poi`
 
@@ -169,11 +181,29 @@ Practical notes:
 - only use valid mapped POIs
 - prism fixtures are mechanically slow, so pre-position them before the hit
 
+### `circle`
+
+- use it when you want moving heads to orbit around a room focus in world space rather than drawing a DMX-space circle
+- required payload: `target_poi`, `radius`
+- optional payload: `orbits`
+- `target_poi` should usually be a named room POI with a real `location`; the reference cube POIs drive the interpolation behind the scenes
+- keep `radius` modest so the motion reads as a controlled ring around the subject rather than a full-room sweep
+- `circle` is motion-first: if the fixture should stay visibly on while moving, the show designer must author the dimmer behavior separately with `set_channels`, `full`, `fade_in`, `flash`, or overlapping cues
+
 ### `sweep` and `orbit`
 
 - use sweep mainly on `head_el150`, and orbit on `mini_beam_prism_l` and `mini_beam_prism_r` for phrase motion
 - these are best for section openings, vocal phrasing, instrumental arcs, and deliberate movement moments
 - avoid piling multiple pan/tilt actions on the same fixture at the same timestamp unless one is intentionally replacing another
+- `orbit` accepts `write_dimmer: false` when you want the movement to layer under another lighting pattern without forcing a blackout/preroll dim change
+- when `write_dimmer: false`, the motion effect will not manage brightness for you; keeping the beam visible during travel is the show designer's responsibility
+
+### `orbit_out`
+
+- use it as the inverse of `orbit`: start on the subject and spiral back out toward `start_POI`
+- it uses the same payload shape as `orbit`: `subject_POI`, `start_POI`, optional `orbits`, optional `easing`, optional `write_dimmer`
+- this is useful for releases, phrase exits, or taking focus away from a vocal anchor without a hard snap
+- like `orbit`, `orbit_out` may be used as motion-only by disabling dimmer writes, which means the show designer must pair it with intentional dimmer cues if light should remain present during the move
 
 ### `fade_out`
 
@@ -253,6 +283,14 @@ Translate song analysis into fixture behavior like this:
 - vocal-led sections: fewer hits, slower motion, more focus
 - electronic or instrumental sections: more kinetic, more rhythmic, more extroverted
 
+If `chord_patterns.json` exists, use it to stabilize the visual language:
+
+- repeated chord patterns should usually produce repeated visual phrases unless the section notes give a clear reason to break that symmetry
+- let the strongest recurring pattern define the section's default loop language for motion, color, or impact density
+- use pattern changes as likely cue points for palette shifts, fixture-role swaps, or phrase resets
+- if two sections share the same chord pattern but differ in energy, keep the structural idea related while changing brightness, density, width, or motion size
+- do not infer a more complicated harmonic story than the artifact supports; when `chord_patterns.json` is absent, fall back to `beats.json`, `sections.json`, and other analyzer metadata
+
 Useful fixture roles:
 
 - prisms: impact, drop language, emotional release
@@ -266,7 +304,7 @@ Use this order:
 
 1. Read fixture and POI definitions.
 2. Read `sections.json` and `beats.json`.
-3. Read the song metadata files that matter for energy, loudness, or hints.
+3. Read the song metadata files that matter for energy, loudness, harmony, or hints.
 4. Write the planning brief in `analyzer/meta/<Song>/<Song>.md`.
 5. Decide the palette and recurring motion language.
 6. Decide which ideas belong in raw cues and which belong in chasers.
@@ -313,6 +351,17 @@ If `*_loudness_envelope.json` shows a drop-then-rise pattern, treat it as a like
 - on the explode bar, let prisms and `head_el150` drive the release first
 - then let the parcans widen and reinforce it
 
+### Chord Pattern Rule
+
+If `chord_patterns.json` is available:
+
+- treat each recurring chord pattern as a candidate visual phrase unit
+- prefer reusing one readable cue idea across repeated occurrences of the same pattern instead of rebuilding every bar from scratch
+- when a pattern spans multiple bars, make the lighting phrase read across the whole pattern window rather than only on downbeats
+- let pattern boundaries help decide where to reset motion, change POIs, rotate prism state, or swap between narration and rhythmic detail
+- if a pattern repeats under different section energy, evolve the same idea rather than replacing it with unrelated motion
+- if the artifact shows only short or weak patterns, do not force a loop; use sections and loudness as the stronger guide
+
 ## Reusable Winning Patterns
 
 ### Drop Prep Pattern
@@ -357,11 +406,14 @@ Important schema facts:
 - chaser `effects[].beat` is an offset inside the pattern
 - chaser `effects[].duration` is also in beats
 - the total cycle length is inferred from the largest `beat + duration`
+- always calculate that cycle length before using a chaser as a bar-aligned motif; some chasers intentionally spill past beat 4, so only use them when that non-bar loop length is part of the design
+- if the motif needs a breath before the next repetition, end the pattern with an explicit fade or reset so the inferred cycle length lands exactly on the intended beat boundary
 
 Use chasers when:
 
 - a repeated motif stabilizes across several bars
 - the pattern is truly reusable
+- `chord_patterns.json` confirms a harmonic phrase that should recur with the same visual grammar
 
 Prefer raw cues when:
 

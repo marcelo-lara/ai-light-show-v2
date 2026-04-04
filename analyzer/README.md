@@ -35,19 +35,22 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 
 | Task | Inputs | Outputs | Notes |
 |---|---|---|---|
-| `init-song` | source song path | `info.json` root | Creates only `song_name`, `song_path`, and `artifacts`.
+| `init-song` | source song path | `info.json` root | Creates `song_name`, `song_path`, top-level `bpm`, top-level `duration`, and `artifacts`.
 | `split-stems` | source song path | `stems/*`, updated `info.json` | Initializes song metadata before writing derived fields.
-| `beat-finder` | source song path, optional Moises files | `beats.json`, updated `info.json` | Imports Moises beats when usable chord data exists; otherwise runs analyzer beat detection.
-| `import-moises` | `moises/chords.json` | `beats.json`, optional `sections.json` | Normalizes Moises beat rows and materializes sections from Moises segments when available, without modifying the original Moises files.
-| `essentia-analysis` | source song path, optional stems | `essentia/*.json`, `essentia/*.svg`, `hints.json`, updated `info.json` | Builds section-indexed hints when sections exist; otherwise falls back to a single song-wide section.
-| `find_chords` | `beats.json` | updated beats output, updated `info.json` | Optional beat enrichment step.
-| `find_sections` | `beats.json` | `sections.json`, updated `info.json` | Produces canonical persisted song sections.
-| `find-song-features` | `info.json`, `beats.json`, `essentia` mix artifacts | `features.json`, updated `info.json` | Also uses `sections.json` and `hints.json` when present.
+| `beat-finder` | source song path, optional Moises files | `reference/beats.json` or `inferred/beats.<model>.json`, updated `info.json` | Imports Moises beats when usable chord data exists; otherwise runs analyzer beat detection.
+| `import-moises` | `moises/chords.json` | `reference/beats.json`, optional `sections.json` | Normalizes Moises beat rows and materializes sections from Moises segments when available, without modifying the original Moises files.
+| `essentia-analysis` | source song path, optional stems | `essentia/*.json`, optional `essentia/*.svg`, `hints.json`, updated `info.json` | Builds section-indexed hints when sections exist; otherwise falls back to a single song-wide section. Plot generation is disabled by default and enabled explicitly when needed.
+| `find_chords` | canonical beats | updated beats output, updated `info.json` | Optional beat enrichment step.
+| `find-chord-patterns` | canonical beats with chord labels | `chord_patterns.json` when repeating progressions are found, updated `info.json` | Uses bar-aware windows, prefers 4-bar progressions, compares seventh chords as triads, and tolerates up to 3 beat-level mismatches on patterns longer than 2 bars.
+| `find-stem-patterns` | stem `loudness_envelope` artifacts, optional `chord_patterns.json` | `stem_patterns.json` when repeating stem profiles are found, updated `info.json` | Tries chord-pattern occurrence windows first, then falls back to repeated signal windows from the stem envelopes and does not require beat alignment.
+| `find_sections` | canonical beats | `sections.json`, updated `info.json` | Produces canonical persisted song sections.
+| `find-song-features` | `info.json`, canonical beats, `essentia` mix artifacts | `features.json`, updated `info.json` | Also uses `sections.json` and `hints.json` when present.
+| `stereo-analysis` | `features.json`, source song path, optional stems | updated `features.json` | Adds only notable stereo differences for the mix and available stems using the fixed tag vocabulary `attack_left`, `attack_right`, `echo_left`, `echo_right`, `low_end_left`, `low_end_right`, `percussion_left`, `percussion_right`, `ambience_left`, `ambience_right`, `split_texture`, `centered`. |
 | `generate-md` | `sections.json`, optional `features.json` | `<song>.md` | Terminal presentation artifact.
 
-Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find-sections`, `essentia-analysis`, `find-song-features`, `generate-md`.
+Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find_chords`, `find-sections`, `essentia-analysis`, `find-song-features`, `stereo-analysis`, `find-chord-patterns`, `find-stem-patterns`, `generate-md`.
 
-Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
+Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `stereo-analysis`, `find-chord-patterns`, `find-stem-patterns`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
 
 The executable full-artifact playlist lives in `src/playlists/full_artifact.py` and selects the analyzer-native or Moises-backed path from current song metadata.
 
@@ -99,13 +102,16 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 
 ### Output structure
 
-- `analyzer/meta/<song>/info.json`: canonical song metadata.
-- `analyzer/meta/<song>/beats.json`: canonical mix beat events used by backend consumers. When `moises/` contains usable chord data, this file is normalized from `moises/chords.json`.
+- `analyzer/meta/<song>/info.json`: canonical song metadata, including top-level `bpm`, top-level `duration`, and the active canonical beats path in `beats_file`.
+- `analyzer/meta/<song>/reference/beats.json`: human-validated canonical beat events used by backend consumers when available.
+- `analyzer/meta/<song>/inferred/beats.<model>.json`: model-generated beat outputs kept separate from canonical reference data.
+- `analyzer/meta/<song>/chord_patterns.json`: grouped repeating harmonic progressions with bar and time occurrence spans when canonical beats contain usable chord labels.
+- `analyzer/meta/<song>/stem_patterns.json`: grouped per-stem loudness and envelope profiles that try chord-pattern occurrence windows first and fall back to repeated signal windows when chord patterns are absent or unhelpful.
 - `analyzer/meta/<song>/sections.json`: canonical persisted section list. When `moises/segments.json` exists and `sections.json` is absent, Moises import materializes this file using the analyzer section row shape (`start`, `end`, `label`, optional `description`, optional `hints`) after standalone section-range validation used by backend consumers.
 - `analyzer/meta/<song>/hints.json`: section-indexed loudness hints, using the mix as the section anchor and stems as supporting evidence for significant local events.
-- `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, and optional semantic tags from a music audio-classification model.
+- `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, optional semantic tags from a music audio-classification model, and `global.stereo_analysis` for notable mix and stem stereo differences.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
-- `analyzer/meta/<song>/essentia/*.svg`: optional plots.
+- `analyzer/meta/<song>/essentia/*.svg`: optional plots generated only when Essentia plotting is explicitly enabled.
 - `analyzer/meta/<song>/stems/*`: separated stems when stem split is enabled.
 
 Backend and MCP treat this folder as read-only input data.
@@ -128,9 +134,11 @@ This starts the HTTP API on `http://localhost:8100` and the queue worker loop in
 docker compose exec analyzer python analyze_song.py
 ```
 
-Interactive option `8. Analyze All Songs` traverses every song in `/app/songs` and runs stem splitting, analyzer beat finding only when usable Moises chord data is absent, Essentia analysis, Moises import when available, and markdown generation for the resulting sections metadata.
+Interactive option `15. Analyze All Songs` traverses every song in `/app/songs` and runs the full analyzer task playlist for each song.
 
 Interactive option `4. Find Song Features` builds `features.json` for the selected song after beat and Essentia artifacts exist.
+
+Interactive option `6. Stereo Analysis` adds notable stereo differences into the existing `features.json` after feature synthesis has completed.
 
 ### CLI mode
 
@@ -154,6 +162,18 @@ To validate chord inference against the canonical Yonaka beat metadata, run:
 
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --find-chords --beats-output-name test.beats.json
+```
+
+To validate chord pattern grouping from canonical beat metadata, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Pet Shop Boys - I'm not scared.mp3" --find-chord-patterns
+```
+
+To validate stem pattern grouping from Essentia loudness envelopes, with chord patterns used as the first alignment attempt when available, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Pet Shop Boys - I'm not scared.mp3" --find-stem-patterns
 ```
 
 To validate section inference against the canonical Yonaka section metadata, run:
@@ -184,22 +204,34 @@ To validate feature synthesis from existing analyzer artifacts, run:
 docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --find-song-features
 ```
 
+To validate notable stereo analysis from existing features and available stems, run:
+
+```bash
+docker compose exec analyzer python analyze_song.py --song "Best Friend - Sofi Tukker.mp3" --stereo-analysis
+```
+
 ### Common CLI flags
 
 - `--song <filename>`: song in `/app/songs`.
 - `--split-stems`: run Demucs separation.
 - `--beat-finder`: run beat/downbeat extraction.
 - `--essentia-analysis`: run Essentia analysis bundle.
+- `--essentia-plots`: generate Essentia SVG plots when running Essentia analysis.
 - `--find-song-features`: synthesize LLM-facing feature metadata from analyzer outputs.
+- `--stereo-analysis`: append only notable stereo differences to `features.json` for the mix and available stems.
 - `--find-chords`: run Hugging Face chord inference and write beat-aligned chord labels.
+- `--find-chord-patterns`: group repeating chord progressions from canonical beats and write `chord_patterns.json` when usable repeats exist.
+- `--find-stem-patterns`: group repeating stem loudness and envelope profiles, trying chord-pattern occurrence windows first and falling back to repeated signal windows, and write `stem_patterns.json` when usable repeats exist.
 - `--find-sections`: run Hugging Face section inference and write `sections.json` rows.
 - `--generate-md`: render the per-song markdown summary from `sections.json`.
 
-Chord inference requires an existing `beats.json`. If it is missing, the analyzer warns and returns `None`. Bass inference uses `analyzer/temp_files/htdemucs/<song>/bass.wav` when present; if the bass stem is missing, the analyzer warns and keeps going with mix-only chord inference.
+Chord inference requires canonical beats from `info.json` or `reference/beats.json`. If they are missing, the analyzer warns and returns `None`. Bass inference uses `analyzer/temp_files/htdemucs/<song>/bass.wav` when present; if the bass stem is missing, the analyzer warns and keeps going with mix-only chord inference.
 
-Section inference also requires an existing `beats.json`. If no section models are configured or all configured models fail, the analyzer warns and returns `None`.
+Section inference also requires canonical beats. If no section models are configured or all configured models fail, the analyzer warns and returns `None`.
 
 Model retries are registry-driven. The analyzer tries the configured candidates in order and stops on the first successful model output. The default chord model is `andrewmcgill04/ast-finetuned-audioset-10-10-0.4593-chordy`. The default section model is `ArseniiChstiakovml/MusicSectionDetection`. Override or extend them through `ANALYZER_FIND_CHORDS_MODELS_JSON` and `ANALYZER_FIND_SECTIONS_MODELS_JSON`.
+
+Analyzer task execution also releases cached Hugging Face models and flushes Python/CUDA memory after each task completes. This keeps Demucs, musical-structure inference, and semantic feature tagging from holding GPU memory across task boundaries.
 
 Every successful chord or section run also updates `info.json` with a `musical_structure_inference` object that records the selected method, confidence summary, candidate attempts, inputs, and output artifact path.
 
@@ -218,11 +250,11 @@ Every successful chord or section run also updates `info.json` with a `musical_s
 
 `info.json` groups Essentia artifacts by part first: `artifacts.essentia.mix.loudness_envelope`, `artifacts.essentia.bass.chroma_hpcp`, and so on. The derived loudness hints file is exposed separately as `artifacts.hints_file`.
 
-`features.json` is additive and analyzer-owned. It records global energy, beat intensity, section-level energy/trend/phrase descriptors, dominant stems, harmonic-change counts, beat-window accents per part, per-part relative dips, merged low windows, semantic tags when the configured music model can run, and explicit attempt metadata for requested Essentia TensorFlow models. The analyzer image installs `essentia-tensorflow` and downloads the published `AudioSet-YAMNet`, `Nsynth instrument`, and `Discogs-EffNet` model assets into `/opt/essentia-models`; if the runtime still cannot execute them, the attempt metadata records the exact missing operator or file. Accents are stored with the beat anchor time plus the actual peak time inside that beat window, which lets markdown and downstream cue logic speak in bar/beat-aligned timestamps without losing the frame-level peak detail. Dips mark beat windows that fall below their neighboring bars, and low windows merge adjacent part dips into broader section-level ranges that read closer to how the music actually drops. Time fields are written at two-decimal precision for downstream prompt use. If a feature cannot be identified, the analyzer logs that condition and leaves the corresponding metadata unavailable instead of inventing substitute values.
+`features.json` is additive and analyzer-owned. It records global energy, beat intensity, section-level energy/trend/phrase descriptors, dominant stems, harmonic-change counts, beat-window accents per part, per-part relative dips, merged low windows, semantic tags when the configured music model can run, explicit attempt metadata for requested Essentia TensorFlow models, and `global.stereo_analysis` for only the notable stereo asymmetries that matter for prompt-time musical interpretation. Stereo analysis does not dump per-window traces. It stores a sparse `notable_events` list with `start_s`, `end_s`, `source`, `dominant_side`, `intensity`, `confidence`, `frequency_focus`, and a controlled `tags` list chosen only from the fixed vocabulary. The analyzer image installs `essentia-tensorflow` and downloads the published `AudioSet-YAMNet`, `Nsynth instrument`, and `Discogs-EffNet` model assets into `/opt/essentia-models`; if the runtime still cannot execute them, the attempt metadata records the exact missing operator or file. Accents are stored with the beat anchor time plus the actual peak time inside that beat window, which lets markdown and downstream cue logic speak in bar/beat-aligned timestamps without losing the frame-level peak detail. Dips mark beat windows that fall below their neighboring bars, and low windows merge adjacent part dips into broader section-level ranges that read closer to how the music actually drops. Time fields are written at two-decimal precision for downstream prompt use. If a feature cannot be identified, the analyzer logs that condition and leaves the corresponding metadata unavailable instead of inventing substitute values.
 
 `hints.json` is a plain list of song sections. Each section includes its time window and a `hints` array containing relevant `rise`, `drop`, `sustain`, and `sudden_spike` entries. Mix drives section-level meaning, while stems only appear when they materially support a local event.
 
-Stem Essentia files use a consistent `<part>_<feature>.json` and `<part>_<feature>.svg` naming pattern in the song `essentia` directory, while the mix keeps unprefixed filenames like `loudness_envelope.json` and `rhythm.json`.
+Stem Essentia JSON files use a consistent `<part>_<feature>.json` naming pattern in the song `essentia` directory, while the mix keeps unprefixed filenames like `loudness_envelope.json` and `rhythm.json`. When plotting is enabled, the matching SVG files are written with the same stem naming pattern.
 
 
 ## Verification
@@ -247,9 +279,9 @@ Then verify output artifacts exist in `analyzer/meta/<song>/` and are readable J
 
 ## Appendix
 
-### Beats.json file
+### Canonical beats file
 
-`beats.json` is an array of beat events:
+The active beats file recorded in `info.json.beats_file` is an array of beat events. Canonical human-backed beats live at `reference/beats.json`, while model outputs live under `inferred/`:
 
 ```json
 [

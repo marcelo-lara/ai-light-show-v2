@@ -55,7 +55,6 @@ def import_moises(song_id: str, meta_path: str | Path = META_PATH) -> list[dict]
     song_meta_dir = Path(meta_path).expanduser().resolve() / song_id
     moises_dir = song_meta_dir / "moises"
     chords_path = moises_dir / "chords.json"
-    output_path = song_meta_dir / "beats.json"
 
     chord_rows = _load_rows(chords_path)
     if not chord_rows:
@@ -67,9 +66,7 @@ def import_moises(song_id: str, meta_path: str | Path = META_PATH) -> list[dict]
         print(f"ERROR: no valid Moises chord rows found in {chords_path}")
         return []
 
-    with open(output_path, "w", encoding="utf-8") as handle:
-        json.dump(normalized, handle, indent=2)
-    print(f"Successfully normalized {len(normalized)} Moises chord rows to {output_path}")
+    print(f"Successfully normalized {len(normalized)} Moises chord rows from {chords_path}")
     generate_sections_from_segments(song_meta_dir)
     return normalized
 

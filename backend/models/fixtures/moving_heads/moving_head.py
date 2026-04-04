@@ -1,9 +1,11 @@
 from typing import Any, Dict, Optional, Tuple
 from models.fixtures.fixture import Fixture
 from .set_channels import handle as handle_set_channels
+from .circle import handle as handle_circle
 from .move_to import handle as handle_move_to
 from .move_to_poi import handle as handle_move_to_poi
 from .orbit import handle as handle_orbit
+from .orbit_out import handle as handle_orbit_out
 from .strobe import handle as handle_strobe
 from .full import handle as handle_full
 from .flash import handle as handle_flash
@@ -216,9 +218,11 @@ class MovingHead(Fixture):
         effect = (effect or "").lower().strip()
         effect_handlers = {
             "set_channels": handle_set_channels,
+            "circle": handle_circle,
             "move_to": handle_move_to,
             "move_to_poi": handle_move_to_poi,
             "orbit": handle_orbit,
+            "orbit_out": handle_orbit_out,
             "strobe": handle_strobe,
             "full": handle_full,
             "flash": handle_flash,

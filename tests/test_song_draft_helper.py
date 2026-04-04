@@ -41,10 +41,12 @@ async def test_generate_song_draft_uses_analysis_and_live_rig() -> None:
 def test_generate_song_draft_reports_missing_artifacts(tmp_path: Path) -> None:
     meta_path = tmp_path / "meta"
     song_dir = meta_path / "Test Song"
+    reference_dir = song_dir / "reference"
     song_dir.mkdir(parents=True)
+    reference_dir.mkdir(parents=True)
     info_path = song_dir / "info.json"
     info_path.write_text('{"title": "Test Song", "artist": "Test Artist", "duration": 10, "bpm": 120, "artifacts": {}}', encoding="utf-8")
-    (song_dir / "beats.json").write_text('[{"time": 0.0, "beat": 1, "bar": 1}]', encoding="utf-8")
+    (reference_dir / "beats.json").write_text('[{"time": 0.0, "beat": 1, "bar": 1}]', encoding="utf-8")
     (song_dir / "sections.json").write_text('[{"label": "Intro", "start": 0.0, "end": 10.0}]', encoding="utf-8")
 
     song = Song(song_id="Test Song", base_dir=str(meta_path))

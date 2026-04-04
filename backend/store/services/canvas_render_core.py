@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Tuple
 from models.chasers import ChaserDefinition, get_chaser_by_id, get_chaser_cycle_beats
 from models.cues import CueEntry, CueSheet
 from models.fixtures.fixture import Fixture
+from models.fixtures.moving_heads.orbit_helpers import orbit_writes_dimmer
+from models.fixtures.moving_heads.poi_geometry import estimate_circle_pan_tilt
 from models.fixtures.moving_heads.travel_helpers import EFFECT_SAFETY_PREROLL_SECONDS, EFFECT_SETTLE_SECONDS, fixture_travel_profile_seconds
 from services.cue_helpers.timing import beatToTimeMs
 
@@ -89,6 +91,13 @@ def _estimate_orbit_end_position(fixture: Fixture, data: dict[str, Any]) -> tupl
     return int(subject_pan), int(subject_tilt)
 
 
+def _estimate_circle_end_position(fixture: Fixture, data: dict[str, Any]) -> tuple[int, int] | None:
+    pan_u16, tilt_u16 = estimate_circle_pan_tilt(fixture, data, 1.0)
+    if pan_u16 is None or tilt_u16 is None:
+        return None
+    return int(pan_u16), int(tilt_u16)
+
+
 def _estimate_entry_end_position(fixture: Fixture, entry: CueEntry) -> tuple[int, int] | None:
     data = entry.data or {}
     effect = str(entry.effect or "").strip().lower()
@@ -97,8 +106,18 @@ def _estimate_entry_end_position(fixture: Fixture, entry: CueEntry) -> tuple[int
         if target[0] is None or target[1] is None:
             return None
         return int(target[0]), int(target[1])
+    if effect == "circle":
+        return _estimate_circle_end_position(fixture, data)
     if effect == "orbit":
         return _estimate_orbit_end_position(fixture, data)
+    if effect == "orbit_out":
+        start_poi = str(data.get("start_POI") or "").strip()
+        if not start_poi:
+            return None
+        start_pan, start_tilt = fixture._resolve_poi_pan_tilt_u16(start_poi)
+        if start_pan is None or start_tilt is None:
+            return None
+        return int(start_pan), int(start_tilt)
     if effect == "move_to_poi":
         target_poi = str(data.get("target_POI") or data.get("poi") or data.get("POI") or "").strip()
         if not target_poi:
@@ -129,6 +148,8 @@ def _estimate_sweep_preroll_seconds(fixture: Fixture, data: dict[str, Any], last
 
 
 def _estimate_orbit_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
+    if not orbit_writes_dimmer(data):
+        return 0.0
     start_poi = str(data.get("start_POI") or "").strip()
     if not start_poi or last_position is None:
         return 0.0
@@ -144,12 +165,34 @@ def _estimate_orbit_preroll_seconds(fixture: Fixture, data: dict[str, Any], last
     return max(0.0, pan_seconds, tilt_seconds) + EFFECT_SAFETY_PREROLL_SECONDS + EFFECT_SETTLE_SECONDS
 
 
+def _estimate_orbit_out_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
+    if not orbit_writes_dimmer(data):
+        return 0.0
+    subject_poi = str(data.get("subject_POI") or "").strip()
+    if not subject_poi or last_position is None:
+        return 0.0
+
+    subject_pan, subject_tilt = fixture._resolve_poi_pan_tilt_u16(subject_poi)
+    if subject_pan is None or subject_tilt is None:
+        return 0.0
+
+    last_pan, last_tilt = last_position
+    pan_full_travel_seconds, tilt_full_travel_seconds = fixture_travel_profile_seconds(fixture)
+    pan_seconds = (abs(int(subject_pan) - int(last_pan)) / 65535.0) * pan_full_travel_seconds
+    tilt_seconds = (abs(int(subject_tilt) - int(last_tilt)) / 65535.0) * tilt_full_travel_seconds
+    return max(0.0, pan_seconds, tilt_seconds) + EFFECT_SAFETY_PREROLL_SECONDS + EFFECT_SETTLE_SECONDS
+
+
 def estimate_sweep_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
     return _estimate_sweep_preroll_seconds(fixture, data, last_position)
 
 
 def estimate_orbit_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
     return _estimate_orbit_preroll_seconds(fixture, data, last_position)
+
+
+def estimate_orbit_out_preroll_seconds(fixture: Fixture, data: dict[str, Any], last_position: tuple[int, int] | None) -> float:
+    return _estimate_orbit_out_preroll_seconds(fixture, data, last_position)
 
 
 def iter_cues_for_render(
@@ -171,10 +214,15 @@ def iter_cues_for_render(
             duration = max(0.0, float(render_entry.duration or 0.0))
             end = int(round((float(render_entry.time) + duration) * fps))
             fixture = fixture_map.get(render_entry.fixture_id or "")
-            if fixture and str(render_entry.effect or "").strip().lower() in {"sweep", "orbit"}:
+            if fixture and str(render_entry.effect or "").strip().lower() in {"sweep", "orbit", "orbit_out"}:
                 last_position = fixture_positions.get(fixture.id) or _fixture_axis_position_from_current_values(fixture)
                 effect_name = str(render_entry.effect or "").strip().lower()
-                preroll_seconds = _estimate_sweep_preroll_seconds(fixture, render_data, last_position) if effect_name == "sweep" else _estimate_orbit_preroll_seconds(fixture, render_data, last_position)
+                if effect_name == "sweep":
+                    preroll_seconds = _estimate_sweep_preroll_seconds(fixture, render_data, last_position)
+                elif effect_name == "orbit_out":
+                    preroll_seconds = _estimate_orbit_out_preroll_seconds(fixture, render_data, last_position)
+                else:
+                    preroll_seconds = _estimate_orbit_preroll_seconds(fixture, render_data, last_position)
                 preroll_frames = max(0, int(round(preroll_seconds * fps)))
                 if preroll_frames > 0:
                     preroll_key = "__sweep_preroll_frames" if effect_name == "sweep" else "__orbit_preroll_frames"

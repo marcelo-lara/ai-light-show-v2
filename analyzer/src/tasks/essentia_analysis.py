@@ -15,6 +15,7 @@ ESSENTIA_FEATURES = ("rhythm", "loudness_envelope", "chroma_hpcp", "mel_bands", 
 def run(params: dict[str, Any], progress_callback: ProgressCallback | None = None) -> dict[str, Any] | None:
     song_path = Path(params["song_path"]).expanduser().resolve()
     meta_root = Path(params.get("meta_path", "/app/meta")).expanduser().resolve()
+    generate_plots = bool(params.get("generate_plots", False))
     print(f"Running Essentia analysis for {song_path.name}")
     try:
         emit_stage(progress_callback, "essentia-analysis", "Start", 1, 4)
@@ -35,7 +36,15 @@ def run(params: dict[str, Any], progress_callback: ProgressCallback | None = Non
 
         emit_stage(progress_callback, "essentia-analysis", "Analyze Mix", 2, 4, part_name="mix")
         part_artifacts = {
-            "mix": analyze_with_essentia(str(song_path), str(essentia_dir), "mix", sample_rate=read_sample_rate(song_path), artifact_file_stems={feature: feature for feature in ESSENTIA_FEATURES}, progress_callback=emit_part_stage)
+            "mix": analyze_with_essentia(
+                str(song_path),
+                str(essentia_dir),
+                "mix",
+                sample_rate=read_sample_rate(song_path),
+                artifact_file_stems={feature: feature for feature in ESSENTIA_FEATURES},
+                generate_plots=generate_plots,
+                progress_callback=emit_part_stage,
+            )
         }
         metadata = load_json_file(meta_file) if meta_file.exists() else {}
         stems_dir = metadata.get("stems_dir")
@@ -53,12 +62,13 @@ def run(params: dict[str, Any], progress_callback: ProgressCallback | None = Non
                         stem_name,
                         sample_rate=read_sample_rate(stem_file),
                         artifact_file_stems={feature: f"{stem_name}_{feature}" for feature in ESSENTIA_FEATURES},
+                        generate_plots=generate_plots,
                         progress_callback=emit_part_stage,
                     )
         hints_path = song_dir / "hints.json"
         emit_stage(progress_callback, "essentia-analysis", "Write Metadata", 3, 4)
         dump_json(hints_path, build_loudness_hints(part_artifacts, load_sections(song_dir)))
-        merge_json_file(meta_file, {"artifacts": {"essentia": build_essentia_manifest(essentia_dir, part_artifacts, ESSENTIA_FEATURES), "hints_file": str(hints_path)}})
+        merge_json_file(meta_file, {"artifacts": {"essentia": build_essentia_manifest(essentia_dir, part_artifacts, ESSENTIA_FEATURES, include_plots=generate_plots), "hints_file": str(hints_path)}})
         emit_stage(progress_callback, "essentia-analysis", "Complete", 4, 4)
         print("Essentia analysis complete.")
         return part_artifacts
@@ -71,7 +81,7 @@ def run(params: dict[str, Any], progress_callback: ProgressCallback | None = Non
 TASK = {
     "value": "essentia-analysis",
     "label": "Essentia Analysis",
-    "description": "Generate Essentia feature JSON and plots.",
-    "params": ["song_path", "meta_path"],
+    "description": "Generate Essentia feature JSON and optional plots.",
+    "params": ["song_path", "meta_path", "generate_plots"],
     "runner": run,
 }
