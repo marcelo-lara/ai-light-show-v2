@@ -1,4 +1,5 @@
 demucs
+basic-pitch
 librosa
 matplotlib
 transformers

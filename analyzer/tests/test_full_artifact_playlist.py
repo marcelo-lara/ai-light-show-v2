@@ -25,6 +25,10 @@ def test_build_full_artifact_playlist_for_analyzer_song(tmp_path: Path) -> None:
         "stereo-analysis",
         "find-chord-patterns",
         "find-stem-patterns",
+        "harmonic-layer",
+        "symbolic-layer",
+        "energy-layer",
+        "build-music-feature-layers",
         "generate-md",
     ]
 
@@ -50,6 +54,10 @@ def test_build_full_artifact_playlist_for_moises_song(tmp_path: Path) -> None:
         "stereo-analysis",
         "find-chord-patterns",
         "find-stem-patterns",
+        "harmonic-layer",
+        "symbolic-layer",
+        "energy-layer",
+        "build-music-feature-layers",
         "generate-md",
     ]
 
@@ -74,6 +82,10 @@ def test_build_full_artifact_playlist_for_moises_song_without_segments(tmp_path:
         "stereo-analysis",
         "find-chord-patterns",
         "find-stem-patterns",
+        "harmonic-layer",
+        "symbolic-layer",
+        "energy-layer",
+        "build-music-feature-layers",
         "generate-md",
     ]
 

@@ -21,7 +21,7 @@ FULL_ARTIFACT_PLAYLIST_METADATA = {
         {"value": "full-artifact-analyzer", "description": "Analyzer-native path that computes beats and sections internally."},
         {"value": "full-artifact-moises", "description": "Moises-backed path that normalizes external Moises metadata without modifying moises/ inputs."},
     ],
-    "produces": ["info.json", "reference/beats.json or inferred/beats.<model>.json", "chord_patterns.json", "stem_patterns.json", "sections.json", "hints.json", "features.json with stereo_analysis", "essentia artifacts", "stems", "song markdown summary"],
+    "produces": ["info.json", "reference/beats.json or inferred/beats.<model>.json", "chord_patterns.json", "stem_patterns.json", "sections.json", "hints.json", "features.json with stereo_analysis", "essentia artifacts", "layer_a_harmonic.json", "layer_b_symbolic.json", "layer_c_energy.json", "music_feature_layers.json", "lighting_score.md", "stems"],
 }
 
 
@@ -66,6 +66,10 @@ def build_full_artifact_playlist(song_path: str | Path, meta_path: str | Path, d
             {"task_type": "stereo-analysis", "params": {"song_path": str(song_file), "meta_path": str(meta_root)}},
             {"task_type": "find-chord-patterns", "params": {"song_path": str(song_file), "meta_path": str(meta_root)}},
             {"task_type": "find-stem-patterns", "params": {"song_path": str(song_file), "meta_path": str(meta_root)}},
+            {"task_type": "harmonic-layer", "params": {"song_path": str(song_file), "meta_path": str(meta_root)}},
+            {"task_type": "symbolic-layer", "params": {"song_path": str(song_file), "meta_path": str(meta_root)}},
+            {"task_type": "energy-layer", "params": {"song_path": str(song_file), "meta_path": str(meta_root)}},
+            {"task_type": "build-music-feature-layers", "params": {"song_path": str(song_file), "meta_path": str(meta_root)}},
             {"task_type": "generate-md", "params": {"song_path": str(song_file), "meta_path": str(meta_root)}},
         ]
     )

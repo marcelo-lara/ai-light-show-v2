@@ -5,6 +5,8 @@ from typing import Any
 
 from ..runtime.model_cleanup import release_model_memory
 from ..runtime.progress import ProgressCallback
+from .build_music_feature_layers import TASK as BUILD_MUSIC_FEATURE_LAYERS_TASK
+from .energy_layer import TASK as ENERGY_LAYER_TASK
 from . import init_song
 from .essentia_analysis import TASK as ESSENTIA_ANALYSIS_TASK
 from .find_beats import TASK as FIND_BEATS_TASK
@@ -14,9 +16,11 @@ from .find_sections import TASK as FIND_SECTIONS_TASK
 from .find_song_features import TASK as FIND_SONG_FEATURES_TASK
 from .find_stem_patterns import TASK as FIND_STEM_PATTERNS_TASK
 from .generate_md import TASK as GENERATE_MD_TASK
+from .harmonic_layer import TASK as HARMONIC_LAYER_TASK
 from .import_moises_task import TASK as IMPORT_MOISES_TASK
 from .split_stems import TASK as SPLIT_STEMS_TASK
 from .stereo_analysis import TASK as STEREO_ANALYSIS_TASK
+from .symbolic_layer import TASK as SYMBOLIC_LAYER_TASK
 
 def _param(name: str, description: str, *, required: bool = True, default: Any = None) -> dict[str, Any]:
     payload = {"name": name, "description": description, "required": required}
@@ -55,7 +59,11 @@ TASK_DEFINITIONS = [
     _task(FIND_STEM_PATTERNS_TASK, requires=["chord_patterns.json", "stem loudness_envelope artifacts"], produces=["stem_patterns.json when repeating stem profiles are found", "info.json artifact reference"], notes=["Uses chord pattern occurrence windows first, then derives per-stem loudness and envelope profiles without beat alignment."]),
     _task(FIND_SECTIONS_TASK, requires=["canonical beats"], produces=["sections.json", "info.json musical structure metadata"], notes=["Used when analyzer must infer sections or when Moises segments are unavailable."]),
     _task(IMPORT_MOISES_TASK, requires=["moises/chords.json"], produces=["reference/beats.json", "optional sections.json", "info.json beat metadata"], notes=["Moises files are external source-of-truth inputs and are never overwritten or deleted."]),
-    _task(GENERATE_MD_TASK, requires=["sections.json"], produces=["song markdown summary"], notes=["Uses features.json when available."]),
+    _task(HARMONIC_LAYER_TASK, requires=["canonical beats", "optional chord pattern metadata"], produces=["layer_a_harmonic.json"], notes=["Builds a harmonic summary layer from canonical beat and chord artifacts."]),
+    _task(SYMBOLIC_LAYER_TASK, requires=["source song path", "canonical beats", "sections.json", "split stems metadata"], produces=["layer_b_symbolic.json"], notes=["Uses Basic Pitch note extraction on harmonic and bass sources and aligns notes to canonical analyzer timing."]),
+    _task(ENERGY_LAYER_TASK, requires=["features.json", "hints.json", "sections.json"], produces=["layer_c_energy.json"], notes=["Builds a consolidated energy layer from existing analyzer feature outputs."]),
+    _task(BUILD_MUSIC_FEATURE_LAYERS_TASK, requires=["layer_a_harmonic.json", "layer_b_symbolic.json", "layer_c_energy.json"], produces=["music_feature_layers.json"], notes=["Merges layer outputs into one LLM-ready IR used by lighting-score generation."]),
+    _task(GENERATE_MD_TASK, requires=["music_feature_layers.json"], produces=["lighting_score.md"], notes=["Uses the merged analyzer IR as the canonical lighting-score input."]),
 ]
 TASKS_BY_TYPE = {task["value"]: task for task in TASK_DEFINITIONS}
 
