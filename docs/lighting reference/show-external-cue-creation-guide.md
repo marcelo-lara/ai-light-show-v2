@@ -1,24 +1,26 @@
 # Show External Cue Creation Guide For LLMs
 
-This document is the generic authoring guide for language models working in this repo. Use it to create new shows, refine existing shows, and keep the planning and cue artifacts aligned.
+This document is the generic authoring guide for language models working in this repo. Use it to create new shows, refine existing shows, and keep the canonical analysis and cue artifacts aligned.
 
 ## Goal
 
 For any song, produce:
 
-- a planning brief at `analyzer/meta/<Song>/<Song>.md`
+- a canonical analysis brief at `analyzer/meta/<Song>/lighting_score.md`
 - a cue sheet at `backend/cues/<Song>.json`
 
-The planning brief explains the creative plan. The cue sheet implements it.
+The lighting score explains the creative plan. The cue sheet implements it.
 
 ## Required Iteration Behavior
 
 When refining an existing song:
 
-- always update `analyzer/meta/<Song>/<Song>.md`
+- always update `analyzer/meta/<Song>/lighting_score.md`
 - always update `backend/cues/<Song>.json`
 - update this guide when a rule becomes reusable across songs
 - clear the cue time window for the section being rebuilt before recreating that section
+
+Legacy planning briefs such as `analyzer/meta/<Song>/<Song>.md` are optional reference material only. Do not treat them as canonical when `lighting_score.md` exists.
 
 Do not stack new ideas on top of stale cues for the same section.
 
@@ -27,6 +29,11 @@ Do not stack new ideas on top of stale cues for the same section.
 - Fixtures: [fixtures.json](/home/darkangel/ai-light-show-v2/backend/fixtures/fixtures.json)
 - POIs: [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json)
 - Chasers: [chasers.json](/home/darkangel/ai-light-show-v2/backend/fixtures/chasers.json)
+- Canonical analysis brief: `analyzer/meta/<Song>/lighting_score.md`
+- Merged feature IR: `analyzer/meta/<Song>/music_feature_layers.json`
+- Harmonic layer: `analyzer/meta/<Song>/layer_a_harmonic.json`
+- Symbolic layer: `analyzer/meta/<Song>/layer_b_symbolic.json`
+- Energy layer: `analyzer/meta/<Song>/layer_c_energy.json`
 - Song beats: `analyzer/meta/<Song>/beats.json`
 - Song sections: `analyzer/meta/<Song>/sections.json`
 - Optional song metadata:
@@ -35,15 +42,17 @@ Do not stack new ideas on top of stale cues for the same section.
   - `analyzer/meta/<Song>/features.json`
   - `analyzer/meta/<Song>/hints.json`
   - `analyzer/meta/<Song>/*_loudness_envelope.json`
+  - `analyzer/meta/<Song>/<Song>.md`
 
 If timing matters, trust `beats.json` and `sections.json` first. If motion and emotional rise/fall matter, also inspect `*_loudness_envelope.json`.
 If harmonic repetition matters, inspect `chord_patterns.json` before inventing your own progression map.
+If `lighting_score.md` and `music_feature_layers.json` disagree with older planning notes, treat the canonical analyzer artifacts as the source of truth and reconcile the cue sheet to them.
 
 ## Deliverables
 
-### 1. Planning Brief
+### 1. Canonical Analysis Brief
 
-Create `analyzer/meta/<Song>/<Song>.md` with:
+Create or update `analyzer/meta/<Song>/lighting_score.md` with:
 
 - feature summary
 - high-level visual strategy
@@ -51,6 +60,8 @@ Create `analyzer/meta/<Song>/<Song>.md` with:
 - section-by-section plan
 - loudness, dip, build, and drop observations
 - any song-specific rules that should guide later cue edits
+
+Keep the brief aligned with `music_feature_layers.json`. When section evidence, harmonic motion, symbolic phrasing, or energy detail matters, pull it from the layer artifacts rather than inventing unsupported structure.
 
 ### 2. Cue Sheet
 
@@ -305,7 +316,7 @@ Use this order:
 1. Read fixture and POI definitions.
 2. Read `sections.json` and `beats.json`.
 3. Read the song metadata files that matter for energy, loudness, harmony, or hints.
-4. Write the planning brief in `analyzer/meta/<Song>/<Song>.md`.
+4. Write or revise the canonical analysis brief in `analyzer/meta/<Song>/lighting_score.md`.
 5. Decide the palette and recurring motion language.
 6. Decide which ideas belong in raw cues and which belong in chasers.
 7. Build the cue sheet in `backend/cues/<Song>.json`.
@@ -471,12 +482,12 @@ After any meaningful change:
 If you are the model creating or refining a show:
 
 - read the song metadata before writing cues
-- write the planning brief before or alongside the cue sheet
+- write or revise `lighting_score.md` before or alongside the cue sheet
 - use real timestamps
 - keep fixture roles distinct
 - let low-energy parts breathe
 - make rises and drops legible
-- update the song brief when the creative direction changes
+- update the canonical analysis brief when the creative direction changes
 - update this guide when you discover a rule that should apply to future songs
 
 This avoids rediscovering the same workflow every session.

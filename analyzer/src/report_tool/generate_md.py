@@ -71,13 +71,13 @@ def _energy_lines(ir: dict[str, object]) -> list[str]:
 def _structure_lines(ir: dict[str, object]) -> list[str]:
     sections = (((ir.get("timeline") or {}).get("sections") or []) if isinstance(ir.get("timeline"), dict) else [])
     cards = ir.get("section_cards") if isinstance(ir.get("section_cards"), list) else []
-    card_map = {str(card.get("section_name") or ""): card for card in cards if isinstance(card, dict)}
+    card_map = {_section_key(card): card for card in cards if isinstance(card, dict)}
     lines = ["## Structure", "| Section | Time Range | Music |", "|---|---|---|"]
     for section in sections:
         if not isinstance(section, dict):
             continue
         name = str(section.get("name") or section.get("section_name") or "")
-        card = card_map.get(name, {})
+        card = card_map.get(_section_key(section), {})
         lines.append(f"| {name} | {_time(section.get('start_s', 0.0))}-{_time(section.get('end_s', 0.0))} | {card.get('music_description', 'No summary available.')} |")
     lines.append("")
     return lines
@@ -110,6 +110,12 @@ def _section_plan_lines(ir: dict[str, object]) -> list[str]:
             lines.append(f"Visual Implications: {', '.join(str(item) for item in implications)}")
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _section_key(section: dict[str, object]) -> tuple[str, float]:
+    name = str(section.get("section_name") or section.get("name") or "")
+    start_s = round(float(section.get("start_s", 0.0) or 0.0), 3)
+    return name, start_s
 
 
 def generate_md_file(song_path: str | Path, meta_path: str | Path = META_PATH) -> Path | None:

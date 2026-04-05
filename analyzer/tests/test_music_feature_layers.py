@@ -46,6 +46,68 @@ def test_layer_tasks_and_ir_builder_write_expected_files(tmp_path: Path) -> None
     assert ir_payload["section_cards"][0]["energy_profile"]["level"] == "low"
 
 
+def test_ir_builder_uses_detected_key_and_preserves_duplicate_section_labels(tmp_path: Path) -> None:
+    song_path = tmp_path / "songs" / "Title - Artist.mp3"
+    song_path.parent.mkdir(parents=True)
+    song_path.touch()
+    meta_root = tmp_path / "meta"
+    song_dir = meta_root / "Title - Artist"
+    song_dir.mkdir(parents=True)
+    (song_dir / "info.json").write_text(json.dumps({"song_name": "Title - Artist", "bpm": 120, "duration": 42, "artifacts": {}}), encoding="utf-8")
+    (song_dir / "sections.json").write_text(json.dumps([
+        {"start": 0.0, "end": 4.0, "label": "Instrumental"},
+        {"start": 4.0, "end": 8.0, "label": "Instrumental"},
+    ]), encoding="utf-8")
+    (song_dir / "features.json").write_text(json.dumps({
+        "global": {
+            "key": {"canonical": None, "detected": {"key": "D", "scale": "major", "strength": 0.77}},
+            "energy": {"mean": 0.3, "peak": 1.1, "dynamic_range": 0.8, "volatility": 0.2},
+        },
+        "sections": [
+            {"name": "Instrumental", "start_s": 0.0, "energy": {"level": "low", "trend": "hold", "peak": 0.6}, "summary": "First instrumental section."},
+            {"name": "Instrumental", "start_s": 4.0, "energy": {"level": "high", "trend": "push", "peak": 1.1}, "summary": "Second instrumental section."},
+        ],
+    }), encoding="utf-8")
+    (song_dir / "hints.json").write_text(json.dumps([]), encoding="utf-8")
+    reference_dir = song_dir / "reference"
+    reference_dir.mkdir()
+    (reference_dir / "beats.json").write_text(json.dumps([
+        {"time": 0.0, "bar": 1, "beat": 1, "type": "downbeat", "chord": "D"},
+        {"time": 4.0, "bar": 2, "beat": 1, "type": "downbeat", "chord": "A"},
+    ]), encoding="utf-8")
+
+    harmonic_result = run_harmonic_layer({"song_path": str(song_path), "meta_path": str(meta_root)})
+    energy_result = run_energy_layer({"song_path": str(song_path), "meta_path": str(meta_root)})
+    symbolic_file = song_dir / "layer_b_symbolic.json"
+    symbolic_file.write_text(json.dumps({
+        "schema_version": "1.0",
+        "song_id": "Title - Artist",
+        "generated_from": {},
+        "transcription_source": {"engine": "basic-pitch", "model_version": "unknown", "stems_used": ["mix"]},
+        "note_events": [],
+        "symbolic_summary": {"texture": "sparse", "melodic_contour": "unknown", "bass_motion": "unknown", "repetition_level": "low", "density_trend": "unknown", "description": "No symbolic summary available."},
+        "density_per_bar": [],
+        "phrase_contours": [],
+        "bass_movement_events": [],
+        "repeated_motifs": [],
+        "section_symbolic": [
+            {"section_id": "instrumental-0.00", "section_name": "Instrumental", "start_s": 0.0, "summary": "First symbolic section."},
+            {"section_id": "instrumental-4.00", "section_name": "Instrumental", "start_s": 4.0, "summary": "Second symbolic section."},
+        ],
+        "validation_notes": [],
+    }), encoding="utf-8")
+    ir_result = run_build_music_feature_layers({"song_path": str(song_path), "meta_path": str(meta_root)})
+
+    assert Path(harmonic_result["layer_a_harmonic_file"]).exists()
+    assert Path(energy_result["layer_c_energy_file"]).exists()
+    ir_payload = json.loads(Path(ir_result["music_feature_layers_file"]).read_text(encoding="utf-8"))
+
+    assert ir_payload["metadata"]["artist"] == "Artist"
+    assert ir_payload["metadata"]["key"] == "D major"
+    assert ir_payload["section_cards"][0]["music_description"] == "First instrumental section."
+    assert ir_payload["section_cards"][1]["music_description"] == "Second instrumental section."
+
+
 def test_symbolic_layer_uses_harmonic_and_bass_stems(monkeypatch, tmp_path: Path) -> None:
     song_path = tmp_path / "songs" / "Test Song.mp3"
     song_path.parent.mkdir(parents=True)

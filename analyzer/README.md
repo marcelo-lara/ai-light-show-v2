@@ -232,7 +232,7 @@ docker compose exec analyzer python analyze_song.py --song "Best Friend - Sofi T
 - `--find-chord-patterns`: group repeating chord progressions from canonical beats and write `chord_patterns.json` when usable repeats exist.
 - `--find-stem-patterns`: group repeating stem loudness and envelope profiles, trying chord-pattern occurrence windows first and falling back to repeated signal windows, and write `stem_patterns.json` when usable repeats exist.
 - `--find-sections`: run Hugging Face section inference and write `sections.json` rows.
-- `--generate-md`: render the per-song markdown summary from `sections.json`.
+- `--generate-md`: render the canonical lighting score from `music_feature_layers.json`.
 
 Chord inference requires canonical beats from `info.json` or `reference/beats.json`. If they are missing, the analyzer warns and returns `None`. Bass inference uses `analyzer/temp_files/htdemucs/<song>/bass.wav` when present; if the bass stem is missing, the analyzer warns and keeps going with mix-only chord inference.
 

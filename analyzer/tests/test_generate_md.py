@@ -162,3 +162,80 @@ def test_main_generate_md_flag_calls_markdown_generation(tmp_path: Path, monkeyp
 
     assert result == 0
     assert calls == [song_path]
+
+
+def test_generate_md_keeps_duplicate_section_labels_distinct(tmp_path: Path) -> None:
+    song_path = tmp_path / "songs" / "Title - Artist.mp3"
+    song_path.parent.mkdir(parents=True)
+    song_path.touch()
+    meta_root = tmp_path / "meta"
+    song_meta_dir = meta_root / "Title - Artist"
+    song_meta_dir.mkdir(parents=True)
+    (song_meta_dir / "music_feature_layers.json").write_text(
+        json.dumps(
+            {
+                "metadata": {
+                    "title": "Title - Artist",
+                    "artist": "Artist",
+                    "duration_s": 8.0,
+                    "bpm": 120.0,
+                    "time_signature": "4/4",
+                    "key": "D major",
+                },
+                "energy_profile": {
+                    "energy_trend": "wave",
+                    "dynamic_range": 1.2,
+                    "transient_density": 0.45,
+                    "loudness_mean": 0.5,
+                    "loudness_peak": 1.2,
+                    "loudness_percentile_90": 1.0,
+                    "onset_count": 12,
+                    "onset_density_per_minute": 14.4,
+                    "flux_mean": 0.42,
+                    "flux_peak": 1.8,
+                    "brightness_trend": "rising",
+                    "centroid_mean": 0.18,
+                    "centroid_peak": 0.31,
+                    "centroid_summary": "Centroid stays balanced overall, peaks at 0.310, and trends rising.",
+                    "flux_summary": "Onset flux is spiky with mean 0.420, peak 1.800, and 12 detected onset anchors.",
+                },
+                "timeline": {
+                    "sections": [
+                        {"name": "Instrumental", "start_s": 0.0, "end_s": 4.0},
+                        {"name": "Instrumental", "start_s": 4.0, "end_s": 8.0},
+                    ]
+                },
+                "structure_summary": "2 sections with an overall wave energy trend, rising brightness arc, and 12 detected onset anchors.",
+                "mapping_rules": ["Bass -> dimmer pulses"],
+                "section_cards": [
+                    {
+                        "section_id": "instrumental-0.00",
+                        "section_name": "Instrumental",
+                        "start_s": 0.0,
+                        "end_s": 4.0,
+                        "music_description": "First instrumental section.",
+                        "energy_description": "Low energy with a hold contour, loudness peak 0.400, centroid mean 0.110.",
+                        "energy_profile": {"level": "low", "trend": "hold", "loudness_peak": 0.4, "centroid_mean": 0.11, "flux_mean": 0.21},
+                        "visual_implications": ["Narrow the rig"],
+                    },
+                    {
+                        "section_id": "instrumental-4.00",
+                        "section_name": "Instrumental",
+                        "start_s": 4.0,
+                        "end_s": 8.0,
+                        "music_description": "Second instrumental section.",
+                        "energy_description": "High energy with a push contour, loudness peak 1.200, centroid mean 0.220.",
+                        "energy_profile": {"level": "high", "trend": "push", "loudness_peak": 1.2, "centroid_mean": 0.22, "flux_mean": 0.61},
+                        "visual_implications": ["Use phrase-led motion"],
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    output_path = analyze_song.run_generate_md_for(song_path, meta_path=meta_root)
+    rendered = output_path.read_text(encoding="utf-8")
+
+    assert "| Instrumental | 0.00-4.00 | First instrumental section. |" in rendered
+    assert "| Instrumental | 4.00-8.00 | Second instrumental section. |" in rendered

@@ -16,7 +16,7 @@ def build_harmonic_layer(song_path: Path, meta_path: Path) -> dict[str, Any]:
     features = load_json_file(meta_dir / "features.json") if (meta_dir / "features.json").exists() else {}
     patterns = load_json_file(meta_dir / "chord_patterns.json") if (meta_dir / "chord_patterns.json").exists() else None
     sections = load_sections(meta_dir)
-    key_label = str(info.get("song_key") or (((features.get("global") or {}).get("key") or {}).get("canonical") or ""))
+    key_label = _key_label(info, features)
     hpcp_payload, hpcp_path = _hpcp_payload(meta_dir)
     hpcp_times = [float(value) for value in (hpcp_payload.get("times") or [])]
     hpcp_rows = [row for row in (hpcp_payload.get("hpcp") or []) if isinstance(row, list) and row]
@@ -103,6 +103,22 @@ def _hpcp_payload(meta_dir: Path) -> tuple[dict[str, Any], Path]:
             payload = load_json_file(path)
             return (payload if isinstance(payload, dict) else {}), path
     return {}, meta_dir / "essentia" / "chroma_hpcp.json"
+
+
+def _key_label(info: dict[str, Any], features: dict[str, Any]) -> str:
+    if str(info.get("song_key") or ""):
+        return str(info.get("song_key") or "")
+    global_payload = (features.get("global") or {}) if isinstance(features.get("global"), dict) else {}
+    key_payload = (global_payload.get("key") or {}) if isinstance(global_payload.get("key"), dict) else {}
+    canonical = str(key_payload.get("canonical") or "")
+    if canonical:
+        return canonical
+    detected = (key_payload.get("detected") or {}) if isinstance(key_payload.get("detected"), dict) else {}
+    detected_key = str(detected.get("key") or "")
+    detected_scale = str(detected.get("scale") or "")
+    if detected_key and detected_scale:
+        return f"{detected_key} {detected_scale}"
+    return detected_key
 
 
 def _section_harmony(section: dict[str, Any], chord_events: list[dict[str, Any]], hpcp_times: list[float], hpcp_rows: list[list[float]], key_label: str) -> dict[str, Any]:

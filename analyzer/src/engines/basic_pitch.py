@@ -16,16 +16,16 @@ def transcribe_notes(audio_path: str | Path) -> list[dict[str, Any]]:
         return []
     normalized: list[dict[str, Any]] = []
     for event in note_events:
-        start_s = float(getattr(event, "start_time_s", 0.0) or 0.0)
-        end_s = float(getattr(event, "end_time_s", start_s) or start_s)
-        pitch_midi = int(getattr(event, "pitch", 0) or 0)
+        start_s, end_s, pitch_midi, confidence = _event_fields(event)
+        if pitch_midi <= 0:
+            continue
         normalized.append(
             {
                 "start_s": start_s,
                 "end_s": end_s,
                 "pitch_midi": pitch_midi,
                 "pitch_name": _pitch_name(pitch_midi),
-                "confidence": float(getattr(event, "confidence", 0.0) or 0.0),
+                "confidence": confidence,
                 "source_part": "mix",
             }
         )
@@ -46,3 +46,23 @@ def _pitch_name(pitch_midi: int) -> str:
     names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
     octave = (pitch_midi // 12) - 1
     return f"{names[pitch_midi % 12]}{octave}"
+
+
+def _event_fields(event: Any) -> tuple[float, float, int, float]:
+    if isinstance(event, dict):
+        start_s = float(event.get("start_time_s", event.get("start_s", 0.0)) or 0.0)
+        end_s = float(event.get("end_time_s", event.get("end_s", start_s)) or start_s)
+        pitch_midi = int(event.get("pitch", event.get("pitch_midi", 0)) or 0)
+        confidence = float(event.get("confidence", 0.0) or 0.0)
+        return start_s, max(end_s, start_s), pitch_midi, confidence
+    if isinstance(event, (list, tuple)) and len(event) >= 4:
+        start_s = float(event[0] or 0.0)
+        end_s = float(event[1] or start_s)
+        pitch_midi = int(event[2] or 0)
+        confidence = float(event[3] or 0.0)
+        return start_s, max(end_s, start_s), pitch_midi, confidence
+    start_s = float(getattr(event, "start_time_s", getattr(event, "start_s", 0.0)) or 0.0)
+    end_s = float(getattr(event, "end_time_s", getattr(event, "end_s", start_s)) or start_s)
+    pitch_midi = int(getattr(event, "pitch", getattr(event, "pitch_midi", 0)) or 0)
+    confidence = float(getattr(event, "confidence", 0.0) or 0.0)
+    return start_s, max(end_s, start_s), pitch_midi, confidence

@@ -167,7 +167,7 @@ def main() -> int:
     parser.add_argument("--find-stem-patterns", action="store_true", help="Group repeating stem loudness and envelope profiles using chord pattern windows")
     parser.add_argument("--find-sections", action="store_true", help="Infer song section labels")
     parser.add_argument("--import-moises", action="store_true", help="Import Moises chords")
-    parser.add_argument("--generate-md", action="store_true", help="Generate markdown from sections metadata")
+    parser.add_argument("--generate-md", action="store_true", help="Generate the canonical lighting score from merged analyzer IR")
     parser.add_argument("--full-artifact-playlist", action="store_true", help="Run the full artifact playlist for the selected song")
     parser.add_argument("--beats-output-name", type=str, default="beats.json", help="Output file name for chord inference")
     parser.add_argument("--sections-output-name", type=str, default="sections.json", help="Output file name for section inference")

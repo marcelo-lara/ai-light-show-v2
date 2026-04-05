@@ -30,7 +30,7 @@ def build_music_feature_layers(song_path: Path, meta_path: Path, harmonic: dict[
             "duration_s": float(info.get("duration", 0.0) or 0.0),
             "bpm": float(info.get("bpm", 0.0) or 0.0),
             "time_signature": "4/4",
-            "key": str((harmonic.get("global_key") or {}).get("label") or ""),
+            "key": _key_label(harmonic, info),
             "key_confidence": float((harmonic.get("global_key") or {}).get("confidence") or 0.0),
         },
         "timeline": {
@@ -53,7 +53,23 @@ def build_music_feature_layers(song_path: Path, meta_path: Path, harmonic: dict[
 
 
 def _artist(song_id: str) -> str:
-    return song_id.split(" - ", 1)[0] if " - " in song_id else ""
+    return song_id.rsplit(" - ", 1)[1] if " - " in song_id else ""
+
+
+def _key_label(harmonic: dict[str, Any], info: dict[str, Any]) -> str:
+    label = str((harmonic.get("global_key") or {}).get("label") or "")
+    if label:
+        return label
+    global_payload = (info.get("global") or {}) if isinstance(info.get("global"), dict) else {}
+    key_payload = (global_payload.get("key") or {}) if isinstance(global_payload.get("key"), dict) else {}
+    detected = (key_payload.get("detected") or {}) if isinstance(key_payload.get("detected"), dict) else {}
+    detected_key = str(detected.get("key") or "")
+    detected_scale = str(detected.get("scale") or "")
+    if detected_key and detected_scale:
+        return f"{detected_key} {detected_scale}"
+    if detected_key:
+        return detected_key
+    return ""
 
 
 def _bars(beats: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -78,16 +94,18 @@ def _structure_summary(sections: list[dict[str, Any]], energy: dict[str, Any]) -
 
 
 def _section_cards(sections: list[dict[str, Any]], harmonic: dict[str, Any], symbolic: dict[str, Any], energy: dict[str, Any]) -> list[dict[str, Any]]:
-    harmonic_sections = {item.get("section_name"): item for item in harmonic.get("section_harmony") or [] if isinstance(item, dict)}
-    symbolic_sections = {item.get("section_name"): item for item in symbolic.get("section_symbolic") or [] if isinstance(item, dict)}
-    energy_sections = {item.get("section_name"): item for item in energy.get("section_energy") or [] if isinstance(item, dict)}
+    harmonic_sections = {_section_match_key(item): item for item in harmonic.get("section_harmony") or [] if isinstance(item, dict)}
+    symbolic_sections = {_section_match_key(item): item for item in symbolic.get("section_symbolic") or [] if isinstance(item, dict)}
+    energy_sections = {_section_match_key(item): item for item in energy.get("section_energy") or [] if isinstance(item, dict)}
     cards: list[dict[str, Any]] = []
     for section in sections:
-        harmonic_row = harmonic_sections.get(section["name"], {})
-        symbolic_row = symbolic_sections.get(section["name"], {})
-        energy_row = energy_sections.get(section["name"], {})
+        section_key = _section_match_key(section)
+        harmonic_row = harmonic_sections.get(section_key, {})
+        symbolic_row = symbolic_sections.get(section_key, {})
+        energy_row = energy_sections.get(section_key, {})
         cards.append(
             {
+                "section_id": _section_id(section),
                 "section_name": section["name"],
                 "start_s": section["start_s"],
                 "end_s": section["end_s"],
@@ -168,3 +186,11 @@ def _section_energy_profile(energy_row: dict[str, Any]) -> dict[str, Any]:
         "centroid_peak": float(energy_row.get("centroid_peak", 0.0) or 0.0),
         "flux_mean": float(energy_row.get("flux_mean", 0.0) or 0.0),
     }
+
+
+def _section_id(section: dict[str, Any]) -> str:
+    return f"{str(section.get('name') or '').lower().replace(' ', '-')}-{float(section.get('start_s', 0.0) or 0.0):.2f}"
+
+
+def _section_match_key(section: dict[str, Any]) -> tuple[str, float]:
+    return (str(section.get("section_name") or section.get("name") or ""), round(float(section.get("start_s", 0.0) or 0.0), 3))

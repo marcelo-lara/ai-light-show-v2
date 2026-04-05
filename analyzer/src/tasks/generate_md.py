@@ -24,7 +24,7 @@ def run(params: dict[str, Any], progress_callback: ProgressCallback | None = Non
         return output_path
     except Exception as exc:
         emit_stage(progress_callback, "generate-md", "Failed", 3, 3)
-        warn(f"Generate markdown failed: {exc}")
+        warn(f"Lighting score generation failed: {exc}")
         return None
 
 
