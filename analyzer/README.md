@@ -46,11 +46,15 @@ Offline song analysis pipeline that generates metadata consumed by backend playb
 | `find_sections` | canonical beats | `sections.json`, updated `info.json` | Produces canonical persisted song sections.
 | `find-song-features` | `info.json`, canonical beats, `essentia` mix artifacts | `features.json`, updated `info.json` | Also uses `sections.json` and `hints.json` when present.
 | `stereo-analysis` | `features.json`, source song path, optional stems | updated `features.json` | Adds only notable stereo differences for the mix and available stems using the fixed tag vocabulary `attack_left`, `attack_right`, `echo_left`, `echo_right`, `low_end_left`, `low_end_right`, `percussion_left`, `percussion_right`, `ambience_left`, `ambience_right`, `split_texture`, `centered`. |
-| `generate-md` | `sections.json`, optional `features.json` | `<song>.md` | Terminal presentation artifact.
+| `harmonic-layer` | canonical beats, optional `chord_patterns.json`, optional `features.json`, optional Essentia HPCP artifacts | `layer_a_harmonic.json` | Consolidated harmonic layer with chord confidence, cadence notes, section tension, and HPCP-backed pitch-class summaries for prompt-ready scoring.
+| `symbolic-layer` | source song path, canonical beats, `sections.json`, split-stem metadata | `layer_b_symbolic.json` | Basic Pitch-backed symbolic layer that transcribes the harmonic stem and bass stem, merges those note events, aligns the result to analyzer timing, and derives repetition, sustain, register, phrase, and bass-motion features.
+| `energy-layer` | `features.json`, `hints.json`, `sections.json`, Essentia loudness, centroid, and rhythm artifacts | `layer_c_energy.json` | Consolidated energy layer with loudness envelope, onset and flux summaries, brightness trends, and section-level centroid and loudness metrics.
+| `build-music-feature-layers` | all three layer artifacts plus canonical timing metadata | `music_feature_layers.json` | Merged LLM-ready IR that promotes top-level energy profiles and per-section energy summaries for lighting score generation.
+| `generate-md` | `music_feature_layers.json` | `lighting_score.md` | Canonical lighting score artifact with rendered loudness, onset, spectral, and per-section energy guidance.
 
-Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find_chords`, `find-sections`, `essentia-analysis`, `find-song-features`, `stereo-analysis`, `find-chord-patterns`, `find-stem-patterns`, `generate-md`.
+Recommended full-artifact order for analyzer-native songs: `init-song`, `split-stems`, `beat-finder`, `find_chords`, `find-sections`, `essentia-analysis`, `find-song-features`, `stereo-analysis`, `find-chord-patterns`, `find-stem-patterns`, `harmonic-layer`, `symbolic-layer`, `energy-layer`, `build-music-feature-layers`, `generate-md`.
 
-Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `stereo-analysis`, `find-chord-patterns`, `find-stem-patterns`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
+Recommended full-artifact order for Moises-backed songs: `init-song`, `split-stems`, `import-moises`, `essentia-analysis`, `find-song-features`, `stereo-analysis`, `find-chord-patterns`, `find-stem-patterns`, `harmonic-layer`, `symbolic-layer`, `energy-layer`, `build-music-feature-layers`, `generate-md`, with `find-sections` only when Moises segments are unavailable.
 
 The executable full-artifact playlist lives in `src/playlists/full_artifact.py` and selects the analyzer-native or Moises-backed path from current song metadata.
 
@@ -112,6 +116,11 @@ The executable full-artifact playlist lives in `src/playlists/full_artifact.py` 
 - `analyzer/meta/<song>/features.json`: song-level and section-level feature metadata for light-show generation, including beat-aligned energy, phrase windows, dominant stems, harmonic motion, per-part relative dips, merged low windows, optional semantic tags from a music audio-classification model, and `global.stereo_analysis` for notable mix and stem stereo differences.
 - `analyzer/meta/<song>/essentia/*.json`: feature time series and descriptors.
 - `analyzer/meta/<song>/essentia/*.svg`: optional plots generated only when Essentia plotting is explicitly enabled.
+- `analyzer/meta/<song>/layer_a_harmonic.json`: consolidated harmonic summary with cadence, tension, and HPCP-backed pitch-class detail for LLM-facing scoring.
+- `analyzer/meta/<song>/layer_b_symbolic.json`: Basic Pitch-backed symbolic event summary aligned to analyzer beats and sections, including repetition, sustain, register, phrase, and bass-motion features.
+- `analyzer/meta/<song>/layer_c_energy.json`: consolidated energy summary with Essentia-backed loudness, onset and flux, brightness trend, and section-window metrics.
+- `analyzer/meta/<song>/music_feature_layers.json`: merged LLM-ready feature IR with promoted `energy_profile` data and per-section energy descriptions used to generate the final lighting score.
+- `analyzer/meta/<song>/lighting_score.md`: canonical markdown lighting score rendered from `music_feature_layers.json`, including the richer energy profile and per-section energy metrics.
 - `analyzer/meta/<song>/stems/*`: separated stems when stem split is enabled.
 
 Backend and MCP treat this folder as read-only input data.
@@ -190,13 +199,13 @@ docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the P
 
 You can replace the song name with any other song that has usable `moises/` data.
 
-To validate markdown generation from existing sections metadata, run:
+To validate lighting score generation from merged analyzer layers, run:
 
 ```bash
 docker compose exec analyzer python analyze_song.py --song "Yonaka - Seize the Power.mp3" --generate-md
 ```
 
-You can replace the song name with any other song that already has usable `sections.json` data.
+You can replace the song name with any other song that already has usable merged layer metadata.
 
 To validate feature synthesis from existing analyzer artifacts, run:
 
@@ -223,7 +232,7 @@ docker compose exec analyzer python analyze_song.py --song "Best Friend - Sofi T
 - `--find-chord-patterns`: group repeating chord progressions from canonical beats and write `chord_patterns.json` when usable repeats exist.
 - `--find-stem-patterns`: group repeating stem loudness and envelope profiles, trying chord-pattern occurrence windows first and falling back to repeated signal windows, and write `stem_patterns.json` when usable repeats exist.
 - `--find-sections`: run Hugging Face section inference and write `sections.json` rows.
-- `--generate-md`: render the per-song markdown summary from `sections.json`.
+- `--generate-md`: render the canonical lighting score from `music_feature_layers.json`.
 
 Chord inference requires canonical beats from `info.json` or `reference/beats.json`. If they are missing, the analyzer warns and returns `None`. Bass inference uses `analyzer/temp_files/htdemucs/<song>/bass.wav` when present; if the bass stem is missing, the analyzer warns and keeps going with mix-only chord inference.
 

@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 
-from src.storage.song_meta import load_sections, song_meta_dir, song_name
+from src.storage.song_meta import lighting_score_path, music_feature_layers_path, song_name
 
 META_PATH = os.environ.get("META_PATH", "/app/meta")
 
@@ -20,163 +20,138 @@ def _time(value: object) -> str:
     return f"{numeric:.2f}"
 
 
-def _relevant_part_names(parts: object, *, limit: int = 2) -> list[str]:
-    if not isinstance(parts, list):
-        return []
-    filtered = [
-        str(part.get("part"))
-        for part in parts
-        if isinstance(part, dict)
-        and isinstance(part.get("part"), str)
-        and part.get("part") != "mix"
-        and float(part.get("share", 0.0) or 0.0) >= 0.08
-    ]
-    return filtered[:limit]
-
-
-def _load_features(meta_dir: Path) -> dict[str, object] | None:
-    path = meta_dir / "features.json"
+def _load_ir(song_path: str | Path, meta_path: str | Path) -> dict[str, object] | None:
+    path = music_feature_layers_path(song_path, meta_path)
     if not path.exists():
         return None
     payload = json.loads(path.read_text(encoding="utf-8"))
     return payload if isinstance(payload, dict) else None
 
 
-def _render_feature_summary(features: dict[str, object]) -> list[str]:
-    global_payload = features.get("global") if isinstance(features.get("global"), dict) else {}
-    energy = global_payload.get("energy") if isinstance(global_payload, dict) else {}
-    semantic_tags = global_payload.get("semantic_tags") if isinstance(global_payload, dict) else {}
-    tags = semantic_tags.get("tags") if isinstance(semantic_tags, dict) else []
-    raw_stem_accents = global_payload.get("stem_accents") if isinstance(global_payload, dict) else None
-    stem_accents = raw_stem_accents if isinstance(raw_stem_accents, list) else []
-    raw_low_windows = global_payload.get("low_windows") if isinstance(global_payload, dict) else None
-    low_windows = raw_low_windows if isinstance(raw_low_windows, list) else []
-    lines = ["## Feature Summary", ""]
-    if isinstance(energy, dict):
-        lines.append(f"Energy mean {energy.get('mean', 0.0):.3f}, peak {energy.get('peak', 0.0):.3f}, range {energy.get('dynamic_range', 0.0):.3f}.")
-    if isinstance(tags, list) and tags:
-        label_text = ", ".join(str(tag.get("label")) for tag in tags[:5] if isinstance(tag, dict) and tag.get("label"))
-        if label_text:
-            lines.append(f"Model tags: {label_text}.")
-    if stem_accents:
-        stem_lines = []
-        for entry in stem_accents[:4]:
-            if not isinstance(entry, dict):
-                continue
-            accents = entry.get("accents") if isinstance(entry.get("accents"), list) else []
-            if not accents:
-                continue
-            times = ", ".join(_time(accent.get("time", 0.0)) for accent in accents[:4] if isinstance(accent, dict))
-            if times:
-                stem_lines.append(f"{entry.get('part')}: {times}")
-        if stem_lines:
-            lines.append(f"Accents: {'; '.join(stem_lines)}.")
-    if low_windows:
-        windows = ", ".join(
-            f"{_time(window.get('start_s', 0.0))}-{_time(window.get('end_s', 0.0))} ({', '.join(window.get('parts') or [])})"
-            for window in low_windows[:4]
-            if isinstance(window, dict) and isinstance(window.get("parts"), list)
-        )
-        if windows:
-            lines.append(f"Dips: {windows}.")
+def _metadata_lines(ir: dict[str, object]) -> list[str]:
+    metadata = ir.get("metadata") if isinstance(ir.get("metadata"), dict) else {}
+    duration_s = float(metadata.get("duration_s", 0.0) or 0.0)
+    minutes = int(duration_s // 60)
+    seconds = int(duration_s % 60)
+    return [
+        "## Metadata",
+        f"- Song: {metadata.get('title', '')}",
+        f"- Artist: {metadata.get('artist', '')}",
+        f"- Duration: {minutes}:{seconds:02d}",
+        f"- BPM: {float(metadata.get('bpm', 0.0) or 0.0):.3f}",
+        f"- Time Signature: {metadata.get('time_signature', '4/4')}",
+        f"- Key: {metadata.get('key', '')}",
+        "",
+    ]
+
+
+def _energy_lines(ir: dict[str, object]) -> list[str]:
+    energy = ir.get("energy_profile") if isinstance(ir.get("energy_profile"), dict) else {}
+    return [
+        "## Energy Profile",
+        f"- Loudness Mean: {float(energy.get('loudness_mean', 0.0) or 0.0):.3f}",
+        f"- Loudness Peak: {float(energy.get('loudness_peak', 0.0) or 0.0):.3f}",
+        f"- Loudness P90: {float(energy.get('loudness_percentile_90', 0.0) or 0.0):.3f}",
+        f"- Dynamic Range: {float(energy.get('dynamic_range', 0.0) or 0.0):.3f}",
+        f"- Transient Density: {float(energy.get('transient_density', 0.0) or 0.0):.3f}",
+        f"- Energy Trend: {energy.get('energy_trend', 'unknown')}",
+        f"- Brightness Trend: {energy.get('brightness_trend', 'unknown')}",
+        f"- Centroid Mean: {float(energy.get('centroid_mean', 0.0) or 0.0):.3f}",
+        f"- Centroid Peak: {float(energy.get('centroid_peak', 0.0) or 0.0):.3f}",
+        f"- Onset Count: {int(energy.get('onset_count', 0) or 0)}",
+        f"- Onset Density/Minute: {float(energy.get('onset_density_per_minute', 0.0) or 0.0):.3f}",
+        f"- Flux Mean: {float(energy.get('flux_mean', 0.0) or 0.0):.3f}",
+        f"- Flux Peak: {float(energy.get('flux_peak', 0.0) or 0.0):.3f}",
+        f"- Brightness Summary: {energy.get('centroid_summary', '')}",
+        f"- Flux Summary: {energy.get('flux_summary', '')}",
+        "",
+    ]
+
+
+def _structure_lines(ir: dict[str, object]) -> list[str]:
+    sections = (((ir.get("timeline") or {}).get("sections") or []) if isinstance(ir.get("timeline"), dict) else [])
+    cards = ir.get("section_cards") if isinstance(ir.get("section_cards"), list) else []
+    card_map = {_section_key(card): card for card in cards if isinstance(card, dict)}
+    lines = ["## Structure", "| Section | Time Range | Music |", "|---|---|---|"]
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        name = str(section.get("name") or section.get("section_name") or "")
+        card = card_map.get(_section_key(section), {})
+        lines.append(f"| {name} | {_time(section.get('start_s', 0.0))}-{_time(section.get('end_s', 0.0))} | {card.get('music_description', 'No summary available.')} |")
     lines.append("")
     return lines
 
 
-def _render_section_feature(section: dict[str, object], features: dict[str, object] | None) -> list[str]:
-    if not features:
-        return []
-    raw_sections = features.get("sections")
-    feature_sections = raw_sections if isinstance(raw_sections, list) else []
-    match = next(
-        (row for row in feature_sections if isinstance(row, dict) and row.get("name") == section["name"] and row.get("start_s") == section["start_s"]),
-        None,
-    )
-    if not isinstance(match, dict):
-        return []
-    energy = match.get("energy") if isinstance(match.get("energy"), dict) else {}
-    raw_parts = match.get("dominant_parts")
-    dominant_parts = raw_parts if isinstance(raw_parts, list) else []
-    raw_phrases = match.get("phrases")
-    phrases = raw_phrases if isinstance(raw_phrases, list) else []
-    raw_stem_accents = match.get("stem_accents")
-    stem_accents = raw_stem_accents if isinstance(raw_stem_accents, list) else []
-    raw_low_windows = match.get("low_windows")
-    low_windows = raw_low_windows if isinstance(raw_low_windows, list) else []
-    top_parts = ", ".join(_relevant_part_names(dominant_parts))
-    lines: list[str] = []
-    if isinstance(match.get("summary"), str) and match.get("summary"):
-        lines.append(str(match.get("summary")))
-    if isinstance(energy, dict):
-        lines.append(f"Energy: {energy.get('level', 'unknown')} with {energy.get('trend', 'unknown')} trend, peak {energy.get('peak', 0.0):.3f}.")
-    if top_parts:
-        lines.append(f"Dominant parts: {top_parts}.")
-    if phrases:
-        phrase_text = ", ".join(
-            f"{_time(phrase.get('start_s', 0.0))}-{_time(phrase.get('end_s', 0.0))} {phrase.get('shape', 'unknown')}"
-            for phrase in phrases[:3]
-            if isinstance(phrase, dict)
-        )
-        if phrase_text:
-            lines.append(f"Phrases: {phrase_text}.")
-    if stem_accents:
-        stem_lines = []
-        for entry in stem_accents[:4]:
-            if not isinstance(entry, dict):
-                continue
-            accents = entry.get("accents") if isinstance(entry.get("accents"), list) else []
-            if not accents:
-                continue
-            times = ", ".join(_time(accent.get("time", 0.0)) for accent in accents[:6] if isinstance(accent, dict))
-            if times:
-                stem_lines.append(f"{entry.get('part')} at {times}")
-        if stem_lines:
-            lines.append(f"Accents: {'; '.join(stem_lines)}.")
-    if low_windows:
-        windows = ", ".join(
-            f"{_time(window.get('start_s', 0.0))}-{_time(window.get('end_s', 0.0))} ({', '.join(window.get('parts') or [])})"
-            for window in low_windows[:4]
-            if isinstance(window, dict) and isinstance(window.get("parts"), list)
-        )
-        if windows:
-            lines.append(f"Dips: {windows}.")
-    return [line for line in lines if line]
-
-
-def _render_markdown(song: str, sections: list[dict[str, object]], features: dict[str, object] | None) -> str:
-    lines = [f"# {song} - Light Show", ""]
-    if features:
-        lines.extend(_render_feature_summary(features))
-    for section in sections:
-        lines.append(f"## {section['name']} [{_time(section['start_s'])}-{_time(section['end_s'])}]")
+def _section_plan_lines(ir: dict[str, object]) -> list[str]:
+    cards = ir.get("section_cards") if isinstance(ir.get("section_cards"), list) else []
+    lines = ["## Section Plan", ""]
+    for card in cards:
+        if not isinstance(card, dict):
+            continue
+        lines.append(f"### {card.get('section_name', '')} [{_time(card.get('start_s', 0.0))}-{_time(card.get('end_s', 0.0))}]")
         lines.append("")
-        lines.extend(_render_section_feature(section, features))
-        if lines[-1] != "":
-            lines.append("")
+        lines.append(f"Music: {card.get('music_description', 'No summary available.')}")
+        energy_description = str(card.get("energy_description") or "")
+        if energy_description:
+            lines.append(f"Energy: {energy_description}")
+        energy_profile = card.get("energy_profile") if isinstance(card.get("energy_profile"), dict) else {}
+        if energy_profile:
+            lines.append(
+                "Energy Metrics: "
+                f"level {energy_profile.get('level', 'unknown')}, "
+                f"trend {energy_profile.get('trend', 'unknown')}, "
+                f"loudness peak {float(energy_profile.get('loudness_peak', 0.0) or 0.0):.3f}, "
+                f"centroid mean {float(energy_profile.get('centroid_mean', 0.0) or 0.0):.3f}, "
+                f"flux mean {float(energy_profile.get('flux_mean', 0.0) or 0.0):.3f}"
+            )
+        implications = card.get("visual_implications") if isinstance(card.get("visual_implications"), list) else []
+        if implications:
+            lines.append(f"Visual Implications: {', '.join(str(item) for item in implications)}")
+        lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _section_key(section: dict[str, object]) -> tuple[str, float]:
+    name = str(section.get("section_name") or section.get("name") or "")
+    start_s = round(float(section.get("start_s", 0.0) or 0.0), 3)
+    return name, start_s
+
+
 def generate_md_file(song_path: str | Path, meta_path: str | Path = META_PATH) -> Path | None:
-    meta_dir = song_meta_dir(song_path, meta_path)
-    sections = load_sections(meta_dir)
-    if not sections:
+    ir = _load_ir(song_path, meta_path)
+    if not ir:
         return None
-    features = _load_features(meta_dir)
-    output_path = meta_dir / f"{song_name(song_path)}.md"
-    output_path.write_text(_render_markdown(song_name(song_path), sections, features), encoding="utf-8")
+    lines = [f"# {song_name(song_path)} - Lighting Score", "", "## Musical Features", ""]
+    lines.extend(_metadata_lines(ir))
+    lines.extend(_energy_lines(ir))
+    lines.extend(_structure_lines(ir))
+    structure_summary = str(ir.get("structure_summary") or "")
+    if structure_summary:
+        lines.append("## Structure Summary")
+        lines.append(structure_summary)
+        lines.append("")
+    mapping_rules = ir.get("mapping_rules") if isinstance(ir.get("mapping_rules"), list) else []
+    if mapping_rules:
+        lines.append("## Mapping Rules")
+        lines.extend(f"- {rule}" for rule in mapping_rules)
+        lines.append("")
+    lines.append(_section_plan_lines(ir).rstrip())
+    output_path = lighting_score_path(song_path, meta_path)
+    output_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return output_path
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate song markdown from analyzer sections")
+    parser = argparse.ArgumentParser(description="Generate lighting score markdown from merged analyzer IR")
     parser.add_argument("song_path", type=str, help="Path to the source song file")
     parser.add_argument("--meta-path", type=str, default=META_PATH, help="Path to the analyzer meta root")
     args = parser.parse_args()
     output_path = generate_md_file(args.song_path, meta_path=args.meta_path)
     if output_path is None:
-        print(f"No sections metadata found for {Path(args.song_path).stem}")
+        print(f"No merged music feature layers found for {Path(args.song_path).stem}")
         return 1
-    print(f"Generated markdown file: {output_path}")
+    print(f"Generated lighting score file: {output_path}")
     return 0
 
 

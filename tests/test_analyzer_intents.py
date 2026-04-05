@@ -19,7 +19,7 @@ class _AnalyzerService:
         self.playlist_enqueued = []
         self.task_type_refreshes = 0
         self._task_types = [
-            {"value": "generate-md", "label": "Generate Markdown", "description": "Generate markdown summary."},
+            {"value": "generate-md", "label": "Generate Lighting Score", "description": "Render the canonical lighting score markdown from the merged analyzer IR."},
             {"value": "find_sections", "label": "Find Sections", "description": "Infer song sections."},
         ]
 

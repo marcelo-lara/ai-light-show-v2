@@ -22,7 +22,7 @@ class _Client:
     async def get_task_types(self):
         self.task_type_calls += 1
         return [
-            {"value": "generate-md", "label": "Generate Markdown", "description": "Generate markdown summary."},
+            {"value": "generate-md", "label": "Generate Lighting Score", "description": "Render the canonical lighting score markdown from the merged analyzer IR."},
             {"value": "find_sections", "label": "Find Sections", "description": "Infer song sections."},
         ]
 

@@ -14,6 +14,7 @@ def test_task_catalog_includes_init_song() -> None:
     assert "stereo-analysis" in task_types
     assert "find-chord-patterns" in task_types
     assert "find-stem-patterns" in task_types
+    assert "symbolic-layer" in task_types
 
 
 def test_run_task_init_song_returns_metadata_payload(tmp_path: Path) -> None:

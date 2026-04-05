@@ -45,6 +45,26 @@ def info_path(song_path: str | Path, meta_path: str | Path) -> Path:
     return song_meta_dir(song_path, meta_path) / "info.json"
 
 
+def harmonic_layer_path(song_path: str | Path, meta_path: str | Path) -> Path:
+    return song_meta_dir(song_path, meta_path) / "layer_a_harmonic.json"
+
+
+def symbolic_layer_path(song_path: str | Path, meta_path: str | Path) -> Path:
+    return song_meta_dir(song_path, meta_path) / "layer_b_symbolic.json"
+
+
+def energy_layer_path(song_path: str | Path, meta_path: str | Path) -> Path:
+    return song_meta_dir(song_path, meta_path) / "layer_c_energy.json"
+
+
+def music_feature_layers_path(song_path: str | Path, meta_path: str | Path) -> Path:
+    return song_meta_dir(song_path, meta_path) / "music_feature_layers.json"
+
+
+def lighting_score_path(song_path: str | Path, meta_path: str | Path) -> Path:
+    return song_meta_dir(song_path, meta_path) / "lighting_score.md"
+
+
 def load_song_info(song_path: str | Path, meta_path: str | Path) -> dict[str, Any]:
     path = info_path(song_path, meta_path)
     if not path.exists():
