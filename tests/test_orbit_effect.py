@@ -285,3 +285,26 @@ async def test_circle_uses_reference_geometry_around_target_location():
     assert quarter_position != half_position
     assert math.hypot(end_position[0] - start_position[0], end_position[1] - start_position[1]) < math.hypot(half_position[0] - start_position[0], half_position[1] - start_position[1])
     await state_manager.wait_for_preview_end(started["requestId"])
+
+
+@pytest.mark.asyncio
+async def test_circle_supports_negative_orbits_for_reverse_direction():
+    circle_pois = [
+        {"id": "target", "location": {"x": 0.5, "y": 0.5, "z": 0.0}, "fixtures": {}},
+        {"id": "ref_0_0_0", "location": {"x": 0.0, "y": 0.0, "z": 0.0}, "fixtures": {"head_el150": {"pan": 10000, "tilt": 10000}}},
+        {"id": "ref_1_0_0", "location": {"x": 1.0, "y": 0.0, "z": 0.0}, "fixtures": {"head_el150": {"pan": 50000, "tilt": 12000}}},
+        {"id": "ref_1_1_0", "location": {"x": 1.0, "y": 1.0, "z": 0.0}, "fixtures": {"head_el150": {"pan": 52000, "tilt": 50000}}},
+        {"id": "ref_0_1_0", "location": {"x": 0.0, "y": 1.0, "z": 0.0}, "fixtures": {"head_el150": {"pan": 12000, "tilt": 52000}}},
+    ]
+    state_manager = build_state_manager()
+    await state_manager.load_fixtures(FIXTURES_PATH)
+    state_manager.poi_db.pois = circle_pois
+    fixture = next(item for item in state_manager.fixtures if item.id == "head_el150")
+
+    start_position = estimate_circle_pan_tilt(fixture, {"target_poi": "target", "radius": 0.25, "orbits": 1.0}, 0.0)
+    positive_quarter = estimate_circle_pan_tilt(fixture, {"target_poi": "target", "radius": 0.25, "orbits": 1.0}, 0.25)
+    negative_quarter = estimate_circle_pan_tilt(fixture, {"target_poi": "target", "radius": 0.25, "orbits": -1.0}, 0.25)
+
+    assert positive_quarter != start_position
+    assert negative_quarter != start_position
+    assert positive_quarter != negative_quarter

@@ -47,6 +47,7 @@ Do not stack new ideas on top of stale cues for the same section.
 If timing matters, trust `beats.json` and `sections.json` first. If motion and emotional rise/fall matter, also inspect `*_loudness_envelope.json`.
 If harmonic repetition matters, inspect `chord_patterns.json` before inventing your own progression map.
 If `lighting_score.md` and `music_feature_layers.json` disagree with older planning notes, treat the canonical analyzer artifacts as the source of truth and reconcile the cue sheet to them.
+When `chord_patterns.json` shows a short loop repeating through multiple sections, keep one stable chord-color mapping for that loop and escalate later sections with motion width, prism state, and accent density instead of replacing the palette on each repeat.
 
 ## Deliverables
 
@@ -185,6 +186,7 @@ Practical notes:
 - use `full` to establish a sustained RGB bed at the start of a harmonic window
 - use `fade_in` on the final beat before the next chord when the room should glide into the new color instead of snapping or flashing
 - when using this pattern, clear any older per-beat RGB flash cues from the rebuilt time window so the sustained bed remains the only active parcan language
+- when an RGB `fade_in` lives inside a chaser and the color family must stay constrained from the first frame, provide an explicit `start_value`; otherwise the fade will inherit the prior live color from the universe and can drag unwanted hues into the new section
 
 ### `move_to_poi`
 
@@ -197,6 +199,7 @@ Practical notes:
 - use it when you want moving heads to orbit around a room focus in world space rather than drawing a DMX-space circle
 - required payload: `target_poi`, `radius`
 - optional payload: `orbits`
+- signed `orbits` reverse the direction, which is useful when you want chord-by-chord circle reversals without changing the target POI
 - `target_poi` should usually be a named room POI with a real `location`; the reference cube POIs drive the interpolation behind the scenes
 - keep `radius` modest so the motion reads as a controlled ring around the subject rather than a full-room sweep
 - `circle` is motion-first: if the fixture should stay visibly on while moving, the show designer must author the dimmer behavior separately with `set_channels`, `full`, `fade_in`, `flash`, or overlapping cues
@@ -208,6 +211,10 @@ Practical notes:
 - avoid piling multiple pan/tilt actions on the same fixture at the same timestamp unless one is intentionally replacing another
 - `orbit` accepts `write_dimmer: false` when you want the movement to layer under another lighting pattern without forcing a blackout/preroll dim change
 - when `write_dimmer: false`, the motion effect will not manage brightness for you; keeping the beam visible during travel is the show designer's responsibility
+- when `orbit` uses `write_dimmer: false`, add a short pre-position move into the next `start_POI` during the outgoing dip if you want the next visible orbit to read from a clean cardinal anchor
+- for the first visible phrase of a song, start color/gobo and dim washes slightly before the first orbit if the rendered canvas otherwise begins with a dark correction frame
+- when a phrase is meant to read as a clear convergence, keep both moving heads on the same ending POI for at least one full bar before switching the shared target on the next phrase
+- if that held convergence matters more than continuous motion, end the orbit early enough to leave a dedicated hold bar, then use the final bar for the fade and pre-position into the next phrase
 
 ### `orbit_out`
 
@@ -250,6 +257,7 @@ Practical guidance:
 - use `130` for static split-beam texture
 - use `200` for stronger high-energy motion
 - blue/indigo palettes work especially well on the prisms
+- do not leave mini prisms permanently on `Open`; vary gobos across sections unless the song direction argues against it
 
 ### Head EL-150
 
@@ -275,6 +283,11 @@ Practical guidance:
 - prefer only `Open` or `Tunnel` unless a song-specific note explicitly asks for another gobo
 - `Tunnel` is `12`, not `25`
 - EL-150 has no true indigo wheel slot, so purple is the closest moody companion to prism indigo
+
+## Motion Readability Rules
+
+- if a moving head is moving, the cue sequence should produce visible light for that idea; do not author dark travel that the audience cannot read as part of the show
+- when a new song section starts, add a quick visible change at the boundary so the section change reads immediately
 
 ### RGB And Proton Parcans
 
@@ -419,6 +432,7 @@ Important schema facts:
 - the total cycle length is inferred from the largest `beat + duration`
 - always calculate that cycle length before using a chaser as a bar-aligned motif; some chasers intentionally spill past beat 4, so only use them when that non-bar loop length is part of the design
 - if the motif needs a breath before the next repetition, end the pattern with an explicit fade or reset so the inferred cycle length lands exactly on the intended beat boundary
+- if a section needs a hard blackout or handoff, make sure no active chaser cycle extends past that cutoff; otherwise later chaser steps will re-light the rig after the blackout unless you shorten the chaser window or replace the cutoff with direct channel-zero rows
 
 Use chasers when:
 
@@ -476,6 +490,30 @@ After any meaningful change:
 5. Confirm prism values are intentional: `0`, `130`, or `200`.
 6. Check for duplicate same-time `fixture_id + effect` entries.
 7. Confirm the ending obeys the `table + fade_out >= 1s` rule.
+
+## Optional Canvas Debug Log Validation
+
+If `backend/cues/<Song>.canvas.debug.log` exists, use it as an optional rendered-output check when motion readability or dimmer behavior is critical.
+
+Validate it like this:
+
+- decode fixture channels from the fixture profile plus the fixture `base_channel`; do not guess channel offsets from memory
+- inspect moving-head motion windows in the rendered frames, not only the authored cue rows
+- confirm pan and tilt change smoothly frame to frame with no unexpected snaps that exceed the intended mechanical feel
+- confirm dimmer values stay visible during motion whenever the brief says the audience should read the travel
+- confirm midpoint or chord-change color and dimmer swaps appear in rendered frames, not only in `set_channels` rows
+
+Important failure pattern to look for:
+
+- `orbit` or `sweep` can start earlier than the authored cue time because of preroll
+- if the motion effect writes dimmer and samples its initial dim before the later `set_channels` row runs, the rendered log may show one bright frame at the authored start time and then immediate dark motion on the next frame
+- treat that as a failed visible-motion validation even if the cue JSON looks correct
+
+If the log shows that failure:
+
+- prefer `write_dimmer: false` on the motion effect and author the visible dimmer behavior explicitly
+- or move the brightness-establishing cue so the motion effect samples the intended dimmer state before visible travel begins
+- rerun the canvas render and recheck the log before considering the section done
 
 ## Default LLM Authoring Contract
 

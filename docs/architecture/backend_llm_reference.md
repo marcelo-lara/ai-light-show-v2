@@ -458,6 +458,7 @@ Patch behavior during playback:
 | --- | --- | --- |
 | `move_to` | pan/tilt targets (`pan`/`tilt` u16 or axis byte variants/preset) | interpolates pan/tilt across cue duration |
 | `move_to_poi` | `target_POI` (also accepts `poi` or `POI`) | interpolates toward POI target for this fixture |
+| `circle` | required `target_poi` or `target_POI`, `radius`; optional `orbits` | estimates pan/tilt from the POI reference cube and runs a sustained circular path around the target; `radius` is normalized room-space distance and signed `orbits` reverse the circle direction |
 | `orbit` | required `subject_POI`, `start_POI`; optional `orbits`, `easing` | schedules dark pre-roll to `start_POI` from the last known pan/tilt using fixture-template `physical_movement` timing, then circles around `subject_POI` and spirals into the subject by cue end while limiting per-frame pan/tilt changes to the fixture's maximum physical travel; recommended easing is `late_focus`, with `balanced`, `linear`, and `early_focus` also supported |
 | `strobe` | optional `rate` (Hz) | toggles dimmer only; dedicated fixture `strobe`/`shutter` channels are left unchanged |
 | `full` | none | instant full-on dimmer (+ shutter if available) |
