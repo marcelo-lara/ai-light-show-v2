@@ -83,7 +83,7 @@ def estimate_circle_pan_tilt(fixture, data: dict[str, Any], progress: float) -> 
         return fixture._resolve_poi_pan_tilt_u16(target_poi)
 
     radius = max(0.0, parse_float(data.get("radius"), 0.0))
-    orbit_count = max(0.0, parse_float(data.get("orbits", data.get("cycles", 1.0)), 1.0))
+    orbit_count = parse_float(data.get("orbits", data.get("cycles", 1.0)), 1.0)
     angle = math.tau * orbit_count * clamp_unit(progress)
     location = {
         "x": clamp_unit(center["x"] + (math.cos(angle) * radius)),

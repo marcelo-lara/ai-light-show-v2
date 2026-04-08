@@ -29,7 +29,7 @@ Prepare clean, structured inputs for feature extraction.
 - Cache results
 
 ### Output
-{
+```json
   "stems": {
     "bass": "path",
     "drums": "path",
@@ -37,6 +37,7 @@ Prepare clean, structured inputs for feature extraction.
     "vocals": "path"
   }
 }
+```
 
 ---
 
@@ -50,6 +51,15 @@ Prepare clean, structured inputs for feature extraction.
 - Extract beats
 - Compute bars
 
+### Output
+```json
+{ 
+  "tempo": 124, 
+  "beats": [...], 
+  "bars": [...] 
+}
+```
+
 ---
 
 # 🎼 EPIC 2 — Harmonic Summary
@@ -57,24 +67,70 @@ Prepare clean, structured inputs for feature extraction.
 ## 🎯 Goal
 Provide harmonic context
 
-## 🧩 Story 2.1 — HPCP
+## 🧩 Story 2.1 — HPCP Feature Extraction
 
-- Extract chroma
+### Tools
+- Essentia
+
+### Tasks
+- Extract HPCP from harmonic stem 
+- Apply tuning correction 
 - Aggregate per beat
+
+### Acceptance
+- Stable chroma representation across time
 
 ## 🧩 Story 2.2 — Chords
 
+Phase 1: template matching + HMM 
+Phase 2: CRNN model
+
+### Tools
 - Template + HMM
 - Viterbi decoding
 
-## 🧩 Story 2.3 — Key
+### Tasks 
+- Generate chord probabilities 
+- Decode with Viterbi 
 
-- Detect global key
+### Output 
+```json
+  { "chords": [ {"time": 0.0, "label": "Am", "confidence": 0.82} ] } 
+```
+### Acceptance 
+- Progression matches human expectation for test songs
+
+## 🧩 Story 2.3 — Key & Tonal Center Detection
+Detect global key
+
+### Tools 
+- Essentia key detection 
+
+### Tasks 
+- Detect global key 
+- Optional: local key per section 
+
+### Output 
+```json
+{ "key": "A minor" }
+```
 
 ## 🧩 Story 2.4 — Harmonic Features
 
 - tension
 - cadence
+
+### Tasks 
+Extract: 
+- root 
+- chord quality 
+- cadence detection 
+- harmonic tension score 
+
+### Output
+```json
+ { "harmonic_features": { "tension": 0.7, "cadence": "V-I" } }
+```
 
 ---
 
@@ -92,19 +148,23 @@ Translate audio into musical behavior
 - Run transcription on:
   - harmonic stem (`other.wav` in current Demucs output)
   - bass stem (`bass.wav`)
+
 - Extract:
   - note onsets
   - pitch (MIDI)
   - duration
-  - velocity or confidence
+  - velocity
+  - confidence (optional)
 - Merge note events into a unified timeline aligned to the canonical beat grid
 
 ### Output
+```json
 {
   "notes": [
-    {"time": 1.23, "pitch": 64, "duration": 0.2}
+    {"time": 1.23, "pitch": 64, "duration": 0.2, "velocity": 0.5, "confidence": 0.8}
   ]
 }
+```
 
 ### Acceptance
 - Captures main harmonic structure from the harmonic stem
@@ -112,38 +172,94 @@ Translate audio into musical behavior
 - Timing aligns with the beat grid and analyzer section windows
 - Feeds Story 3.2 feature engineering for density, contour, repetition, sustain, and bass motion
 
-## 🧩 Story 3.2 — Features
+## 🧩 Story 3.2 — Feature Engineering
 
 - density
 - contour
 - repetition
 - bass motion
 
-## 🧩 Story 3.3 — Description
+### Tasks
+Compute:
+- note density (per beat/bar) 
+- active note count 
+- pitch range 
+- register centroid 
+- melodic contour (slope) 
+- bass movement 
+- repetition score 
+- sustain ratio 
+- pitch bend activity
 
-- Convert to human-readable text
+### Output
+```json
+Output { "symbolic_features": { "density": 0.65, "melodic_contour": "rising", "bass_motion": "stepwise" } }
+```
+## 🧩 Story 3.3 — Temporal Alignment
 
+### Tasks
+Snap notes to:
+- beat grid (from EPIC 1.2)
+- bars
+
+## 🧩 Story 3.4 — LLM-Friendly Abstraction
+
+### Tasks 
+Convert raw features → descriptors 
+
+### Output (IMPORTANT)
+```json
+{ "description": "Repeated staccato mid-register pattern with rising melodic contour and stable bass" } 
+```
+
+### Acceptance 
+- Description is understandable by a musician
 ---
 
 # 🔊 EPIC 4 — Audio Energy Summary
 
 ## 🎯 Goal
-Capture intensity
+Capture physical intensity & motion
 
 ## 🧩 Story 4.1 — Features
 
-- loudness
-- centroid
-- flux
-- onset
+### Tools
+- Essentia
 
-## 🧩 Story 4.2 — Sections
+### Tasks
+Extract:
+- loudness
+- spectral centroid
+- spectral flux
+- onset strength
+
+### Output
+
+(see energy_feature_schema.md)
+
+## 🧩 Story 4.2 — Section Segmentation
 
 - intro, verse, chorus
 
-## 🧩 Story 4.3 — Energy Metrics
+```json
+[
+  {
+    "start": 0.0,
+    "end": 35.82,
+    "label": "Intro"
+  },
+  {
+    "start": 35.82,
+    "end": 50.14,
+    "label": "Verse"
+  }
+]
+```
 
-- intensity
+## 🧩 Story 4.3 — Energy Features
+
+- energy curve 
+- intensity score 
 - transient density
 
 ---
