@@ -1,4 +1,3 @@
-from api.intents.analyzer.handlers import ANALYZER_HANDLERS
 from api.intents.chaser.handlers import CHASER_HANDLERS
 from api.intents.cue.handlers import CUE_HANDLERS
 from api.intents.fixture.handlers import FIXTURE_HANDLERS
@@ -9,7 +8,6 @@ from api.intents.poi.handlers import POI_HANDLERS
 
 
 INTENT_HANDLERS = {
-    "analyzer": ANALYZER_HANDLERS,
     "chaser": CHASER_HANDLERS,
     "cue": CUE_HANDLERS,
     "song": SONG_HANDLERS,

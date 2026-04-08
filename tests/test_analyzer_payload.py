@@ -9,7 +9,7 @@ from store.state import StateManager
 
 
 @pytest.mark.asyncio
-async def test_frontend_state_includes_analyzer_snapshot():
+async def test_frontend_state_includes_placeholder_analyzer_snapshot():
     workspace_root = Path(__file__).resolve().parents[1]
     backend_path = workspace_root / "backend"
     songs_path = resolve_songs_root(backend_path)
@@ -19,14 +19,14 @@ async def test_frontend_state_includes_analyzer_snapshot():
     state_manager = StateManager(backend_path, songs_path, cues_path, meta_path)
     await state_manager.load_fixtures(backend_path / "fixtures" / "fixtures.json")
     manager = WebSocketManager(state_manager, object(), object())
-    manager.analyzer_service = type(
-        "AnalyzerStub",
-        (),
-        {"snapshot": lambda self: {"available": True, "polling": True, "playback_locked": False, "items": [{"item_id": "item-1"}], "summary": {"queued": 1, "pending": 0, "running": 0, "complete": 0, "failed": 0}}},
-    )()
 
     payload = await build_frontend_state(manager)
 
-    assert payload["analyzer"]["available"] is True
-    assert payload["analyzer"]["items"] == [{"item_id": "item-1"}]
-    assert payload["analyzer"]["summary"]["queued"] == 1
+    assert payload["analyzer"] == {
+        "available": False,
+        "polling": False,
+        "playback_locked": False,
+        "task_types": [],
+        "items": [],
+        "summary": {"queued": 0, "pending": 0, "running": 0, "complete": 0, "failed": 0},
+    }

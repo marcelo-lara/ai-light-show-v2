@@ -8,9 +8,9 @@ AI Light Show is split into six primary modules:
 
 - **frontend/**: Deno-served TypeScript client acting as a "dumb console" that maps user actions to backend intents.
 - **backend/**: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
-- **analyzer/**: Offline metadata generation (`analyzer/meta/<song>/...`).
+- **data/**: Canonical song audio, generated metadata, and analysis artifacts (`data/songs`, `data/output`, `data/artifacts`).
 - **llm-server/agent-gateway/**: OpenAI-compatible gateway that translates model tool calls to MCP JSON-RPC.
-- **tests/**: backend/analyzer integration and regression tests.
+- **tests/**: backend metadata, protocol, and regression tests.
 
 ### Canonical runtime flow
 
@@ -18,7 +18,7 @@ AI Light Show is split into six primary modules:
 2. UI emits only `intent` messages; backend applies domain logic and rebroadcasts state deltas.
 3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
 4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
-5. Analyzer writes song metadata; backend consumes it from `/app/meta` in Docker.
+5. Backend reads song audio from `/app/songs`, metadata from `/app/meta`, and artifact manifests from `/data/artifacts` in Docker.
 6. Backend exposes mounted MCP tools at `/mcp`; agent-gateway forwards LLM tool calls there.
 
 ### Important behavior constraints
@@ -29,32 +29,22 @@ AI Light Show is split into six primary modules:
 - While playing, backend enforces `system.edit_lock` and rejects preview requests.
 - Cue sheets are action-based and rendered into a full 60 FPS DMX canvas on song load.
 - Art-Net output is transmitted to the node at 30 FPS while the backend keeps the internal DMX canvas at 60 FPS.
-- Default startup song target is `Yonaka - Seize the Power` (fallback: first available).
+- Default startup song target is `Yonaka - Seize the Power` when present (fallback: first available).
 
 ## Module documentation (LLM-first)
 
 - [frontend/README.md](frontend/README.md)
-- [analyzer/README.md](analyzer/README.md)
 - [backend/README.md](backend/README.md)
 - [llm-server/README.md](llm-server/README.md)
 - [tests/README.md](tests/README.md)
 
 ## Local development
 
-### 1) Generate metadata (manual)
-
-```bash
-cd analyzer
-python analyze_song.py /path/to/song.mp3
-```
-
-### 2) Run backend
+### 1) Run backend
 
 ```bash
 cd backend
-python -m venv ai-light
-source ai-light/bin/activate
-pip install -r requirements.txt
+PYENV_VERSION=ai-light pyenv exec pip install -r requirements.txt
 python main.py
 ```
 
@@ -70,7 +60,6 @@ docker compose up --build
 - Frontend: http://localhost:5173
 - LLM server: http://localhost:8080
 - Agent gateway: http://localhost:8090
-- Analyzer: run manually via `docker compose run analyzer ...`
 
 ## Tests
 
@@ -104,5 +93,4 @@ When backend fixture effects are added, removed, renamed, or their parameters ch
 
 - `docs/architecture.md`
 - `docs/architecture/backend.md`
-- `docs/architecture/analyzer.md`
 - `docs/ui/UI_Future_state.md`

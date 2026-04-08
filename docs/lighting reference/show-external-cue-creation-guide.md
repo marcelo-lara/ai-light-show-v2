@@ -6,7 +6,7 @@ This document is the generic authoring guide for language models working in this
 
 For any song, produce:
 
-- a canonical analysis brief at `analyzer/meta/<Song>/lighting_score.md`
+- a canonical analysis brief at `data/artifacts/<Song>/lighting_score.md`
 - a cue sheet at `backend/cues/<Song>.json`
 
 The lighting score explains the creative plan. The cue sheet implements it.
@@ -15,12 +15,12 @@ The lighting score explains the creative plan. The cue sheet implements it.
 
 When refining an existing song:
 
-- always update `analyzer/meta/<Song>/lighting_score.md`
+- always update `data/artifacts/<Song>/lighting_score.md`
 - always update `backend/cues/<Song>.json`
 - update this guide when a rule becomes reusable across songs
 - clear the cue time window for the section being rebuilt before recreating that section
 
-Legacy planning briefs such as `analyzer/meta/<Song>/<Song>.md` are optional reference material only. Do not treat them as canonical when `lighting_score.md` exists.
+Legacy planning briefs such as `data/artifacts/<Song>/<Song>.md` are optional reference material only. Do not treat them as canonical when `lighting_score.md` exists.
 
 Do not stack new ideas on top of stale cues for the same section.
 
@@ -29,31 +29,31 @@ Do not stack new ideas on top of stale cues for the same section.
 - Fixtures: [fixtures.json](/home/darkangel/ai-light-show-v2/backend/fixtures/fixtures.json)
 - POIs: [pois.json](/home/darkangel/ai-light-show-v2/backend/fixtures/pois.json)
 - Chasers: [chasers.json](/home/darkangel/ai-light-show-v2/backend/fixtures/chasers.json)
-- Canonical analysis brief: `analyzer/meta/<Song>/lighting_score.md`
-- Merged feature IR: `analyzer/meta/<Song>/music_feature_layers.json`
-- Harmonic layer: `analyzer/meta/<Song>/layer_a_harmonic.json`
-- Symbolic layer: `analyzer/meta/<Song>/layer_b_symbolic.json`
-- Energy layer: `analyzer/meta/<Song>/layer_c_energy.json`
-- Song beats: `analyzer/meta/<Song>/beats.json`
-- Song sections: `analyzer/meta/<Song>/sections.json`
+- Canonical analysis brief: `data/artifacts/<Song>/lighting_score.md`
+- Merged feature IR: `data/artifacts/<Song>/music_feature_layers.json`
+- Harmonic layer: `data/artifacts/<Song>/layer_a_harmonic.json`
+- Symbolic layer: `data/artifacts/<Song>/layer_b_symbolic.json`
+- Energy layer: `data/artifacts/<Song>/layer_c_energy.json`
+- Song beats: `data/output/<Song>/beats.json`
+- Song sections: `data/output/<Song>/sections.json`
 - Optional song metadata:
-  - `analyzer/meta/<Song>/info.json`
-  - `analyzer/meta/<Song>/chord_patterns.json`
-  - `analyzer/meta/<Song>/features.json`
-  - `analyzer/meta/<Song>/hints.json`
-  - `analyzer/meta/<Song>/*_loudness_envelope.json`
-  - `analyzer/meta/<Song>/<Song>.md`
+  - `data/output/<Song>/info.json`
+  - `data/artifacts/<Song>/chord_patterns.json`
+  - `data/artifacts/<Song>/features.json`
+  - `data/artifacts/<Song>/hints.json`
+  - `data/artifacts/<Song>/*_loudness_envelope.json`
+  - `data/artifacts/<Song>/<Song>.md`
 
 If timing matters, trust `beats.json` and `sections.json` first. If motion and emotional rise/fall matter, also inspect `*_loudness_envelope.json`.
 If harmonic repetition matters, inspect `chord_patterns.json` before inventing your own progression map.
-If `lighting_score.md` and `music_feature_layers.json` disagree with older planning notes, treat the canonical analyzer artifacts as the source of truth and reconcile the cue sheet to them.
+If `lighting_score.md` and `music_feature_layers.json` disagree with older planning notes, treat the canonical metadata artifacts as the source of truth and reconcile the cue sheet to them.
 When `chord_patterns.json` shows a short loop repeating through multiple sections, keep one stable chord-color mapping for that loop and escalate later sections with motion width, prism state, and accent density instead of replacing the palette on each repeat.
 
 ## Deliverables
 
 ### 1. Canonical Analysis Brief
 
-Create or update `analyzer/meta/<Song>/lighting_score.md` with:
+Create or update `data/artifacts/<Song>/lighting_score.md` with:
 
 - feature summary
 - high-level visual strategy
@@ -329,7 +329,7 @@ Use this order:
 1. Read fixture and POI definitions.
 2. Read `sections.json` and `beats.json`.
 3. Read the song metadata files that matter for energy, loudness, harmony, or hints.
-4. Write or revise the canonical analysis brief in `analyzer/meta/<Song>/lighting_score.md`.
+4. Write or revise the canonical analysis brief in `data/artifacts/<Song>/lighting_score.md`.
 5. Decide the palette and recurring motion language.
 6. Decide which ideas belong in raw cues and which belong in chasers.
 7. Build the cue sheet in `backend/cues/<Song>.json`.

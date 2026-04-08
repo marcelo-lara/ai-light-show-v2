@@ -6,13 +6,11 @@ Code is the source of truth.
 ## Runtime map
 
 1. App bootstrap: `backend/main.py`
-- Creates `StateManager`, `ArtNetService`, `SongService`, `WebSocketManager`, and `AnalyzerService`.
+- Creates `StateManager`, `ArtNetService`, `SongService`, and `WebSocketManager`.
 - Creates and mounts the backend MCP server at `/mcp`.
 - Loads POIs and fixtures.
 - Arms fixtures and starts Art-Net send loop.
 - Loads default song (`Yonaka - Seize the Power` if present, else first available).
-- Refreshes analyzer status once at startup and starts analyzer polling only when queue work is present.
-- Fetches analyzer task metadata at startup so frontend state can expose task selection while the queue is idle.
 - Mounts songs at `/songs` and exposes websocket endpoint at `/ws`.
 
 2. WebSocket transport: `backend/api/websocket_manager/*`
@@ -77,8 +75,6 @@ Code is the source of truth.
 | `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
 | `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canvas debug file writer |
 | `backend/services/cue_helpers/*` | `generate_downbeats_and_beats` | Backend-owned cue helper generation logic |
-| `backend/services/analyzer/service.py` | `AnalyzerService` | Demand-driven analyzer HTTP polling, playback lock coordination, and frontend state relay |
-| `backend/services/analyzer/client.py` | `AnalyzerHttpClient` | HTTP calls to analyzer queue status, queue CRUD, execute, and playback-lock endpoints |
 | `backend/store/pois.py` | `PoiDatabase` | POI CRUD + disk sync + runtime target lookup |
 | `backend/store/dmx_canvas.py` | `DMXCanvas` | Packed DMX frame buffer |
 | `backend/services/artnet.py` | `ArtNetService` | UDP Art-Net output |
@@ -162,7 +158,7 @@ Code is the source of truth.
 | `metadata_find_bar_beat` | `bar`, `beat`, `song?` | returns one exact beat row with its resolved time |
 | `metadata_get_chords` | `song?`, `start_time?`, `end_time?`, `start_bar?`, `start_beat?`, `end_bar?`, `end_beat?` | returns chord-change rows parsed from `beats.json`, optionally time-filtered or bar/beat-filtered |
 | `metadata_find_chord` | `chord`, `occurrence?`, `song?` | returns one exact chord occurrence with resolved time and musical position |
-| `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads the analyzer mix loudness artifact referenced from `info.json` and returns averaged window statistics |
+| `metadata_get_loudness` | `song?`, `start_time?`, `end_time?`, `section?` | reads the mix loudness artifact referenced from `info.json` and returns averaged window statistics |
 
 #### Transport
 
@@ -187,37 +183,28 @@ Code is the source of truth.
 | `song.list` | none | emits `song_list` with backend-discoverable song names from `SongService.list_songs()` | `False` |
 | `song.load` | `filename` | validates the song id, loads the selected song into `StateManager`, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and emits `song_loaded`. If analyzer `info.json` is missing, backend uses empty fallback metadata instead of failing the load. | `True` on success; else event `song_load_failed` and `False` |
 
-### Analyzer intents
+### Analysis placeholder state
 
-| Intent | Payload keys | Behavior | Returns |
-| --- | --- | --- | --- |
-| `analyzer.enqueue` | `task_type`, `filename?` | validates `task_type` against the analyzer-owned task catalog, resolves selected song id to backend `songs_path` and `meta_path`, posts a queue item to the analyzer service, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
-| `analyzer.enqueue_full_artifact` | `filename?`, `activate?` | resolves selected song id to backend `songs_path` and `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue endpoint, then triggers queue-activity polling | `True` on success; else event `analyzer_enqueue_failed` and `False` |
-| `analyzer.execute` | `item_id` | posts one queued analyzer item to the analyzer execute endpoint and triggers queue-activity polling | `True` on success; else event `analyzer_execute_failed` and `False` |
-| `analyzer.execute_all` | none | reads analyzer queue items, executes each item with status `queued`, then refreshes analyzer state once | `True` when any queued item was dispatched; else `False` with event `analyzer_items_executed` carrying `count: 0` |
-| `analyzer.remove` | `item_id` | deletes one analyzer queue item and refreshes analyzer state | `True` on success; else event `analyzer_remove_failed` and `False` |
-| `analyzer.remove_all` | none | deletes every analyzer queue item whose status is not `running`, then refreshes analyzer state | `True` when any item was removed; else `False` with event `analyzer_items_removed` carrying `count: 0` |
-
-Analyzer queue state notes:
-- Backend exposes analyzer-owned task metadata under `state.analyzer.task_types`, with `value`, `label`, and `description` for each supported task type.
-- Backend surfaces analyzer queue item status/progress directly from analyzer HTTP responses under `state.analyzer`.
-- Analyzer startup clears persisted queue items before queue HTTP state is served, so backend should expect an empty analyzer queue after analyzer restarts.
+- Backend keeps a top-level `state.analyzer` object in snapshot and patch payloads.
+- The current payload is an inert placeholder so the frontend Song Analysis page can keep rendering its queue card while backend queue/runtime behavior is absent.
+- `available` is `false`, `polling` is `false`, `playback_locked` is `false`, `task_types` and `items` are empty, and `summary` is zeroed.
 
 Metadata root notes:
 - Backend resolves metadata from `/app/meta` in Docker.
-- For local development and tests, backend uses `analyzer/meta` when it exists and falls back to `backend/meta` only when no analyzer metadata tree is available.
+- For local development and tests, backend prefers `data/output` and falls back to `backend/meta` only when no local metadata tree is available.
+- Paths under `/data/output`, `/data/artifacts`, and `/data/songs` are resolved through the shared `/data` mount.
 
 Songs root notes:
 - Backend resolves song audio from `/app/songs` in Docker.
-- For local development and tests, backend uses `analyzer/songs`.
+- For local development and tests, backend prefers `data/songs`.
 
 ### Transport intents
 
 | Intent | Payload keys | Behavior | Returns |
 | --- | --- | --- | --- |
-| `transport.play` | none | refresh analyzer status; if analyzer reports any `running` item, emit `transport_play_blocked` and return `False`; otherwise set analyzer playback lock, stop analyzer polling, set playback state, start backend playback ticker, and enable continuous Art-Net send | `True` on success, else `False` |
-| `transport.pause` | none | `set_playback_state(False)`, stop backend playback ticker, disable continuous send, release analyzer playback lock, resume analyzer polling only when queued work remains | `True` |
-| `transport.stop` | none | pause + stop ticker + seek `0` + blackout output universe + push Art-Net + disable continuous send + release analyzer playback lock + resume analyzer polling only when queued work remains | `True` |
+| `transport.play` | none | set playback state, start backend playback ticker, and enable continuous Art-Net send | `True` on success, else `False` |
+| `transport.pause` | none | `set_playback_state(False)`, stop backend playback ticker, disable continuous send | `True` |
+| `transport.stop` | none | pause + stop ticker + seek `0` + blackout output universe + push Art-Net + disable continuous send | `True` |
 | `transport.jump_to_time` | `time_ms`, `sync?` | seek to `max(0, time_ms/1000)` and push output universe; `sync=true` is used by the running browser clock and suppresses websocket patch broadcasts | `True` on user seek, `False` on no-op or `sync=true`, else event `invalid_time_ms` and `False` |
 | `transport.jump_to_section` | `section_index` | sort sections by normalized start (`start_s|start`), seek to selected section start, then push output universe | `True` on valid index; else event `invalid_section_index`/`section_index_out_of_range`/`no_sections_available`/`song_not_loaded` and `False` |
 

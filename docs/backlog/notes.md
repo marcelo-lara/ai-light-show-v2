@@ -10,7 +10,7 @@ It does three jobs:
 2. Lists the next concrete implementation tasks for harmonic, symbolic, energy, IR, and score generation depth.
 3. Compares the GPT-style flat IR contract with the current repo-native `music_feature_layers.json` shape.
 
-The analyzer remains the only analysis pipeline. The canonical artifact root remains `analyzer/meta/{song}/`.
+The current analysis pipeline writes canonical metadata under `data/output/{song}/` and companion artifacts under `data/artifacts/{song}/`.
 
 ---
 
@@ -75,7 +75,7 @@ The analyzer-native full-artifact flow is currently:
 
 ### Current artifact set
 
-Current canonical and additive artifacts under `analyzer/meta/{song}/`:
+Current canonical and additive artifacts under `data/output/{song}/` and `data/artifacts/{song}/`:
 
 - `info.json`
 - canonical beats file
@@ -294,7 +294,7 @@ These are the remaining mismatches between the GPT notes and the repo:
 These decisions should remain stable unless there is a deliberate redesign:
 
 1. The analyzer task system remains the only pipeline.
-2. The canonical artifact root remains `analyzer/meta/{song}/`.
+2. The canonical metadata roots remain `data/output/{song}/` and `data/artifacts/{song}/`.
 3. `music_feature_layers.json` remains the single LLM-ready IR for score generation.
 4. `lighting_score.md` remains the canonical markdown output.
 5. The IR stays nested and analyzer-owned rather than mirroring a flatter external sketch.

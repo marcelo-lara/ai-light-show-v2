@@ -38,7 +38,6 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Frontend module guide (entrypoints/routes/intents/component map): [frontend/README.md](../frontend/README.md)
 - UI docs + LoFi asset index: [docs/ui/README.md](../docs/ui/README.md)
 - Backend module guide: [backend/README.md](../backend/README.md)
-- Analyzer module guide: [analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [llm-server/README.md](../llm-server/README.md)
 - Agent gateway guide: [llm-server/agent-gateway/README.md](../llm-server/agent-gateway/README.md)
 - Test module guide: [tests/README.md](../tests/README.md)
@@ -49,8 +48,8 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Real-time DMX flow: client websocket messages -> intent handlers/state builders -> `StateManager` updates -> `ArtNetService` sends ArtDMX UDP packets.
 - The UI frontend is strictly a backend client. DMX logic is backend-owned.
 - Active frontend routes are `show_control`, `song_analysis`, `show_builder`, and `dmx_control` (see [frontend/src/app/routes.ts](../frontend/src/app/routes.ts)).
-- Analyzer scripts produce metadata under `analyzer/meta/<song>/...`; backend reads from `/app/meta` in Docker.
-- Analyzer queue/runtime control is exposed by the analyzer HTTP service on `http://analyzer:8100`; backend is the only intended client and relays analyzer state to the frontend.
+- Song audio lives under `data/songs`, metadata under `data/output`, and detailed artifacts under `data/artifacts`; backend reads them from `/app/songs`, `/app/meta`, and `/data` in Docker.
+- `state.analyzer` is currently a backend-owned placeholder payload used only to keep the Song Analysis queue card layout stable.
 - LLM integration stack: local llama.cpp server + OpenAI-compatible agent gateway + backend-mounted MCP surface.
 
 ## Playback model (DMX canvas)
@@ -74,7 +73,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - Fixtures: [backend/fixtures/fixtures.json](../backend/fixtures/fixtures.json)
 - POIs: [backend/fixtures/pois.json](../backend/fixtures/pois.json)
 - Cues: [backend/cues](../backend/cues) as `{song}.json`
-- Song metadata: analyzer output at `analyzer/meta/<song>/info.json`, loaded by backend during song load
+- Song metadata: `data/output/<song>/info.json`, with companion artifact manifests under `data/artifacts/<song>/...`
 
 ## Developer workflows
 - Run backend locally from [backend/main.py](../backend/main.py).
@@ -105,8 +104,7 @@ PYENV_VERSION=ai-light pyenv exec <command>
 - DMX channels are 1-based in fixture/message contracts; runtime storage uses 512-byte arrays.
 - `ArtNetService` sends at `30 FPS` to configured `ARTNET_IP`/`ARTNET_PORT`.
 - Startup arm behavior applies configured fixture arm values.
-- Playback and analyzer execution are mutually exclusive. While playback is running, backend must stop analyzer polling and the analyzer worker must stay playback-locked. If analyzer reports a running job, playback start must be blocked.
-- Backend must not keep a standing analyzer poll loop while the analyzer queue is empty. Analyzer polling should start only after queue activity is known and stop again once the queue returns to an idle state.
+- Frontend Song Analysis keeps an inert Analyzer Queue placeholder card; do not reintroduce queue/runtime behavior unless the backend protocol and docs are updated together.
 - Whenever fixture effect contracts change, update backend docs and active client integration in the same change.
 - For frontend UI implementation:
   - Prefer flexbox over grid for small/local components.

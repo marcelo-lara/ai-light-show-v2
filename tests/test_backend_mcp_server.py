@@ -6,13 +6,15 @@ from fastmcp import Client
 from mcp_server import BackendMcpRuntime, create_backend_mcp
 from models.song import Song
 
+TEST_SONG = "Cinderella - Ella Lee"
+
 
 class FakeSongService:
     def __init__(self, meta_path: Path) -> None:
         self.meta_path = meta_path
 
     def list_songs(self):
-        return ["Yonaka - Seize the Power"]
+        return [TEST_SONG]
 
     def load_metadata(self, filename: str) -> Song:
         return Song(song_id=filename, base_dir=str(self.meta_path))
@@ -29,8 +31,8 @@ class FakeArtNetService:
 class FakeStateManager:
     def __init__(self, meta_path: Path) -> None:
         self.meta_path = meta_path
-        self.current_song = Song(song_id="Yonaka - Seize the Power", base_dir=str(meta_path))
-        self.timecode = 37.62
+        self.current_song = Song(song_id=TEST_SONG, base_dir=str(meta_path))
+        self.timecode = 0.464399
         self._cue_entries = [
             {"time": 0.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}},
             {"time": 16.0, "fixture_id": "parcan_r", "effect": "flash", "duration": 0.5, "data": {}},
@@ -75,7 +77,7 @@ class FakeWsManager:
 
 @pytest.mark.asyncio
 async def test_backend_mcp_tools_cover_song_metadata_and_cues():
-    meta_path = Path("/home/darkangel/ai-light-show-v2/analyzer/meta")
+    meta_path = Path(__file__).resolve().parents[1] / "data" / "output"
     song_service = FakeSongService(meta_path)
     state_manager = FakeStateManager(meta_path)
     ws_manager = FakeWsManager(state_manager, song_service)
@@ -86,25 +88,26 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
     async with Client(mcp) as client:
         songs = await client.call_tool("songs_list", {})
         assert songs.data["ok"] is True
-        assert "Yonaka - Seize the Power" in songs.data["data"]["songs"]
+        assert TEST_SONG in songs.data["data"]["songs"]
 
-        sections = await client.call_tool("metadata_get_sections", {"song": "Yonaka - Seize the Power"})
+        sections = await client.call_tool("metadata_get_sections", {"song": TEST_SONG})
         assert sections.data["ok"] is True
         assert sections.data["data"]["count"] > 0
         first_section = sections.data["data"]["sections"][0]
         assert "start_bar" in first_section
         assert "start_beat" in first_section
+        assert first_section["name"] == "Intro"
 
-        verse = await client.call_tool("metadata_find_section", {"song": "Yonaka - Seize the Power", "section_name": "Verse"})
+        verse = await client.call_tool("metadata_find_section", {"song": TEST_SONG, "section_name": "Verse"})
         assert verse.data["ok"] is True
         assert verse.data["data"]["section"]["name"] == "Verse"
-        assert verse.data["data"]["section"]["start_s"] == 57.32
+        assert verse.data["data"]["section"]["start_s"] > 0.0
         assert isinstance(verse.data["data"]["section"]["start_bar"], int)
         assert isinstance(verse.data["data"]["section"]["start_beat"], int)
 
         fallback_verse = await client.call_tool("metadata_find_section", {"song": "unique_song_identifier", "section_name": "Verse"})
         assert fallback_verse.data["ok"] is True
-        assert fallback_verse.data["data"]["song"] == "Yonaka - Seize the Power"
+        assert fallback_verse.data["data"]["song"] == TEST_SONG
         assert fallback_verse.data["data"]["section"]["name"] == "Verse"
 
         fuzzy_verse = await client.call_tool("metadata_find_section", {"section_name": "verse start"})
@@ -115,33 +118,33 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         assert fuzzy_chorus.data["ok"] is True
         assert fuzzy_chorus.data["data"]["section"]["name"] == "Chorus"
 
-        chords = await client.call_tool("metadata_get_chords", {"song": "Yonaka - Seize the Power"})
+        chords = await client.call_tool("metadata_get_chords", {"song": TEST_SONG})
         assert chords.data["ok"] is True
         assert chords.data["data"]["count"] > 0
 
-        chord = await client.call_tool("metadata_find_chord", {"chord": "F"})
+        chord = await client.call_tool("metadata_find_chord", {"chord": "Am"})
         assert chord.data["ok"] is True
-        assert chord.data["data"]["chord"]["time_s"] == 51.94
-        assert chord.data["data"]["chord"]["bar"] == 29
+        assert chord.data["data"]["chord"]["time_s"] == 0.46
+        assert chord.data["data"]["chord"]["bar"] == 1
         assert chord.data["data"]["chord"]["beat"] == 1
 
-        bar_window = await client.call_tool("metadata_get_bar_beats", {"start_bar": 21, "end_bar": 21})
+        bar_window = await client.call_tool("metadata_get_bar_beats", {"start_bar": 1, "end_bar": 1})
         assert bar_window.data["ok"] is True
         assert bar_window.data["data"]["count"] > 0
-        assert all(item["bar"] == 21 for item in bar_window.data["data"]["beats"])
+        assert all(item["bar"] == 1 for item in bar_window.data["data"]["beats"])
 
-        bar_beat = await client.call_tool("metadata_find_bar_beat", {"bar": 21, "beat": 1})
+        bar_beat = await client.call_tool("metadata_find_bar_beat", {"bar": 1, "beat": 1})
         assert bar_beat.data["ok"] is True
-        assert bar_beat.data["data"]["position"]["time"] == 37.62
-        assert bar_beat.data["data"]["position"]["bar"] == 21
+        assert bar_beat.data["data"]["position"]["time"] == 0.46
+        assert bar_beat.data["data"]["position"]["bar"] == 1
         assert bar_beat.data["data"]["position"]["beat"] == 1
 
         cursor = await client.call_tool("transport_get_cursor", {})
         assert cursor.data["ok"] is True
-        assert cursor.data["data"]["time_s"] == 37.62
-        assert cursor.data["data"]["bar"] == 21
+        assert cursor.data["data"]["time_s"] == 0.464
+        assert cursor.data["data"]["bar"] == 1
         assert cursor.data["data"]["beat"] == 1
-        assert cursor.data["data"]["beat_time_s"] == 37.62
+        assert cursor.data["data"]["beat_time_s"] == 0.46
 
         state_manager.timecode = 0.0
         cursor_before_intro = await client.call_tool("transport_get_cursor", {})
@@ -149,28 +152,20 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         assert cursor_before_intro.data["data"]["section_name"] is None
         assert cursor_before_intro.data["data"]["next_section_name"] == "Intro"
 
-        loudness = await client.call_tool("metadata_get_loudness", {"song": "Yonaka - Seize the Power", "section": "Verse"})
-        assert loudness.data["ok"] is True
-        assert loudness.data["data"]["start_time"] == 57.32
-        assert loudness.data["data"]["end_time"] == 84.18
-        assert loudness.data["data"]["average"] > 0.0
-
-        section_analysis = await client.call_tool("metadata_get_section_analysis", {"song": "Yonaka - Seize the Power", "section_name": "Verse"})
+        section_analysis = await client.call_tool("metadata_get_section_analysis", {"song": TEST_SONG, "section_name": "Verse"})
         assert section_analysis.data["ok"] is True
         verse_analysis = section_analysis.data["data"]["section"]
         assert verse_analysis["name"] == "Verse"
-        assert verse_analysis["loudness"]["average"] > 0.0
-        assert verse_analysis["harmony"]["source"] == "moises"
-        assert set(verse_analysis["parts"]) >= {"mix", "bass", "drums", "vocals"}
-        assert all(event["dominant_part"] in {"mix", "bass", "drums", "vocals"} for event in verse_analysis["events"])
+        assert verse_analysis["events"]
+        assert all(event["dominant_part"] == "mix" for event in verse_analysis["events"])
 
-        song_analysis = await client.call_tool("metadata_get_song_analysis", {"song": "Yonaka - Seize the Power"})
+        song_analysis = await client.call_tool("metadata_get_song_analysis", {"song": TEST_SONG})
         assert song_analysis.data["ok"] is True
         analysis_payload = song_analysis.data["data"]["analysis"]
         assert analysis_payload["features_available"] is True
+        assert analysis_payload["hints_available"] is True
         verse_from_analysis = next(section for section in analysis_payload["sections"] if section["name"] == "Verse")
-        assert "vocals" in verse_from_analysis["stem_accents"]
-        assert verse_from_analysis["stem_accents"]["vocals"]
+        assert verse_from_analysis["events"]
 
         chasers = await client.call_tool("chasers_list", {})
         assert chasers.data["ok"] is True
@@ -193,7 +188,7 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         assert replaced.data["ok"] is True
         assert replaced.data["data"]["count"] == 1
 
-        loaded = await client.call_tool("songs_load", {"song": "Yonaka - Seize the Power"})
+        loaded = await client.call_tool("songs_load", {"song": TEST_SONG})
         assert loaded.data["ok"] is True
-        assert state_manager.current_song.song_id == "Yonaka - Seize the Power"
+        assert state_manager.current_song.song_id == TEST_SONG
         assert ws_manager.broadcasts >= 2

@@ -8,12 +8,18 @@ DOCKER_SONGS_ROOT = Path("/app/songs")
 def resolve_songs_root(backend_path: Path) -> Path:
     if DOCKER_SONGS_ROOT.exists():
         return DOCKER_SONGS_ROOT
+    data_songs = backend_path.parent / "data" / "songs"
+    if data_songs.exists():
+        return data_songs
     return backend_path.parent / "analyzer" / "songs"
 
 
 def resolve_meta_root(backend_path: Path) -> Path:
     if DOCKER_META_ROOT.exists():
         return DOCKER_META_ROOT
+    data_output = backend_path.parent / "data" / "output"
+    if data_output.exists():
+        return data_output
     analyzer_meta = backend_path.parent / "analyzer" / "meta"
     if analyzer_meta.exists():
         return analyzer_meta

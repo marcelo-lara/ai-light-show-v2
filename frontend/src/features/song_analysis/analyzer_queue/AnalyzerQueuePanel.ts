@@ -5,7 +5,6 @@ import { List } from "../../../shared/components/layout/List.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../shared/state/backend_state.ts";
 import type { AnalyzerQueueItem, AnalyzerTaskType } from "../../../shared/transport/protocol.ts";
 import { analyzerItemDetail, analyzerItemProgressPercent, analyzerItemProgressTone, analyzerProgressLabel, analyzerTaskDescription, analyzerTaskLabel } from "./models.ts";
-import { enqueueAnalyzerFullArtifact, enqueueAnalyzerItem, executeAllAnalyzerItems, executeAnalyzerItem, removeAllAnalyzerItems, removeAnalyzerItem } from "../song_analysis_intents.ts";
 
 function createText(className: string, text: string): HTMLSpanElement {
 	const node = document.createElement("span");
@@ -51,17 +50,9 @@ function renderItemRow(item: AnalyzerQueueItem, taskTypes: AnalyzerTaskType[]): 
 	progressFill.className = `analyzer-queue-row-status-fill is-${analyzerItemProgressTone(item)}`;
 	progressFill.style.width = `${analyzerItemProgressPercent(item)}%`;
 	progressTrack.append(progressFill);
-	const actions = document.createElement("div");
-	if (item.status === "queued") {
-		actions.append(Button({ caption: "Run", state: "primary", bindings: { onClick: () => executeAnalyzerItem(item.item_id) } }));
-	}
-	if (item.status !== "running") {
-		actions.append(Button({ caption: "Remove", bindings: { onClick: () => removeAnalyzerItem(item.item_id) } }));
-	}
 	return List({
 		className: `analyzer-queue-row ${item.status}`,
 		content: [main, progressTrack],
-		actions,
 	});
 }
 
@@ -152,13 +143,6 @@ export function AnalyzerQueuePanel(): HTMLElement {
 				: analyzer.playback_locked === true
 					? "Playback is running"
 					: "Queue the analyzer full-artifact playlist and start it immediately";
-		fullAnalysisButton.onclick = () => {
-			if (!currentSong) return;
-			enqueueAnalyzerFullArtifact(currentSong, true);
-			selectedTasks = new Set<string>();
-			isExpanded = false;
-			render();
-		};
 		addButton.disabled = !currentSong || analyzer.available === false || analyzer.playback_locked === true || selectedTasks.size === 0;
 		addButton.title = !currentSong
 			? "Load a song first"
@@ -169,21 +153,10 @@ export function AnalyzerQueuePanel(): HTMLElement {
 					: selectedTasks.size === 0
 						? "Select at least one task"
 						: "Add selected tasks to queue";
-		addButton.onclick = () => {
-			for (const taskType of selectedTasks) enqueueAnalyzerItem(taskType, currentSong);
-			selectedTasks = new Set<string>();
-			render();
-		};
 		runAllButton.disabled = queuedCount === 0 || analyzer.available === false || analyzer.playback_locked === true;
 		runAllButton.title = runningCount > 0 || pendingCount > 0 ? "Worker already active" : queuedCount === 0 ? "No queued items" : "Run all queued items";
-		runAllButton.onclick = () => {
-			executeAllAnalyzerItems();
-			isExpanded = false;
-			render();
-		};
 		removeAllButton.disabled = removableCount === 0 || analyzer.available === false || analyzer.playback_locked === true;
 		removeAllButton.title = removableCount === 0 ? "No removable items" : analyzer.playback_locked === true ? "Playback is running" : analyzer.available === false ? "Analyzer unavailable" : "Remove all non-running items";
-		removeAllButton.onclick = () => removeAllAnalyzerItems();
 	};
 
 	const unsubscribeBackend = subscribeBackendStore(render);

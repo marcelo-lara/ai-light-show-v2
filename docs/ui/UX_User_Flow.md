@@ -6,8 +6,8 @@ For implemented backend contracts, see `docs/architecture/backend_llm_reference.
 ## Workflow
 
 ### Preparation (outside the UI)
-- The user add a song into analyzer/songs
-- The user executes the /analyzer/analyze_song.py
+- The user adds a song into data/songs
+- The user ensures generated metadata exists in data/output and required artifacts exist in data/artifacts
 - When complete: the user start the flow from the UI.
 
 ### Song Analysis

@@ -96,23 +96,18 @@ docker-compose*.yml
 # Project specific
 # Pretrained models (large files)
 pretrained_models/
-analyzer/pretrained_models/
 
 # Temporary files
 temp_files/
-analyzer/temp_files/
 
 # Generated metadata
 metadata/
-analyzer/metadata/
 
 # Test files
 tests/
-analyzer/tests/
 
 # Songs (large audio files)
 songs/
-analyzer/songs/
 
 # Large media files
 *.mp3

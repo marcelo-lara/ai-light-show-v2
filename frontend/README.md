@@ -22,7 +22,7 @@ UI layout references live in [../docs/ui/README.md](../docs/ui/README.md).
    - `snapshot`: replace store via `applySnapshot`.
    - `patch`: apply sequence-ordered path/value changes via `applyPatch`.
    - `event`: route LLM streaming chunks/messages to `llm_state`; backend errors become chat system messages.
-  - `cue_helper_apply_failed` for `song_draft` with missing `features.json`: prompt the user to enqueue every analyzer task from the live analyzer task catalog, then send `analyzer.execute_all` when confirmed.
+  - `cue_helper_apply_failed` surfaces missing artifact filenames and paths for `song_draft` failures.
 4. `AppShell.ts` renders `Sidebar + Main + RightPanel`, rerenders on UI/Backend/LLM store updates, and refreshes the singleton song player.
 5. Timecode sync exception: browser playback time is authoritative during playback and syncs via `transport.jump_to_time`.
 
@@ -38,7 +38,7 @@ Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`
 | Route id | Sidebar label | View function | Current behavior |
 | --- | --- | --- | --- |
 | `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` with `SongSectionsPanel`, a placeholder cue summary panel, and a placeholder fixture-effects panel |
-| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with `SongLoaderPanel()`, `AnalyzerQueuePanel()`, and analyzer plot panels |
+| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with `SongLoaderPanel()`, `AnalyzerQueuePanel()`, and analysis plot panels |
 | `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` with the shared chord progression panel, live cue sheet, effect picker, chaser picker, and cue helpers |
 | `dmx_control` | DMX Control | `DmxControlView()` | Renders fixture grid with dynamic controls |
 
@@ -61,7 +61,6 @@ Backend -> client message types:
 
 Intent names currently emitted by frontend:
 - Song: `song.list`, `song.load`
-- Analyzer: `analyzer.enqueue`, `analyzer.execute`, `analyzer.execute_all`, `analyzer.remove`, `analyzer.remove_all`
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.apply_helper`
@@ -141,13 +140,13 @@ Global bridge fields used across modules:
 - `SongSectionsPanel` highlight rule uses section bounds with a small start-time tolerance (`start_s - 0.01`): active when `timeS > (start_s - 0.01) && timeS < end_s`.
 
 ### Song Analysis
-- `src/features/song_analysis/SongAnalysisView.ts`: composes player with `SongLoaderPanel()`, `AnalyzerQueuePanel()`, and analyzer plot cards.
-- `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats and analyzer plots from backend state and composes shared song structure data.
+- `src/features/song_analysis/SongAnalysisView.ts`: composes player with `SongLoaderPanel()`, `AnalyzerQueuePanel()`, and analysis plot cards.
+- `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats and analysis plots from backend state and composes shared song structure data.
 - `src/features/song_analysis/song_loader/SongLoaderPanel.ts`: event-driven available-song list with confirmation before `song.load`.
 - `src/features/song_analysis/song_loader/state.ts`: local song-loader store fed by `song_list` events.
-- `src/features/song_analysis/components/AnalyzerQueuePanel.ts`: analyzer queue panel with a collapsible backend-driven task checklist, a `Run Full Analysis` action that schedules the analyzer-owned full-artifact playlist, per-item run/remove controls, and manual queue controls for selected tasks.
-- `src/features/song_analysis/analyzer_queue_models.ts`: task labels and queue-state display labels. Pending work and recovered `Interrupted before completion` items render as waiting work instead of failure text.
-- `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel for canonical analyzer beat events, including explicit beat/downbeat type.
+- `src/features/song_analysis/analyzer_queue/AnalyzerQueuePanel.ts`: placeholder analysis queue panel. It reads the inert backend `state.analyzer` payload and keeps the layout stable without sending queue intents.
+- `src/features/song_analysis/analyzer_queue_models.ts`: queue-state display labels used by the placeholder panel.
+- `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel for canonical beat events, including explicit beat/downbeat type.
 
 `BeatTable.ts` exists but is not mounted by the current `SongAnalysisView()`.
 
@@ -279,7 +278,7 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
 
 ## Current implementation status
 
-- `SongAnalysis` renders the shared chord progression panel and analyzer plots when available.
+- `SongAnalysis` renders the shared chord progression panel, the placeholder analysis queue card, and analysis plots when available.
 - `ShowBuilder` reuses the shared chord progression card and renders a live mixed cue sheet plus builder tools for effects, chasers, and cue helpers.
 - `ShowControl` renders a live sections panel backed by websocket song metadata, but its cue summary and fixture-effects panels are still static placeholder content.
 - `HomeView` exists in source but is not part of current route rendering.

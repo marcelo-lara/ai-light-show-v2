@@ -51,12 +51,6 @@ export type IntentMsg = {
 export type IntentName =
   | "song.list"
   | "song.load"
-  | "analyzer.enqueue"
-  | "analyzer.enqueue_full_artifact"
-  | "analyzer.execute"
-  | "analyzer.execute_all"
-  | "analyzer.remove"
-  | "analyzer.remove_all"
   | "transport.play"
   | "transport.pause"
   | "transport.stop"
