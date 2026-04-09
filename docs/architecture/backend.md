@@ -97,7 +97,8 @@ Behavior:
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - When `info.json` is missing for the selected song, `song.load` falls back to empty metadata (`bpm=0`, `duration=0`, empty beats path, empty artifacts) so the backend can still load the song and emit a valid snapshot.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, `cue.reload`, and `cue.apply_helper`.
-- The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, and full-sheet replace.
+- The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, cue-window replace, and full-sheet replace.
+- The mounted MCP server exposes canvas inspection operations for LLM clients: `render_dmx_canvas` refreshes the derived canvas and rewrites `backend/cues/{song}.dmx.log`, and `read_fixture_output_window` returns sampled fixture-channel output from that rendered canvas.
 - The mounted MCP server exposes read helpers for assistant grounding beyond cue CRUD: transport cursor lookup, loudness summaries, fixture lists, chaser lists, beat windows, exact bar/beat lookup, chord windows, section windows with resolved musical positions, and section-analysis summaries for metadata drafting.
 - `cue.clear` removes cue entries by time range (`from_time`, optional `to_time`) and persists the updated cue sheet.
 - `cue.clear_all` removes every cue entry from the current song and persists the empty cue sheet.
@@ -160,7 +161,8 @@ Message types:
 Current mounted MCP tools:
 - `songs_list`, `songs_get_details`, `songs_load`
 - `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
-- `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
+- `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`, `cues_replace_window`
+- `render_dmx_canvas`, `read_fixture_output_window`
 - `metadata_get_overview`, `metadata_get_sections`, `metadata_get_song_analysis`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - `transport_get_cursor`
 

@@ -71,9 +71,9 @@ Code is the source of truth.
 | `backend/store/services/fixture_loader.py` | `load_fixtures_from_path` | Fixture/template loading and instantiation |
 | `backend/store/services/song_metadata_loader.py` | `SongMetadataLoader` | Metadata candidate resolution + beats hydration |
 | `backend/store/services/section_persistence.py` | `normalize_sections_input`, `persist_parts_to_meta` | Section validation and metadata persistence |
-| `backend/store/services/canvas_rendering.py` | `render_cue_sheet_to_canvas`, `render_preview_canvas`, `dump_canvas_debug` | DMX canvas rendering + debug log dump |
+| `backend/store/services/canvas_rendering.py` | `render_cue_sheet_to_canvas`, `render_preview_canvas`, `dump_canvas_debug` | DMX canvas rendering + `.dmx.log` dump |
 | `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
-| `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canvas debug file writer |
+| `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canonical `backend/cues/{song}.dmx.log` writer |
 | `backend/services/cue_helpers/*` | `generate_downbeats_and_beats` | Backend-owned cue helper generation logic |
 | `backend/store/pois.py` | `PoiDatabase` | POI CRUD + disk sync + runtime target lookup |
 | `backend/store/dmx_canvas.py` | `DMXCanvas` | Packed DMX frame buffer |
@@ -143,6 +143,14 @@ Code is the source of truth.
 | `cues_update_entry` | `index`, `patch` | updates one cue row by index, persists, schedules websocket broadcast |
 | `cues_delete_entry` | `index` | deletes one cue row by index, persists, schedules websocket broadcast |
 | `cues_replace_sheet` | `entries` | replaces the entire cue sheet after validation, persists, re-renders canvas, schedules websocket broadcast |
+| `cues_replace_window` | `start_time`, `end_time`, `entries` | replaces cue rows inside one time window, persists, re-renders canvas, schedules websocket broadcast |
+
+#### Canvas
+
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `render_dmx_canvas` | none | re-renders the current song canvas and refreshes `backend/cues/{song}.dmx.log` |
+| `read_fixture_output_window` | `fixture_id`, `start_time`, `end_time`, `max_samples?` | returns sampled DMX channel values for one fixture from the rendered canvas |
 
 #### Metadata
 

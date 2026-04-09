@@ -64,3 +64,16 @@ def register_cue_tools(mcp, runtime) -> None:
             return fail("cue_replace_failed", "Could not replace cue sheet", result)
         await ws_manager._schedule_broadcast()
         return ok(result)
+
+    @mcp.tool()
+    async def cues_replace_window(start_time: float, end_time: float, entries: list[dict]):
+        ws_manager = runtime.require_ws_manager()
+        result = await ws_manager.state_manager.replace_cue_entries_window(
+            float(start_time),
+            float(end_time),
+            entries or [],
+        )
+        if not result.get("ok"):
+            return fail("cue_replace_window_failed", "Could not replace cue entries in window", result)
+        await ws_manager._schedule_broadcast()
+        return ok(result)

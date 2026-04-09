@@ -68,13 +68,16 @@ Supported intent names:
 Current MCP tools:
 - Songs: `songs_list`, `songs_get_details`, `songs_load`
 - Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
-- Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
+- Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`, `cues_replace_window`
+- Canvas: `render_dmx_canvas`, `read_fixture_output_window`
 - Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_song_analysis`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - Transport: `transport_get_cursor`
 
 Behavior notes:
 - MCP song and cue mutation tools operate on the same `StateManager` used by websocket clients.
 - MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
+- `render_dmx_canvas` refreshes the derived song canvas and rewrites the canonical debug artifact at `backend/cues/{song}.dmx.log`.
+- `read_fixture_output_window` reads sampled DMX channel values for one fixture from the rendered canvas without mutating cues.
 - Metadata tools expose backend-resolved beat positions as bars and beats, including section start/end positions and exact bar/beat lookup.
 - `metadata_get_song_analysis` returns a backend-owned normalized analysis contract for the current song, including beat availability, section availability, feature availability, normalized section timing, per-section dominant parts, per-stem accents, per-stem dips, and low windows.
 - Loudness summaries are read from the mix `artifacts.essentia` manifest entry for `loudness_envelope` and returned as averaged window statistics.
@@ -180,6 +183,11 @@ MCP cue payloads:
 - `cues_get_sheet` returns the full persisted cue sheet for the current song.
 - `cues_get_window` returns entries in an inclusive `[start_time, end_time]` window.
 - `cues_replace_sheet` validates and replaces the full cue sheet, persists it, and re-renders the DMX canvas.
+- `cues_replace_window` validates and replaces entries in one inclusive `[start_time, end_time]` window, persists the result, and re-renders the DMX canvas.
+
+DMX render artifact:
+- The canonical human/debug render artifact is `backend/cues/{song}.dmx.log`.
+- The log is sparse and text-based: it records only non-zero frames up to the current max-used channel range.
 
 Chasers payload under `state.chasers`:
 - List of chaser definitions loaded from `backend/fixtures/chasers.json`, including stable `id`, display `name`, `description`, and beat-based `effects`.

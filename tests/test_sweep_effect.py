@@ -177,7 +177,7 @@ async def test_sweep_preview_prerolls_to_start_poi_from_last_position():
     assert state_manager.preview_canvas is not None
     assert state_manager.preview_canvas.total_frames > 31
     visible_start_frame = state_manager.preview_canvas.total_frames - 31
-    dump_path = POIS_PATH.resolve().parents[1] / "cues" / "preview.mini_beam_prism_l.sweep.sweep-preview-preroll.canvas.debug.log"
+    dump_path = POIS_PATH.resolve().parents[1] / "cues" / "preview.mini_beam_prism_l.sweep.sweep-preview-preroll.dmx.log"
     assert dump_path.exists()
     assert dump_path.stat().st_size > 0
     piano_pan, piano_tilt = _poi_target("piano", "mini_beam_prism_l")

@@ -330,11 +330,13 @@ Use this order:
 2. Read `sections.json` and `beats.json`.
 3. Read the song metadata files that matter for energy, loudness, harmony, or hints.
 4. Write or revise the canonical analysis brief in `data/artifacts/<Song>/lighting_score.md`.
-5. Decide the palette and recurring motion language.
-6. Decide which ideas belong in raw cues and which belong in chasers.
-7. Build the cue sheet in `backend/cues/<Song>.json`.
-8. Validate JSON.
-9. Spot-check exact timestamps, especially the ones the user called out.
+5. Divide the song into phrase-aligned authoring windows of about 60 seconds. Prefer section boundaries when they fit; if a section is longer, split it into multiple phrase windows.
+6. Decide the palette and recurring motion language.
+7. Decide which ideas belong in raw cues and which belong in chasers.
+8. Build the cue sheet in `backend/cues/<Song>.json` one window at a time.
+9. After each window rewrite, rerender and inspect that same window before moving on.
+10. Validate JSON.
+11. Spot-check exact timestamps, especially the ones the user called out.
 
 ## Section Identity Patterns
 
@@ -493,7 +495,7 @@ After any meaningful change:
 
 ## Optional Canvas Debug Log Validation
 
-If `backend/cues/<Song>.canvas.debug.log` exists, use it as an optional rendered-output check when motion readability or dimmer behavior is critical.
+If `backend/cues/<Song>.dmx.log` exists, use it as an optional rendered-output check when motion readability or dimmer behavior is critical.
 
 Validate it like this:
 
@@ -521,6 +523,8 @@ If you are the model creating or refining a show:
 
 - read the song metadata before writing cues
 - write or revise `lighting_score.md` before or alongside the cue sheet
+- author long cue sheets in phrase-aligned windows of about 60 seconds instead of trying to rebuild the whole song in one pass
+- validate each rewritten window before moving to the next window
 - use real timestamps
 - keep fixture roles distinct
 - let low-energy parts breathe

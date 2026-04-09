@@ -1,10 +1,12 @@
 from pathlib import Path
+from typing import Dict
 
 import pytest
 from fastmcp import Client
 
 from mcp_server import BackendMcpRuntime, create_backend_mcp
 from models.song import Song
+from store.dmx_canvas import DMXCanvas
 
 TEST_SONG = "Cinderella - Ella Lee"
 
@@ -28,15 +30,30 @@ class FakeArtNetService:
         del universe
 
 
+class FakeFixture:
+    def __init__(self, fixture_id: str, absolute_channels: Dict[str, int]) -> None:
+        self.id = fixture_id
+        self.absolute_channels = absolute_channels
+
+
 class FakeStateManager:
     def __init__(self, meta_path: Path) -> None:
         self.meta_path = meta_path
         self.current_song = Song(song_id=TEST_SONG, base_dir=str(meta_path))
         self.timecode = 0.464399
+        self.fixtures = [FakeFixture("parcan_l", {"red": 1, "green": 2, "blue": 3, "dim": 4})]
         self._cue_entries = [
             {"time": 0.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.5, "data": {}},
             {"time": 16.0, "fixture_id": "parcan_r", "effect": "flash", "duration": 0.5, "data": {}},
         ]
+        self.canvas = DMXCanvas.allocate(fps=60, total_frames=5)
+        for frame_index in range(self.canvas.total_frames):
+            universe = bytearray(512)
+            universe[0] = min(255, frame_index * 10)
+            universe[1] = min(255, frame_index * 20)
+            universe[2] = min(255, frame_index * 30)
+            universe[3] = 255
+            self.canvas.set_frame(frame_index, universe)
 
     async def load_song(self, song: str) -> None:
         self.current_song = Song(song_id=song, base_dir=str(self.meta_path))
@@ -56,6 +73,60 @@ class FakeStateManager:
     async def replace_cue_sheet_entries(self, entries):
         self._cue_entries = list(entries)
         return {"ok": True, "count": len(self._cue_entries), "entries": list(self._cue_entries)}
+
+    async def replace_cue_entries_window(self, start_time: float, end_time: float, entries):
+        retained = [entry for entry in self._cue_entries if not (start_time <= entry["time"] <= end_time)]
+        self._cue_entries = retained + list(entries)
+        self._cue_entries.sort(key=lambda entry: float(entry.get("time", 0.0)))
+        return {
+            "ok": True,
+            "start_time": start_time,
+            "end_time": end_time,
+            "count": len(self._cue_entries),
+            "window_count": len(entries),
+            "entries": list(self._cue_entries),
+        }
+
+    async def rerender_dmx_canvas(self):
+        return {
+            "ok": True,
+            "song": self.current_song.song_id,
+            "fps": self.canvas.fps,
+            "total_frames": self.canvas.total_frames,
+            "duration_s": round((self.canvas.total_frames - 1) / float(self.canvas.fps), 3),
+            "dmx_log_path": f"backend/cues/{self.current_song.song_id}.dmx.log",
+        }
+
+    async def read_fixture_output_window(self, fixture_id: str, start_time: float, end_time: float, max_samples: int = 240):
+        del max_samples
+        fixture = next((item for item in self.fixtures if item.id == fixture_id), None)
+        if fixture is None:
+            return {"ok": False, "reason": "fixture_not_found"}
+        start_frame = self.canvas.clamp_frame_index(int(start_time * self.canvas.fps))
+        end_frame = self.canvas.clamp_frame_index(int(end_time * self.canvas.fps))
+        samples = []
+        for frame_index in range(start_frame, end_frame + 1):
+            frame = self.canvas.frame_view(frame_index)
+            samples.append(
+                {
+                    "frame": frame_index,
+                    "time_s": round(frame_index / float(self.canvas.fps), 3),
+                    "channels": {name: int(frame[channel - 1]) for name, channel in fixture.absolute_channels.items()},
+                }
+            )
+        return {
+            "ok": True,
+            "song": self.current_song.song_id,
+            "fixture_id": fixture_id,
+            "fps": self.canvas.fps,
+            "start_time": start_time,
+            "end_time": end_time,
+            "start_frame": start_frame,
+            "end_frame": end_frame,
+            "sample_step_frames": 1,
+            "absolute_channels": dict(fixture.absolute_channels),
+            "samples": samples,
+        }
 
     def get_chasers(self):
         return [{"id": "parcan_left_to_right", "name": "Parcans left to right", "description": "Test chaser", "effects": []}]
@@ -184,9 +255,36 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         assert window.data["ok"] is True
         assert window.data["data"]["count"] == 1
 
+        sheet = await client.call_tool("cues_get_sheet", {})
+        assert sheet.data["ok"] is True
+        assert sheet.data["data"]["count"] == 2
+
         replaced = await client.call_tool("cues_replace_sheet", {"entries": [{"time": 4.0, "chaser_id": "demo", "data": {}}]})
         assert replaced.data["ok"] is True
         assert replaced.data["data"]["count"] == 1
+
+        replaced_window = await client.call_tool(
+            "cues_replace_window",
+            {"start_time": 0.0, "end_time": 8.0, "entries": [{"time": 2.0, "fixture_id": "parcan_l", "effect": "flash", "duration": 0.25, "data": {}}]},
+        )
+        assert replaced_window.data["ok"] is True
+        assert replaced_window.data["data"]["window_count"] == 1
+
+        rendered = await client.call_tool("render_dmx_canvas", {})
+        assert rendered.data["ok"] is True
+        assert rendered.data["data"]["fps"] == 60
+        assert rendered.data["data"]["dmx_log_path"].endswith(f"{TEST_SONG}.dmx.log")
+
+        fixture_output = await client.call_tool(
+            "read_fixture_output_window",
+            {"fixture_id": "parcan_l", "start_time": 0.0, "end_time": 0.05, "max_samples": 10},
+        )
+        assert fixture_output.data["ok"] is True
+        assert fixture_output.data["data"]["fixture_id"] == "parcan_l"
+        assert fixture_output.data["data"]["absolute_channels"]["red"] == 1
+        assert fixture_output.data["data"]["samples"]
+        first_sample = fixture_output.data["data"]["samples"][0]
+        assert first_sample["channels"]["dim"] == 255
 
         loaded = await client.call_tool("songs_load", {"song": TEST_SONG})
         assert loaded.data["ok"] is True

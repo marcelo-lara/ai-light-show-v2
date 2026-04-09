@@ -206,6 +206,53 @@ class StateSongCueMixin:
         entries = self.get_cue_entries()
         return [entry for entry in entries if start_time <= float(entry.get("time", 0.0)) <= end_time]
 
+    async def replace_cue_entries_window(
+        self,
+        start_time: float,
+        end_time: float,
+        entries: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+            if end_time < start_time:
+                return {"ok": False, "reason": "invalid_time_range"}
+
+            current_entries = list(self.cue_sheet.entries)
+            try:
+                replacement_entries = [CueEntry(**entry) for entry in entries]
+            except Exception as exc:
+                return {"ok": False, "reason": "invalid_entry", "error": str(exc)}
+
+            for entry in replacement_entries:
+                if not (float(start_time) <= float(entry.time) <= float(end_time)):
+                    return {
+                        "ok": False,
+                        "reason": "entry_out_of_window",
+                        "entry": entry.model_dump(exclude_none=True),
+                    }
+
+            retained_entries = [
+                entry for entry in current_entries if not (float(start_time) <= float(entry.time) <= float(end_time))
+            ]
+            self.cue_sheet.entries = self._dedupe_entries(retained_entries + replacement_entries)
+            try:
+                self._validate_cue_sheet()
+            except ValueError as exc:
+                self.cue_sheet.entries = current_entries
+                return {"ok": False, "reason": str(exc)}
+
+            await self.save_cue_sheet()
+            self._refresh_canvas_after_cue_change()
+            return {
+                "ok": True,
+                "start_time": float(start_time),
+                "end_time": float(end_time),
+                "count": len(self.cue_sheet.entries),
+                "window_count": len(replacement_entries),
+                "entries": self.get_cue_entries(),
+            }
+
     async def replace_cue_sheet_entries(self, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
         async with self.lock:
             if not self.cue_sheet:

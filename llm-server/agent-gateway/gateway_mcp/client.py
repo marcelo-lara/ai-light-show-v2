@@ -26,6 +26,8 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
             "available_mappings": list(MCP_TOOL_MAP.keys()),
             "hint": "Call /debug/mcp/tools and map MCP_TOOL_MAP to real tool names.",
         }
+    if tool_name == "mcp_load_song":
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"song": str(args.get("song") or args.get("song_id") or "")})
     if tool_name == "mcp_read_sections":
         song = str(args.get("song") or args.get("song_id") or "")
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {"song": song} if song else {})
@@ -57,7 +59,25 @@ async def call_mcp(tool_name: str, args: Dict[str, Any]) -> Any:
         if song:
             payload["song"] = song
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
+    if tool_name == "mcp_read_cue_sheet":
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], {})
     if tool_name == "mcp_read_cue_window":
         payload = {"start_time": float(args.get("start_time", 0.0)), "end_time": float(args.get("end_time", 0.0))}
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
+    if tool_name == "mcp_replace_cue_window":
+        payload = {
+            "start_time": float(args.get("start_time", 0.0)),
+            "end_time": float(args.get("end_time", 0.0)),
+            "entries": list(args.get("entries") or []),
+        }
+        return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
+    if tool_name == "mcp_read_fixture_output_window":
+        payload = {
+            "fixture_id": str(args.get("fixture_id") or ""),
+            "start_time": float(args.get("start_time", 0.0)),
+            "end_time": float(args.get("end_time", 0.0)),
+        }
+        if args.get("max_samples") is not None:
+            payload["max_samples"] = int(args.get("max_samples") or 0)
         return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], payload)
     return await _call_mcp_tool(MCP_TOOL_MAP[tool_name], args)
