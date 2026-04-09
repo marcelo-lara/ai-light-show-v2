@@ -29,6 +29,7 @@ Legacy planning briefs such as `data/artifacts/<Song>/<Song>.md` are optional re
 - Follow `docs/lighting reference/show-external-cue-creation-guide.md` for every show-authoring task.
 - Read the guide before making show edits.
 - Start each authoring session by loading the target song through the backend MCP server.
+- If the MCP server is unavailable, stop and ask the user to start the full Docker Compose stack before continuing.
 - Read `lighting_score.md` and `music_feature_layers.json` before authoring or revising cues.
 - Use `layer_a_harmonic.json`, `layer_b_symbolic.json`, and `layer_c_energy.json` when the merged files are too coarse and you need section-level evidence for harmony, symbolic phrasing, or energy.
 - Treat `beats.json` and `sections.json` as the timing source of truth.
@@ -43,6 +44,7 @@ Legacy planning briefs such as `data/artifacts/<Song>/<Song>.md` are optional re
 - DO NOT ignore the generated planning brief. If `lighting_score.md` or `music_feature_layers.json` says the section changed, reconcile the cue sheet to that analysis instead of preserving stale show logic.
 - ONLY create cues that can be justified from song metadata, fixture definitions, and the authoring guide.
 - DO NOT bypass MCP for cue mutations or DMX validation once the song is loaded.
+- DO NOT continue with cue authoring if the MCP server cannot be reached; ask the user to start the full Docker Compose stack first.
 - DO NOT treat `backend/cues/<Song>.dmx.log` as an interchange file; it is the canonical human/debug render artifact.
 - DO author long songs in bounded cue windows rather than attempting a whole-song rewrite in one pass.
 - Prefer windows of about 60 seconds. If a musical phrase or section boundary makes that awkward, use the nearest phrase-aligned window that stays close to 60 seconds.
