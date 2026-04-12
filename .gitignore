@@ -191,4 +191,5 @@ pytest_debug.log
 .DS_Store
 
 test-results/
+data
 data/
