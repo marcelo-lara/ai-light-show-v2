@@ -94,3 +94,9 @@ When backend fixture effects are added, removed, renamed, or their parameters ch
 - `docs/architecture.md`
 - `docs/architecture/backend.md`
 - `docs/ui/UI_Future_state.md`
+
+## Note
+
+/data is a symbolic link
+
+ln -s ~/ai-light-song-v2/data ~/ai-light-show-v2/data
