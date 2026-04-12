@@ -199,6 +199,8 @@ Code is the source of truth.
 
 Song snapshot payload also includes optional `song.analysis.events[]` rows sourced from `outputs.song_event_timeline`. Each row keeps event timing, section, confidence/intensity, provenance, summary, creator, evidence summary, and lighting hint fields. `evidence_ref` is omitted from the client-facing snapshot payload.
 
+Song snapshot payload also includes optional `song.analysis.patterns[]` rows sourced from `artifacts.pattern_mining`. Each row keeps the pattern label, representative sequence, normalized bar count, and normalized `occurrences[]` timing windows. Invalid occurrence rows are dropped and `occurrence_count` is recalculated from the normalized occurrence list.
+
 Metadata root notes:
 - Backend resolves metadata from `/app/meta` in Docker.
 - For local development and tests, backend prefers `data/output` and falls back to `backend/meta` only when no local metadata tree is available.

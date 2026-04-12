@@ -243,6 +243,7 @@ export type SongAnalysisState = {
   plots?: SongAnalysisPlot[];
   chords?: SongChord[];
   events?: SongAnalysisEvent[];
+  patterns?: SongAnalysisPattern[];
 };
 
 export type SongAnalysisPlot = {
@@ -272,6 +273,24 @@ export type SongAnalysisEvent = {
   created_by: string;
   evidence_summary: string;
   lighting_hint: string;
+};
+
+export type SongAnalysisPatternOccurrence = {
+  start_bar: number;
+  end_bar: number;
+  start_s: number;
+  end_s: number;
+  mismatch_count: number;
+  sequence: string;
+};
+
+export type SongAnalysisPattern = {
+  id: string;
+  label: string;
+  bar_count: number;
+  sequence: string;
+  occurrence_count: number;
+  occurrences: SongAnalysisPatternOccurrence[];
 };
 
 export type SongSection = {

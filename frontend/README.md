@@ -38,7 +38,7 @@ Route definitions live in `src/app/routes.ts` and `src/shared/state/ui_state.ts`
 | Route id | Sidebar label | View function | Current behavior |
 | --- | --- | --- | --- |
 | `show_control` | Show Control | `ShowControlView()` | Renders `SongPlayer()` with `SongSectionsPanel`, a placeholder cue summary panel, and a placeholder fixture-effects panel |
-| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with Song Loader plus the shared chord panel, Song Events plus an inert Event Tools placeholder, and analysis plot panels in a three-column layout |
+| `song_analysis` | Song Analysis | `SongAnalysisView()` | Renders `SongPlayer()` with Song Loader plus the shared chord panel, Song Events plus an inert Event Tools placeholder, chord-pattern mining cards, and analysis plot panels in a four-column layout |
 | `show_builder` | Show Builder | `ShowBuilderView()` | Renders `SongPlayer()` with the shared chord progression panel, live cue sheet, effect picker, chaser picker, and cue helpers |
 | `dmx_control` | DMX Control | `DmxControlView()` | Renders fixture grid with dynamic controls |
 
@@ -140,12 +140,14 @@ Global bridge fields used across modules:
 - `SongSectionsPanel` highlight rule uses section bounds with a small start-time tolerance (`start_s - 0.01`): active when `timeS > (start_s - 0.01) && timeS < end_s`.
 
 ### Song Analysis
-- `src/features/song_analysis/SongAnalysisView.ts`: composes player with a three-column analysis layout: `SongLoaderPanel()` plus shared `ChordsPanel()` in column one, `SongEventsPanel()` plus the inert Event Tools placeholder in column two, and analysis plot cards in column three.
-- `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats, analysis plots, and song-event timeline data from backend state and composes shared song structure data.
+- `src/features/song_analysis/SongAnalysisView.ts`: composes player with a four-column analysis layout: `SongLoaderPanel()` plus shared `ChordsPanel()` in column one, `SongEventsPanel()` plus the inert Event Tools placeholder in column two, chord-pattern mining cards in column three, and analysis plot cards in column four.
+- `src/features/song_analysis/song_analysis_state.ts`: derives cleaned/sorted beats, analysis plots, song-event timeline data, and chord-pattern mining data from backend state and composes shared song structure data.
 - `src/features/song_analysis/song_loader/SongLoaderPanel.ts`: event-driven available-song list with confirmation before `song.load`.
 - `src/features/song_analysis/song_loader/state.ts`: local song-loader store fed by `song_list` events.
 - `src/features/song_analysis/analyzer_queue/AnalyzerQueuePanel.ts`: placeholder analysis queue panel. It reads the inert backend `state.analyzer` payload and keeps the layout stable without sending queue intents.
 - `src/features/song_analysis/analyzer_queue_models.ts`: queue-state display labels used by the placeholder panel.
+- `src/features/song_analysis/chord_patterns/ChordPatterns.ts`: chord-pattern mining model and active-occurrence helpers for Song Analysis.
+- `src/features/song_analysis/chord_patterns/ChordPatternsPanel.ts`: scrollable pattern-card column with occurrence squares sourced from `analysis.patterns[]`.
 - `src/features/song_analysis/song_events/SongEvents.ts`: song-event timeline model and active-window logic for Song Analysis.
 - `src/features/song_analysis/song_events/SongEventsPanel.ts`: scrollable song-event card list with playback-synced `is-active` highlighting.
 - `src/features/song_analysis/components/BeatTable.ts`: beat grouping panel for canonical beat events, including explicit beat/downbeat type.
@@ -280,7 +282,7 @@ Reference: `docs/ui/LoFi mockups/4 DMX Control.png`.
 
 ## Current implementation status
 
-- `SongAnalysis` renders Song Loader plus the shared chord progression panel in the first column, Song Events plus the inert Event Tools placeholder in the second column, and analysis plots in the third column when available.
+- `SongAnalysis` renders Song Loader plus the shared chord progression panel in the first column, Song Events plus the inert Event Tools placeholder in the second column, chord-pattern mining cards in the third column, and analysis plots in the fourth column when available.
 - `ShowBuilder` reuses the shared chord progression card and renders a live mixed cue sheet plus builder tools for effects, chasers, and cue helpers.
 - `ShowControl` renders a live sections panel backed by websocket song metadata, but its cue summary and fixture-effects panels are still static placeholder content.
 - `HomeView` exists in source but is not part of current route rendering.

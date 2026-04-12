@@ -188,6 +188,7 @@ Song snapshot payload includes optional analysis artifacts under `song.analysis`
 - `plots[]`: backend-served SVG plot descriptors.
 - `chords[]`: chord-change timeline entries when metadata exists.
 - `events[]`: song-event timeline entries read from `outputs.song_event_timeline`, sorted by `start_time`, with timing, section, confidence/intensity, provenance, summary, creator, evidence summary, and lighting hint fields. `evidence_ref` stays backend-side.
+- `patterns[]`: chord-pattern mining entries read from `artifacts.pattern_mining`, sorted by descending normalized occurrence count, with `id`, `label`, `bar_count`, `sequence`, and normalized `occurrences[]` timing/bar spans.
 
 Static file serving for frontend assets consumed from snapshots:
 - `/songs/*`: song audio files.

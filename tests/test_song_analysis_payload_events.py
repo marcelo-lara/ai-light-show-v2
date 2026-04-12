@@ -52,7 +52,8 @@ def test_parse_song_events_drops_evidence_ref_and_sorts(tmp_path: Path) -> None:
 
 
 def test_build_song_analysis_payload_includes_events_from_outputs_path(tmp_path: Path) -> None:
-    song_dir = tmp_path / "Test Song"
+    meta_root = tmp_path / "output"
+    song_dir = meta_root / "Test Song"
     song_dir.mkdir(parents=True)
     (song_dir / "info.json").write_text(json.dumps({
         "outputs": {
@@ -83,7 +84,7 @@ def test_build_song_analysis_payload_includes_events_from_outputs_path(tmp_path:
         ]
     }))
 
-    manager = SimpleNamespace(state_manager=SimpleNamespace(meta_path=str(tmp_path)))
+    manager = SimpleNamespace(state_manager=SimpleNamespace(meta_path=str(meta_root)))
 
     payload = build_song_analysis_payload(manager, "Test Song")
 

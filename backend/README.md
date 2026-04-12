@@ -164,7 +164,7 @@ Patch behavior:
 
 Song payload fields under `state.song`:
 - Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`.
-- Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`), `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`), and `analysis.events[]` (`id`, `type`, `start_time`, `end_time`, `confidence`, `intensity`, `section_id`, nullable `section_name`, `provenance`, `summary`, `created_by`, `evidence_summary`, `lighting_hint`). `analysis.events[]` is sourced from `outputs.song_event_timeline`, sorted by `start_time`, and omits `evidence_ref` at the websocket boundary.
+- Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`), `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`), `analysis.events[]` (`id`, `type`, `start_time`, `end_time`, `confidence`, `intensity`, `section_id`, nullable `section_name`, `provenance`, `summary`, `created_by`, `evidence_summary`, `lighting_hint`), and `analysis.patterns[]` (`id`, `label`, `bar_count`, `sequence`, `occurrence_count`, `occurrences[]`). `analysis.events[]` is sourced from `outputs.song_event_timeline`, sorted by `start_time`, and omits `evidence_ref` at the websocket boundary. `analysis.patterns[]` is sourced from `artifacts.pattern_mining`, keeps valid `occurrences[]` rows only, and re-counts `occurrence_count` from the normalized rows.
 
 Canonical `state.song.beats[]` rows are beat events with:
 - `time`: beat timestamp in seconds.
@@ -240,6 +240,7 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 	tests/test_song_sections_payload_schema.py \
 	tests/test_song_analysis_payload_chords.py \
 	tests/test_song_analysis_payload_events.py \
+	 tests/test_song_analysis_payload_patterns.py \
 	tests/test_jump_to_section_regression.py \
 	tests/test_chaser_timing.py \
 	tests/test_chaser_preview_lifecycle.py \
