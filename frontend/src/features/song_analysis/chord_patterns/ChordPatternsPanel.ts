@@ -2,6 +2,7 @@ import { Card } from "../../../shared/components/layout/Card.ts";
 import { Cards } from "../../../shared/components/layout/Cards.ts";
 import { getSongPlayerTimeMs } from "../../../shared/state/song_player_time.ts";
 import { selectPlayback } from "../../../shared/state/selectors.ts";
+import { transportJumpToTime } from "../../../shared/transport/transport_intents.ts";
 import { ChordPatterns } from "./ChordPatterns.ts";
 
 function formatTime(value: number): string {
@@ -15,12 +16,12 @@ function text(className: string, value: string): HTMLParagraphElement {
 	return node;
 }
 
-function occurrenceLabel(startBar: number, endBar: number, startTime: number, endTime: number): string {
-	return `${endBar - startBar}: ${formatTime(startTime)}-${formatTime(endTime)}`;
+function occurrenceLabel(startTime: number, endTime: number): string {
+	return `${formatTime(startTime)}-${formatTime(endTime)}`;
 }
 
 export function ChordPatternsPanel(patterns: ChordPatterns): HTMLElement {
-	const activeSquares = new Map<string, HTMLElement>();
+	const activeRows = new Map<string, HTMLElement>();
 	const cards = patterns.items.map((pattern, patternIndex) => {
 		const body = document.createElement("div");
 		body.className = "chord-pattern-card-body";
@@ -33,13 +34,14 @@ export function ChordPatternsPanel(patterns: ChordPatterns): HTMLElement {
 		const occurrences = document.createElement("div");
 		occurrences.className = "chord-pattern-occurrences";
 		pattern.occurrences.forEach((occurrence, occurrenceIndex) => {
-			const square = document.createElement("div");
-			square.className = "chord-pattern-occurrence";
-			square.textContent = occurrenceLabel(occurrence.startBar, occurrence.endBar, occurrence.startTime, occurrence.endTime);
-			square.title = occurrence.sequence || `${pattern.label} occurrence`;
-			if (occurrence.mismatchCount > 0) square.dataset.mismatchCount = String(occurrence.mismatchCount);
-			activeSquares.set(`${patternIndex}:${occurrenceIndex}`, square);
-			occurrences.append(square);
+			const row = document.createElement("div");
+			row.className = "chord-pattern-occurrence";
+			row.textContent = occurrenceLabel(occurrence.startTime, occurrence.endTime);
+			row.title = occurrence.sequence || `${pattern.label} occurrence`;
+			row.addEventListener("click", () => transportJumpToTime(occurrence.startTime * 1000));
+			if (occurrence.mismatchCount > 0) row.dataset.mismatchCount = String(occurrence.mismatchCount);
+			activeRows.set(`${patternIndex}:${occurrenceIndex}`, row);
+			occurrences.append(row);
 		});
 
 		body.append(occurrences);
@@ -56,13 +58,13 @@ export function ChordPatternsPanel(patterns: ChordPatterns): HTMLElement {
 	if (!cards.length) return root;
 
 	let currentKeys = patterns.activeOccurrenceKeys(Math.max(selectPlayback().time_ms, getSongPlayerTimeMs()));
-		for (const [key, square] of activeSquares.entries()) square.classList.toggle("is-active", currentKeys.has(key));
+	for (const [key, row] of activeRows.entries()) row.classList.toggle("is-active", currentKeys.has(key));
 
 	let rafId = 0;
 	const syncActive = () => {
 		const nextKeys = patterns.activeOccurrenceKeys(getSongPlayerTimeMs());
 		if (nextKeys.size !== currentKeys.size || [...nextKeys].some((key) => !currentKeys.has(key))) {
-			for (const [key, square] of activeSquares.entries()) square.classList.toggle("is-active", nextKeys.has(key));
+			for (const [key, row] of activeRows.entries()) row.classList.toggle("is-active", nextKeys.has(key));
 			currentKeys = nextKeys;
 		}
 		if (root.isConnected) rafId = requestAnimationFrame(syncActive);

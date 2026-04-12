@@ -37,21 +37,21 @@
 }
 
 .chord-pattern-occurrences {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr));
-  gap: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .chord-pattern-occurrence {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 6.25rem;
-  aspect-ratio: 1 / 1;
-  padding: 0.4rem;
-  text-align: center;
-  font-size: 0.72rem;
+  justify-content: flex-start;
+  min-height: 1rem;
+  padding: 0.2rem;
+  text-align: left;
+  font-size: 0.7rem;
   background: color-mix(in oklab, var(--card) 90%, var(--panel));
+  cursor: pointer;
 }
 
 .chord-pattern-occurrence.is-active {

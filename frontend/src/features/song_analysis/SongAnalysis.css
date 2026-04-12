@@ -19,10 +19,13 @@
 
 .song-analysis-column {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   overflow: hidden;
+}
+
+.song-analysis-column:first-child {
+  grid-template-rows: minmax(0, 0.3fr) minmax(0, 1fr);
 }
 
 .song-analysis-column-plots {
