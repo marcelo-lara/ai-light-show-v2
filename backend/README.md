@@ -164,7 +164,7 @@ Patch behavior:
 
 Song payload fields under `state.song`:
 - Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`.
-- Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`) and `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`).
+- Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`), `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`), and `analysis.events[]` (`id`, `type`, `start_time`, `end_time`, `confidence`, `intensity`, `section_id`, nullable `section_name`, `provenance`, `summary`, `created_by`, `evidence_summary`, `lighting_hint`). `analysis.events[]` is sourced from `outputs.song_event_timeline`, sorted by `start_time`, and omits `evidence_ref` at the websocket boundary.
 
 Canonical `state.song.beats[]` rows are beat events with:
 - `time`: beat timestamp in seconds.
@@ -239,6 +239,7 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 	tests/test_set_values_regression.py \
 	tests/test_song_sections_payload_schema.py \
 	tests/test_song_analysis_payload_chords.py \
+	tests/test_song_analysis_payload_events.py \
 	tests/test_jump_to_section_regression.py \
 	tests/test_chaser_timing.py \
 	tests/test_chaser_preview_lifecycle.py \
@@ -269,7 +270,7 @@ Use this matrix to pick edit targets and minimum tests quickly:
 | --- | --- | --- |
 | State bootstrap fields or shared state flags | `store/state_manager/core/bootstrap.py` | state-manager regression command above |
 | Fixture load/save, arm defaults, POI fixture target persistence | `store/state_manager/core/fixture_store.py`, `store/state_manager/core/fixture_effects.py` | state-manager regression command above |
-| Song metadata length inference or metadata path resolution | `store/state_manager/core/metadata.py`, `store/services/song_metadata_loader.py` | state-manager regression command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
+| Song metadata length inference or metadata path resolution | `store/state_manager/core/metadata.py`, `store/services/song_metadata_loader.py` | state-manager regression command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` + `tests/test_song_analysis_payload_events.py` |
 | Cue-sheet-to-canvas render wiring or preview render wiring | `store/state_manager/core/render.py`, `store/services/canvas_rendering.py` | state-manager regression command above |
 | Fixture effect contracts or preview support | `models/fixtures/**/*`, `store/state_manager/core/fixture_effects.py`, `store/state_manager/playback/preview_start.py` | state-manager regression command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `store/state_manager/song/loading.py`, `store/state_manager/song/cues.py`, `store/state_manager/song/sections.py` | state-manager regression command above |

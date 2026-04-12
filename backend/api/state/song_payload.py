@@ -87,6 +87,83 @@ def parse_chords(chords_path: Path) -> List[Dict[str, Any]]:
 
     return picked[:512]
 
+
+def resolve_output_file(song_dir: Path, info_data: Dict[str, Any], output_key: str, default_name: str) -> Path:
+    outputs = info_data.get("outputs") if isinstance(info_data, dict) else None
+    candidate = outputs.get(output_key) if isinstance(outputs, dict) else None
+    if not isinstance(candidate, str) or not candidate:
+        return song_dir / default_name
+
+    output_path = Path(candidate)
+    if output_path.exists() or not output_path.is_absolute():
+        return output_path if output_path.is_absolute() else song_dir / output_path
+
+    for prefix in ("/app/meta", "/data/output"):
+        try:
+            relative = output_path.relative_to(prefix)
+            return song_dir.parent / relative
+        except ValueError:
+            continue
+    return output_path
+
+
+def parse_song_events(events_path: Path) -> List[Dict[str, Any]]:
+    try:
+        payload = json.loads(events_path.read_text())
+    except Exception:
+        return []
+
+    rows = payload.get("events") if isinstance(payload, dict) else None
+    if not isinstance(rows, list):
+        return []
+
+    picked: List[Dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+
+        event_id = str(row.get("id") or "").strip()
+        event_type = str(row.get("type") or "").strip()
+        if not event_id or not event_type:
+            continue
+
+        try:
+            start_time = float(row.get("start_time"))
+            end_time = float(row.get("end_time"))
+        except Exception:
+            continue
+        if not (start_time >= 0.0 and end_time > start_time):
+            continue
+
+        try:
+            confidence = float(row.get("confidence", 0.0))
+        except Exception:
+            confidence = 0.0
+        try:
+            intensity = float(row.get("intensity", 0.0))
+        except Exception:
+            intensity = 0.0
+
+        section_name_raw = row.get("section_name")
+        picked.append({
+            "id": event_id,
+            "type": event_type,
+            "start_time": start_time,
+            "end_time": end_time,
+            "confidence": confidence,
+            "intensity": intensity,
+            "section_id": str(row.get("section_id") or "").strip(),
+            "section_name": None if section_name_raw is None else str(section_name_raw).strip(),
+            "provenance": str(row.get("provenance") or "").strip(),
+            "summary": str(row.get("summary") or "").strip(),
+            "created_by": str(row.get("created_by") or "").strip(),
+            "evidence_summary": str(row.get("evidence_summary") or "").strip(),
+            "lighting_hint": str(row.get("lighting_hint") or "").strip(),
+        })
+
+    picked.sort(key=lambda item: (item["start_time"], item["end_time"], item["id"]))
+    return picked[:1024]
+
 def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[str, Any]]:
     meta_root = Path(getattr(manager.state_manager, "meta_path", "") or "")
     if not meta_root:
@@ -118,17 +195,20 @@ def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[st
 
     chords_path = Path(resolve_beats_file(meta_root / song_filename, info_data))
     chords = parse_chords(chords_path) if chords_path.exists() else []
+    events_path = resolve_output_file(meta_root / song_filename, info_data, "song_event_timeline", "song_event_timeline.json")
+    events = parse_song_events(events_path) if events_path.exists() else []
     logger.debug(
-        "[SONG_PAYLOAD] analysis payload for %s -> chords=%s first=%s",
+        "[SONG_PAYLOAD] analysis payload for %s -> chords=%s events=%s first_event=%s",
         song_filename,
         len(chords),
-        chords[:8],
+        len(events),
+        events[:3],
     )
 
-    if not plots and not chords:
+    if not plots and not chords and not events:
         return None
 
-    return {"plots": plots, "chords": chords}
+    return {"plots": plots, "chords": chords, "events": events}
 
 def build_song_payload(manager) -> Optional[Dict[str, Any]]:
     song = manager.state_manager.current_song

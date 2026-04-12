@@ -25,6 +25,7 @@ export function renderDocument(opts: RenderOptions): string {
     <link rel="stylesheet" href="/src/features/show_builder/ShowBuilder.css" />
     <link rel="stylesheet" href="/src/features/song_analysis/SongAnalysis.css" />
     <link rel="stylesheet" href="/src/features/song_analysis/analyzer_queue/AnalyzerQueuePanel.css" />
+    <link rel="stylesheet" href="/src/features/song_analysis/song_events/SongEventsPanel.css" />
     <link rel="stylesheet" href="/src/features/song_analysis/song_loader/SongLoaderPanel.css" />
     <link rel="stylesheet" href="/src/features/dmx_control/DmxControl.css" />
     <link rel="stylesheet" href="/src/features/llm_chat/LlmChat.css" />

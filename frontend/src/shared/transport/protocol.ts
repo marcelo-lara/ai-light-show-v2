@@ -242,6 +242,7 @@ export type SongState = {
 export type SongAnalysisState = {
   plots?: SongAnalysisPlot[];
   chords?: SongChord[];
+  events?: SongAnalysisEvent[];
 };
 
 export type SongAnalysisPlot = {
@@ -255,6 +256,22 @@ export type SongChord = {
   label: string;
   bar?: number;
   beat?: number;
+};
+
+export type SongAnalysisEvent = {
+  id: string;
+  type: string;
+  start_time: number;
+  end_time: number;
+  confidence: number;
+  intensity: number;
+  section_id: string;
+  section_name?: string | null;
+  provenance: string;
+  summary: string;
+  created_by: string;
+  evidence_summary: string;
+  lighting_hint: string;
 };
 
 export type SongSection = {

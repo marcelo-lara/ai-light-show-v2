@@ -1,6 +1,6 @@
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
-import type { Section } from "../types/types.ts";
+import type { Section, SongPlayerEvent } from "../types/types.ts";
 import { rebuildSongRegions } from "./regions.ts";
 
 export interface WaveSurferManagerOptions {
@@ -103,6 +103,7 @@ export class WaveSurferManager {
 
   rebuildRegions(params: {
     sections: Section[];
+    activeEvents: SongPlayerEvent[];
     downbeats: number[];
     showSections: boolean;
     showDownbeats: boolean;
@@ -111,6 +112,7 @@ export class WaveSurferManager {
     rebuildSongRegions({
       regionsPlugin: this.regionsPlugin,
       sections: params.sections,
+      activeEvents: params.activeEvents,
       downbeats: params.downbeats,
       showSections: params.showSections,
       showDownbeats: params.showDownbeats,

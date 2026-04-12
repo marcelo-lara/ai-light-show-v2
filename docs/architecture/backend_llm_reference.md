@@ -197,6 +197,8 @@ Code is the source of truth.
 - The current payload is an inert placeholder so the frontend Song Analysis page can keep rendering its queue card while backend queue/runtime behavior is absent.
 - `available` is `false`, `polling` is `false`, `playback_locked` is `false`, `task_types` and `items` are empty, and `summary` is zeroed.
 
+Song snapshot payload also includes optional `song.analysis.events[]` rows sourced from `outputs.song_event_timeline`. Each row keeps event timing, section, confidence/intensity, provenance, summary, creator, evidence summary, and lighting hint fields. `evidence_ref` is omitted from the client-facing snapshot payload.
+
 Metadata root notes:
 - Backend resolves metadata from `/app/meta` in Docker.
 - For local development and tests, backend prefers `data/output` and falls back to `backend/meta` only when no local metadata tree is available.
@@ -424,7 +426,7 @@ Field notes:
 - `system.edit_lock` is `True` when playback is active.
 - `playback.state` derives from `isPlaying` plus `timecode` (`stopped` only at ~0).
 - `song` is `null` when no song is loaded.
-- `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song.
+- `song.analysis` is optional and is present only when analysis artifacts exist for the loaded song. When present, it may include `plots[]`, `chords[]`, and `events[]`.
 - For RGB fixtures, `fixtures.<id>.values.rgb` is emitted as canonical uppercase `#RRGGBB`.
 - `fixtures.<id>.supported_effects` lists valid effects as rich metadata objects with `id`, `name`, `description`, `tags`, and `schema`.
 - Frontend consumers should read `fixtures.<id>.supported_effects[].id` as the stable effect identifier and `name` as the display label; treating `supported_effects` as a string id list is invalid.
@@ -485,6 +487,7 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
   tests/test_set_values_regression.py \
   tests/test_song_sections_payload_schema.py \
   tests/test_song_analysis_payload_chords.py \
+  tests/test_song_analysis_payload_events.py \
   tests/test_jump_to_section_regression.py \
   tests/test_chaser_timing.py \
   tests/test_chaser_preview_lifecycle.py \
@@ -513,7 +516,7 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 | --- | --- | --- |
 | State bootstrap fields or shared state flags | `backend/store/state_manager/core/bootstrap.py` | state-manager validation command above |
 | Fixture load/save, arm defaults, POI fixture target persistence | `backend/store/state_manager/core/fixture_store.py`, `backend/store/state_manager/core/fixture_effects.py` | state-manager validation command above |
-| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | state-manager validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
+| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | state-manager validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` + `tests/test_song_analysis_payload_events.py` |
 | Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | state-manager validation command above |
 | Fixture effect contracts or preview support | `backend/models/fixtures/**/*`, `backend/store/state_manager/core/fixture_effects.py`, `backend/store/state_manager/playback/preview_start.py` | state-manager validation command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | state-manager validation command above |

@@ -187,6 +187,7 @@ Backend resolves song audio from `/app/songs` in Docker. For local development a
 Song snapshot payload includes optional analysis artifacts under `song.analysis`:
 - `plots[]`: backend-served SVG plot descriptors.
 - `chords[]`: chord-change timeline entries when metadata exists.
+- `events[]`: song-event timeline entries read from `outputs.song_event_timeline`, sorted by `start_time`, with timing, section, confidence/intensity, provenance, summary, creator, evidence summary, and lighting hint fields. `evidence_ref` stays backend-side.
 
 Static file serving for frontend assets consumed from snapshots:
 - `/songs/*`: song audio files.
@@ -215,6 +216,7 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
   tests/test_set_values_regression.py \
   tests/test_song_sections_payload_schema.py \
   tests/test_song_analysis_payload_chords.py \
+  tests/test_song_analysis_payload_events.py \
   tests/test_jump_to_section_regression.py \
   tests/test_chaser_timing.py \
   tests/test_chaser_preview_lifecycle.py \
@@ -243,8 +245,8 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 | --- | --- | --- |
 | State bootstrap fields or shared state flags | `backend/store/state_manager/core/bootstrap.py` | validation command above |
 | Fixture load/save, arm defaults, POI fixture target persistence | `backend/store/state_manager/core/fixture_store.py`, `backend/store/state_manager/core/fixture_effects.py` | validation command above |
-| Song metadata structure and loading paths | `backend/models/song/*` | validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
-| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
+| Song metadata structure and loading paths | `backend/models/song/*` | validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` + `tests/test_song_analysis_payload_events.py` |
+| Song metadata length inference or metadata path resolution | `backend/store/state_manager/core/metadata.py`, `backend/store/services/song_metadata_loader.py` | validation command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` + `tests/test_song_analysis_payload_events.py` |
 | Cue-sheet-to-canvas render wiring or preview render wiring | `backend/store/state_manager/core/render.py`, `backend/store/services/canvas_rendering.py` | validation command above |
 | Fixture effect contracts or preview support | `backend/models/fixtures/**/*`, `backend/store/state_manager/core/fixture_effects.py`, `backend/store/state_manager/playback/preview_start.py` | validation command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `backend/store/state_manager/song/loading.py`, `backend/store/state_manager/song/cues.py`, `backend/store/state_manager/song/sections.py` | validation command above |
