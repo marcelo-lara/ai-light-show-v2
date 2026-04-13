@@ -51,6 +51,9 @@ export type IntentMsg = {
 export type IntentName =
   | "song.list"
   | "song.load"
+  | "song.hints.create"
+  | "song.hints.update"
+  | "song.hints.delete"
   | "transport.play"
   | "transport.pause"
   | "transport.stop"
@@ -244,6 +247,23 @@ export type SongAnalysisState = {
   chords?: SongChord[];
   events?: SongAnalysisEvent[];
   patterns?: SongAnalysisPattern[];
+  human_hints?: SongHumanHint[];
+  human_hints_status?: SongHumanHintsStatus;
+};
+
+export type SongHumanHint = {
+  id: string;
+  start_time: number;
+  end_time: number;
+  title: string;
+  summary: string;
+  lighting_hint: string;
+};
+
+export type SongHumanHintsStatus = {
+  dirty?: boolean;
+  saved?: boolean;
+  file_exists?: boolean;
 };
 
 export type SongAnalysisPlot = {

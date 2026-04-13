@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from models.fixtures.fixture import Fixture
-from models.song import resolve_meta_root, resolve_songs_root
+from models.song import HumanHints, resolve_meta_root, resolve_songs_root
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.pois import PoiStore
 
@@ -28,6 +28,7 @@ class StateCoreBootstrapMixin:
         self.fixtures_path: Optional[Path] = None
         self.current_song = None
         self.cue_sheet = None
+        self.human_hints: Optional[HumanHints] = None
         self.timecode: float = 0.0
         self.is_playing: bool = False
         self.playback_anchor_perf: float = perf_counter()

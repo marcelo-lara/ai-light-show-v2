@@ -25,6 +25,7 @@ class StateSongLoadingMixin:
 
             self.load_chasers()
             self.cue_sheet = load_cue_sheet(self.cues_path, song_filename)
+            self.load_human_hints(song_filename)
             self._validate_cue_sheet()
 
             self.editor_universe = bytearray(DMX_CHANNELS)

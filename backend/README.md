@@ -160,11 +160,12 @@ Patch behavior:
 - Songs: `data/songs/*.mp3` locally, mounted at `/app/songs` in Docker
 - Metadata root in Docker: `/app/meta` (local preference: `data/output`, fallback: `backend/meta`)
 - Artifact root: `/data/artifacts` in Docker (local preference: `data/artifacts`)
+- Human hints root in Docker: `/data/reference/{song}/human/human_hints.json` (local preference: `data/reference/{song}/human/human_hints.json`)
 - Static routes: `/songs/*` for audio and `/meta/*` for metadata artifacts (SVG/JSON).
 
 Song payload fields under `state.song`:
 - Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`.
-- Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`), `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`), `analysis.events[]` (`id`, `type`, `start_time`, `end_time`, `confidence`, `intensity`, `section_id`, nullable `section_name`, `provenance`, `summary`, `created_by`, `evidence_summary`, `lighting_hint`), and `analysis.patterns[]` (`id`, `label`, `bar_count`, `sequence`, `occurrence_count`, `occurrences[]`). `analysis.events[]` is sourced from `outputs.song_event_timeline`, sorted by `start_time`, and omits `evidence_ref` at the websocket boundary. `analysis.patterns[]` is sourced from `artifacts.pattern_mining`, keeps valid `occurrences[]` rows only, and re-counts `occurrence_count` from the normalized rows.
+- Analysis: `analysis.plots[]` (`id`, `title`, `svg_url`), `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`), `analysis.events[]` (`id`, `type`, `start_time`, `end_time`, `confidence`, `intensity`, `section_id`, nullable `section_name`, `provenance`, `summary`, `created_by`, `evidence_summary`, `lighting_hint`), `analysis.patterns[]` (`id`, `label`, `bar_count`, `sequence`, `occurrence_count`, `occurrences[]`), `analysis.human_hints[]` (`id`, `start_time`, `end_time`, `title`, `summary`, `lighting_hint`), and `analysis.human_hints_status` (`dirty`, `saved`, `file_exists`). `analysis.events[]` is sourced from `outputs.song_event_timeline`, `analysis.patterns[]` is sourced from `artifacts.pattern_mining`, and `analysis.human_hints[]` is sourced from `data/reference/{song}/human/human_hints.json`.
 
 Canonical `state.song.beats[]` rows are beat events with:
 - `time`: beat timestamp in seconds.

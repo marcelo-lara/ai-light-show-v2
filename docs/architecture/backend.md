@@ -96,6 +96,7 @@ Behavior:
 - `song.list` emits an event with the available backend song names and does not broadcast state.
 - `song.load` validates `payload.filename`, loads the selected song, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and broadcasts the updated song/cue/playback state.
 - When `info.json` is missing for the selected song, `song.load` falls back to empty metadata (`bpm=0`, `duration=0`, empty beats path, empty artifacts) so the backend can still load the song and emit a valid snapshot.
+- Song-scoped human hints are loaded from `data/reference/{song}/human/human_hints.json` through the shared `/data` root. Backend exposes them under `state.song.analysis.human_hints[]` with companion `state.song.analysis.human_hints_status`, and `song.hints.create|update|delete` persist edits immediately.
 - Cue edits are handled by websocket intents: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`, `cue.clear_all`, `cue.reload`, and `cue.apply_helper`.
 - The mounted MCP server exposes parallel editing operations for LLM clients: full cue sheet reads, cue-window reads, cue add/update/delete, cue-window replace, and full-sheet replace.
 - The mounted MCP server exposes canvas inspection operations for LLM clients: `render_dmx_canvas` refreshes the derived canvas and rewrites `backend/cues/{song}.dmx.log`, and `read_fixture_output_window` returns sampled fixture-channel output from that rendered canvas.

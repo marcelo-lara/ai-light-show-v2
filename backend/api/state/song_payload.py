@@ -259,20 +259,22 @@ def parse_chord_patterns(patterns_path: Path) -> List[Dict[str, Any]]:
 
 def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[str, Any]]:
     meta_root = Path(getattr(manager.state_manager, "meta_path", "") or "")
+    human_hints = manager.state_manager.get_human_hints_payload()
+    human_hints_status = manager.state_manager.get_human_hints_status()
     if not meta_root:
-        return None
+        return {"plots": [], "chords": [], "events": [], "patterns": [], "human_hints": human_hints, "human_hints_status": human_hints_status}
 
     info_file = meta_root / song_filename / "info.json"
     if not info_file.exists():
-        return None
+        return {"plots": [], "chords": [], "events": [], "patterns": [], "human_hints": human_hints, "human_hints_status": human_hints_status}
 
     try:
         info_data = json.loads(info_file.read_text())
     except Exception:
-        return None
+        return {"plots": [], "chords": [], "events": [], "patterns": [], "human_hints": human_hints, "human_hints_status": human_hints_status}
 
     if not isinstance(info_data, dict):
-        return None
+        return {"plots": [], "chords": [], "events": [], "patterns": [], "human_hints": human_hints, "human_hints_status": human_hints_status}
 
     artifacts = info_data.get("artifacts") or {}
 
@@ -302,10 +304,14 @@ def build_song_analysis_payload(manager, song_filename: str) -> Optional[Dict[st
         patterns[:2],
     )
 
-    if not plots and not chords and not events and not patterns:
-        return None
-
-    return {"plots": plots, "chords": chords, "events": events, "patterns": patterns}
+    return {
+        "plots": plots,
+        "chords": chords,
+        "events": events,
+        "patterns": patterns,
+        "human_hints": human_hints,
+        "human_hints_status": human_hints_status,
+    }
 
 def build_song_payload(manager) -> Optional[Dict[str, Any]]:
     song = manager.state_manager.current_song

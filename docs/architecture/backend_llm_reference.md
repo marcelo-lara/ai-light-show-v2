@@ -190,6 +190,9 @@ Code is the source of truth.
 | --- | --- | --- | --- |
 | `song.list` | none | emits `song_list` with backend-discoverable song names from `SongService.list_songs()` | `False` |
 | `song.load` | `filename` | validates the song id, loads the selected song into `StateManager`, stops playback ticker activity, disables continuous Art-Net send, reapplies the loaded output universe, and emits `song_loaded`. If analyzer `info.json` is missing, backend uses empty fallback metadata instead of failing the load. | `True` on success; else event `song_load_failed` and `False` |
+| `song.hints.create` | `start_time`, `end_time`, `title`, `summary`, `lighting_hint` | creates one human hint for the current song, persists `data/reference/{song}/human/human_hints.json`, and emits `song_hint_created` | `True` on success; else event `song_hint_create_failed` and `False` |
+| `song.hints.update` | `id`, `patch.end_time?`, `patch.title?`, `patch.summary?`, `patch.lighting_hint?` | updates one persisted human hint for the current song and emits `song_hint_updated` | `True` on success; else event `song_hint_update_failed` and `False` |
+| `song.hints.delete` | `id` | deletes one persisted human hint for the current song and emits `song_hint_deleted` | `True` on success; else event `song_hint_delete_failed` and `False` |
 
 ### Analysis placeholder state
 
@@ -200,6 +203,8 @@ Code is the source of truth.
 Song snapshot payload also includes optional `song.analysis.events[]` rows sourced from `outputs.song_event_timeline`. Each row keeps event timing, section, confidence/intensity, provenance, summary, creator, evidence summary, and lighting hint fields. `evidence_ref` is omitted from the client-facing snapshot payload.
 
 Song snapshot payload also includes optional `song.analysis.patterns[]` rows sourced from `artifacts.pattern_mining`. Each row keeps the pattern label, representative sequence, normalized bar count, and normalized `occurrences[]` timing windows. Invalid occurrence rows are dropped and `occurrence_count` is recalculated from the normalized occurrence list.
+
+Song snapshot payload also includes `song.analysis.human_hints[]` rows sourced from `data/reference/{song}/human/human_hints.json`. Each row keeps `id`, `start_time`, `end_time`, `title`, `summary`, and `lighting_hint`. Companion `song.analysis.human_hints_status` exposes `dirty`, `saved`, and `file_exists` for the currently loaded file.
 
 Metadata root notes:
 - Backend resolves metadata from `/app/meta` in Docker.

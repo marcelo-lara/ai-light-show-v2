@@ -1,0 +1,103 @@
+.human-hints-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.human-hints-header,
+.human-hints-editor-top,
+.human-hints-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.human-hints-header {
+  margin-bottom: 0.75rem;
+}
+
+.human-hints-title,
+.human-hints-meta,
+.human-hints-empty,
+.human-hints-row-title,
+.human-hints-row-time,
+.human-hints-row-copy,
+.human-hints-editor-time {
+  margin: 0;
+}
+
+.human-hints-title {
+  font-size: 0.95rem;
+}
+
+.human-hints-meta {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.human-hints-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.25rem;
+}
+
+.human-hints-row {
+  align-items: flex-start;
+  padding: 0.35rem 0;
+}
+
+.human-hints-row .o-list-content,
+.human-hints-row-main,
+.human-hints-editor {
+  display: flex;
+  flex-direction: column;
+}
+
+.human-hints-row-main,
+.human-hints-editor {
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.human-hints-row-title,
+.human-hints-row-copy {
+  font-size: 0.78rem;
+  white-space: normal;
+}
+
+.human-hints-row-time,
+.human-hints-editor-time {
+  font-size: 0.72rem;
+}
+
+.human-hints-textarea {
+  min-height: 4rem;
+  resize: vertical;
+}
+
+.human-hints-editor {
+  padding: 0 0 0.5rem;
+}
+
+.human-hints-editor-time-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.human-hints-editor-time-row > .input-control {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 960px) {
+  .human-hints-body {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+}
