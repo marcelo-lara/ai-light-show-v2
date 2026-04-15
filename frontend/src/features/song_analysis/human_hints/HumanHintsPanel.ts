@@ -7,12 +7,11 @@ import { getBackendStore, subscribeBackendStore } from "../../../shared/state/ba
 import { getSongPlayerTimeMs } from "../../../shared/state/song_player_time.ts";
 import { selectEditLock } from "../../../shared/state/selectors.ts";
 import { transportJumpToTime } from "../../../shared/transport/transport_intents.ts";
+import { formatPosition } from "../../../shared/utils/format.ts";
 import { createHumanHint, deleteHumanHint, updateHumanHint } from "../song_analysis_intents.ts";
 import { readHumanHints, type HumanHint } from "./HumanHints.ts";
 
 type Draft = { mode: "create" | "edit"; id?: string; startTime: string; endTime: string; title: string; summary: string; lightingHint: string };
-
-const formatTime = (value: number) => (Number.isFinite(value) ? value.toFixed(3) : "0.000");
 const text = (className: string, value: string) => Object.assign(document.createElement("p"), { className, textContent: value });
 
 function createEditor(draft: Draft, onSave: () => void, onCancel: () => void): HTMLElement {
@@ -29,7 +28,7 @@ function createEditor(draft: Draft, onSave: () => void, onCancel: () => void): H
 		bindings: {
 			title: "Set start time to current cursor position",
 			onClick: () => {
-				draft.startTime = formatTime(Math.max(0, getSongPlayerTimeMs() / 1000));
+				draft.startTime = formatPosition(Math.max(0, getSongPlayerTimeMs() / 1000));
 				startTime.setValue(draft.startTime);
 			},
 		},
@@ -43,7 +42,7 @@ function createEditor(draft: Draft, onSave: () => void, onCancel: () => void): H
 		bindings: {
 			title: "Set end time to current cursor position",
 			onClick: () => {
-				draft.endTime = formatTime(Math.max(0, getSongPlayerTimeMs() / 1000));
+				draft.endTime = formatPosition(Math.max(0, getSongPlayerTimeMs() / 1000));
 				endTime.setValue(draft.endTime);
 			},
 		},
@@ -77,7 +76,7 @@ function buildRow(hint: HumanHint, isActive: boolean, disabled: boolean, onEdit:
 	main.className = "human-hints-row-main";
 	main.append(
 		text("human-hints-row-title", hint.title || "Untitled hint"),
-		text("human-hints-row-time muted", `${formatTime(hint.startTime)} - ${formatTime(hint.endTime)}`),
+		text("human-hints-row-time muted", `${formatPosition(hint.startTime)} - ${formatPosition(hint.endTime)}`),
 	);
 	if (hint.summary) main.append(text("human-hints-row-copy", hint.summary));
 	if (hint.lightingHint) main.append(text("human-hints-row-copy muted", hint.lightingHint));
@@ -118,7 +117,7 @@ export function HumanHintsPanel(): HTMLElement {
 		addButton.disabled = disabled || draft !== null;
 		addButton.onclick = () => {
 			if (disabled || draft) return;
-			draft = { mode: "create", startTime: formatTime(cursorS), endTime: formatTime(cursorS + 1), title: "", summary: "", lightingHint: "" };
+			draft = { mode: "create", startTime: formatPosition(cursorS), endTime: formatPosition(cursorS + 1), title: "", summary: "", lightingHint: "" };
 			render();
 		};
 		body.replaceChildren();
@@ -147,7 +146,7 @@ export function HumanHintsPanel(): HTMLElement {
 		}
 		for (const hint of analysis.items) {
 			body.append(buildRow(hint, cursorS >= hint.startTime && cursorS < hint.endTime, disabled, () => {
-				draft = { mode: "edit", id: hint.id, startTime: formatTime(hint.startTime), endTime: formatTime(hint.endTime), title: hint.title, summary: hint.summary, lightingHint: hint.lightingHint };
+				draft = { mode: "edit", id: hint.id, startTime: formatPosition(hint.startTime), endTime: formatPosition(hint.endTime), title: hint.title, summary: hint.summary, lightingHint: hint.lightingHint };
 				render();
 			}, async () => {
 				const confirmed = await ConfirmCancelPrompt({ title: "Delete human hint", message: `Delete ${hint.title || hint.id}?`, confirmLabel: "Delete", cancelLabel: "Cancel" });

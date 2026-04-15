@@ -3,17 +3,10 @@ import { List } from "../../../shared/components/layout/List.ts";
 import { getSongPlayerTimeMs } from "../../../shared/state/song_player_time.ts";
 import { selectPlayback } from "../../../shared/state/selectors.ts";
 import { transportJumpToTime } from "../../../shared/transport/transport_intents.ts";
+import { formatPosition } from "../../../shared/utils/format.ts";
 import { SongEvents } from "./SongEvents.ts";
 
 const ACTIVE_SCROLL_PADDING_PX = 12;
-
-function formatTime(value: number): string {
-	return Number.isFinite(value) ? value.toFixed(3) : "0.000";
-}
-
-function formatAmount(value: number): string {
-	return Number.isFinite(value) ? value.toFixed(3) : "0.000";
-}
 
 function text(className: string, value: string): HTMLParagraphElement {
 	const node = document.createElement("p");
@@ -37,7 +30,7 @@ function buildRow(event: SongEvents["items"][number], isActive: boolean): HTMLEl
 	top.className = "song-events-row-top";
 	top.append(
 		text("song-events-row-type", event.type),
-		text("song-events-row-time", `${formatTime(event.startTime)} - ${formatTime(event.endTime)}`),
+		text("song-events-row-time", `${formatPosition(event.startTime)} - ${formatPosition(event.endTime)}`),
 	);
 
 	const section = text(
@@ -48,8 +41,8 @@ function buildRow(event: SongEvents["items"][number], isActive: boolean): HTMLEl
 	const details = document.createElement("div");
 	details.className = "song-events-row-meta muted";
 	details.append(
-		metaLine("confidence", formatAmount(event.confidence)),
-		metaLine("intensity", formatAmount(event.intensity)),
+		metaLine("confidence", formatPosition(event.confidence)),
+		metaLine("intensity", formatPosition(event.intensity)),
 		metaLine("source", event.provenance || "unknown"),
 		metaLine("creator", event.createdBy || "unknown"),
 	);

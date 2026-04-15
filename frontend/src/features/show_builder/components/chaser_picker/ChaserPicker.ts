@@ -4,6 +4,7 @@ import { Card } from "../../../../shared/components/layout/Card.ts";
 import { List } from "../../../../shared/components/layout/List.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
+import { formatPosition } from "../../../../shared/utils/format.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { applyChaser, previewChaser, updateCue } from "../../cue_intents.ts";
 import { getChaserById, getCueRepetitions, isChaserCue } from "../../cue_utils.ts";
@@ -173,7 +174,7 @@ export function ChaserPicker(): HTMLElement {
 		for (const effect of [...chaser.effects].sort((a, b) => a.beat - b.beat)) {
 			const start = document.createElement("span");
 			start.className = "u-cell u-cell-time";
-			start.textContent = getStartTimeForBeat(effect.beat, bpm).toFixed(3);
+			start.textContent = formatPosition(getStartTimeForBeat(effect.beat, bpm));
 
 			const beat = document.createElement("span");
 			beat.className = "u-cell u-cell-beat";
@@ -189,7 +190,7 @@ export function ChaserPicker(): HTMLElement {
 
 			const duration = document.createElement("span");
 			duration.className = "u-cell u-cell-duration";
-			duration.textContent = `${getStartTimeForBeat(effect.duration, bpm).toFixed(3)}s`;
+			duration.textContent = `${formatPosition(getStartTimeForBeat(effect.duration, bpm))}s`;
 
 			const preview = Button({
 				icon: "preview",

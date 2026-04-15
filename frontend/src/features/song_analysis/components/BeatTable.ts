@@ -1,5 +1,6 @@
 import { Card } from "../../../shared/components/layout/Card.ts";
 import type { BeatObject } from "../../../shared/transport/protocol.ts";
+import { formatPosition } from "../../../shared/utils/format.ts";
 
 type BeatTableProps = {
   beats: BeatObject[];
@@ -85,7 +86,7 @@ export function BeatTable(props: BeatTableProps): HTMLElement {
     for (const beat of group.beats) {
       const row = document.createElement("tr");
       const timeCell = document.createElement("td");
-      timeCell.textContent = beat.time.toFixed(3);
+      timeCell.textContent = formatPosition(beat.time);
       row.appendChild(timeCell);
 
       const beatCell = document.createElement("td");

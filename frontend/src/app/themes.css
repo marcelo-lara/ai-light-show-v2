@@ -194,10 +194,10 @@ button:hover:not(:disabled) {
   background: var(--accent) !important;
 }
 
-.is-active .muted,
+/* .is-active .muted,
 .is-selected .muted {
   color: var(--accent);
-}
+} */
 
 button:disabled {
   opacity: 0.55;

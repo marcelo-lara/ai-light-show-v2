@@ -3,10 +3,10 @@ import { List } from "../../../shared/components/layout/List.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../shared/state/backend_state.ts";
 import { transportJumpToSection } from "../../../shared/transport/transport_intents.ts";
 import type { SongSection } from "../../../shared/transport/protocol.ts";
+import { formatPosition } from "../../../shared/utils/format.ts";
 
 function formatSectionStart(startSeconds: number): string {
-  const safeValue = Number.isFinite(startSeconds) ? startSeconds : 0;
-  return safeValue.toFixed(3);
+  return formatPosition(startSeconds);
 }
 
 function normalizedSections(sections: SongSection[] | undefined): SongSection[] {

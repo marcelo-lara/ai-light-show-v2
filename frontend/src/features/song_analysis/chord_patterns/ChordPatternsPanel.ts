@@ -3,11 +3,8 @@ import { Cards } from "../../../shared/components/layout/Cards.ts";
 import { getSongPlayerTimeMs } from "../../../shared/state/song_player_time.ts";
 import { selectPlayback } from "../../../shared/state/selectors.ts";
 import { transportJumpToTime } from "../../../shared/transport/transport_intents.ts";
+import { formatPosition } from "../../../shared/utils/format.ts";
 import { ChordPatterns } from "./ChordPatterns.ts";
-
-function formatTime(value: number): string {
-	return Number.isFinite(value) ? value.toFixed(3) : "0.000";
-}
 
 function text(className: string, value: string): HTMLParagraphElement {
 	const node = document.createElement("p");
@@ -17,7 +14,7 @@ function text(className: string, value: string): HTMLParagraphElement {
 }
 
 function occurrenceLabel(startTime: number, endTime: number): string {
-	return `${formatTime(startTime)}-${formatTime(endTime)}`;
+	return `${formatPosition(startTime)}-${formatPosition(endTime)}`;
 }
 
 export function ChordPatternsPanel(patterns: ChordPatterns): HTMLElement {
