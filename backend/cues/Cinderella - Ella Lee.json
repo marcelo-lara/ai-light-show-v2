@@ -1456,6 +1456,8 @@
     "duration": 0.1,
     "data": {},
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "data": { "red": 20, "green": 0, "blue": 150 },
+    "created_by": "agent:creative-designer"
   },
   {
     "time": 28.58,
@@ -1613,6 +1615,7 @@
   },
   {
     "time": 30.48,
+    "time": 0.0,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
@@ -2751,6 +2754,8 @@
       "target_POI": "piano"
     },
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "data": { "target_POI": "piano" },
+    "created_by": "agent:creative-designer"
   },
   {
     "time": 44.1,
@@ -2847,6 +2852,7 @@
   },
   {
     "time": 45.72,
+    "time": 31.0,
     "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
     "duration": 0.14,
@@ -2862,9 +2868,13 @@
       "target_POI": "table"
     },
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "duration": 1.0,
+    "data": { "target_POI": "ref_0_0_0" },
+    "created_by": "agent:creative-designer:drop-prep"
   },
   {
     "time": 45.72,
+    "time": 32.0,
     "fixture_id": "mini_beam_prism_l",
     "effect": "set_channels",
     "duration": 0.0,
@@ -8956,6 +8966,9 @@
       "blue": 104
     },
     "created_by": "copilot:cinderella_chorus_parcan_glides_20260404"
+    "duration": 4.0,
+    "data": { "color": 0, "prism": 200 },
+    "created_by": "agent:creative-designer:beatdrop_visual_plan"
   },
   {
     "time": 148.58,
@@ -9043,6 +9056,7 @@
   },
   {
     "time": 150.48,
+    "time": 32.0,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
@@ -9698,9 +9712,13 @@
     "duration": 0.2,
     "data": {},
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "data": { "color": 0 },
+    "comment": "Lyric sync: 'Cinderella'",
+    "created_by": "agent:creative-designer:lyric-sync"
   },
   {
     "time": 163.82,
+    "time": 32.5,
     "fixture_id": "mini_beam_prism_l",
     "effect": "move_to_poi",
     "duration": 2.0,
@@ -25612,5 +25630,7 @@
       "blue": 190
     },
     "created_by": "codex:cinderella_show_20260403_full_rebuild"
+    "data": { "color": 55 },
+    "created_by": "agent:creative-designer:drop-transition"
   }
 ]

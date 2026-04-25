@@ -20,10 +20,12 @@ Primary GPT magic show inputs:
 
 ### Deliverables
 1. **Lighting Score (`data/output/<Song>/lighting_score.md`)**:
+   - A professional narrative story for the show using industry-standard vocabulary (e.g., wash, focus, texture, rhythm, dynamics).
    - High-level strategy and fixture roles.
    - Section-by-section breakdown.
    - **`beatdrop_visual_plan`**: Explicit coordination for energy builds and hits.
-2. **Cue Sheet (`backend/cues/<Song>.json`)**
+2. **Cue Sheet (`backend/cues/<Song>.json`)**:
+   - Professional lighting designer effects and precise DMX control logic implemented based on the lighting score narrative.
 
 Reference Material for Professional Polish:
 - `data/reference/<Song>/moises/lyrics.json` (align hits with vocal delivery)
@@ -69,8 +71,8 @@ Legacy planning briefs such as `data/artifacts/<Song>/<Song>.md` are optional re
 2. Inspect the song inputs: `data/output/<Song>/lighting_score.md`, `music_feature_layers.json`, `lighting_events.json`, and `layer_d_patterns.json`. For vocal-driven songs like "Cinderella", check `lyrics.json` for word-level sync.
 3. Read the current cue sheet through MCP before planning mutations.
 4. Divide the song into phrase-aligned authoring windows of about 60 seconds. Use section boundaries when they fit inside that target; otherwise split longer passages into multiple phrase windows.
-5. Write or revise the GPT magic show plan inside `lighting_score.md` so the creative direction, fixture roles, and section plan stay explicit and current with the available artifacts.
-6. Build or revise the cue sheet one window at a time by replacing only the intended time window through MCP, clearing stale cues inside that rebuilt window before recreating it.
+5. First, create a professional narrative story using a professional style and vocabulary in `lighting_score.md`. Ensure the creative direction, fixture roles, and section plan stay explicit and current with the available artifacts.
+6. Second, based on the lighting score, implement the cue sheet to reflect professional lighting designer effects and precise DMX control to ensure a high-quality render. Build or revise the sheet one window at a time, clearing stale cues inside that rebuilt window before recreating it.
 7. After each window rewrite, re-render the DMX canvas through MCP, inspect fixture output over that same window through MCP, and use `backend/cues/<Song>.dmx.log` as a rendered-output check when timing, dimmer behavior, or motion readability is critical.
 8. Validate the JSON and spot-check critical timestamps, fixture ids, POIs, prism values, and duplicate same-time cue collisions for the current window before moving to the next one.
 9. End every session with a short retrospective. If it reveals a reusable rule for future songs, update `docs/lighting reference/show-external-cue-creation-guide.md` in the same session.
