@@ -8,6 +8,14 @@ import { SongEvents } from "./SongEvents.ts";
 
 const ACTIVE_SCROLL_PADDING_PX = 12;
 
+function sameIndexes(left: number[], right: number[]): boolean {
+	if (left.length !== right.length) return false;
+	for (let index = 0; index < left.length; index++) {
+		if (left[index] !== right[index]) return false;
+	}
+	return true;
+}
+
 function text(className: string, value: string): HTMLParagraphElement {
 	const node = document.createElement("p");
 	node.className = className;
@@ -82,8 +90,8 @@ export function SongEventsPanel(events: SongEvents): HTMLElement {
 
 	const playback = selectPlayback();
 	const initialTimeMs = Math.max(playback.time_ms, getSongPlayerTimeMs());
-	let currentIndex = events.activeIndex(initialTimeMs);
-	const rows = events.items.map((event, index) => buildRow(event, index === currentIndex));
+	let currentIndexes = events.activeIndexes(initialTimeMs);
+	const rows = events.items.map((event, index) => buildRow(event, currentIndexes.includes(index)));
 	body.append(...rows);
 
 	let rafId = 0;
@@ -102,19 +110,19 @@ export function SongEventsPanel(events: SongEvents): HTMLElement {
 	};
 
 	const syncActive = () => {
-		const nextIndex = events.activeIndex(getSongPlayerTimeMs());
-		if (nextIndex !== currentIndex) {
-			if (currentIndex >= 0) rows[currentIndex]?.classList.remove("is-active");
-			if (nextIndex >= 0) rows[nextIndex]?.classList.add("is-active");
-			scrollActiveIntoView(nextIndex);
-			currentIndex = nextIndex;
+		const nextIndexes = events.activeIndexes(getSongPlayerTimeMs());
+		if (!sameIndexes(nextIndexes, currentIndexes)) {
+			for (const index of currentIndexes) rows[index]?.classList.remove("is-active");
+			for (const index of nextIndexes) rows[index]?.classList.add("is-active");
+			scrollActiveIntoView(nextIndexes[0] ?? -1);
+			currentIndexes = nextIndexes;
 		}
 		if (content.isConnected) rafId = requestAnimationFrame(syncActive);
 	};
 
 	queueMicrotask(() => {
 		if (!content.isConnected) return;
-		scrollActiveIntoView(currentIndex);
+		scrollActiveIntoView(currentIndexes[0] ?? -1);
 		rafId = requestAnimationFrame(syncActive);
 	});
 

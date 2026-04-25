@@ -57,17 +57,22 @@ export class SongEvents {
 		return new SongEvents(items);
 	}
 
-	activeIndex(timeMs: number): number {
-		if (!Number.isFinite(timeMs)) return -1;
+	activeIndexes(timeMs: number): number[] {
+		if (!Number.isFinite(timeMs)) return [];
 		const cursorS = Math.max(0, timeMs / 1000);
+		const matches: number[] = [];
 		for (let index = 0; index < this.items.length; index++) {
 			const item = this.items[index];
-			if (cursorS >= item.startTime && cursorS < item.endTime) return index;
+			if (cursorS >= item.startTime && cursorS < item.endTime) matches.push(index);
 		}
-		return -1;
+		return matches;
+	}
+
+	activeIndex(timeMs: number): number {
+		return this.activeIndexes(timeMs)[0] ?? -1;
 	}
 
 	isActive(index: number, timeMs: number): boolean {
-		return this.activeIndex(timeMs) === index;
+		return this.activeIndexes(timeMs).includes(index);
 	}
 }
