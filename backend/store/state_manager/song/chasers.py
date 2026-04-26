@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, List, Optional
 
-from models.chasers import ChaserDefinition, get_chaser_cycle_beats, load_chasers
+from models.chasers import ChaserDefinition, ChaserEffect, get_chaser_cycle_beats, load_chasers
 from models.cues import create_cue_entry
 from services.cue_helpers.timing import beatToTimeMs
 
@@ -76,16 +76,33 @@ class StateSongChaserMixin:
         start_time_ms: float,
         repetitions: int,
         bpm: float,
+        params: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         chaser = self.get_chaser_definition(chaser_id)
         if not chaser:
             return []
+
+        # Determine source of effects (Static vs Dynamic)
+        source_effects: List[ChaserEffect] = []
+        if chaser.type == "dynamic":
+            from services.dynamic_chasers import GENERATORS
+            if chaser.generator_id in GENERATORS:
+                # Merge definition defaults with instance overrides
+                merged_params = dict(chaser.default_params)
+                if params:
+                    merged_params.update(params)
+                
+                raw_effects = GENERATORS[chaser.generator_id](merged_params)
+                source_effects = [ChaserEffect(**e) for e in raw_effects]
+        else:
+            source_effects = chaser.effects
+
         entries: List[Dict[str, Any]] = []
         cycle_beats = get_chaser_cycle_beats(chaser)
 
         for cycle in range(repetitions):
             cycle_offset_beats = cycle * cycle_beats
-            for effect in chaser.effects:
+            for effect in source_effects:
                 cue_time_ms = start_time_ms + beatToTimeMs(cycle_offset_beats + effect.beat, bpm)
                 cue_duration_ms = beatToTimeMs(effect.duration, bpm)
                 entries.append({

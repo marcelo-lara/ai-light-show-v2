@@ -52,4 +52,7 @@ def get_chaser_by_name(chasers: List[ChaserDefinition], name: str) -> Optional[C
 
 
 def get_chaser_cycle_beats(chaser: ChaserDefinition) -> float:
+    if chaser.type == "dynamic":
+        return float(chaser.default_params.get("duration_beats", 0.0))
+
     return max((float(effect.beat) + float(effect.duration) for effect in chaser.effects), default=0.0)
