@@ -1,0 +1,411 @@
+{
+  "id": "indigo_blue_step_wave_lr_2_bars",
+  "name": "Indigo Blue Step Wave Lr 2 Bars",
+  "description": "A two-bar indigo-blue step wave for the RGB floor cans only, using one-beat directional red chases over a soft blue bed.",
+  "effects": [
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 30,
+        "green": 8,
+        "blue": 124,
+        "easing": "ease-in-out",
+        "start_value": {
+          "red": 0,
+          "green": 0,
+          "blue": 0
+        }
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 12,
+        "green": 7,
+        "blue": 108,
+        "easing": "ease-in-out",
+        "start_value": {
+          "red": 0,
+          "green": 0,
+          "blue": 0
+        }
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 4,
+        "green": 5,
+        "blue": 90,
+        "easing": "ease-in-out",
+        "start_value": {
+          "red": 0,
+          "green": 0,
+          "blue": 0
+        }
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 4,
+        "green": 5,
+        "blue": 90,
+        "easing": "ease-in-out",
+        "start_value": {
+          "red": 0,
+          "green": 0,
+          "blue": 0
+        }
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 12,
+        "green": 7,
+        "blue": 106,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 31,
+        "green": 8,
+        "blue": 122,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 12,
+        "green": 7,
+        "blue": 106,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 4,
+        "green": 5,
+        "blue": 88,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 5,
+        "green": 5,
+        "blue": 85,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 13,
+        "green": 7,
+        "blue": 103,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 32,
+        "green": 8,
+        "blue": 119,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 13,
+        "green": 7,
+        "blue": 103,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 5,
+        "green": 5,
+        "blue": 83,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 5,
+        "green": 5,
+        "blue": 83,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 13,
+        "green": 7,
+        "blue": 101,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 33,
+        "green": 8,
+        "blue": 117,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 33,
+        "green": 8,
+        "blue": 115,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 14,
+        "green": 7,
+        "blue": 99,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 5,
+        "green": 5,
+        "blue": 81,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 5,
+        "green": 5,
+        "blue": 81,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 5.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 14,
+        "green": 7,
+        "blue": 97,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 5.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 34,
+        "green": 8,
+        "blue": 113,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 5.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 14,
+        "green": 7,
+        "blue": 97,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 5.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 5,
+        "green": 5,
+        "blue": 79,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 6.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 6,
+        "green": 5,
+        "blue": 76,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 6.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 15,
+        "green": 7,
+        "blue": 94,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 6.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 35,
+        "green": 8,
+        "blue": 110,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 6.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 15,
+        "green": 7,
+        "blue": 94,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 7.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 6,
+        "green": 5,
+        "blue": 74,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 7.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 6,
+        "green": 5,
+        "blue": 74,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 7.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 15,
+        "green": 7,
+        "blue": 92,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 7.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.9,
+      "data": {
+        "red": 36,
+        "green": 8,
+        "blue": 108,
+        "easing": "ease-in-out"
+      }
+    }
+  ]
+}

@@ -115,7 +115,7 @@ Behavior:
 - `cue_helper_apply_failed` carries `missing_artifacts` when helper execution detects absent artifact files, allowing frontend error UI to report the exact artifact names and resolved paths.
 - `state.cue_helpers` includes a parameter schema for each helper so the frontend can render helper-specific controls without hardcoded forms.
 - Cue persistence de-duplicates matching effect identities (`fixture_id` + `effect`) and matching chaser identities (`chaser_id`) within `100ms`, keeping the latest write even when the duplicate arrives through assistant-confirmed MCP-backed edits.
-- Chaser definitions are loaded from `backend/fixtures/chasers.json` and exposed in `state.chasers`.
+- Chaser definitions are loaded from `backend/chasers/*.json` and exposed in `state.chasers`.
 - Chaser intents are `chaser.apply`, `chaser.preview`, `chaser.stop_preview`, `chaser.start`, `chaser.stop`, and `chaser.list`.
 - Chaser effect fields `beat` and `duration` are beat-based; conversion uses `beatToTimeMs(beat_count, bpm)`.
 - Persisted chaser cue rows store `chaser_id` and `data.repetitions`; they are not flattened on save.

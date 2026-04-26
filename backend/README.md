@@ -135,7 +135,7 @@ Patch behavior:
 - `cue.apply_helper` generates cue entries from backend-owned helper definitions and upserts them into the cue sheet. Helpers can expose parameter schemas and runtime params.
 - `cue_helper_apply_failed` includes `missing_artifacts` when helper execution fails because required artifact files referenced by the current song are absent, so frontend error surfaces can show the missing filenames and paths.
 - `song_draft` is a backend-owned cue helper that reads section and per-stem metadata through the backend analysis contract and generates a draft cue sheet using the active fixture inventory and POI availability.
-- `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
+- `chaser.apply` and `chaser.start` persist chaser-backed cue rows from definitions loaded under `backend/chasers/*.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
@@ -191,7 +191,7 @@ DMX render artifact:
 - The log is sparse and text-based: it records only non-zero frames up to the current max-used channel range.
 
 Chasers payload under `state.chasers`:
-- List of chaser definitions loaded from `backend/fixtures/chasers.json`, including stable `id`, display `name`, `description`, and beat-based `effects`.
+- List of chaser definitions loaded from `backend/chasers/*.json`, including stable `id`, display `name`, `description`, and beat-based `effects`.
 
 Section payload normalization:
 - Backend accepts section records with either `start/end/label` or `start_s/end_s/name` keys.

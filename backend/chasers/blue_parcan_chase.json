@@ -1,0 +1,43 @@
+{
+  "id": "blue_parcan_chase",
+  "name": "Parcans left to right blue",
+  "description": "A simple chaser that flashes the par cans from left to right in blue.",
+  "effects": [
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_pl",
+      "effect": "flash",
+      "duration": 1.5,
+      "data": {
+        "color": "#0000FF"
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_l",
+      "effect": "flash",
+      "duration": 1.5,
+      "data": {
+        "color": "#0000FF"
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_r",
+      "effect": "flash",
+      "duration": 1.5,
+      "data": {
+        "color": "#0000FF"
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_pr",
+      "effect": "flash",
+      "duration": 1.5,
+      "data": {
+        "color": "#0000FF"
+      }
+    }
+  ]
+}

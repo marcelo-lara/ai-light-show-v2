@@ -50,7 +50,7 @@ class StateCoreBootstrapMixin:
         self.preview_chaser_request_id: Optional[str] = None
         self.preview_chaser_name: Optional[str] = None
         self.max_used_channel: int = 0
-        self.chasers_path: Path = backend_path / "fixtures" / "chasers.json"
+        self.chasers_dir: Path = backend_path / "chasers"
         self.chasers: List[Any] = []
         self.active_chasers: Dict[str, Dict[str, Any]] = {}
 

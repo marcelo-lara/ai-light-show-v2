@@ -248,7 +248,7 @@ EL-150 shutter operational rule: keep `shutter: 255` whenever the beam should be
 
 ## Chasers
 
-Chasers are defined in `backend/fixtures/chasers.json`. They use beat-relative timing.
+Chasers are defined as one file per chaser under `backend/chasers/*.json`. They use beat-relative timing.
 
 Current chasers:
 

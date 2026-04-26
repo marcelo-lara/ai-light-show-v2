@@ -1,33 +1,32 @@
 # Backend Chasers Schema
 
-`backend/fixtures/chasers.json` stores reusable chaser definitions.
+`backend/chasers/*.json` stores reusable chaser definitions (one definition per file).
 
 ## Top-level shape
 
-The file content is an array.
+Each file under `backend/chasers` stores a single chaser definition object.
+The filename should match the definition id (`{id}.json`).
 
 ```json
-[
-  {
-    "id": "downbeats_and_beats",
-    "name": "Downbeat plus two beats",
-    "description": "A simple chaser pattern",
-    "effects": [
-      {
-        "beat": 0.0,
-        "fixture_id": "parcan_pl",
-        "effect": "flash",
-        "duration": 1.5,
-        "data": {}
-      }
-    ]
-  }
-]
+{
+  "id": "downbeats_and_beats",
+  "name": "Downbeat plus two beats",
+  "description": "A simple chaser pattern",
+  "effects": [
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_pl",
+      "effect": "flash",
+      "duration": 1.5,
+      "data": {}
+    }
+  ]
+}
 ```
 
 ## Chaser definition shape
 
-Each array item is an object with these fields:
+Each file object includes these fields:
 
 - `id`: string. Stable chaser identifier used by `chaser.*` intents and cue-sheet `chaser_id` entries.
 - `name`: string. Human-readable label shown in the UI.

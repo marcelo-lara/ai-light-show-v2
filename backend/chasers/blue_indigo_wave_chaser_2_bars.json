@@ -1,0 +1,162 @@
+{
+  "id": "blue_indigo_wave_chaser_2_bars",
+  "name": "Blue Indigo Wave Chaser 2 Bars",
+  "description": "A two-bar low blue-indigo wave for the RGB floor cans only: proton and parcan fixtures rise and fall in staggered fades, with no moving heads involved.",
+  "effects": [
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.2,
+      "data": {
+        "start_value": {
+          "red": 0,
+          "green": 4,
+          "blue": 18
+        },
+        "red": 0,
+        "green": 4,
+        "blue": 18,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 1.75,
+      "data": {
+        "start_value": {
+          "red": 0,
+          "green": 4,
+          "blue": 18
+        },
+        "red": 6,
+        "green": 12,
+        "blue": 96,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.2,
+      "data": {
+        "start_value": {
+          "red": 0,
+          "green": 4,
+          "blue": 18
+        },
+        "red": 0,
+        "green": 4,
+        "blue": 18,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.2,
+      "data": {
+        "start_value": {
+          "red": 0,
+          "green": 4,
+          "blue": 18
+        },
+        "red": 0,
+        "green": 4,
+        "blue": 18,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 0.6,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 1.65,
+      "data": {
+        "start_value": {
+          "red": 4,
+          "green": 4,
+          "blue": 24
+        },
+        "red": 20,
+        "green": 10,
+        "blue": 112,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 2.4,
+      "fixture_id": "parcan_l",
+      "effect": "fade_out",
+      "duration": 1.1,
+      "data": {
+        "easing": "ease-out"
+      }
+    },
+    {
+      "beat": 2.9,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_out",
+      "duration": 1.1,
+      "data": {
+        "easing": "ease-out"
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 1.75,
+      "data": {
+        "start_value": {
+          "red": 0,
+          "green": 4,
+          "blue": 18
+        },
+        "red": 6,
+        "green": 12,
+        "blue": 96,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 4.6,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 1.65,
+      "data": {
+        "start_value": {
+          "red": 4,
+          "green": 4,
+          "blue": 24
+        },
+        "red": 20,
+        "green": 10,
+        "blue": 112,
+        "easing": "ease-in-out"
+      }
+    },
+    {
+      "beat": 6.4,
+      "fixture_id": "parcan_r",
+      "effect": "fade_out",
+      "duration": 1.1,
+      "data": {
+        "easing": "ease-out"
+      }
+    },
+    {
+      "beat": 6.9,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_out",
+      "duration": 1.1,
+      "data": {
+        "easing": "ease-out"
+      }
+    }
+  ]
+}

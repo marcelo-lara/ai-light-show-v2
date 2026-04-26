@@ -1,9 +1,9 @@
 # pyright: reportAttributeAccessIssue=false
 
-import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from models.chasers import ChaserDefinition, upsert_global_chaser
 from models.cues import (
     CueEntry,
     clear_cue_sheet,
@@ -402,32 +402,9 @@ class StateSongCueMixin:
 
         async with self.lock:
             if is_global:
-                # Update global fixtures/chasers.json
-                global_path = self.backend_path / "fixtures" / "chasers.json"
                 try:
-                    data = []
-                    if global_path.exists():
-                        with open(global_path, "r") as f:
-                            data = json.load(f)
-                    
-                    # Update or append
-                    idx = -1
-                    for i, c in enumerate(data):
-                        if c.get("id") == chaser_id:
-                            idx = i
-                            break
-                    
-                    if idx >= 0:
-                        data[idx] = new_def
-                    else:
-                        data.append(new_def)
-                    
-                    with open(global_path, "w") as f:
-                        json.dump(data, f, indent=2)
-                    
-                    # Update runtime cache
-                    if hasattr(self, "chasers"):
-                        setattr(self, "chasers", data)
+                    upsert_global_chaser(self.chasers_dir, ChaserDefinition(**new_def))
+                    self.load_chasers()
                 except Exception as e:
                     return {"ok": False, "reason": f"global_save_failed: {str(e)}"}
             else:

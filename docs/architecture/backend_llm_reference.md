@@ -130,7 +130,7 @@ Code is the source of truth.
 | --- | --- | --- |
 | `fixtures_list` | none | returns serialized fixture payloads using current output universe values |
 | `fixtures_get` | `fixture_id` | returns one serialized fixture payload |
-| `chasers_list` | none | returns the currently loaded chaser definitions from `backend/fixtures/chasers.json` |
+| `chasers_list` | none | returns the currently loaded chaser definitions from `backend/chasers/*.json` |
 | `list_effects` | none | returns canonical effect metadata including `name`, `description`, controlled `tags`, and `schema` for each effect id |
 
 #### Cues
@@ -441,7 +441,7 @@ Field notes:
 - Input section records may be `start/end/label` or `start_s/end_s/name`; emitted `song.sections[]` entries are normalized to `{name,start_s,end_s}`.
 - `cues` contains the cue sheet entries for the loaded song; empty array if no cue sheet. Each cue entry includes `created_by`.
 - `cue_helpers` lists backend-declared helper definitions for frontend helper execution UI.
-- `chasers` lists chaser definitions loaded from `backend/fixtures/chasers.json`.
+- `chasers` lists chaser definitions loaded from `backend/chasers/*.json`.
 - Chaser effect fields `beat` and `duration` are in beats and converted using `beatToTimeMs(beat_count, bpm)` when generating cues.
 
 Patch behavior during playback:
