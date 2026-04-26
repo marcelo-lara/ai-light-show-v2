@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from models.song.artifacts import get_essentia_artifact_entry
+from models.song.analysis_files import resolve_data_root
 
 PARTS = ("mix", "bass", "drums", "vocals")
 
@@ -53,6 +54,13 @@ def _load_json(path: Path) -> Any:
 def _meta_file_path(meta_root: Path, raw_path: str, song_id: str) -> Path:
     if raw_path.startswith("/app/meta/"):
         return meta_root / raw_path[len("/app/meta/"):]
+    data_root = resolve_data_root(meta_root)
+    if raw_path.startswith("/data/output/"):
+        return data_root / "output" / raw_path[len("/data/output/"):]
+    if raw_path.startswith("/data/artifacts/"):
+        return data_root / "artifacts" / raw_path[len("/data/artifacts/"):]
+    if raw_path.startswith("/data/songs/"):
+        return data_root / "songs" / raw_path[len("/data/songs/"):]
     return Path(raw_path) if raw_path else meta_root / song_id
 
 
@@ -65,11 +73,74 @@ def _load_part_payload(song, meta_root: Path, part: str) -> dict[str, Any]:
 
 def _load_hints(song, meta_root: Path) -> list[dict[str, Any]]:
     artifacts = getattr(song.meta, "artifacts", {}) or {}
-    path = _meta_file_path(meta_root, str(artifacts.get("hints_file") or ""), song.song_id) if isinstance(artifacts, dict) else meta_root / song.song_id / "hints.json"
+    path = _meta_file_path(
+        meta_root,
+        str(artifacts.get("hints_file") or artifacts.get("music_feature_layers") or artifacts.get("lighting_events") or ""),
+        song.song_id,
+    ) if isinstance(artifacts, dict) else meta_root / song.song_id / "hints.json"
     if not path.name:
         path = meta_root / song.song_id / "hints.json"
     payload = _load_json(path if path.suffix else meta_root / song.song_id / "hints.json")
-    return payload if isinstance(payload, list) else []
+    if isinstance(payload, list):
+        return payload
+    if not isinstance(payload, dict):
+        return []
+    timeline = payload.get("timeline")
+    if not isinstance(timeline, dict):
+        return []
+    sections = []
+    for section in timeline.get("sections") or []:
+        if not isinstance(section, dict):
+            continue
+        sections.append(
+            {
+                "start_s": float(section.get("start_s", section.get("start", 0.0)) or 0.0),
+                "end_s": float(section.get("end_s", section.get("end", 0.0)) or 0.0),
+                "hints": [],
+            }
+        )
+    for phrase in timeline.get("phrases") or []:
+        if not isinstance(phrase, dict):
+            continue
+        _append_hint(
+            sections,
+            {
+                "kind": "phrase_window",
+                "start_s": float(phrase.get("start_s", 0.0) or 0.0),
+                "end_s": float(phrase.get("end_s", 0.0) or 0.0),
+                "parts": ["mix"],
+                "dominant_part": "mix",
+            },
+        )
+    for accent in timeline.get("accent_windows") or []:
+        if not isinstance(accent, dict):
+            continue
+        _append_hint(
+            sections,
+            {
+                "kind": f"accent_{str(accent.get('kind') or 'hit')}",
+                "time_s": float(accent.get("time_s", 0.0) or 0.0),
+                "strength": float(accent.get("intensity", 0.0) or 0.0),
+                "parts": ["mix"],
+                "dominant_part": "mix",
+            },
+        )
+    return sections
+
+
+def _append_hint(sections: list[dict[str, Any]], hint: dict[str, Any]) -> None:
+    hint_time = hint.get("time_s")
+    hint_start = hint.get("start_s")
+    hint_end = hint.get("end_s")
+    for section in sections:
+        start_s = float(section.get("start_s", 0.0) or 0.0)
+        end_s = float(section.get("end_s", start_s) or start_s)
+        if hint_time is not None and start_s <= float(hint_time) < end_s:
+            section["hints"].append(hint)
+            return
+        if hint_start is not None and hint_end is not None and start_s <= float(hint_start) and float(hint_end) <= end_s:
+            section["hints"].append(hint)
+            return
 
 
 def _normalize_chord_label(value: Any) -> str:
@@ -133,9 +204,9 @@ def _window_stats(payload: dict[str, Any], start_s: float, end_s: float) -> dict
 
 def _section_events(hints: list[dict[str, Any]], start_s: float, end_s: float) -> list[dict[str, Any]]:
     for section in hints:
-        if round(float(section.get("start_s", 0.0) or 0.0), 3) != round(start_s, 3):
+        if abs(float(section.get("start_s", 0.0) or 0.0) - start_s) > 0.05:
             continue
-        if round(float(section.get("end_s", 0.0) or 0.0), 3) != round(end_s, 3):
+        if abs(float(section.get("end_s", 0.0) or 0.0) - end_s) > 0.05:
             continue
         kept = []
         for hint in section.get("hints") or []:

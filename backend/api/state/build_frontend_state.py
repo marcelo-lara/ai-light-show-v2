@@ -9,6 +9,17 @@ from api.state.section_name_for_time import section_name_for_time
 from api.state.song_payload import build_song_payload
 
 
+def _placeholder_analyzer_state() -> Dict[str, Any]:
+    return {
+        "available": False,
+        "polling": False,
+        "playback_locked": False,
+        "task_types": [],
+        "items": [],
+        "summary": {status: 0 for status in ["queued", "pending", "running", "complete", "failed"]},
+    }
+
+
 async def build_frontend_state(manager) -> Dict[str, Any]:
     status = await manager.state_manager.get_status()
     timecode = await manager.state_manager.get_timecode()
@@ -18,14 +29,6 @@ async def build_frontend_state(manager) -> Dict[str, Any]:
     playback_state = "playing" if is_playing else ("stopped" if timecode <= 0.001 else "paused")
     show_state = "running" if is_playing else "idle"
     bpm = getattr(getattr(manager.state_manager.current_song, "meta", None), "bpm", None)
-    analyzer = manager.analyzer_service.snapshot() if getattr(manager, "analyzer_service", None) is not None else {
-        "available": False,
-        "polling": False,
-        "playback_locked": is_playing,
-        "task_types": [],
-        "items": [],
-        "summary": {status: 0 for status in ["queued", "pending", "running", "complete", "failed"]},
-    }
 
     return {
         "system": {"show_state": show_state, "edit_lock": is_playing},
@@ -37,7 +40,7 @@ async def build_frontend_state(manager) -> Dict[str, Any]:
         },
         "fixtures": build_fixtures_payload(manager, universe),
         "song": build_song_payload(manager),
-        "analyzer": analyzer,
+        "analyzer": _placeholder_analyzer_state(),
         "pois": await manager.state_manager.get_pois(),
         "cues": manager.state_manager.get_cue_entries(),
         "cue_helpers": build_cue_helpers_payload(),

@@ -6,7 +6,7 @@ export function formatTimeMs(ms: number): string {
   return `${m}:${ss}`;
 }
 
-export function formatPositionMs(time: number): string {
-	return `${time.toFixed(3)}`;
+export function formatPosition(value: number): string {
+	return Number.isFinite(value) ? value.toFixed(3) : "0.000";
 }
 

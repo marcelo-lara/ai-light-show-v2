@@ -4,10 +4,11 @@ from typing import List, Dict, Any, Tuple
 from .meta import Meta
 from .beats import Beats, Beat
 from .sections import Sections
+from .analysis_files import resolve_data_root
 
 
 def _is_supported_beats_path(path: Path) -> bool:
-    return path.parent.name in {"reference", "inferred"}
+    return path.suffix == ".json"
 
 
 def _resolve_meta_path(path: Path, song_dir: Path) -> Path:
@@ -16,26 +17,36 @@ def _resolve_meta_path(path: Path, song_dir: Path) -> Path:
     try:
         relative = path.relative_to("/app/meta")
     except ValueError:
+        data_root = resolve_data_root(song_dir.parent)
+        for prefix, folder in (("/data/output", "output"), ("/data/artifacts", "artifacts"), ("/data/songs", "songs")):
+            try:
+                relative = path.relative_to(prefix)
+                return data_root / folder / relative
+            except ValueError:
+                continue
         return path
     return song_dir.parent / relative
 
 
 def resolve_beats_file(song_dir: Path, info_data: Dict[str, Any] | None = None) -> str:
-    default_path = str(song_dir / "reference" / "beats.json")
+    default_path = str(song_dir / "beats.json")
     if not isinstance(info_data, dict):
         return default_path
-    beats_file = info_data.get("beats_file")
-    if isinstance(beats_file, str) and beats_file:
-        beats_path = _resolve_meta_path(Path(beats_file), song_dir)
+
+    candidates = [
+        info_data.get("beats_file"),
+        (info_data.get("outputs") or {}).get("beats") if isinstance(info_data.get("outputs"), dict) else None,
+        (info_data.get("artifacts") or {}).get("beats") if isinstance(info_data.get("artifacts"), dict) else None,
+        (info_data.get("artifacts") or {}).get("beats_file") if isinstance(info_data.get("artifacts"), dict) else None,
+        (info_data.get("generated_from") or {}).get("timing_grid") if isinstance(info_data.get("generated_from"), dict) else None,
+        (info_data.get("generated_from") or {}).get("beats_file") if isinstance(info_data.get("generated_from"), dict) else None,
+    ]
+    for candidate in candidates:
+        if not isinstance(candidate, str) or not candidate:
+            continue
+        beats_path = _resolve_meta_path(Path(candidate), song_dir)
         if _is_supported_beats_path(beats_path):
             return str(beats_path)
-    artifacts = info_data.get("artifacts")
-    if isinstance(artifacts, dict):
-        artifact_beats_file = artifacts.get("beats_file")
-        if isinstance(artifact_beats_file, str) and artifact_beats_file:
-            beats_path = _resolve_meta_path(Path(artifact_beats_file), song_dir)
-            if _is_supported_beats_path(beats_path):
-                return str(beats_path)
     return default_path
 
 def load_meta_data(song_dir: Path, song_id: str) -> Meta:

@@ -47,7 +47,7 @@ Each array item is one of these shapes.
 ### Chaser cue
 
 - `time`: number. Cue start time in seconds.
-- `chaser_id`: string. Stable chaser identifier from `backend/fixtures/chasers.json`.
+- `chaser_id`: string. Stable chaser identifier from `backend/chasers/*.json`.
 - `data`: object. Chaser cue parameter payload.
 - `data.repetitions`: integer. Number of chaser cycles to render; defaults to `1`.
 - `name`: string or `null`. Display label for the cue.
@@ -59,7 +59,7 @@ Each array item is one of these shapes.
   - effect cue with `fixture_id` + `effect`
   - chaser cue with `chaser_id`
 - Effect cues must reference a real fixture and a supported effect for that fixture.
-- Chaser cues must reference a valid `chaser_id` from `backend/fixtures/chasers.json`.
+- Chaser cues must reference a valid `chaser_id` from `backend/chasers/*.json`.
 - Chaser cue rows are persisted as chaser rows and are expanded into effect renders only at DMX canvas and preview time.
 
 ## Example

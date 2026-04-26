@@ -1,0 +1,93 @@
+{
+  "song_name": "What a Feeling - Courtney Storm",
+  "human_hints": [
+    {
+      "id": "ui_003",
+      "start_time": 3.15,
+      "end_time": 4.15,
+      "title": "E-Piano",
+      "summary": "One chord in mid intensity piano every 1 bar, plus a soft arpeggiato by 0.5 bar each up and down the triad of the main chord",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_001",
+      "start_time": 3.15,
+      "end_time": 33.65,
+      "title": "indistinct chat",
+      "summary": "There are male and female voices chatting.",
+      "lighting_hint": "peaceful, slow movements following 2 bars."
+    },
+    {
+      "id": "ui_002",
+      "start_time": 33.65,
+      "end_time": 34.65,
+      "title": "Female vocal",
+      "summary": "Phrases are soft, spiritual, calm. each phrase repeats 'what a feeling' for about 2 bars each.",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_004",
+      "start_time": 61.705,
+      "end_time": 62.705,
+      "title": "Female voca ends slowly",
+      "summary": "This space leaves one bar with the instrumental base.",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_005",
+      "start_time": 65.09,
+      "end_time": 80.9,
+      "title": "Female Vocal + Indistinct chatter",
+      "summary": "Female vocal overlaps the indistinct chat in the background. This time, a soft ride is added to build a bit of groove.",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_006",
+      "start_time": 78.65,
+      "end_time": 79.65,
+      "title": "Snares only",
+      "summary": "only the snare ride continue while the music reverb fades out.",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_007",
+      "start_time": 111.55,
+      "end_time": 126.791,
+      "title": "Soft Female Vocal + indistinct chatter",
+      "summary": "Soft transition from intimate indistinct chatter, while the female vocal starts rising.",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_008",
+      "start_time": 126.791,
+      "end_time": 141.55,
+      "title": "Female vocal + arpegiatto",
+      "summary": "complete harmony with drums, long female vocal phrases. Arpegiatto runs at one beat per chord, with sevenths and fours.\nThis phrase repeats.",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_009",
+      "start_time": 142.03,
+      "end_time": 157.088,
+      "title": "",
+      "summary": "complete harmony with drums, long female vocal phrases. Arpegiatto runs at one beat per chord, with sevenths and fours.\nsimilar to the previous phrase.",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_010",
+      "start_time": 157.088,
+      "end_time": 188.97,
+      "title": "Instrumental",
+      "summary": "e-piano as bass, snares and machine kicks, a synthesizer plays longs easy notes.",
+      "lighting_hint": ""
+    },
+    {
+      "id": "ui_011",
+      "start_time": 188.97,
+      "end_time": 204.93,
+      "title": "outro",
+      "summary": "similar to the intro. E-piano as bass, with a one beat arpeggiato on the same chord.",
+      "lighting_hint": ""
+    }
+  ]
+}

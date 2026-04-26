@@ -1,8 +1,9 @@
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
+import { formatPosition } from "../../../../shared/utils/format.ts";
 import { getCueSignatureToken } from "../../cue_utils.ts";
 
 export function formatCueTime(time: number): string {
-	return `${time.toFixed(3)}`;
+	return formatPosition(time);
 }
 
 export function formatCueLabel(value: string): string {

@@ -7,6 +7,14 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "mcp_load_song",
+            "description": "Load one song into the live backend state before doing cue or DMX work. Use this first when working on a specific song.",
+            "parameters": {"type": "object", "properties": {"song_id": {"type": "string"}}, "required": ["song_id"]},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "mcp_read_sections",
             "description": "Read the song sections with exact names, time ranges, and resolved start/end bars and beats.",
             "parameters": {"type": "object", "properties": {"song_id": {"type": "string"}}, "required": []},
@@ -101,9 +109,33 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "mcp_read_cue_sheet",
+            "description": "Read the full cue sheet for the currently loaded song.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "mcp_read_cue_window",
             "description": "Read cue entries in a specific time window.",
             "parameters": {"type": "object", "properties": {"start_time": {"type": "number"}, "end_time": {"type": "number"}}, "required": ["start_time", "end_time"]},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_replace_cue_window",
+            "description": "Replace cue entries inside a specific time window for the currently loaded song.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"},
+                    "entries": {"type": "array", "items": {"type": "object"}}
+                },
+                "required": ["start_time", "end_time", "entries"]
+            },
         },
     },
     {"type": "function", "function": {"name": "mcp_read_fixtures", "description": "Read the fixture list including ids, names, types, capabilities, positions, and supported_effects. Use this to resolve phrases like 'el-150 moving head' to exact fixture ids and to confirm whether a fixture supports move_to_poi.", "parameters": {"type": "object", "properties": {}, "required": []}}},
@@ -119,6 +151,31 @@ TOOLS = [
                 "type": "object",
                 "properties": {"song_id": {"type": "string"}, "section": {"type": "string"}, "start_time": {"type": "number"}, "end_time": {"type": "number"}},
                 "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_render_dmx_canvas",
+            "description": "Re-render the DMX canvas for the currently loaded song and refresh the canonical backend/cues/{song}.dmx.log artifact.",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "mcp_read_fixture_output_window",
+            "description": "Read sampled DMX channel output for one fixture over a time window from the currently rendered canvas.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "fixture_id": {"type": "string"},
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"},
+                    "max_samples": {"type": "integer"}
+                },
+                "required": ["fixture_id", "start_time", "end_time"]
             },
         },
     },
@@ -181,6 +238,7 @@ TOOLS = [
 ]
 
 MCP_TOOL_MAP = {
+    "mcp_load_song": "songs_load",
     "mcp_read_sections": "metadata_get_sections",
     "mcp_find_section": "metadata_find_section",
     "mcp_read_section_analysis": "metadata_get_section_analysis",
@@ -189,11 +247,15 @@ MCP_TOOL_MAP = {
     "mcp_find_bar_beat": "metadata_find_bar_beat",
     "mcp_find_chord": "metadata_find_chord",
     "mcp_read_chords": "metadata_get_chords",
+    "mcp_read_cue_sheet": "cues_get_sheet",
     "mcp_read_cue_window": "cues_get_window",
+    "mcp_replace_cue_window": "cues_replace_window",
     "mcp_read_fixtures": "fixtures_list",
     "mcp_read_pois": "pois_list",
     "mcp_read_chasers": "chasers_list",
     "mcp_read_cursor": "transport_get_cursor",
     "mcp_read_loudness": "metadata_get_loudness",
+    "mcp_render_dmx_canvas": "render_dmx_canvas",
+    "mcp_read_fixture_output_window": "read_fixture_output_window",
     "mcp_read_effects": "list_effects",
 }

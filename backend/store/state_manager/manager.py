@@ -14,12 +14,14 @@ from .playback import (
     StatePlaybackTransportMixin,
 )
 from .song import StateSongChaserMixin, StateSongCueMixin, StateSongLoadingMixin, StateSongSectionsMixin
+from .song import StateSongHintsMixin
 
 
 class StateManager(
     StateSongSectionsMixin,
     StateSongChaserMixin,
     StateSongCueMixin,
+    StateSongHintsMixin,
     StateSongLoadingMixin,
     StatePlaybackTransportMixin,
     StatePlaybackPreviewChaserMixin,

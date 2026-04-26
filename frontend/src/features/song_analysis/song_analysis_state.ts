@@ -1,6 +1,8 @@
 import { getBackendStore } from "../../shared/state/backend_state.ts";
 import { getSongStructureData } from "../../shared/state/song_data.ts";
 import type { SongSection, BeatObject } from "../../shared/transport/protocol.ts";
+import { ChordPatterns } from "./chord_patterns/ChordPatterns.ts";
+import { SongEvents } from "./song_events/SongEvents.ts";
 
 type BackendOriginGlobal = typeof globalThis & {
   __BACKEND_HTTP_ORIGIN__?: string;
@@ -10,6 +12,8 @@ export type SongAnalysisData = {
   beats: BeatObject[];
   sections: SongSection[];
   plots: Array<{ id: string; title: string; svgUrl: string }>;
+  events: SongEvents;
+  patterns: ChordPatterns;
 };
 
 function resolveBackendUrl(rawUrl: string): string {
@@ -21,7 +25,7 @@ function resolveBackendUrl(rawUrl: string): string {
 
 export function getSongAnalysisData(): SongAnalysisData {
   const song = getBackendStore().state.song;
-  if (!song) return { beats: [], sections: [], plots: [] };
+  if (!song) return { beats: [], sections: [], plots: [], events: new SongEvents([]), patterns: new ChordPatterns([]) };
 
   const plots = (song.analysis?.plots ?? [])
     .filter((plot) => Boolean(plot?.id) && Boolean(plot?.title) && Boolean(plot?.svg_url))
@@ -34,5 +38,7 @@ export function getSongAnalysisData(): SongAnalysisData {
   return {
     ...getSongStructureData(),
     plots,
+    events: SongEvents.fromAnalysis(song.analysis?.events ?? []),
+    patterns: ChordPatterns.fromAnalysis(song.analysis?.patterns ?? []),
   };
 }

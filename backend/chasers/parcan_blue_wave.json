@@ -1,0 +1,17 @@
+{
+  "id": "parcan_blue_wave",
+  "name": "Parcan Blue Wave",
+  "description": "Organic sine-modulated blue wave traveling left to right across all four parcans. Deep dark base with electric blue accent. Used for ambient and groove sections with cool blue palette.",
+  "type": "dynamic",
+  "generator_id": "dynamic_wave_generator",
+  "default_params": {
+    "fixtures": ["parcan_pl", "parcan_l", "parcan_r", "parcan_pr"],
+    "base_color": "#001066",
+    "accent_color": "#0033FF",
+    "duration_beats": 4.0,
+    "speed": 0.8,
+    "step_size": 0.05,
+    "fade_in_beats": 1.0,
+    "fade_out_beats": 1.0
+  }
+}

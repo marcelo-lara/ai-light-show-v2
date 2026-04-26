@@ -1,7 +1,9 @@
 # pyright: reportAttributeAccessIssue=false
 
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from models.chasers import ChaserDefinition, upsert_global_chaser
 from models.cues import (
     CueEntry,
     clear_cue_sheet,
@@ -16,6 +18,40 @@ from models.cues import (
 
 
 class StateSongCueMixin:
+    def get_chasers(self) -> List[Dict[str, Any]]:
+        """Return merged list of global and local chasers (local wins)."""
+        global_chasers = getattr(self, "chasers", [])
+        local_chasers = []
+        if self.cue_sheet and hasattr(self.cue_sheet, "chasers") and self.cue_sheet.chasers:
+            local_chasers = self.cue_sheet.chasers
+
+        # Convert to dicts if they are models
+        g_dicts = [c if isinstance(c, dict) else c.model_dump() for c in global_chasers]
+        l_dicts = [c if isinstance(c, dict) else c.model_dump() for c in local_chasers]
+
+        merged = {c["id"]: c for c in g_dicts}
+        merged.update({c["id"]: c for c in l_dicts})
+
+        return list(merged.values())
+
+    def get_chaser_definition(self, chaser_id: str) -> Optional[Dict[str, Any]]:
+        """Resolve chaser by ID: local song scope first, then global library."""
+        # 1. Local
+        if self.cue_sheet and hasattr(self.cue_sheet, "chasers") and self.cue_sheet.chasers:
+            for c in self.cue_sheet.chasers:
+                cid = c.get("id") if isinstance(c, dict) else getattr(c, "id", None)
+                if cid == chaser_id:
+                    return c if isinstance(c, dict) else c.model_dump()
+
+        # 2. Global
+        global_chasers = getattr(self, "chasers", [])
+        for c in global_chasers:
+            cid = c.get("id") if isinstance(c, dict) else getattr(c, "id", None)
+            if cid == chaser_id:
+                return c if isinstance(c, dict) else c.model_dump()
+
+        return None
+
     @staticmethod
     def _cue_sort_key(entry: CueEntry) -> tuple[float, str, str]:
         label = entry.chaser_id or entry.fixture_id or ""
@@ -206,6 +242,53 @@ class StateSongCueMixin:
         entries = self.get_cue_entries()
         return [entry for entry in entries if start_time <= float(entry.get("time", 0.0)) <= end_time]
 
+    async def replace_cue_entries_window(
+        self,
+        start_time: float,
+        end_time: float,
+        entries: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        async with self.lock:
+            if not self.cue_sheet:
+                return {"ok": False, "reason": "no_cue_sheet"}
+            if end_time < start_time:
+                return {"ok": False, "reason": "invalid_time_range"}
+
+            current_entries = list(self.cue_sheet.entries)
+            try:
+                replacement_entries = [CueEntry(**entry) for entry in entries]
+            except Exception as exc:
+                return {"ok": False, "reason": "invalid_entry", "error": str(exc)}
+
+            for entry in replacement_entries:
+                if not (float(start_time) <= float(entry.time) <= float(end_time)):
+                    return {
+                        "ok": False,
+                        "reason": "entry_out_of_window",
+                        "entry": entry.model_dump(exclude_none=True),
+                    }
+
+            retained_entries = [
+                entry for entry in current_entries if not (float(start_time) <= float(entry.time) <= float(end_time))
+            ]
+            self.cue_sheet.entries = self._dedupe_entries(retained_entries + replacement_entries)
+            try:
+                self._validate_cue_sheet()
+            except ValueError as exc:
+                self.cue_sheet.entries = current_entries
+                return {"ok": False, "reason": str(exc)}
+
+            await self.save_cue_sheet()
+            self._refresh_canvas_after_cue_change()
+            return {
+                "ok": True,
+                "start_time": float(start_time),
+                "end_time": float(end_time),
+                "count": len(self.cue_sheet.entries),
+                "window_count": len(replacement_entries),
+                "entries": self.get_cue_entries(),
+            }
+
     async def replace_cue_sheet_entries(self, entries: List[Dict[str, Any]]) -> Dict[str, Any]:
         async with self.lock:
             if not self.cue_sheet:
@@ -300,6 +383,55 @@ class StateSongCueMixin:
 
     async def clear_all_cue_entries(self) -> Dict[str, Any]:
         return await self.clear_cue_entries(from_time=0.0, to_time=None)
+
+    async def upsert_chaser_definition(
+        self,
+        chaser_id: str,
+        name: str,
+        description: str,
+        effects: List[Dict[str, Any]],
+        is_global: bool = False
+    ) -> Dict[str, Any]:
+        """Creates or updates a chaser definition in the specified scope."""
+        new_def = {
+            "id": chaser_id,
+            "name": name,
+            "description": description,
+            "effects": effects
+        }
+
+        async with self.lock:
+            if is_global:
+                try:
+                    upsert_global_chaser(self.chasers_dir, ChaserDefinition(**new_def))
+                    self.load_chasers()
+                except Exception as e:
+                    return {"ok": False, "reason": f"global_save_failed: {str(e)}"}
+            else:
+                if not self.cue_sheet:
+                    return {"ok": False, "reason": "no_song_loaded"}
+                
+                # Update local cue_sheet.chasers
+                if not hasattr(self.cue_sheet, "chasers") or self.cue_sheet.chasers is None:
+                    self.cue_sheet.chasers = []
+                
+                # Check for existing
+                idx = -1
+                for i, c in enumerate(self.cue_sheet.chasers):
+                    cid = c.get("id") if isinstance(c, dict) else getattr(c, "id", None)
+                    if cid == chaser_id:
+                        idx = i
+                        break
+                
+                if idx >= 0:
+                    self.cue_sheet.chasers[idx] = new_def
+                else:
+                    self.cue_sheet.chasers.append(new_def)
+                
+                await self.save_cue_sheet()
+                self._refresh_canvas_after_cue_change()
+            
+            return {"ok": True, "chaser": new_def}
 
     async def apply_cue_helper(self, helper_id: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Apply a cue helper to generate and upsert cue entries."""

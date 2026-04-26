@@ -6,6 +6,7 @@ except Exception:  # pragma: no cover
     from mcp.server.fastmcp import FastMCP  # type: ignore
 
 from .cues import register_cue_tools
+from .canvas import register_canvas_tools
 from .fixtures import register_fixtures_tools
 from .metadata import register_metadata_tools
 from .songs import register_songs_tools
@@ -18,6 +19,7 @@ def create_backend_mcp(runtime) -> FastMCP:
     register_songs_tools(mcp, runtime)
     register_fixtures_tools(mcp, runtime)
     register_cue_tools(mcp, runtime)
+    register_canvas_tools(mcp, runtime)
     register_metadata_tools(mcp, runtime)
     register_transport_tools(mcp, runtime)
     register_effects_tools(mcp, runtime)

@@ -1,0 +1,81 @@
+.chord-patterns-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.25rem;
+}
+
+.chord-pattern-card {
+  flex: 0 0 auto;
+}
+
+.chord-pattern-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chord-pattern-card-title,
+.chord-pattern-card-meta,
+.chord-pattern-card-sequence,
+.chord-patterns-empty {
+  margin: 0;
+}
+
+.chord-pattern-card-title {
+  font-size: 0.95rem;
+}
+
+.chord-pattern-card-meta,
+.chord-pattern-card-sequence,
+.chord-patterns-empty {
+  font-size: 0.8rem;
+}
+
+.chord-pattern-occurrences {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chord-pattern-occurrence {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 1rem;
+  padding: 0.2rem;
+  text-align: left;
+  font-size: 0.7rem;
+  background: color-mix(in oklab, var(--card) 90%, var(--panel));
+  cursor: pointer;
+}
+
+.chord-pattern-occurrence.is-active {
+  background: color-mix(in oklab, var(--accent) 30%, var(--card));
+  color: var(--text);
+}
+
+.chord-pattern-occurrence[data-mismatch-count]::after {
+  content: "m" attr(data-mismatch-count);
+  position: absolute;
+  inset-block-start: 0.2rem;
+  inset-inline-end: 0.25rem;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.chord-pattern-occurrence[data-mismatch-count] {
+  position: relative;
+}
+
+@media (max-width: 960px) {
+  .chord-patterns-panel {
+    height: auto;
+    overflow: visible;
+    padding-right: 0;
+  }
+}

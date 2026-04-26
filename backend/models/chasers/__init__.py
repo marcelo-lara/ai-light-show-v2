@@ -1,4 +1,4 @@
-from .crud import get_chaser_by_id, get_chaser_by_name, get_chaser_cycle_beats, load_chasers
+from .crud import get_chaser_by_id, get_chaser_by_name, get_chaser_cycle_beats, load_chasers, upsert_global_chaser
 from .models import ChaserDefinition, ChaserEffect
 
 __all__ = [
@@ -8,4 +8,5 @@ __all__ = [
     "get_chaser_by_id",
     "get_chaser_by_name",
     "get_chaser_cycle_beats",
+    "upsert_global_chaser",
 ]

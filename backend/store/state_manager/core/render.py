@@ -1,5 +1,6 @@
 # pyright: reportAttributeAccessIssue=false
 
+import math
 from typing import Any, Dict
 
 from models.fixtures.fixture import Fixture
@@ -15,6 +16,15 @@ from ..constants import FPS
 
 
 class StateCoreRenderMixin:
+    def _build_canvas_metadata(self, canvas: DMXCanvas, song_filename: str) -> Dict[str, Any]:
+        return {
+            "song": song_filename,
+            "fps": int(canvas.fps),
+            "total_frames": int(canvas.total_frames),
+            "duration_s": round((max(0, canvas.total_frames - 1)) / float(canvas.fps), 3),
+            "dmx_log_path": str(self.backend_path / "cues" / f"{song_filename}.dmx.log"),
+        }
+
     def _render_cue_sheet_to_canvas(self) -> DMXCanvas:
         return render_cue_sheet_to_canvas(
             fixtures=self.fixtures,
@@ -59,3 +69,77 @@ class StateCoreRenderMixin:
             canvas=self.preview_canvas,
             max_used_channel=self.max_used_channel,
         )
+
+    async def rerender_dmx_canvas(self) -> Dict[str, Any]:
+        async with self.lock:
+            song_filename = getattr(getattr(self, "current_song", None), "song_id", None)
+            if not song_filename or not self.cue_sheet:
+                return {"ok": False, "reason": "no_song_loaded"}
+
+            self._refresh_canvas_after_cue_change()
+            if not self.canvas:
+                return {"ok": False, "reason": "canvas_unavailable"}
+
+            return {
+                "ok": True,
+                **self._build_canvas_metadata(self.canvas, song_filename),
+            }
+
+    async def read_fixture_output_window(
+        self,
+        fixture_id: str,
+        start_time: float,
+        end_time: float,
+        max_samples: int = 240,
+    ) -> Dict[str, Any]:
+        async with self.lock:
+            if end_time < start_time:
+                return {"ok": False, "reason": "invalid_time_range"}
+            if not self.canvas:
+                return {"ok": False, "reason": "canvas_unavailable"}
+
+            fixture = self._get_fixture(str(fixture_id or "").strip())
+            if not fixture:
+                return {"ok": False, "reason": "fixture_not_found", "fixture_id": fixture_id}
+
+            canvas = self.canvas
+            start_frame = canvas.clamp_frame_index(int(math.floor(float(start_time) * canvas.fps)))
+            end_frame = canvas.clamp_frame_index(int(math.ceil(float(end_time) * canvas.fps)))
+            frame_count = max(1, end_frame - start_frame + 1)
+            sample_limit = max(1, min(int(max_samples or 1), frame_count))
+            step = max(1, int(math.ceil(frame_count / float(sample_limit))))
+
+            sample_indices = list(range(start_frame, end_frame + 1, step))
+            if sample_indices[-1] != end_frame:
+                sample_indices.append(end_frame)
+
+            samples = []
+            for frame_index in sample_indices:
+                frame = canvas.frame_view(frame_index)
+                channels = {
+                    name: int(frame[channel_1_based - 1])
+                    for name, channel_1_based in fixture.absolute_channels.items()
+                    if 1 <= channel_1_based <= len(frame)
+                }
+                samples.append(
+                    {
+                        "frame": int(frame_index),
+                        "time_s": round(frame_index / float(canvas.fps), 3),
+                        "channels": channels,
+                    }
+                )
+
+            song_filename = getattr(getattr(self, "current_song", None), "song_id", None) or "unknown"
+            return {
+                "ok": True,
+                "song": song_filename,
+                "fixture_id": fixture.id,
+                "fps": int(canvas.fps),
+                "start_time": float(start_time),
+                "end_time": float(end_time),
+                "start_frame": int(start_frame),
+                "end_frame": int(end_frame),
+                "sample_step_frames": int(step),
+                "absolute_channels": dict(fixture.absolute_channels),
+                "samples": samples,
+            }

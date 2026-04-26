@@ -1,0 +1,1415 @@
+{
+  "id": "sea-waves-right-to-left",
+  "name": "Sea Waves Right To Left",
+  "description": "A calm 4-bar underwater parcan wave with half-beat sine-stepped blue/green modulation flowing right-to-left over a deep blue base.",
+  "effects": [
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 36,
+        "blue": 104
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 40,
+        "blue": 116
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 28,
+        "blue": 80
+      }
+    },
+    {
+      "beat": 0.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 16,
+        "blue": 44
+      }
+    },
+    {
+      "beat": 0.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 38,
+        "blue": 109
+      }
+    },
+    {
+      "beat": 0.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 40,
+        "blue": 116
+      }
+    },
+    {
+      "beat": 0.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 26,
+        "blue": 75
+      }
+    },
+    {
+      "beat": 0.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 16,
+        "blue": 44
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 39,
+        "blue": 113
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 40,
+        "blue": 114
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 25,
+        "blue": 71
+      }
+    },
+    {
+      "beat": 1.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 16,
+        "blue": 46
+      }
+    },
+    {
+      "beat": 1.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 41,
+        "blue": 117
+      }
+    },
+    {
+      "beat": 1.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 39,
+        "blue": 112
+      }
+    },
+    {
+      "beat": 1.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 23,
+        "blue": 67
+      }
+    },
+    {
+      "beat": 1.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 17,
+        "blue": 48
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 42,
+        "blue": 121
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 38,
+        "blue": 109
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 22,
+        "blue": 63
+      }
+    },
+    {
+      "beat": 2.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 18,
+        "blue": 51
+      }
+    },
+    {
+      "beat": 2.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 43,
+        "blue": 124
+      }
+    },
+    {
+      "beat": 2.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 37,
+        "blue": 105
+      }
+    },
+    {
+      "beat": 2.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 21,
+        "blue": 60
+      }
+    },
+    {
+      "beat": 2.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 19,
+        "blue": 55
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 44,
+        "blue": 126
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 35,
+        "blue": 101
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 20,
+        "blue": 58
+      }
+    },
+    {
+      "beat": 3.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 21,
+        "blue": 59
+      }
+    },
+    {
+      "beat": 3.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 44,
+        "blue": 128
+      }
+    },
+    {
+      "beat": 3.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 34,
+        "blue": 97
+      }
+    },
+    {
+      "beat": 3.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 20,
+        "blue": 56
+      }
+    },
+    {
+      "beat": 3.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 22,
+        "blue": 63
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 44,
+        "blue": 128
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 32,
+        "blue": 92
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 20,
+        "blue": 56
+      }
+    },
+    {
+      "beat": 4.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 24,
+        "blue": 68
+      }
+    },
+    {
+      "beat": 4.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 44,
+        "blue": 128
+      }
+    },
+    {
+      "beat": 4.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 30,
+        "blue": 87
+      }
+    },
+    {
+      "beat": 4.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 20,
+        "blue": 56
+      }
+    },
+    {
+      "beat": 4.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 26,
+        "blue": 73
+      }
+    },
+    {
+      "beat": 5.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 44,
+        "blue": 126
+      }
+    },
+    {
+      "beat": 5.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 29,
+        "blue": 83
+      }
+    },
+    {
+      "beat": 5.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 20,
+        "blue": 58
+      }
+    },
+    {
+      "beat": 5.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 27,
+        "blue": 77
+      }
+    },
+    {
+      "beat": 5.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 43,
+        "blue": 124
+      }
+    },
+    {
+      "beat": 5.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 27,
+        "blue": 79
+      }
+    },
+    {
+      "beat": 5.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 21,
+        "blue": 60
+      }
+    },
+    {
+      "beat": 5.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 29,
+        "blue": 81
+      }
+    },
+    {
+      "beat": 6.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 42,
+        "blue": 121
+      }
+    },
+    {
+      "beat": 6.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 26,
+        "blue": 75
+      }
+    },
+    {
+      "beat": 6.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 22,
+        "blue": 63
+      }
+    },
+    {
+      "beat": 6.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 30,
+        "blue": 85
+      }
+    },
+    {
+      "beat": 6.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 41,
+        "blue": 117
+      }
+    },
+    {
+      "beat": 6.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 25,
+        "blue": 72
+      }
+    },
+    {
+      "beat": 6.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 23,
+        "blue": 67
+      }
+    },
+    {
+      "beat": 6.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 31,
+        "blue": 88
+      }
+    },
+    {
+      "beat": 7.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 39,
+        "blue": 113
+      }
+    },
+    {
+      "beat": 7.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 24,
+        "blue": 70
+      }
+    },
+    {
+      "beat": 7.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 25,
+        "blue": 71
+      }
+    },
+    {
+      "beat": 7.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 32,
+        "blue": 90
+      }
+    },
+    {
+      "beat": 7.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 38,
+        "blue": 109
+      }
+    },
+    {
+      "beat": 7.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 24,
+        "blue": 68
+      }
+    },
+    {
+      "beat": 7.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 26,
+        "blue": 75
+      }
+    },
+    {
+      "beat": 7.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 32,
+        "blue": 92
+      }
+    },
+    {
+      "beat": 8.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 36,
+        "blue": 104
+      }
+    },
+    {
+      "beat": 8.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 24,
+        "blue": 68
+      }
+    },
+    {
+      "beat": 8.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 28,
+        "blue": 80
+      }
+    },
+    {
+      "beat": 8.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 32,
+        "blue": 92
+      }
+    },
+    {
+      "beat": 8.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 34,
+        "blue": 99
+      }
+    },
+    {
+      "beat": 8.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 24,
+        "blue": 68
+      }
+    },
+    {
+      "beat": 8.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 30,
+        "blue": 85
+      }
+    },
+    {
+      "beat": 8.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 32,
+        "blue": 92
+      }
+    },
+    {
+      "beat": 9.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 33,
+        "blue": 95
+      }
+    },
+    {
+      "beat": 9.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 24,
+        "blue": 70
+      }
+    },
+    {
+      "beat": 9.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 31,
+        "blue": 89
+      }
+    },
+    {
+      "beat": 9.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 32,
+        "blue": 90
+      }
+    },
+    {
+      "beat": 9.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 31,
+        "blue": 91
+      }
+    },
+    {
+      "beat": 9.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 25,
+        "blue": 72
+      }
+    },
+    {
+      "beat": 9.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 33,
+        "blue": 93
+      }
+    },
+    {
+      "beat": 9.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 31,
+        "blue": 88
+      }
+    },
+    {
+      "beat": 10.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 30,
+        "blue": 87
+      }
+    },
+    {
+      "beat": 10.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 26,
+        "blue": 75
+      }
+    },
+    {
+      "beat": 10.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 34,
+        "blue": 97
+      }
+    },
+    {
+      "beat": 10.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 30,
+        "blue": 85
+      }
+    },
+    {
+      "beat": 10.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 29,
+        "blue": 84
+      }
+    },
+    {
+      "beat": 10.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 27,
+        "blue": 79
+      }
+    },
+    {
+      "beat": 10.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 35,
+        "blue": 100
+      }
+    },
+    {
+      "beat": 10.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 29,
+        "blue": 81
+      }
+    },
+    {
+      "beat": 11.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 28,
+        "blue": 82
+      }
+    },
+    {
+      "beat": 11.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 29,
+        "blue": 83
+      }
+    },
+    {
+      "beat": 11.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 36,
+        "blue": 102
+      }
+    },
+    {
+      "beat": 11.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 27,
+        "blue": 77
+      }
+    },
+    {
+      "beat": 11.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 28,
+        "blue": 80
+      }
+    },
+    {
+      "beat": 11.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 30,
+        "blue": 87
+      }
+    },
+    {
+      "beat": 11.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 36,
+        "blue": 104
+      }
+    },
+    {
+      "beat": 11.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 26,
+        "blue": 73
+      }
+    },
+    {
+      "beat": 12.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 28,
+        "blue": 80
+      }
+    },
+    {
+      "beat": 12.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 32,
+        "blue": 92
+      }
+    },
+    {
+      "beat": 12.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 36,
+        "blue": 104
+      }
+    },
+    {
+      "beat": 12.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 24,
+        "blue": 68
+      }
+    },
+    {
+      "beat": 12.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 28,
+        "blue": 80
+      }
+    },
+    {
+      "beat": 12.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 34,
+        "blue": 97
+      }
+    },
+    {
+      "beat": 12.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 36,
+        "blue": 104
+      }
+    },
+    {
+      "beat": 12.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 22,
+        "blue": 63
+      }
+    },
+    {
+      "beat": 13.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 28,
+        "blue": 82
+      }
+    },
+    {
+      "beat": 13.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 35,
+        "blue": 101
+      }
+    },
+    {
+      "beat": 13.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 36,
+        "blue": 102
+      }
+    },
+    {
+      "beat": 13.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 21,
+        "blue": 59
+      }
+    },
+    {
+      "beat": 13.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 29,
+        "blue": 84
+      }
+    },
+    {
+      "beat": 13.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 37,
+        "blue": 105
+      }
+    },
+    {
+      "beat": 13.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 35,
+        "blue": 100
+      }
+    },
+    {
+      "beat": 13.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 19,
+        "blue": 55
+      }
+    },
+    {
+      "beat": 14.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 30,
+        "blue": 87
+      }
+    },
+    {
+      "beat": 14.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 38,
+        "blue": 109
+      }
+    },
+    {
+      "beat": 14.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 34,
+        "blue": 97
+      }
+    },
+    {
+      "beat": 14.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 18,
+        "blue": 51
+      }
+    },
+    {
+      "beat": 14.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 31,
+        "blue": 91
+      }
+    },
+    {
+      "beat": 14.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 39,
+        "blue": 112
+      }
+    },
+    {
+      "beat": 14.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 33,
+        "blue": 93
+      }
+    },
+    {
+      "beat": 14.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 17,
+        "blue": 48
+      }
+    },
+    {
+      "beat": 15.0,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 33,
+        "blue": 95
+      }
+    },
+    {
+      "beat": 15.0,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 40,
+        "blue": 114
+      }
+    },
+    {
+      "beat": 15.0,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 31,
+        "blue": 89
+      }
+    },
+    {
+      "beat": 15.0,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 16,
+        "blue": 46
+      }
+    },
+    {
+      "beat": 15.5,
+      "fixture_id": "parcan_pr",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 34,
+        "blue": 99
+      }
+    },
+    {
+      "beat": 15.5,
+      "fixture_id": "parcan_r",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 40,
+        "blue": 116
+      }
+    },
+    {
+      "beat": 15.5,
+      "fixture_id": "parcan_l",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 30,
+        "blue": 85
+      }
+    },
+    {
+      "beat": 15.5,
+      "fixture_id": "parcan_pl",
+      "effect": "fade_in",
+      "duration": 0.5,
+      "data": {
+        "red": 0,
+        "green": 16,
+        "blue": 44
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import type { BeatSectionGroup } from "./types.ts";
 import { isDownbeat } from "../song_player/logic/song_logic.ts";
+import { formatPosition } from "../../utils/format.ts";
 
 type AppendChordSectionOptions = {
 	activeBeatIndex: number;
@@ -23,7 +24,7 @@ export function appendChordSection(
 
 	const label = document.createElement("p");
 	label.className = "chords-panel-section-title";
-	label.textContent = `${group.label} (${group.start_s.toFixed(3)}-${group.end_s.toFixed(3)})`;
+	label.textContent = `${group.label} (${formatPosition(group.start_s)}-${formatPosition(group.end_s)})`;
 	block.appendChild(label);
 
 	const rowEl = document.createElement("div");
@@ -39,7 +40,7 @@ export function appendChordSection(
 		cell.textContent = labelText;
 		cell.tabIndex = 0;
 		cell.setAttribute("role", "button");
-		cell.setAttribute("aria-label", `Jump to beat ${beat.bar}.${beat.beat} at ${beat.time.toFixed(3)} seconds`);
+		cell.setAttribute("aria-label", `Jump to beat ${beat.bar}.${beat.beat} at ${formatPosition(beat.time)} seconds`);
 		cell.onclick = () => options.onBeatSelect(beat.time);
 		cell.onkeydown = (event) => {
 			if (event.key !== "Enter" && event.key !== " ") return;

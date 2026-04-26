@@ -25,56 +25,41 @@ export function loadSong(filename: string) {
 	});
 }
 
-export function enqueueAnalyzerItem(taskType: string, filename: string) {
+export function createHumanHint(payload: {
+	start_time: number;
+	end_time: number;
+	title: string;
+	summary: string;
+	lighting_hint: string;
+}) {
 	wsSend({
 		type: "intent",
 		req_id: makeId(),
-		name: "analyzer.enqueue",
-		payload: { task_type: taskType, filename },
+		name: "song.hints.create",
+		payload,
 	});
 }
 
-export function enqueueAnalyzerFullArtifact(filename: string, activate = true) {
+export function updateHumanHint(id: string, patch: {
+	start_time: number;
+	end_time: number;
+	title: string;
+	summary: string;
+	lighting_hint: string;
+}) {
 	wsSend({
 		type: "intent",
 		req_id: makeId(),
-		name: "analyzer.enqueue_full_artifact",
-		payload: { filename, activate },
+		name: "song.hints.update",
+		payload: { id, patch },
 	});
 }
 
-export function removeAnalyzerItem(itemId: string) {
+export function deleteHumanHint(id: string) {
 	wsSend({
 		type: "intent",
 		req_id: makeId(),
-		name: "analyzer.remove",
-		payload: { item_id: itemId },
-	});
-}
-
-export function removeAllAnalyzerItems() {
-	wsSend({
-		type: "intent",
-		req_id: makeId(),
-		name: "analyzer.remove_all",
-		payload: {},
-	});
-}
-
-export function executeAnalyzerItem(itemId: string) {
-	wsSend({
-		type: "intent",
-		req_id: makeId(),
-		name: "analyzer.execute",
-		payload: { item_id: itemId },
-	});
-}
-
-export function executeAllAnalyzerItems() {
-	wsSend({
-		type: "intent",
-		req_id: makeId(),
-		name: "analyzer.execute_all",
-		payload: {},
+		name: "song.hints.delete",
+		payload: { id },
 	});
 }

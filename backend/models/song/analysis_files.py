@@ -14,9 +14,25 @@ def load_json(path: Path) -> Any:
         return None
 
 
+def resolve_data_root(meta_root: Path) -> Path:
+    docker_data_root = Path("/data")
+    if docker_data_root.exists():
+        return docker_data_root
+    if meta_root.name in {"meta", "output"}:
+        return meta_root.parent
+    return meta_root
+
+
 def resolve_meta_path(meta_root: Path, raw_path: str, song_id: str, fallback_name: str) -> Path:
     if raw_path.startswith("/app/meta/"):
         return meta_root / raw_path[len("/app/meta/"):]
+    data_root = resolve_data_root(meta_root)
+    if raw_path.startswith("/data/output/"):
+        return data_root / "output" / raw_path[len("/data/output/"):]
+    if raw_path.startswith("/data/artifacts/"):
+        return data_root / "artifacts" / raw_path[len("/data/artifacts/"):]
+    if raw_path.startswith("/data/songs/"):
+        return data_root / "songs" / raw_path[len("/data/songs/"):]
     if raw_path:
         return Path(raw_path)
     return meta_root / song_id / fallback_name

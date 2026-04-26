@@ -1,6 +1,9 @@
 import pytest
 
 from backend.api.intents.song.actions.list import list_songs
+from backend.api.intents.song.actions.hints_create import create_human_hint
+from backend.api.intents.song.actions.hints_delete import delete_human_hint
+from backend.api.intents.song.actions.hints_update import update_human_hint
 from backend.api.intents.song.actions.load import load_song
 from backend.api.intents.song.handlers import SONG_HANDLERS
 
@@ -17,12 +20,27 @@ class _FakeStateManager:
     def __init__(self):
         self.loaded = []
         self.output_universe = bytearray(512)
+        self.created_hints = []
+        self.updated_hints = []
+        self.deleted_hints = []
 
     async def load_song(self, filename):
         self.loaded.append(filename)
 
     async def get_output_universe(self):
         return bytearray(self.output_universe)
+
+    async def create_human_hint(self, payload):
+        self.created_hints.append(dict(payload))
+        return {"ok": True, "hint": {"id": "ui_001", **payload}}
+
+    async def update_human_hint(self, hint_id, patch):
+        self.updated_hints.append((hint_id, dict(patch)))
+        return {"ok": True, "hint": {"id": hint_id, **patch}}
+
+    async def delete_human_hint(self, hint_id):
+        self.deleted_hints.append(hint_id)
+        return {"ok": True, "id": hint_id}
 
 
 class _FakeArtNetService:
@@ -126,3 +144,50 @@ async def test_load_song_reports_runtime_error():
 def test_song_handlers_map_contains_full_names():
     assert "song.list" in SONG_HANDLERS
     assert "song.load" in SONG_HANDLERS
+    assert "song.hints.create" in SONG_HANDLERS
+    assert "song.hints.update" in SONG_HANDLERS
+    assert "song.hints.delete" in SONG_HANDLERS
+
+
+@pytest.mark.asyncio
+async def test_create_human_hint_emits_success_event():
+    manager = _FakeManager(["alpha"])
+
+    ok = await create_human_hint(manager, {"start_time": 1.0, "end_time": 2.0, "title": "A", "summary": "B", "lighting_hint": "C"})
+
+    assert ok is True
+    assert manager.state_manager.created_hints == [{"start_time": 1.0, "end_time": 2.0, "title": "A", "summary": "B", "lighting_hint": "C"}]
+    assert manager.events[-1][1] == "song_hint_created"
+
+
+@pytest.mark.asyncio
+async def test_update_human_hint_rejects_missing_patch():
+    manager = _FakeManager(["alpha"])
+
+    ok = await update_human_hint(manager, {"id": "ui_001"})
+
+    assert ok is False
+    assert manager.state_manager.updated_hints == []
+    assert manager.events[-1] == ("error", "song_hint_update_failed", {"reason": "missing_patch", "id": "ui_001"})
+
+
+@pytest.mark.asyncio
+async def test_update_human_hint_accepts_start_time_patch():
+    manager = _FakeManager(["alpha"])
+
+    ok = await update_human_hint(manager, {"id": "ui_001", "patch": {"start_time": 1.5, "end_time": 2.0}})
+
+    assert ok is True
+    assert manager.state_manager.updated_hints == [("ui_001", {"start_time": 1.5, "end_time": 2.0})]
+    assert manager.events[-1][1] == "song_hint_updated"
+
+
+@pytest.mark.asyncio
+async def test_delete_human_hint_emits_success_event():
+    manager = _FakeManager(["alpha"])
+
+    ok = await delete_human_hint(manager, {"id": "ui_001"})
+
+    assert ok is True
+    assert manager.state_manager.deleted_hints == ["ui_001"]
+    assert manager.events[-1] == ("info", "song_hint_deleted", {"ok": True, "id": "ui_001"})

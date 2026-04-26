@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from models.fixtures.fixture import Fixture
-from models.song import resolve_meta_root, resolve_songs_root
+from models.song import HumanHints, resolve_meta_root, resolve_songs_root
 from store.dmx_canvas import DMX_CHANNELS, DMXCanvas
 from store.pois import PoiStore
 
@@ -28,6 +28,7 @@ class StateCoreBootstrapMixin:
         self.fixtures_path: Optional[Path] = None
         self.current_song = None
         self.cue_sheet = None
+        self.human_hints: Optional[HumanHints] = None
         self.timecode: float = 0.0
         self.is_playing: bool = False
         self.playback_anchor_perf: float = perf_counter()
@@ -49,7 +50,7 @@ class StateCoreBootstrapMixin:
         self.preview_chaser_request_id: Optional[str] = None
         self.preview_chaser_name: Optional[str] = None
         self.max_used_channel: int = 0
-        self.chasers_path: Path = backend_path / "fixtures" / "chasers.json"
+        self.chasers_dir: Path = backend_path / "chasers"
         self.chasers: List[Any] = []
         self.active_chasers: Dict[str, Dict[str, Any]] = {}
 

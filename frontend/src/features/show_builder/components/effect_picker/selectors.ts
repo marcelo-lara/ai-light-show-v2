@@ -1,9 +1,10 @@
 import { getBackendStore } from "../../../../shared/state/backend_state.ts";
 import type { ChaserDefinition } from "../../../../shared/transport/protocol.ts";
 import { getSupportedEffectIds } from "../../../../shared/transport/supported_effects.ts";
+import { formatPosition } from "../../../../shared/utils/format.ts";
 
 export function formatTime(ms: number): string {
-	return (ms / 1000).toFixed(3);
+	return formatPosition(ms / 1000);
 }
 
 export function getFixtures() {

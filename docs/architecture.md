@@ -10,7 +10,6 @@ Use these module guides first, then drill into architecture detail docs.
 - Backend implementation contract: [architecture/backend_llm_reference.md](architecture/backend_llm_reference.md)
 - Backend cues schema: [architecture/backend_cues_schema.md](architecture/backend_cues_schema.md)
 - Backend chasers schema: [architecture/backend_chasers_schema.md](architecture/backend_chasers_schema.md)
-- Analyzer module: [../analyzer/README.md](../analyzer/README.md)
 - LLM server + gateway: [../llm-server/README.md](../llm-server/README.md)
 - UI docs + LoFi index: [ui/README.md](ui/README.md)
 - Tests module: [../tests/README.md](../tests/README.md)
@@ -19,10 +18,10 @@ AI Light Show v2 is split into six primary modules:
 
 - Frontend: strictly a "dumb client" mapping user intents to websocket payloads.
 - Backend: FastAPI + asyncio WebSocket server, DMX state/canvas engine, Art-Net sender.
-- Analyzer: offline metadata generation in `analyzer/meta/<song>/...`.
+- Data: canonical song audio, generated metadata, and analysis artifacts under `data/`.
 - Backend-mounted MCP tool surface: live song, cue, fixture, and metadata tools exposed at `/mcp`.
 - LLM agent gateway: OpenAI-compatible wrapper that maps tool calls to MCP JSON-RPC.
-- Tests: analyzer/backend integration and regression coverage.
+- Tests: backend metadata, protocol, and regression coverage.
 
 ## How the modules interact
 
@@ -32,10 +31,10 @@ AI Light Show v2 is split into six primary modules:
 2. Frontend emits only `intent` payloads; backend applies all domain logic and broadcasts state changes.
 3. Backend selects nearest precomputed DMX canvas frame and updates Art-Net output.
 4. Preview requests (`fixture.preview_effect`) render temporary in-memory output only (no persistence).
-5. Analyzer writes song metadata and backend reads it from `/app/meta` in Docker.
+5. Song audio lives under `data/songs`, generated metadata under `data/output`, and detailed artifacts under `data/artifacts`; Docker mounts them at `/app/songs`, `/app/meta`, and `/data`.
 6. Backend exposes mounted MCP tools and the agent gateway forwards LLM tool calls.
 
-Song audio files live under `analyzer/songs` locally and are mounted into backend and analyzer containers at `/app/songs`.
+Song audio files live under `data/songs` locally and are mounted into the backend container at `/app/songs`.
 
 ### Real-time playback loop
 
@@ -57,25 +56,24 @@ Song audio files live under `analyzer/songs` locally and are mounted into backen
 3. If accepted, backend renders a temporary in-memory preview canvas and drives Art-Net from it.
 4. Backend emits `event` + `patch` updates; preview is never persisted to cues/files.
 
-### Analysis loop (manual)
+### Metadata loop
 
-1. User runs analyzer scripts to produce metadata under `analyzer/meta/<song>/...`.
-2. Backend loads metadata on song load.
+1. Song metadata is read from `data/output/<song>/info.json` and companion files.
+2. Backend resolves artifact paths declared there, including manifests under `data/artifacts/<song>/...`.
 
 ### Meta source (Docker)
 
-- In Docker, backend reads song metadata from `/app/meta` (mounted from `analyzer/meta`).
-- If `/app/meta` is unavailable, backend falls back to local `backend/meta`.
+- In Docker, backend reads song metadata from `/app/meta` (mounted from `data/output`).
+- Artifact paths declared under `/data/output/...`, `/data/artifacts/...`, and `/data/songs/...` resolve through the shared `/data` mount.
 
 ## Module docs
 
 - Frontend module guide: [../frontend/README.md](../frontend/README.md)
 - Backend module guide: [../backend/README.md](../backend/README.md)
 - Backend implementation contract: [architecture/backend_llm_reference.md](architecture/backend_llm_reference.md)
-- Analyzer module guide: [../analyzer/README.md](../analyzer/README.md)
 - LLM stack guide: [../llm-server/README.md](../llm-server/README.md)
 - Test module guide: [../tests/README.md](../tests/README.md)
-- Deep architecture docs: [backend architecture](architecture/backend.md), [analyzer architecture](architecture/analyzer.md)
+- Deep architecture docs: [backend architecture](architecture/backend.md)
 
 ## WebSocket protocol (canonical)
 

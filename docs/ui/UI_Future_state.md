@@ -41,13 +41,14 @@ The UI must support a production workflow from preparation to show execution wit
 - Provide a song and generated analysis metadata before editing/programming.
 
 ### Required conditions
-- Song file exists in `analyzer/songs`.
-- Analyzer script has produced metadata used by UI pages.
+- Song file exists in `data/songs`.
+- Metadata exists in `data/output` and required artifacts exist in `data/artifacts`.
 
 ### UI behavior
 - Song Analysis must show explicit readiness state:
   - `Song available`
   - `Metadata available`
+  - `Artifacts available`
   - `Ready for editing`
 - If metadata is missing, UI provides clear guidance and blocks downstream programming actions.
 

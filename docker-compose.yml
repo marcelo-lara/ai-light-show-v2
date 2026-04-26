@@ -43,40 +43,22 @@ services:
     depends_on:
       - backend
 
-  analyzer:
-    build: ./analyzer
-    ports:
-      - "8100:8100"
-    volumes:
-      - ./analyzer:/app/analyzer
-      - ./analyzer/songs:/app/songs
-      - ./analyzer/meta:/app/meta
-      - analyzer_cache:/root/.cache
-    gpus: all
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - ANALYZER_PORT=8100
-    restart: unless-stopped
-
   backend:
     build: ./backend
     ports:
       - "5001:5001"
     volumes:
       - ./backend/logs:/app/logs
-      - ./analyzer/songs:/app/songs
+      - ./data:/data
+      - ./data/songs:/app/songs
       - ./backend/fixtures:/app/fixtures
       - ./backend/cues:/app/cues
-      - ./analyzer/meta:/app/meta
+      - ./backend/chasers:/app/chasers
+      - ./data/output:/app/meta
     environment:
       - DMX_NODE_IP=192.168.10.221
       - FPS=60
       - DEBUG_MODE=${DEBUG_MODE:-0}
       - AGENT_GATEWAY_URL=http://agent-gateway:8090
-      - ANALYZER_BASE_URL=http://analyzer:8100
       - ASSISTANT_LOG_DIR=/app/logs/assistant
     restart: unless-stopped
-
-volumes:
-  analyzer_cache:

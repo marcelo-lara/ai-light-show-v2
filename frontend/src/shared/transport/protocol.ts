@@ -51,12 +51,9 @@ export type IntentMsg = {
 export type IntentName =
   | "song.list"
   | "song.load"
-  | "analyzer.enqueue"
-  | "analyzer.enqueue_full_artifact"
-  | "analyzer.execute"
-  | "analyzer.execute_all"
-  | "analyzer.remove"
-  | "analyzer.remove_all"
+  | "song.hints.create"
+  | "song.hints.update"
+  | "song.hints.delete"
   | "transport.play"
   | "transport.pause"
   | "transport.stop"
@@ -248,6 +245,25 @@ export type SongState = {
 export type SongAnalysisState = {
   plots?: SongAnalysisPlot[];
   chords?: SongChord[];
+  events?: SongAnalysisEvent[];
+  patterns?: SongAnalysisPattern[];
+  human_hints?: SongHumanHint[];
+  human_hints_status?: SongHumanHintsStatus;
+};
+
+export type SongHumanHint = {
+  id: string;
+  start_time: number;
+  end_time: number;
+  title: string;
+  summary: string;
+  lighting_hint: string;
+};
+
+export type SongHumanHintsStatus = {
+  dirty?: boolean;
+  saved?: boolean;
+  file_exists?: boolean;
 };
 
 export type SongAnalysisPlot = {
@@ -261,6 +277,40 @@ export type SongChord = {
   label: string;
   bar?: number;
   beat?: number;
+};
+
+export type SongAnalysisEvent = {
+  id: string;
+  type: string;
+  start_time: number;
+  end_time: number;
+  confidence: number;
+  intensity: number;
+  section_id: string;
+  section_name?: string | null;
+  provenance: string;
+  summary: string;
+  created_by: string;
+  evidence_summary: string;
+  lighting_hint: string;
+};
+
+export type SongAnalysisPatternOccurrence = {
+  start_bar: number;
+  end_bar: number;
+  start_s: number;
+  end_s: number;
+  mismatch_count: number;
+  sequence: string;
+};
+
+export type SongAnalysisPattern = {
+  id: string;
+  label: string;
+  bar_count: number;
+  sequence: string;
+  occurrence_count: number;
+  occurrences: SongAnalysisPatternOccurrence[];
 };
 
 export type SongSection = {

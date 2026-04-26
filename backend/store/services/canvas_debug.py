@@ -15,7 +15,7 @@ def dump_named_canvas_debug(
 
     cues_path = backend_path / "cues"
     cues_path.mkdir(parents=True, exist_ok=True)
-    debug_file = cues_path / f"{file_stem}.canvas.debug.log"
+    debug_file = cues_path / f"{file_stem}.dmx.log"
     frames_written = 0
     max_channel = max_used_channel or DMX_CHANNELS
     max_channel = max(1, min(DMX_CHANNELS, int(max_channel)))
@@ -30,7 +30,7 @@ def dump_named_canvas_debug(
             handle.write(f"[{time_sec:.3f}] {hex_pairs}\n")
             frames_written += 1
 
-    print(f"[DMX CANVAS] dumped debug file '{debug_file}' — frames={frames_written}", flush=True)
+    print(f"[DMX CANVAS] dumped DMX log '{debug_file}' — frames={frames_written}", flush=True)
     return debug_file
 
 

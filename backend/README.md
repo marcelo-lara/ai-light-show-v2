@@ -7,7 +7,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - Expose the websocket control plane at `/ws`.
 - Expose a backend-owned MCP tool surface at `/mcp`.
 - Keep backend-authoritative state (`system`, `playback`, `fixtures`, `song`, `pois`, `cues`, `cue_helpers`, `chasers`).
-- Relay analyzer queue/runtime state and analyzer-owned task metadata from the analyzer HTTP service under top-level `state.analyzer`.
+- Expose a placeholder top-level `state.analyzer` object so the frontend Song Analysis layout stays stable while analyzer runtime work is absent.
 - Render cue sheets into DMX frames and drive Art-Net output.
 
 ## Primary entrypoints
@@ -25,7 +25,6 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 - `store/pois.py`: POI CRUD + persistence.
 - `store/dmx_canvas.py`: packed DMX frame buffer.
 - `services/artnet.py`: UDP Art-Net sender.
-- `services/analyzer/*`: analyzer HTTP client and demand-driven polling coordinator.
 - `services/assistant/*`: assistant profile storage, gateway client, request lifecycle, and confirmation-gated LLM orchestration.
 
 ## Runtime model
@@ -35,8 +34,7 @@ FastAPI + asyncio runtime responsible for authoritative show state and Art-Net o
 3. During playback, backend advances timecode with a server-side ticker and pushes Art-Net packets continuously at `30 FPS`.
 4. Clients send websocket `intent` messages.
 5. Backend mutates state, then emits `snapshot` or throttled `patch` updates.
-6. While playback is idle and analyzer queue work exists, backend polls the analyzer HTTP service and relays queue/runtime state in `state.analyzer`.
-7. MCP clients call backend-owned tools over Streamable HTTP and share the same live runtime state.
+6. MCP clients call backend-owned tools over Streamable HTTP and share the same live runtime state.
 
 Websocket delivery behavior:
 - Snapshot and event sends drop disconnected websocket clients instead of letting send failures tear down the backend request path.
@@ -51,7 +49,6 @@ Websocket delivery behavior:
 
 Supported intent names:
 - Song: `song.list`, `song.load`.
-- Analyzer: `analyzer.enqueue`, `analyzer.execute`, `analyzer.execute_all`, `analyzer.remove`, `analyzer.remove_all`.
 - Transport: `transport.play`, `transport.pause`, `transport.stop`, `transport.jump_to_time`, `transport.jump_to_section`.
 - Fixture: `fixture.set_arm`, `fixture.set_values`, `fixture.preview_effect`, `fixture.stop_preview`.
 - Cue: `cue.add`, `cue.update`, `cue.delete`, `cue.clear`.
@@ -70,15 +67,18 @@ Supported intent names:
 
 Current MCP tools:
 - Songs: `songs_list`, `songs_get_details`, `songs_load`
-- Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`, `list_effects`
-- Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`
+- Fixtures: `fixtures_list`, `fixtures_get`, `chasers_list`, `chasers_upsert_definition`, `list_effects`
+- Cues: `cues_get_sheet`, `cues_get_window`, `cues_add_entry`, `cues_update_entry`, `cues_delete_entry`, `cues_replace_sheet`, `cues_replace_window`
+- Canvas: `render_dmx_canvas`, `read_fixture_output_window`
 - Metadata: `metadata_get_overview`, `metadata_get_sections`, `metadata_get_song_analysis`, `metadata_get_section_analysis`, `metadata_find_section`, `metadata_get_beats`, `metadata_get_bar_beats`, `metadata_find_bar_beat`, `metadata_get_chords`, `metadata_find_chord`, `metadata_get_loudness`
 - Transport: `transport_get_cursor`
 
 Behavior notes:
 - MCP song and cue mutation tools operate on the same `StateManager` used by websocket clients.
 - MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
-- Metadata tools expose analyzer beat positions as bars and beats, including section start/end positions and exact bar/beat lookup.
+- `render_dmx_canvas` refreshes the derived song canvas and rewrites the canonical debug artifact at `backend/cues/{song}.dmx.log`.
+- `read_fixture_output_window` reads sampled DMX channel values for one fixture from the rendered canvas without mutating cues.
+- Metadata tools expose backend-resolved beat positions as bars and beats, including section start/end positions and exact bar/beat lookup.
 - `metadata_get_song_analysis` returns a backend-owned normalized analysis contract for the current song, including beat availability, section availability, feature availability, normalized section timing, per-section dominant parts, per-stem accents, per-stem dips, and low windows.
 - Loudness summaries are read from the mix `artifacts.essentia` manifest entry for `loudness_envelope` and returned as averaged window statistics.
 - `metadata_get_section_analysis` returns compact section summaries for LLM metadata drafting, combining mix loudness stats, harmonic spans/change points, and stem-supported evidence from `mix`, `bass`, `drums`, and `vocals`.
@@ -115,21 +115,9 @@ Patch behavior:
 
 - Browser audio timeline keeps backend timecode aligned while playback is running using a short sync cadence, plus immediate sync on play/pause/seek/stop.
 - Backend playback ticker is authoritative for frame-by-frame progression while `playing`.
-- `transport.play` first checks analyzer queue status. If analyzer reports any `running` item, backend emits `transport_play_blocked` and playback does not start.
-- Backend does not keep a standing analyzer poll loop while the queue is empty. Startup performs a one-shot status refresh, fetches analyzer task metadata once, and continuous polling begins only when analyzer queue activity is known. If analyzer status fetches fail while queued or running work is still being tracked, backend keeps retrying until the analyzer status endpoint responds again.
-- `state.analyzer.task_types` exposes the analyzer-owned task catalog with `value`, `label`, and `description` fields for frontend task selection.
-- Analyzer service startup clears any persisted queue items before it begins serving queue state, so backend sees an empty analyzer queue after analyzer restarts.
-- `analyzer.enqueue` validates `task_type` against the analyzer-owned task catalog, derives analyzer `song_path` plus `meta_path`, posts a queue item to the analyzer service, and triggers queue-activity polling.
-- `analyzer.enqueue_full_artifact` derives analyzer `song_path` plus `meta_path`, posts the analyzer-owned full-artifact playlist to the analyzer queue endpoint, and triggers queue-activity polling.
-- `analyzer.execute` posts one queued item to the analyzer service execute endpoint and triggers queue-activity polling so pending/running state is relayed back into `state.analyzer`.
-- `analyzer.execute_all` executes every queue item whose current analyzer status is `queued`, then refreshes analyzer state once.
-- `analyzer.remove` deletes one analyzer queue item and refreshes `state.analyzer` immediately.
-- `analyzer.remove_all` deletes every non-running analyzer queue item and refreshes `state.analyzer` immediately.
-- When playback starts, backend sets analyzer playback lock and stops analyzer polling for the full playback window.
-- `transport.pause`, `transport.stop`, and natural playback completion release analyzer playback lock and resume analyzer polling only when queued work is still present.
 - `song.list` emits the currently loadable backend song names without mutating state.
 - `song.load` validates `payload.filename`, loads the selected song into backend state, resets playback to stopped, updates the output universe, and schedules a snapshot/patch broadcast.
-- If a song is present without analyzer `info.json`, backend still loads it and emits fallback metadata (`bpm=0`, `length_s=0`, empty beats, no analysis) instead of failing the load. When `info.json` exists, backend resolves beats from `info.json.beats_file` or `artifacts.beats_file`, which should point at `reference/beats.json` or `inferred/beats.<model>.json`.
+- If a song is present without `info.json`, backend still loads it and emits fallback metadata (`bpm=0`, `length_s=0`, empty beats, no analysis) instead of failing the load. When `info.json` exists, backend resolves beats from modern metadata keys such as `outputs.beats`, `artifacts.beats`, or `generated_from.timing_grid`.
 - `songs_load` on the MCP surface applies the same load side effects: load state, stop playback ticker, disable continuous send, push the output universe, then schedule websocket broadcasts.
 - Clients can send `transport.jump_to_section` with `payload.section_index` to seek to the matching section start.
 - Section boundaries and labels are resolved from normalized section fields (`start_s|start`, `end_s|end`, `name|label`).
@@ -145,9 +133,9 @@ Patch behavior:
 - `llm.reject_action` dismisses a pending proposal without mutating cues.
 - `transport.stop` always applies blackout (`output_universe` all zeros) before Art-Net update.
 - `cue.apply_helper` generates cue entries from backend-owned helper definitions and upserts them into the cue sheet. Helpers can expose parameter schemas and runtime params.
-- `cue_helper_apply_failed` includes `missing_artifacts` when helper execution fails because analyzer artifact files referenced by the current song are absent, so frontend error surfaces can show the missing filenames and paths.
-- `song_draft` is a backend-owned cue helper that reads analyzer-backed section and per-stem metadata through the backend analysis contract and generates a draft cue sheet using the active fixture inventory and POI availability.
-- `chaser.apply` and `chaser.start` persist chaser-backed cue rows from `backend/fixtures/chasers.json`.
+- `cue_helper_apply_failed` includes `missing_artifacts` when helper execution fails because required artifact files referenced by the current song are absent, so frontend error surfaces can show the missing filenames and paths.
+- `song_draft` is a backend-owned cue helper that reads section and per-stem metadata through the backend analysis contract and generates a draft cue sheet using the active fixture inventory and POI availability.
+- `chaser.apply` and `chaser.start` persist chaser-backed cue rows from definitions loaded under `backend/chasers/*.json`.
 - `chaser.preview` renders chaser effects as a temporary non-persistent output stream.
 - `chaser.stop_preview` stops temporary chaser preview output without writing cues.
 - Chaser effect fields `beat` and `duration` are beat-based and converted with `beatToTimeMs(beat_count, bpm)`.
@@ -169,15 +157,17 @@ Patch behavior:
 - Fixture templates: `backend/fixtures/fixture.<type>.<model>.json`
 - POIs: `backend/fixtures/pois.json`
 - Cues: `backend/cues/{song}.json`
-- Songs: `analyzer/songs/*.mp3` locally, mounted at `/app/songs` in Docker
-- Metadata root in Docker: `/app/meta` (fallback local: `analyzer/meta`, else `backend/meta`)
-- Static routes: `/songs/*` for audio and `/meta/*` for analyzer artifacts (SVG/JSON).
+- Songs: `data/songs/*.mp3` locally, mounted at `/app/songs` in Docker
+- Metadata root in Docker: `/app/meta` (local preference: `data/output`, fallback: `backend/meta`)
+- Artifact root: `/data/artifacts` in Docker (local preference: `data/artifacts`)
+- Human hints root in Docker: `/data/reference/{song}/human/human_hints.json` (local preference: `data/reference/{song}/human/human_hints.json`)
+- Static routes: `/songs/*` for audio and `/meta/*` for metadata artifacts (SVG/JSON).
 
 Song payload fields under `state.song`:
 - Core: `filename`, `audio_url`, `length_s`, `bpm`, `sections`, `beats`.
-- Optional analysis: `analysis.plots[]` (`id`, `title`, `svg_url`) and `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`).
+- Analysis: `analysis.plots[]` (`id`, `title`, `svg_url`), `analysis.chords[]` (`time_s`, `label`, optional `bar`/`beat`), `analysis.events[]` (`id`, `type`, `start_time`, `end_time`, `confidence`, `intensity`, `section_id`, nullable `section_name`, `provenance`, `summary`, `created_by`, `evidence_summary`, `lighting_hint`), `analysis.patterns[]` (`id`, `label`, `bar_count`, `sequence`, `occurrence_count`, `occurrences[]`), `analysis.human_hints[]` (`id`, `start_time`, `end_time`, `title`, `summary`, `lighting_hint`), and `analysis.human_hints_status` (`dirty`, `saved`, `file_exists`). `analysis.events[]` is sourced from `outputs.song_event_timeline`, `analysis.patterns[]` is sourced from `artifacts.pattern_mining`, and `analysis.human_hints[]` is sourced from `data/reference/{song}/human/human_hints.json`.
 
-Canonical `state.song.beats[]` rows are analyzer beat events with:
+Canonical `state.song.beats[]` rows are beat events with:
 - `time`: beat timestamp in seconds.
 - `bar`: bar index.
 - `beat`: beat index within the bar.
@@ -194,12 +184,17 @@ MCP cue payloads:
 - `cues_get_sheet` returns the full persisted cue sheet for the current song.
 - `cues_get_window` returns entries in an inclusive `[start_time, end_time]` window.
 - `cues_replace_sheet` validates and replaces the full cue sheet, persists it, and re-renders the DMX canvas.
+- `cues_replace_window` validates and replaces entries in one inclusive `[start_time, end_time]` window, persists the result, and re-renders the DMX canvas.
+
+DMX render artifact:
+- The canonical human/debug render artifact is `backend/cues/{song}.dmx.log`.
+- The log is sparse and text-based: it records only non-zero frames up to the current max-used channel range.
 
 Chasers payload under `state.chasers`:
-- List of chaser definitions loaded from `backend/fixtures/chasers.json`, including stable `id`, display `name`, `description`, and beat-based `effects`.
+- List of chaser definitions loaded from `backend/chasers/*.json`, including stable `id`, display `name`, `description`, and beat-based `effects`.
 
 Section payload normalization:
-- Backend accepts analyzer section records with either `start/end/label` or `start_s/end_s/name` keys.
+- Backend accepts section records with either `start/end/label` or `start_s/end_s/name` keys.
 - Snapshot payload always emits normalized section entries as `{name, start_s, end_s}`.
 - Canonical persisted `sections.json` is a top-level list of section objects. Optional authored `description` and `hints` stay in that same list shape.
 
@@ -228,8 +223,6 @@ Default local URL: `http://localhost:5001`.
 - `DEBUG_MODE`: when truthy, `ArtNetService` prints sent DMX channel payloads to stdout and to a file if `DEBUG_FILE` is set.
 - `DEBUG_FILE`: optional path to write Art-Net debug output to a file in addition to stdout.
 - `ASSISTANT_LOG_DIR`: directory for assistant interaction JSONL logs. In Docker Compose this is `/app/logs/assistant`, persisted to `backend/logs/assistant` on the host.
-- `ANALYZER_BASE_URL`: analyzer HTTP service base URL. Docker Compose uses `http://analyzer:8100`.
-- `ANALYZER_POLL_INTERVAL`: idle-time analyzer status polling interval in seconds.
 
 ## LLM Fast Map
 
@@ -247,6 +240,8 @@ PYTHONPATH=.:./backend PYENV_VERSION=ai-light pyenv exec python -m pytest -q \
 	tests/test_set_values_regression.py \
 	tests/test_song_sections_payload_schema.py \
 	tests/test_song_analysis_payload_chords.py \
+	tests/test_song_analysis_payload_events.py \
+	 tests/test_song_analysis_payload_patterns.py \
 	tests/test_jump_to_section_regression.py \
 	tests/test_chaser_timing.py \
 	tests/test_chaser_preview_lifecycle.py \
@@ -277,7 +272,7 @@ Use this matrix to pick edit targets and minimum tests quickly:
 | --- | --- | --- |
 | State bootstrap fields or shared state flags | `store/state_manager/core/bootstrap.py` | state-manager regression command above |
 | Fixture load/save, arm defaults, POI fixture target persistence | `store/state_manager/core/fixture_store.py`, `store/state_manager/core/fixture_effects.py` | state-manager regression command above |
-| Song metadata length inference or metadata path resolution | `store/state_manager/core/metadata.py`, `store/services/song_metadata_loader.py` | state-manager regression command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` |
+| Song metadata length inference or metadata path resolution | `store/state_manager/core/metadata.py`, `store/services/song_metadata_loader.py` | state-manager regression command above + `tests/test_song_sections_payload_schema.py` + `tests/test_song_analysis_payload_chords.py` + `tests/test_song_analysis_payload_events.py` |
 | Cue-sheet-to-canvas render wiring or preview render wiring | `store/state_manager/core/render.py`, `store/services/canvas_rendering.py` | state-manager regression command above |
 | Fixture effect contracts or preview support | `models/fixtures/**/*`, `store/state_manager/core/fixture_effects.py`, `store/state_manager/playback/preview_start.py` | state-manager regression command above + `tests/test_fixture_effect_preview_matrix.py` + `tests/test_fixture_effect_canvas_matrix.py` |
 | Song load, cue persistence, section persistence | `store/state_manager/song/loading.py`, `store/state_manager/song/cues.py`, `store/state_manager/song/sections.py` | state-manager regression command above |

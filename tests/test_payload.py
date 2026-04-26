@@ -139,4 +139,11 @@ async def test_frontend_state_handles_song_without_info_json(tmp_path: Path):
     assert payload["song"]["bpm"] == 0.0
     assert payload["song"]["length_s"] == 0.0
     assert payload["song"]["beats"] == []
-    assert payload["song"]["analysis"] is None
+    assert payload["song"]["analysis"] == {
+        "plots": [],
+        "chords": [],
+        "events": [],
+        "patterns": [],
+        "human_hints": [],
+        "human_hints_status": {"dirty": False, "saved": True, "file_exists": False},
+    }

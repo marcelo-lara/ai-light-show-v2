@@ -21,11 +21,26 @@ def _expand_entry_for_render(entry: CueEntry, chasers: List[ChaserDefinition], b
         repetitions = int((entry.data or {}).get("repetitions", 1))
     except (TypeError, ValueError):
         repetitions = 1
+
+    if chaser.type == "dynamic" and chaser.generator_id:
+        from services.dynamic_chasers import GENERATORS
+        from models.chasers import ChaserEffect as _ChaserEffect
+        generator = GENERATORS.get(chaser.generator_id)
+        if not generator:
+            return []
+        # Per-cue data may override default_params (excluding bookkeeping keys)
+        merged_params = dict(chaser.default_params)
+        override = {k: v for k, v in (entry.data or {}).items() if k != "repetitions"}
+        merged_params.update(override)
+        source_effects = [_ChaserEffect(**e) for e in generator(merged_params)]
+    else:
+        source_effects = chaser.effects
+
     cycle_beats = get_chaser_cycle_beats(chaser)
     expanded: List[CueEntry] = []
     for cycle in range(max(1, repetitions)):
         cycle_offset_beats = cycle * cycle_beats
-        for effect in chaser.effects:
+        for effect in source_effects:
             cue_time_seconds = float(entry.time) + beatToTimeMs(cycle_offset_beats + effect.beat, bpm) / 1000.0
             duration_seconds = beatToTimeMs(effect.duration, bpm) / 1000.0
             expanded.append(

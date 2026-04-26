@@ -28,6 +28,8 @@ import {
 } from "./logic/song_player_state.ts";
 import { buildWaveCallbacks } from "./logic/wave_callbacks.ts";
 import { buildSongPlayerUi } from "./ui/buildSongPlayerUi.ts";
+import { activeSongEventKey, activeSongEvents, normalizeSongEvents } from "./logic/song_events.ts";
+import type { SongPlayerEvent } from "./types/types.ts";
 
 export class SongPlayerController {
   root: HTMLElement;
@@ -52,6 +54,7 @@ export class SongPlayerController {
   private currentSongKey = "";
   private songMetaFingerprint = "";
   private sections: Section[] = [];
+  private songEvents: SongPlayerEvent[] = [];
   private beatObjects: BeatObject[] = [];
   private beats: number[] = [];
   private downbeats: number[] = [];
@@ -60,6 +63,7 @@ export class SongPlayerController {
   private durationMs = 0;
   private localTimeMs = 0;
   private isPlaying = false;
+  private activeEventRegionKey = "";
 
   private suppressSeekSync = false;
   private appliedZoomValue: number | null = null;
@@ -316,12 +320,14 @@ export class SongPlayerController {
 
     this.songLabelEl.textContent = derived.label;
     this.sections = derived.sections;
+    this.songEvents = normalizeSongEvents(song);
     this.beatObjects = derived.beatObjects;
     this.beats = derived.beats;
     this.downbeats = derived.downbeats;
     this.durationMs = derived.durationMs;
     this.selectedSectionIndex = derived.selectedSectionIndex;
     this.implicitLoopSectionIndex = derived.implicitLoopSectionIndex;
+    this.activeEventRegionKey = activeSongEventKey(this.songEvents, this.localTimeMs);
 
     this.rebuildRegions();
     this.renderReadout();
@@ -331,11 +337,19 @@ export class SongPlayerController {
   private rebuildRegions() {
     this.waveSurferManager.rebuildRegions({
       sections: this.sections,
+      activeEvents: activeSongEvents(this.songEvents, this.localTimeMs),
       downbeats: this.downbeats,
       showSections: this.showRegionsInput.checked,
       showDownbeats: this.showDownbeatsInput.checked,
       selectedSectionIndex: this.selectedSectionIndex,
     });
+  }
+
+  private syncActiveEventRegions() {
+    const nextKey = activeSongEventKey(this.songEvents, this.localTimeMs);
+    if (nextKey === this.activeEventRegionKey) return;
+    this.activeEventRegionKey = nextKey;
+    this.rebuildRegions();
   }
 
   private applyZoom() {
@@ -349,6 +363,7 @@ export class SongPlayerController {
     setSongPlayerTimeMs(this.localTimeMs);
     this.positionEl.textContent = `${formatCurrentTimeMs(this.localTimeMs)} / ${formatDurationMs(this.durationMs)}`;
     this.barBeatEl.textContent = computeBarBeatLabel(this.beatObjects, this.localTimeMs);
+    this.syncActiveEventRegions();
   }
 
   dispose() {

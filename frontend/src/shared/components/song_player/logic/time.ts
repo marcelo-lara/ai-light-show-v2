@@ -1,3 +1,5 @@
+import { formatPosition as formatSharedPosition } from "../../../utils/format.ts";
+
 function normalizeMs(value: number): number {
   return Math.max(0, Math.floor(value));
 }
@@ -12,7 +14,7 @@ export function formatCurrentTimeMs(value: number): string {
 }
 
 export function formatPosition(value: number): string {
-	return `${value.toFixed(3)}`;
+  return formatSharedPosition(value);
 }
 
 export function formatDurationMs(value: number): string {
