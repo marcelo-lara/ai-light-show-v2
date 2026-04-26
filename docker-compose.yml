@@ -53,6 +53,7 @@ services:
       - ./data/songs:/app/songs
       - ./backend/fixtures:/app/fixtures
       - ./backend/cues:/app/cues
+      - ./backend/chasers:/app/chasers
       - ./data/output:/app/meta
     environment:
       - DMX_NODE_IP=192.168.10.221

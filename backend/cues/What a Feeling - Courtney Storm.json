@@ -1,945 +1,626 @@
 [
   {
     "time": 0.0,
-    "fixture_id": "head_el150",
-    "effect": "blackout",
-    "duration": 0.0,
-    "data": {},
-    "created_by": "copilot:what_a_feeling_show_20260405_v2"
+    "chaser_id": "parcan_blue_wave",
+    "data": {
+      "repetitions": 18
+    },
+    "name": "Blue Wave Ambient",
+    "created_by": "agent"
   },
   {
-    "time": 0.0,
+    "time": 3.15,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 3.15,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "piano"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 3.15,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
         "color": 150,
-        "dim": 0,
         "gobo": 0,
-        "speed": 18,
-        "shutter": 255
+        "shutter": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_show_20260405_v2"
+    "created_by": "agent"
   },
   {
-    "time": 0.0,
+    "time": 3.15,
     "fixture_id": "mini_beam_prism_l",
     "effect": "blackout",
-    "duration": 0.0,
+    "duration": 0.1,
     "data": {},
-    "created_by": "copilot:what_a_feeling_shared_poi_20260405"
+    "created_by": "agent"
   },
   {
-    "time": 0.0,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "blackout",
-    "duration": 0.0,
-    "data": {},
-    "created_by": "copilot:what_a_feeling_shared_poi_20260405"
-  },
-  {
-    "time": 0.0,
-    "fixture_id": "parcan_l",
-    "effect": "blackout",
-    "duration": 0.0,
-    "data": {},
-    "created_by": "copilot:what_a_feeling_chill_20260405"
-  },
-  {
-    "time": 0.0,
-    "fixture_id": "parcan_pl",
-    "effect": "blackout",
-    "duration": 0.0,
-    "data": {},
-    "created_by": "copilot:what_a_feeling_chill_20260405"
-  },
-  {
-    "time": 0.0,
-    "fixture_id": "parcan_pr",
-    "effect": "blackout",
-    "duration": 0.0,
-    "data": {},
-    "created_by": "copilot:what_a_feeling_chill_20260405"
-  },
-  {
-    "time": 0.0,
-    "fixture_id": "parcan_r",
-    "effect": "blackout",
-    "duration": 0.0,
-    "data": {},
-    "created_by": "copilot:what_a_feeling_chill_20260405"
-  },
-  {
-    "time": 1.95,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.2,
-    "data": {
-      "dim": 44,
-      "easing": "ease-in-out"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 1.95,
+    "time": 3.15,
     "fixture_id": "mini_beam_prism_l",
     "effect": "move_to_poi",
-    "duration": 1.2,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_1_1_1"
+      "target_POI": "piano"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 1.95,
+    "time": 3.15,
     "fixture_id": "mini_beam_prism_l",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
         "color": 55,
-        "prism": 0,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
+        "prism": 130,
+        "gobo": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 1.95,
+    "time": 3.15,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.2,
-    "data": {
-      "dim": 40,
-      "easing": "ease-in-out"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 1.95,
+    "time": 3.15,
     "fixture_id": "mini_beam_prism_r",
     "effect": "move_to_poi",
-    "duration": 1.2,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_0_0_0"
+      "target_POI": "piano"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 1.95,
+    "time": 3.15,
     "fixture_id": "mini_beam_prism_r",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
         "color": 55,
-        "prism": 0,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
+        "prism": 130,
+        "gobo": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 3.27,
-    "chaser_id": "blue_indigo_wave_chaser_2_bars",
-    "data": {
-      "repetitions": 4
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 3.27,
+    "time": 5.09,
     "fixture_id": "head_el150",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 5.09,
+    "fixture_id": "head_el150",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "shutter": 255
+      }
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 5.09,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 150
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 5.09,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 150
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 5.57,
+    "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.2,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 3.27,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 150,
-        "dim": 84,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 3.27,
-    "fixture_id": "head_el150",
-    "effect": "sweep",
-    "duration": 15.5,
-    "data": {
-      "start_POI": "ref_0_1_0",
-      "subject_POI": "table",
-      "end_POI": "ref_1_1_0",
-      "easing": 0.76,
-      "dimmer_easing": 0.34,
-      "max_dim": 0.3
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 3.27,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 92,
-      "easing": "ease-in-out",
-      "start_value": 44
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 3.27,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "orbit",
-    "duration": 11.62,
-    "data": {
-      "start_POI": "ref_1_1_1",
-      "subject_POI": "table",
-      "orbits": 0.65,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 3.27,
+    "time": 5.57,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 84,
-      "easing": "ease-in-out",
-      "start_value": 40
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 3.27,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "orbit",
-    "duration": 11.62,
-    "data": {
-      "start_POI": "ref_0_0_0",
-      "subject_POI": "table",
-      "orbits": 0.65,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 3.59,
-    "fixture_id": "head_el150",
     "effect": "flash",
-    "duration": 0.18,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 7.16,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 75,
-        "dim": 84,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 7.16,
+    "time": 7.03,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 92,
-      "easing": "ease-in-out",
-      "start_value": 60
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 7.16,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 7.16,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 84,
-      "easing": "ease-in-out",
-      "start_value": 54
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 7.16,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 10.9,
-    "fixture_id": "head_el150",
     "effect": "flash",
-    "duration": 0.16,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 10.91,
+    "time": 7.03,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 8.91,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 8.91,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "piano"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 8.91,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 175,
-        "dim": 84,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
+        "shutter": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 10.91,
+    "time": 8.91,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 92,
-      "easing": "ease-in-out",
-      "start_value": 60
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 10.91,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 0,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 10.91,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 84,
-      "easing": "ease-in-out",
-      "start_value": 54
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 10.91,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 0,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 14.79,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 75,
-        "dim": 84,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 14.79,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 92,
-      "easing": "ease-in-out",
-      "start_value": 60
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 14.79,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 14.79,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 84,
-      "easing": "ease-in-out",
-      "start_value": 54
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 14.79,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 16.72,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
-  },
-  {
-    "time": 16.72,
+    "time": 8.91,
     "fixture_id": "mini_beam_prism_l",
     "effect": "move_to_poi",
-    "duration": 1.94,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_0_1_1"
+      "target_POI": "sofa"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 16.72,
+    "time": 8.91,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 16.72,
+    "time": 8.91,
     "fixture_id": "mini_beam_prism_r",
     "effect": "move_to_poi",
-    "duration": 1.94,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_1_0_0"
+      "target_POI": "table"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:intro"
+    "created_by": "agent"
   },
   {
-    "time": 18.553,
-    "chaser_id": "blue_indigo_wave_chaser_2_bars",
+    "time": 10.91,
+    "fixture_id": "head_el150",
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "repetitions": 4
+      "intensity": 130
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "created_by": "agent"
   },
   {
-    "time": 18.553,
+    "time": 10.91,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 150,
-        "dim": 84,
-        "gobo": 0,
-        "speed": 18,
         "shutter": 255
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "created_by": "agent"
   },
   {
-    "time": 18.553,
+    "time": 10.91,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 10.91,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 11.89,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 11.89,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 13.81,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 13.81,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 16.65,
     "fixture_id": "head_el150",
-    "effect": "sweep",
-    "duration": 15.48,
-    "data": {
-      "start_POI": "ref_1_0_0",
-      "subject_POI": "piano",
-      "end_POI": "ref_0_0_0",
-      "easing": 0.88,
-      "dimmer_easing": 0.4,
-      "max_dim": 0.32
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 18.553,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
+    "time": 16.65,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
     "data": {
-      "dim": 92,
-      "easing": "ease-in-out"
+      "target_POI": "table"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "created_by": "agent"
   },
   {
-    "time": 18.553,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "orbit",
-    "duration": 11.6,
-    "data": {
-      "start_POI": "ref_0_1_1",
-      "subject_POI": "sofa",
-      "orbits": 0.65,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 18.553,
-    "fixture_id": "mini_beam_prism_l",
+    "time": 16.65,
+    "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 55,
-        "prism": 0,
-        "gobo": 28,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
+        "shutter": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "created_by": "agent"
   },
   {
-    "time": 18.553,
+    "time": 16.65,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 16.65,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "table"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 16.65,
     "fixture_id": "mini_beam_prism_r",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 16.65,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "table"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 18.65,
+    "fixture_id": "head_el150",
     "effect": "fade_in",
-    "duration": 2.35,
+    "duration": 0.48,
     "data": {
-      "dim": 84,
-      "easing": "ease-in-out"
+      "intensity": 130
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "created_by": "agent"
   },
   {
-    "time": 18.553,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "orbit",
-    "duration": 11.6,
-    "data": {
-      "start_POI": "ref_1_0_0",
-      "subject_POI": "sofa",
-      "orbits": 0.65,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 18.553,
-    "fixture_id": "mini_beam_prism_r",
+    "time": 18.65,
+    "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 55,
-        "prism": 0,
-        "gobo": 38,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
+        "shutter": 255
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "created_by": "agent"
   },
   {
-    "time": 18.873,
+    "time": 18.65,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 18.65,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 21.55,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 21.55,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 23.49,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 23.49,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 24.39,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 24.39,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "table"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 24.39,
+    "fixture_id": "head_el150",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "shutter": 0
+      }
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 24.39,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 24.39,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "inblue_desk"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 24.39,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 24.39,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "sofa"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 26.39,
+    "fixture_id": "head_el150",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 130
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 26.39,
+    "fixture_id": "head_el150",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "shutter": 255
+      }
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 26.39,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 26.39,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 26.87,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 26.87,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 28.33,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 28.33,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 33.15,
     "fixture_id": "head_el150",
     "effect": "flash",
-    "duration": 0.18,
+    "duration": 0.4,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "created_by": "agent"
   },
   {
-    "time": 22.71,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 75,
-        "dim": 84,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 22.71,
+    "time": 33.15,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 92,
-      "easing": "ease-in-out",
-      "start_value": 60
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 22.71,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 28,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 22.71,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 84,
-      "easing": "ease-in-out",
-      "start_value": 54
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 22.71,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 38,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 26.413,
-    "fixture_id": "head_el150",
     "effect": "flash",
-    "duration": 0.16,
+    "duration": 0.4,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "created_by": "agent"
   },
   {
-    "time": 26.413,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 175,
-        "dim": 84,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 26.413,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 92,
-      "easing": "ease-in-out",
-      "start_value": 60
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 26.413,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 0,
-        "gobo": 28,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 26.413,
+    "time": 33.15,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 84,
-      "easing": "ease-in-out",
-      "start_value": 54
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 26.413,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 0,
-        "gobo": 38,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 30.263,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 75,
-        "dim": 84,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 30.263,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 92,
-      "easing": "ease-in-out",
-      "start_value": 60
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 30.263,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 28,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 30.263,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 84,
-      "easing": "ease-in-out",
-      "start_value": 54
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 30.263,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 38,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 31.904,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 31.904,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "move_to_poi",
-    "duration": 1.94,
-    "data": {
-      "target_POI": "ref_0_0_1"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 31.904,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
-  },
-  {
-    "time": 31.904,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "move_to_poi",
-    "duration": 1.94,
-    "data": {
-      "target_POI": "ref_1_1_0"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_1"
+    "effect": "flash",
+    "duration": 0.4,
+    "data": {},
+    "created_by": "agent"
   },
   {
     "time": 34.13,
@@ -2130,355 +1811,243 @@
     "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
   },
   {
-    "time": 63.15,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "time": 61.7,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 63.15,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "move_to_poi",
-    "duration": 1.94,
-    "data": {
-      "target_POI": "ref_1_1_1"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 63.15,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 63.15,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "move_to_poi",
-    "duration": 1.94,
-    "data": {
-      "target_POI": "ref_0_0_0"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 65.09,
+    "time": 61.7,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
         "color": 150,
-        "dim": 170,
-        "gobo": 12,
-        "speed": 14,
-        "shutter": 255
+        "gobo": 0,
+        "shutter": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 65.09,
-    "fixture_id": "head_el150",
-    "effect": "sweep",
-    "duration": 15.5,
-    "data": {
-      "start_POI": "ref_1_1_0",
-      "subject_POI": "ceiling_station",
-      "end_POI": "ref_0_0_1",
-      "easing": 0.62,
-      "dimmer_easing": 0.18,
-      "max_dim": 0.66
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 65.09,
+    "time": 61.7,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.2,
-    "data": {
-      "dim": 136
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 65.09,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "orbit",
-    "duration": 3.88,
-    "data": {
-      "start_POI": "ref_1_1_1",
-      "subject_POI": "table",
-      "orbits": 0.95,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 65.09,
+    "time": 61.7,
     "fixture_id": "mini_beam_prism_l",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
         "color": 55,
-        "prism": 130,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
+        "prism": 200,
+        "gobo": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 65.09,
+    "time": 61.7,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.2,
-    "data": {
-      "dim": 124
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 65.09,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "orbit",
-    "duration": 3.88,
-    "data": {
-      "start_POI": "ref_0_0_0",
-      "subject_POI": "table",
-      "orbits": 0.95,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 65.09,
+    "time": 61.7,
     "fixture_id": "mini_beam_prism_r",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
         "color": 55,
-        "prism": 130,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
+        "prism": 200,
+        "gobo": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
+  },
+  {
+    "time": 61.7,
+    "chaser_id": "parcan_blue_wave",
+    "data": {
+      "repetitions": 26
+    },
+    "name": "Blue Wave Groove",
+    "created_by": "agent"
+  },
+  {
+    "time": 63.09,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "piano"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 63.09,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "sofa"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 63.09,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "table"
+    },
+    "created_by": "agent"
   },
   {
     "time": 65.09,
-    "fixture_id": "parcan_l",
+    "fixture_id": "head_el150",
     "effect": "fade_in",
-    "duration": 3.38,
+    "duration": 0.48,
     "data": {
-      "red": 18,
-      "green": 8,
-      "blue": 88
+      "intensity": 140
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
     "time": 65.09,
-    "fixture_id": "parcan_pl",
-    "effect": "fade_in",
-    "duration": 3.38,
+    "fixture_id": "head_el150",
+    "effect": "set_channels",
+    "duration": 0.0,
     "data": {
-      "red": 30,
-      "green": 12,
-      "blue": 118
+      "channels": {
+        "shutter": 255
+      }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
     "time": 65.09,
-    "fixture_id": "parcan_pr",
+    "fixture_id": "mini_beam_prism_l",
     "effect": "fade_in",
-    "duration": 3.38,
+    "duration": 0.48,
     "data": {
-      "red": 24,
-      "green": 10,
-      "blue": 106
+      "intensity": 155
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
     "time": 65.09,
-    "fixture_id": "parcan_r",
+    "fixture_id": "mini_beam_prism_r",
     "effect": "fade_in",
-    "duration": 3.38,
+    "duration": 0.48,
     "data": {
-      "red": 16,
-      "green": 8,
-      "blue": 82
+      "intensity": 155
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 65.41,
-    "fixture_id": "head_el150",
-    "effect": "flash",
-    "duration": 0.24,
-    "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 68.97,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 75,
-        "dim": 170,
-        "gobo": 12,
-        "speed": 14,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
     "time": 68.97,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 130,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
   },
   {
     "time": 68.97,
     "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 70.83,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 70.83,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "inblue_desk"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 70.83,
+    "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 65,
-        "prism": 130,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
+        "shutter": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 68.97,
-    "fixture_id": "parcan_l",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 84,
-      "green": 10,
-      "blue": 28
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 68.97,
-    "fixture_id": "parcan_pl",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 118,
-      "green": 14,
-      "blue": 42
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 68.97,
-    "fixture_id": "parcan_pr",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 106,
-      "green": 12,
-      "blue": 36
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 68.97,
-    "fixture_id": "parcan_r",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 78,
-      "green": 10,
-      "blue": 24
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 70.879,
+    "time": 70.83,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 70.879,
+    "time": 70.83,
     "fixture_id": "mini_beam_prism_l",
     "effect": "move_to_poi",
-    "duration": 1.94,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_0_1_1"
+      "target_POI": "inblue_desk"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 70.879,
+    "time": 70.83,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 70.879,
+    "time": 70.83,
     "fixture_id": "mini_beam_prism_r",
     "effect": "move_to_poi",
-    "duration": 1.94,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_1_0_0"
+      "target_POI": "inblue_desk"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
+  },
+  {
+    "time": 72.83,
+    "fixture_id": "head_el150",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
   },
   {
     "time": 72.83,
@@ -2487,1289 +2056,686 @@
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 175,
-        "dim": 170,
-        "gobo": 12,
-        "speed": 14,
         "shutter": 255
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
     "time": 72.83,
     "fixture_id": "mini_beam_prism_l",
     "effect": "fade_in",
-    "duration": 1.2,
+    "duration": 0.48,
     "data": {
-      "dim": 136
+      "intensity": 155
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
     "time": 72.83,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 155
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 76.23,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "orbit",
-    "duration": 3.88,
-    "data": {
-      "start_POI": "ref_0_1_1",
-      "subject_POI": "sofa",
-      "orbits": 0.95,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.83,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 130,
-        "gobo": 28,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.83,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.2,
-    "data": {
-      "dim": 124
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.83,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "orbit",
-    "duration": 3.88,
-    "data": {
-      "start_POI": "ref_1_0_0",
-      "subject_POI": "sofa",
-      "orbits": 0.95,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.83,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 130,
-        "gobo": 38,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.83,
-    "fixture_id": "parcan_l",
-    "effect": "fade_in",
-    "duration": 3.4,
-    "data": {
-      "red": 18,
-      "green": 8,
-      "blue": 88
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.83,
-    "fixture_id": "parcan_pl",
-    "effect": "fade_in",
-    "duration": 3.4,
-    "data": {
-      "red": 30,
-      "green": 12,
-      "blue": 118
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.83,
-    "fixture_id": "parcan_pr",
-    "effect": "fade_in",
-    "duration": 3.4,
-    "data": {
-      "red": 24,
-      "green": 10,
-      "blue": 106
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.83,
-    "fixture_id": "parcan_r",
-    "effect": "fade_in",
-    "duration": 3.4,
-    "data": {
-      "red": 16,
-      "green": 8,
-      "blue": 82
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 72.84,
-    "fixture_id": "head_el150",
     "effect": "flash",
-    "duration": 0.22,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 76.71,
+    "time": 76.23,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 78.59,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 78.59,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "dark_desk"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 78.59,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 75,
-        "dim": 170,
-        "gobo": 12,
-        "speed": 14,
-        "shutter": 255
+        "shutter": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 76.71,
+    "time": 78.59,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 130,
-        "gobo": 28,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 76.71,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 130,
-        "gobo": 38,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 76.71,
-    "fixture_id": "parcan_l",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 84,
-      "green": 10,
-      "blue": 28
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 76.71,
-    "fixture_id": "parcan_pl",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 118,
-      "green": 14,
-      "blue": 42
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 76.71,
-    "fixture_id": "parcan_pr",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 106,
-      "green": 12,
-      "blue": 36
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 76.71,
-    "fixture_id": "parcan_r",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 78,
-      "green": 10,
-      "blue": 24
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 78.626,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 78.626,
+    "time": 78.59,
     "fixture_id": "mini_beam_prism_l",
     "effect": "move_to_poi",
-    "duration": 1.94,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_0_0_1"
+      "target_POI": "table"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 78.626,
+    "time": 78.59,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 78.626,
+    "time": 78.59,
     "fixture_id": "mini_beam_prism_r",
     "effect": "move_to_poi",
-    "duration": 1.94,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_1_1_0"
+      "target_POI": "sofa"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.59,
-    "chaser_id": "blue_indigo_wave_chaser_2_bars",
-    "data": {
-      "repetitions": 4
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
     "time": 80.59,
     "fixture_id": "head_el150",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 80.59,
+    "fixture_id": "head_el150",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
+        "shutter": 255
+      }
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 80.59,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 155
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 80.59,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 155
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 82.51,
+    "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.24,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 80.59,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 150,
-        "dim": 136,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.59,
-    "fixture_id": "head_el150",
-    "effect": "sweep",
-    "duration": 15.48,
-    "data": {
-      "start_POI": "ref_0_1_0",
-      "subject_POI": "sofa",
-      "end_POI": "ref_1_0_0",
-      "easing": 0.82,
-      "dimmer_easing": 0.38,
-      "max_dim": 0.46
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.59,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 96,
-      "easing": "ease-in-out"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.59,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "orbit",
-    "duration": 11.58,
-    "data": {
-      "start_POI": "ref_0_0_1",
-      "subject_POI": "piano",
-      "orbits": 0.65,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.59,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 55,
-        "prism": 0,
-        "gobo": 43,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.59,
+    "time": 82.51,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 88,
-      "easing": "ease-in-out"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.59,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "orbit",
-    "duration": 11.58,
-    "data": {
-      "start_POI": "ref_1_1_0",
-      "subject_POI": "piano",
-      "orbits": 0.65,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.59,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 55,
-        "prism": 0,
-        "gobo": 53,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
-  },
-  {
-    "time": 80.91,
-    "fixture_id": "head_el150",
     "effect": "flash",
-    "duration": 0.24,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_3"
+    "created_by": "agent"
   },
   {
-    "time": 84.45,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 75,
-        "dim": 136,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 84.45,
+    "time": 83.97,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 96,
-      "easing": "ease-in-out",
-      "start_value": 62
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 84.45,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 43,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 84.45,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 88,
-      "easing": "ease-in-out",
-      "start_value": 56
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 84.45,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 53,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 88.329,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 175,
-        "dim": 136,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 88.329,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 96,
-      "easing": "ease-in-out",
-      "start_value": 62
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 88.329,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 0,
-        "gobo": 43,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 88.329,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 88,
-      "easing": "ease-in-out",
-      "start_value": 56
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 88.329,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 0,
-        "gobo": 53,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 88.349,
-    "fixture_id": "head_el150",
     "effect": "flash",
-    "duration": 0.22,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 92.206,
+    "time": 83.97,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 86.31,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 86.31,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "piano"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 86.31,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 75,
-        "dim": 136,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
+        "shutter": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 92.206,
+    "time": 86.31,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 96,
-      "easing": "ease-in-out",
-      "start_value": 62
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 92.206,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 43,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 92.206,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 88,
-      "easing": "ease-in-out",
-      "start_value": 56
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 92.206,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 53,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 94.13,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.96,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 94.13,
+    "time": 86.31,
     "fixture_id": "mini_beam_prism_l",
     "effect": "move_to_poi",
-    "duration": 1.96,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_1_1_1"
+      "target_POI": "piano"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 94.13,
+    "time": 86.31,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.96,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 94.13,
+    "time": 86.31,
     "fixture_id": "mini_beam_prism_r",
     "effect": "move_to_poi",
-    "duration": 1.96,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_0_0_0"
+      "target_POI": "piano"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 96.07,
-    "chaser_id": "blue_indigo_wave_chaser_2_bars",
+    "time": 88.31,
+    "fixture_id": "head_el150",
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "repetitions": 4
+      "intensity": 140
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 96.07,
+    "time": 88.31,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 150,
-        "dim": 136,
-        "gobo": 0,
-        "speed": 18,
         "shutter": 255
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 96.07,
-    "fixture_id": "head_el150",
-    "effect": "sweep",
-    "duration": 15.48,
-    "data": {
-      "start_POI": "ref_1_1_1",
-      "subject_POI": "piano",
-      "end_POI": "ref_0_0_1",
-      "easing": 0.74,
-      "dimmer_easing": 0.3,
-      "max_dim": 0.48
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 96.07,
+    "time": 88.31,
     "fixture_id": "mini_beam_prism_l",
     "effect": "fade_in",
-    "duration": 2.35,
+    "duration": 0.48,
     "data": {
-      "dim": 96,
-      "easing": "ease-in-out"
+      "intensity": 155
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 96.07,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "orbit",
-    "duration": 11.6,
-    "data": {
-      "start_POI": "ref_1_1_1",
-      "subject_POI": "table",
-      "orbits": 0.65,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 96.07,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 55,
-        "prism": 0,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 96.07,
+    "time": 88.31,
     "fixture_id": "mini_beam_prism_r",
     "effect": "fade_in",
-    "duration": 2.35,
+    "duration": 0.48,
     "data": {
-      "dim": 88,
-      "easing": "ease-in-out"
+      "intensity": 155
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 96.07,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "orbit",
-    "duration": 11.6,
-    "data": {
-      "start_POI": "ref_0_0_0",
-      "subject_POI": "table",
-      "orbits": 0.65,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 96.07,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 55,
-        "prism": 0,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 96.39,
-    "fixture_id": "head_el150",
+    "time": 89.77,
+    "fixture_id": "mini_beam_prism_l",
     "effect": "flash",
-    "duration": 0.24,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 99.93,
+    "time": 89.77,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 93.63,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 93.63,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 94.07,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 94.07,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "table"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 94.07,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 75,
-        "dim": 136,
-        "gobo": 0,
-        "speed": 18,
+        "shutter": 0
+      }
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 94.07,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 94.07,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "sofa"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 94.07,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 94.07,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "inblue_desk"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 96.07,
+    "fixture_id": "head_el150",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 140
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 96.07,
+    "fixture_id": "head_el150",
+    "effect": "set_channels",
+    "duration": 0.0,
+    "data": {
+      "channels": {
         "shutter": 255
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
+  },
+  {
+    "time": 96.07,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 155
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 96.07,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 155
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 97.51,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 97.51,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
   },
   {
     "time": 99.93,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 96,
-      "easing": "ease-in-out",
-      "start_value": 62
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 99.93,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 99.93,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 88,
-      "easing": "ease-in-out",
-      "start_value": 56
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 99.93,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 103.8,
-    "fixture_id": "head_el150",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 175,
-        "dim": 136,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 103.8,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 96,
-      "easing": "ease-in-out",
-      "start_value": 62
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 103.8,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 0,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 103.8,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 88,
-      "easing": "ease-in-out",
-      "start_value": 56
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 103.8,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 95,
-        "prism": 0,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 103.82,
-    "fixture_id": "head_el150",
     "effect": "flash",
-    "duration": 0.22,
+    "duration": 0.3,
     "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 107.68,
+    "time": 99.93,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 100.89,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 100.89,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 101.79,
+    "fixture_id": "head_el150",
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 101.79,
+    "fixture_id": "head_el150",
+    "effect": "move_to_poi",
+    "duration": 2.0,
+    "data": {
+      "target_POI": "sofa"
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 101.79,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 75,
-        "dim": 136,
-        "gobo": 0,
-        "speed": 18,
-        "shutter": 255
+        "shutter": 0
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 107.68,
+    "time": 101.79,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 96,
-      "easing": "ease-in-out",
-      "start_value": 62
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 107.68,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 13,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 107.68,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 2.35,
-    "data": {
-      "dim": 88,
-      "easing": "ease-in-out",
-      "start_value": 56
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 107.68,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 65,
-        "prism": 0,
-        "gobo": 23,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 109.61,
-    "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 109.61,
+    "time": 101.79,
     "fixture_id": "mini_beam_prism_l",
     "effect": "move_to_poi",
-    "duration": 1.94,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_0_1_1"
+      "target_POI": "wall"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 109.61,
+    "time": 101.79,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.94,
-    "data": {
-      "dim": 0
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "blackout",
+    "duration": 0.1,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 109.61,
+    "time": 101.79,
     "fixture_id": "mini_beam_prism_r",
     "effect": "move_to_poi",
-    "duration": 1.94,
+    "duration": 2.0,
     "data": {
-      "target_POI": "ref_1_0_0"
+      "target_POI": "wall"
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
+    "time": 103.79,
     "fixture_id": "head_el150",
-    "effect": "flash",
-    "duration": 0.24,
-    "data": {},
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 111.55,
-    "fixture_id": "head_el150",
-    "effect": "orbit",
-    "duration": 15.48,
+    "effect": "fade_in",
+    "duration": 0.48,
     "data": {
-      "start_POI": "ref_0_0_1",
-      "subject_POI": "ceiling_station",
-      "orbits": 0.95,
-      "easing": "late_focus"
+      "intensity": 140
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
+    "time": 103.79,
     "fixture_id": "head_el150",
     "effect": "set_channels",
     "duration": 0.0,
     "data": {
       "channels": {
-        "color": 150,
-        "dim": 180,
-        "gobo": 12,
-        "speed": 14,
         "shutter": 255
       }
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
+    "time": 103.79,
     "fixture_id": "mini_beam_prism_l",
     "effect": "fade_in",
-    "duration": 1.2,
+    "duration": 0.48,
     "data": {
-      "dim": 132
+      "intensity": 155
     },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
+    "time": 103.79,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_in",
+    "duration": 0.48,
+    "data": {
+      "intensity": 155
+    },
+    "created_by": "agent"
+  },
+  {
+    "time": 105.25,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "orbit",
-    "duration": 3.86,
-    "data": {
-      "start_POI": "ref_0_1_1",
-      "subject_POI": "sofa",
-      "orbits": 0.95,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
+    "time": 105.25,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 106.71,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 55,
-        "prism": 130,
-        "gobo": 28,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
+    "time": 106.71,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 1.2,
-    "data": {
-      "dim": 120
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
+    "time": 107.67,
+    "fixture_id": "head_el150",
+    "effect": "flash",
+    "duration": 0.35,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 107.67,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.35,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 107.67,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "orbit",
-    "duration": 3.86,
-    "data": {
-      "start_POI": "ref_1_0_0",
-      "subject_POI": "sofa",
-      "orbits": 0.95,
-      "easing": "late_focus",
-      "write_dimmer": false
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "flash",
+    "duration": 0.35,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
+    "time": 110.57,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
+  },
+  {
+    "time": 110.57,
     "fixture_id": "mini_beam_prism_r",
-    "effect": "set_channels",
-    "duration": 0.0,
-    "data": {
-      "channels": {
-        "color": 55,
-        "prism": 130,
-        "gobo": 38,
-        "strobe": 0,
-        "speed": 18,
-        "autoplay": 0,
-        "reset": 0
-      }
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "effect": "flash",
+    "duration": 0.3,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
-    "fixture_id": "parcan_l",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 18,
-      "green": 8,
-      "blue": 88
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "time": 111.05,
+    "fixture_id": "head_el150",
+    "effect": "fade_out",
+    "duration": 0.5,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
-    "fixture_id": "parcan_pl",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 30,
-      "green": 12,
-      "blue": 118
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "time": 111.05,
+    "fixture_id": "mini_beam_prism_l",
+    "effect": "fade_out",
+    "duration": 0.5,
+    "data": {},
+    "created_by": "agent"
   },
   {
-    "time": 111.55,
-    "fixture_id": "parcan_pr",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 24,
-      "green": 10,
-      "blue": 106
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
-  },
-  {
-    "time": 111.55,
-    "fixture_id": "parcan_r",
-    "effect": "fade_in",
-    "duration": 3.38,
-    "data": {
-      "red": 16,
-      "green": 8,
-      "blue": 82
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:verse_4"
+    "time": 111.05,
+    "fixture_id": "mini_beam_prism_r",
+    "effect": "fade_out",
+    "duration": 0.5,
+    "data": {},
+    "created_by": "agent"
   },
   {
     "time": 111.87,
@@ -5262,30 +4228,10 @@
   {
     "time": 156.07,
     "fixture_id": "mini_beam_prism_l",
-    "effect": "fade_in",
-    "duration": 0.1,
-    "data": {
-      "dim": 56
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:chorus"
-  },
-  {
-    "time": 156.07,
-    "fixture_id": "mini_beam_prism_l",
     "effect": "move_to_poi",
     "duration": 1.92,
     "data": {
       "target_POI": "ref_0_1_1"
-    },
-    "created_by": "copilot:what_a_feeling_rebuild_20260407:chorus"
-  },
-  {
-    "time": 156.07,
-    "fixture_id": "mini_beam_prism_r",
-    "effect": "fade_in",
-    "duration": 0.1,
-    "data": {
-      "dim": 48
     },
     "created_by": "copilot:what_a_feeling_rebuild_20260407:chorus"
   },
