@@ -219,6 +219,64 @@ Use chasers when:
 - **Global Chasers**: Use for generic utilities (e.g., `parcan_wave_lr`, `strobe_pulse`). These should not reference specific POIs unless they are universal (like `center`).
 - **Song-Specific Chasers**: Use for motifs that define the song's identity (e.g., `chimera_vocal_tail`). These are stored within the song's cue file and can safely reference any POI or fixture role specific to that track.
 
+### Dynamic Chasers
+
+Dynamic chasers use procedural generators instead of hand-authored `effects` arrays. They are declared in `backend/chasers/*.json` with `"type": "dynamic"` and a `generator_id` that maps to a registered Python generator.
+
+Available generator: `dynamic_wave_generator`
+
+This generator produces a continuous sine-modulated color wash across a fixture group. Use it when you need an organic, evolving wave that static beat-step arrays cannot express cleanly.
+
+Parameters:
+
+| Parameter | Default | Description |
+|---|---|---|
+| `fixtures` | `["parcan_pl","parcan_l","parcan_r","parcan_pr"]` | Ordered fixture list; spatial phase is derived from list position |
+| `base_color` | `"#000814"` | Deep-idle color (hex) |
+| `accent_color` | `"#00F5FF"` | Wave peak color (hex) |
+| `duration_beats` | `4.0` | Total pattern length in beats |
+| `speed` | `1.0` | Wave travel speed multiplier |
+| `step_size` | `0.05` | Time resolution in beats (lower = smoother) |
+| `fade_in_beats` | `1.0` | Linear fade-in window at pattern start |
+| `fade_out_beats` | `1.0` | Linear fade-out window at pattern end |
+
+Declare a dynamic chaser definition:
+
+```json
+{
+  "id": "parcan_wave_lr",
+  "name": "Left-Right Parcan Wave",
+  "description": "Organic sine wave traveling left to right across all parcans.",
+  "type": "dynamic",
+  "generator_id": "dynamic_wave_generator",
+  "default_params": {
+    "base_color": "#000814",
+    "accent_color": "#00F5FF",
+    "duration_beats": 4.0,
+    "speed": 1.0
+  }
+}
+```
+
+Override params per cue instance by adding a `params` key in the chaser row:
+
+```json
+{
+  "time": 32.5,
+  "chaser_id": "parcan_wave_lr",
+  "data": {
+    "repetitions": 4,
+    "params": { "accent_color": "#FF6600", "speed": 1.5 }
+  }
+}
+```
+
+When to use dynamic vs static chasers:
+
+- Use `dynamic` when the phrase needs a continuous, smooth modulation that would require tens of hand-authored beat steps to approximate
+- Use `static` when the rhythm is explicit and beat-aligned (e.g., downbeats, snare hits)
+- Dynamic chasers are best over longer sustained sections; static chasers are best for tight rhythmic patterns
+
 Prefer direct phrase design when:
 - the section has unique phrasing
 - the emotional shape changes bar by bar

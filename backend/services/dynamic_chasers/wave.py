@@ -2,7 +2,7 @@ import math
 from typing import Dict, List, Any
 from .utils import hex_to_rgb, get_envelope
 
-def procedural_wave_generator(params: Dict[str, Any]) -> List[Dict]:
+def dynamic_wave_generator(params: Dict[str, Any]) -> List[Dict]:
     """
     Generates an organic, sine-modulated wave across fixtures.
     Supports: base_color, accent_color, speed, and fade envelopes.
