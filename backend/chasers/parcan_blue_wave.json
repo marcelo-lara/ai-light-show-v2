@@ -6,7 +6,7 @@
   "generator_id": "dynamic_wave_generator",
   "default_params": {
     "fixtures": ["parcan_pl", "parcan_l", "parcan_r", "parcan_pr"],
-    "base_color": "#000814",
+    "base_color": "#001066",
     "accent_color": "#0033FF",
     "duration_beats": 4.0,
     "speed": 0.8,

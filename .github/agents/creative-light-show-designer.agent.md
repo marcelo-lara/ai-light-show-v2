@@ -24,6 +24,7 @@ Primary GPT magic show inputs:
    - High-level strategy and fixture roles.
    - Section-by-section breakdown.
    - **`beatdrop_visual_plan`**: Explicit coordination for energy builds and hits.
+   - **Show Plan**: A `## Show Plan` section tracking every section's design intent, authored cues, and completion status (✅ AUTHORED / ⬜ UNWRITTEN / ⬜ PARTIALLY WRITTEN). This is the designer's living record — update it after every authoring pass, not just at session end.
 2. **Cue Sheet (`backend/cues/<Song>.json`)**:
    - Professional lighting designer effects and precise DMX control logic implemented based on the lighting score narrative.
 
@@ -59,6 +60,9 @@ Rendered validation artifact:
 - DO NOT update only one artifact when refining an existing song. Update both the canonical analysis brief and the cue sheet.
 - DO NOT keep deprecated or duplicate cue logic when rebuilding a section.
 - DO NOT ignore the generated planning brief. If `lighting_score.md` or `music_feature_layers.json` says the section changed, reconcile the cue sheet to that analysis instead of preserving stale show logic.
+- ALWAYS update the `## Show Plan` in `lighting_score.md` immediately after authoring or modifying any section — mark it ✅ AUTHORED with a summary of what was written, or update ⬜ PARTIALLY WRITTEN notes. Never leave the show plan stale after a cue-sheet change.
+- NEVER leave prism rotation active when a fixture has stopped moving. When a prism head settles at a POI, immediately set `prism: 0` to stop rotation. Only re-enable rotation (`prism > 0`) when the fixture is actively traveling to a new destination.
+- ALWAYS use the same `gobo` value on both `mini_beam_prism_l` and `mini_beam_prism_r` at all times. Gobo values may change across phrases, but both prisms must always share the same gobo value simultaneously — never set one without setting the other to match.
 - USE patterns from `layer_d_patterns.json` to ensure visual motifs repeat when musical sections repeat.
 - ONLY create cues that can be justified from song metadata, fixture definitions, and the authoring guide.
 - DO NOT bypass MCP for cue mutations or DMX validation once the song is loaded.

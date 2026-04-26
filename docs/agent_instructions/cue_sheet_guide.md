@@ -252,10 +252,11 @@ Chasers are defined as one file per chaser under `backend/chasers/*.json`. They 
 
 Current chasers:
 
-- `blue_parcan_chase`
-- `downbeats_and_beats`
-- `heartbeat`
-- `drop-and-explode`
+- `blue_parcan_chase` — static, 4-beat blue pulse across all parcans
+- `downbeats_and_beats` — static, beat-accent parcan hits
+- `heartbeat` — static, slow pulse effect
+- `drop-and-explode` — static, impact burst
+- `parcan_blue_wave` — **dynamic** (`dynamic_wave_generator`), sine-modulated organic blue wave traveling left-to-right across all four parcans; params: `fixtures`, `base_color`, `accent_color`, `duration_beats`, `speed`, `step_size`, `fade_in_beats`, `fade_out_beats`
 
 Timing mechanics:
 

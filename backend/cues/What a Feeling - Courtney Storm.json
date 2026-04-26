@@ -5679,6 +5679,18 @@
     "created_by": "copilot:what_a_feeling_rebuild_20260407:bridge"
   },
   {
+    "time": 188.97,
+    "chaser_id": "parcan_blue_wave",
+    "data": {
+      "repetitions": 1,
+      "duration_beats": 28.31,
+      "fade_in_beats": 1.0,
+      "fade_out_beats": 12.0
+    },
+    "name": "Blue Wave Outro",
+    "created_by": "agent"
+  },
+  {
     "time": 189.29,
     "fixture_id": "head_el150",
     "effect": "flash",
