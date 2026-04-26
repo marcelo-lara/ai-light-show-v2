@@ -211,13 +211,15 @@ When choosing colors across a whole song:
 ## Chaser Use As A Creative Choice
 
 Use chasers when:
-
 - a repeated motif should feel stable across several bars
 - the phrase is truly reusable
 - harmonic repetition supports a recurring visual grammar
 
-Prefer direct phrase design when:
+### Chaser Scoping
+- **Global Chasers**: Use for generic utilities (e.g., `parcan_wave_lr`, `strobe_pulse`). These should not reference specific POIs unless they are universal (like `center`).
+- **Song-Specific Chasers**: Use for motifs that define the song's identity (e.g., `chimera_vocal_tail`). These are stored within the song's cue file and can safely reference any POI or fixture role specific to that track.
 
+Prefer direct phrase design when:
 - the section has unique phrasing
 - the emotional shape changes bar by bar
 - the section needs a one-off narrative gesture rather than a looping motif

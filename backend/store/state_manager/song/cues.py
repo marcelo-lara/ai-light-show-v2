@@ -1,5 +1,7 @@
 # pyright: reportAttributeAccessIssue=false
 
+import json
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from models.cues import (
@@ -16,6 +18,40 @@ from models.cues import (
 
 
 class StateSongCueMixin:
+    def get_chasers(self) -> List[Dict[str, Any]]:
+        """Return merged list of global and local chasers (local wins)."""
+        global_chasers = getattr(self, "chasers", [])
+        local_chasers = []
+        if self.cue_sheet and hasattr(self.cue_sheet, "chasers") and self.cue_sheet.chasers:
+            local_chasers = self.cue_sheet.chasers
+
+        # Convert to dicts if they are models
+        g_dicts = [c if isinstance(c, dict) else c.model_dump() for c in global_chasers]
+        l_dicts = [c if isinstance(c, dict) else c.model_dump() for c in local_chasers]
+
+        merged = {c["id"]: c for c in g_dicts}
+        merged.update({c["id"]: c for c in l_dicts})
+
+        return list(merged.values())
+
+    def get_chaser_definition(self, chaser_id: str) -> Optional[Dict[str, Any]]:
+        """Resolve chaser by ID: local song scope first, then global library."""
+        # 1. Local
+        if self.cue_sheet and hasattr(self.cue_sheet, "chasers") and self.cue_sheet.chasers:
+            for c in self.cue_sheet.chasers:
+                cid = c.get("id") if isinstance(c, dict) else getattr(c, "id", None)
+                if cid == chaser_id:
+                    return c if isinstance(c, dict) else c.model_dump()
+
+        # 2. Global
+        global_chasers = getattr(self, "chasers", [])
+        for c in global_chasers:
+            cid = c.get("id") if isinstance(c, dict) else getattr(c, "id", None)
+            if cid == chaser_id:
+                return c if isinstance(c, dict) else c.model_dump()
+
+        return None
+
     @staticmethod
     def _cue_sort_key(entry: CueEntry) -> tuple[float, str, str]:
         label = entry.chaser_id or entry.fixture_id or ""
@@ -347,6 +383,78 @@ class StateSongCueMixin:
 
     async def clear_all_cue_entries(self) -> Dict[str, Any]:
         return await self.clear_cue_entries(from_time=0.0, to_time=None)
+
+    async def upsert_chaser_definition(
+        self,
+        chaser_id: str,
+        name: str,
+        description: str,
+        effects: List[Dict[str, Any]],
+        is_global: bool = False
+    ) -> Dict[str, Any]:
+        """Creates or updates a chaser definition in the specified scope."""
+        new_def = {
+            "id": chaser_id,
+            "name": name,
+            "description": description,
+            "effects": effects
+        }
+
+        async with self.lock:
+            if is_global:
+                # Update global fixtures/chasers.json
+                global_path = self.backend_path / "fixtures" / "chasers.json"
+                try:
+                    data = []
+                    if global_path.exists():
+                        with open(global_path, "r") as f:
+                            data = json.load(f)
+                    
+                    # Update or append
+                    idx = -1
+                    for i, c in enumerate(data):
+                        if c.get("id") == chaser_id:
+                            idx = i
+                            break
+                    
+                    if idx >= 0:
+                        data[idx] = new_def
+                    else:
+                        data.append(new_def)
+                    
+                    with open(global_path, "w") as f:
+                        json.dump(data, f, indent=2)
+                    
+                    # Update runtime cache
+                    if hasattr(self, "chasers"):
+                        setattr(self, "chasers", data)
+                except Exception as e:
+                    return {"ok": False, "reason": f"global_save_failed: {str(e)}"}
+            else:
+                if not self.cue_sheet:
+                    return {"ok": False, "reason": "no_song_loaded"}
+                
+                # Update local cue_sheet.chasers
+                if not hasattr(self.cue_sheet, "chasers") or self.cue_sheet.chasers is None:
+                    self.cue_sheet.chasers = []
+                
+                # Check for existing
+                idx = -1
+                for i, c in enumerate(self.cue_sheet.chasers):
+                    cid = c.get("id") if isinstance(c, dict) else getattr(c, "id", None)
+                    if cid == chaser_id:
+                        idx = i
+                        break
+                
+                if idx >= 0:
+                    self.cue_sheet.chasers[idx] = new_def
+                else:
+                    self.cue_sheet.chasers.append(new_def)
+                
+                await self.save_cue_sheet()
+                self._refresh_canvas_after_cue_change()
+            
+            return {"ok": True, "chaser": new_def}
 
     async def apply_cue_helper(self, helper_id: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Apply a cue helper to generate and upsert cue entries."""
