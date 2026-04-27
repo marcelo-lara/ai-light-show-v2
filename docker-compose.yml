@@ -57,7 +57,7 @@ services:
       - ./data/output:/app/meta
     environment:
       - DMX_NODE_IP=192.168.10.221
-      - FPS=60
+      - FPS=${FPS:-50}
       - DEBUG_MODE=${DEBUG_MODE:-0}
       - AGENT_GATEWAY_URL=http://agent-gateway:8090
       - ASSISTANT_LOG_DIR=/app/logs/assistant

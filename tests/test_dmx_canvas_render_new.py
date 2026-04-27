@@ -64,7 +64,7 @@ async def test_dmx_canvas_render_with_templates(state_manager, workspace_root):
     with open(temp_cue_path, "r") as f:
         state_manager.cue_sheet = CueSheet(song_filename="test_render", entries=json.load(f))
     
-    # Precompute canvas (using 60fps)
+    # Precompute canvas (using 50fps)
     # Mock song length
     state_manager.song_length_seconds = 5.0
     
@@ -75,16 +75,16 @@ async def test_dmx_canvas_render_with_templates(state_manager, workspace_root):
     # 1. Check parcan_l at 1.1s (frame 66). Red should be 255.
     # red is offset 0, so channel base_channel + 0 = 16 + 0 = 16.
     # DMX channel 16 is index 15.
-    frame_66 = state_manager.canvas.frame_view(66)
-    assert frame_66[15] == 255
+    frame_55 = state_manager.canvas.frame_view(55)
+    assert frame_55[15] == 255
     
     # 2. Check moving head at 2.5s (halfway through 1s move). 
     # start_pan likely 0 (default), target 65535. Halfway => 32768.
     # pan_msb is offset 0 (ch 42), pan_lsb is offset 1 (ch 43).
     # 32768 => MSB 128, LSB 0.
-    frame_150 = state_manager.canvas.frame_view(150) # 2.5 * 60 = 150
+    frame_125 = state_manager.canvas.frame_view(125) # 2.5 * 50 = 125
     # Add some tolerance for floating point timing
-    assert 120 <= frame_150[41] <= 135 # 1-based channel 42 is index 41
+    assert 120 <= frame_125[41] <= 135 # 1-based channel 42 is index 41
     
     # Cleanup
     if temp_cue_path.exists():
