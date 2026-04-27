@@ -103,6 +103,15 @@ export function reloadCueSheet() {
 	});
 }
 
+export function exportCueDmx() {
+	wsSend({
+		type: "intent",
+		req_id: makeId(),
+		name: "cue.export_dmx",
+		payload: {},
+	});
+}
+
 export function applyCueHelper(helperId: string, params: Record<string, unknown> = {}) {
 	wsSend({
 		type: "intent",

@@ -76,7 +76,7 @@ Current MCP tools:
 Behavior notes:
 - MCP song and cue mutation tools operate on the same `StateManager` used by websocket clients.
 - MCP mutations schedule websocket patch broadcasts so connected UI clients stay in sync.
-- `render_dmx_canvas` refreshes the derived song canvas and rewrites the canonical debug artifact at `backend/cues/{song}.dmx.log`.
+- `render_dmx_canvas` refreshes the derived song canvas, rewrites the canonical debug artifact at `backend/cues/{song}.dmx.log`, and writes `data/shows/{song}.show_{yyyymmdd}.dmx`.
 - `read_fixture_output_window` reads sampled DMX channel values for one fixture from the rendered canvas without mutating cues.
 - Metadata tools expose backend-resolved beat positions as bars and beats, including section start/end positions and exact bar/beat lookup.
 - `metadata_get_song_analysis` returns a backend-owned normalized analysis contract for the current song, including beat availability, section availability, feature availability, normalized section timing, per-section dominant parts, per-stem accents, per-stem dips, and low windows.
@@ -127,6 +127,7 @@ Patch behavior:
 - `cue.clear` removes cue entries from a time window: `from_time` only clears all entries at or after that time, and `from_time` + `to_time` clears entries inside the inclusive range.
 - `cue.clear_all` removes every entry from the current cue sheet.
 - `cue.reload` re-reads `backend/cues/{song}.json` for the current song, validates the external file contents, rebuilds the pre-rendered DMX canvas, and broadcasts the refreshed cue list.
+- `cue.export_dmx` forces an explicit DMX canvas render and writes `data/shows/{song}.show_{yyyymmdd}.dmx` without mutating the cue sheet.
 - Cue writes de-duplicate identical effect rows (`fixture_id` + `effect`) and identical chaser rows (`chaser_id`) within a `100ms` window; the latest write replaces the earlier row instead of appending a duplicate.
 - `llm.send_prompt` starts an assistant request through the backend-owned assistant service. The assistant service loads a named prompt profile, includes recent per-client chat history from the current websocket session, forwards the request to the agent gateway, relays streamed model output to the requesting websocket client, and pauses write-capable tool calls at the proposal stage.
 - `llm.confirm_action` applies a proposed cue or chaser mutation after explicit user confirmation, schedules a broadcast for the resulting state change, and then emits a backend-generated completion summary for that executed action.

@@ -4,6 +4,7 @@ from backend.api.intents.cue.actions.apply_helper import apply_helper
 from backend.api.intents.cue.actions.clear import clear_cue
 from backend.api.intents.cue.actions.clear_all import clear_all_cues
 from backend.api.intents.cue.actions.delete import delete_cue
+from backend.api.intents.cue.actions.export_dmx import export_dmx
 from backend.api.intents.cue.actions.reload import reload_cue_sheet
 from backend.api.intents.cue.actions.update import update_cue
 from backend.api.intents.cue.handlers import CUE_HANDLERS
@@ -33,6 +34,15 @@ class _FakeStateManager:
 
     async def reload_cue_sheet_from_disk(self):
         return {"ok": True, "count": 4, "song_filename": "alpha"}
+
+    async def rerender_dmx_canvas(self):
+        return {
+            "ok": True,
+            "song": "alpha",
+            "show_name": "show_20260426",
+            "dmx_binary_path": "data/shows/alpha.show_20260426.dmx",
+            "dmx_log_path": "backend/cues/alpha.dmx.log",
+        }
 
     async def apply_cue_helper(self, helper_id, params=None):
         if helper_id in {"downbeats_and_beats", "parcan_echoes", "song_draft"}:
@@ -103,6 +113,26 @@ async def test_reload_cue_sheet_intent_success():
 
 
 @pytest.mark.asyncio
+async def test_export_dmx_intent_success():
+    manager = _FakeManager()
+
+    ok = await export_dmx(manager, {})
+
+    assert ok is False
+    assert manager.events[-1] == (
+        "info",
+        "cue_dmx_exported",
+        {
+            "ok": True,
+            "song": "alpha",
+            "show_name": "show_20260426",
+            "dmx_binary_path": "data/shows/alpha.show_20260426.dmx",
+            "dmx_log_path": "backend/cues/alpha.dmx.log",
+        },
+    )
+
+
+@pytest.mark.asyncio
 async def test_update_cue_intent_validation_error():
     manager = _FakeManager()
 
@@ -110,6 +140,21 @@ async def test_update_cue_intent_validation_error():
 
     assert ok is False
     assert manager.events[-1][1] == "cue_update_failed"
+
+
+@pytest.mark.asyncio
+async def test_export_dmx_intent_error():
+    manager = _FakeManager()
+
+    async def rerender_dmx_canvas():
+        return {"ok": False, "reason": "no_song_loaded"}
+
+    manager.state_manager.rerender_dmx_canvas = rerender_dmx_canvas
+
+    ok = await export_dmx(manager, {})
+
+    assert ok is False
+    assert manager.events[-1] == ("error", "cue_export_dmx_failed", {"ok": False, "reason": "no_song_loaded"})
 
 
 @pytest.mark.asyncio
@@ -229,4 +274,5 @@ async def test_cue_handlers_map_contains_full_names():
     assert "cue.clear" in CUE_HANDLERS
     assert "cue.clear_all" in CUE_HANDLERS
     assert "cue.reload" in CUE_HANDLERS
+    assert "cue.export_dmx" in CUE_HANDLERS
     assert "cue.apply_helper" in CUE_HANDLERS

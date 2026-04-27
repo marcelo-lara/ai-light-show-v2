@@ -158,7 +158,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "mcp_render_dmx_canvas",
-            "description": "Re-render the DMX canvas for the currently loaded song and refresh the canonical backend/cues/{song}.dmx.log artifact.",
+            "description": "Re-render the DMX canvas for the currently loaded song, refresh the canonical backend/cues/{song}.dmx.log artifact, and write data/shows/{song}.show_{yyyymmdd}.dmx.",
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },

@@ -73,7 +73,7 @@ Code is the source of truth.
 | `backend/store/services/section_persistence.py` | `normalize_sections_input`, `persist_parts_to_meta` | Section validation and metadata persistence |
 | `backend/store/services/canvas_rendering.py` | `render_cue_sheet_to_canvas`, `render_preview_canvas`, `dump_canvas_debug` | DMX canvas rendering + `.dmx.log` dump |
 | `backend/store/services/canvas_render_core.py` | `iter_cues_for_render`, `render_entry_into_universe` | Cue iteration and per-entry frame rendering helpers |
-| `backend/store/services/canvas_debug.py` | `dump_canvas_debug` | Canonical `backend/cues/{song}.dmx.log` writer |
+| `backend/store/services/canvas_debug.py` | `dump_canvas_debug`, `dump_canvas_binary` | Canonical `backend/cues/{song}.dmx.log` writer and explicit-render `.dmx` show exporter |
 | `backend/services/cue_helpers/*` | `generate_downbeats_and_beats` | Backend-owned cue helper generation logic |
 | `backend/store/pois.py` | `PoiDatabase` | POI CRUD + disk sync + runtime target lookup |
 | `backend/store/dmx_canvas.py` | `DMXCanvas` | Packed DMX frame buffer |
@@ -149,7 +149,7 @@ Code is the source of truth.
 
 | Tool | Arguments | Behavior |
 | --- | --- | --- |
-| `render_dmx_canvas` | none | re-renders the current song canvas and refreshes `backend/cues/{song}.dmx.log` |
+| `render_dmx_canvas` | none | re-renders the current song canvas, refreshes `backend/cues/{song}.dmx.log`, and writes `data/shows/{song}.show_{yyyymmdd}.dmx` |
 | `read_fixture_output_window` | `fixture_id`, `start_time`, `end_time`, `max_samples?` | returns sampled DMX channel values for one fixture from the rendered canvas |
 
 #### Metadata
@@ -261,6 +261,7 @@ Notes on `fixture.set_values`:
 | `cue.clear` | `from_time?`, `to_time?` | validates numeric time range, removes entries in the requested range (`from_time` only clears from that time to end), persists, and re-renders when entries were removed | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.clear_all` | none | removes every entry from the current cue sheet, persists, and re-renders the empty sheet | `True` on success; else event `cue_clear_failed` and `False` |
 | `cue.reload` | none | re-reads the current song cue file from disk, validates the external rows against the active fixture and chaser inventory, re-renders the DMX canvas, and refreshes the frontend cue list | `True` on success; else event `cue_reload_failed` and `False` |
+| `cue.export_dmx` | none | forces an explicit DMX canvas render and writes `data/shows/{song}.show_{yyyymmdd}.dmx` without mutating the cue sheet | event `cue_dmx_exported` on success, `cue_export_dmx_failed` on failure, returns `False` |
 | `cue.apply_helper` | `helper_id`, `params?` | validates helper, validates optional helper params, generates cue entries from the helper definition, upserts by `(time, fixture_id)`, persists, re-renders canvas, and tags `created_by` with helper id. Helper id `song_draft` uses the backend song-analysis contract and active fixture/POI state to build a first-pass show draft. | `True` on success; else event `cue_helper_apply_failed` and `False` |
 
 Notes on cue persistence:

@@ -11,6 +11,7 @@ Use this as a navigation guide first, then open the referenced files for the act
 - `data/reference/` is read-only comparison material. Do not treat it as generation input.
 - `data/artifacts/` contains generated analysis artifacts and intermediate caches.
 - `data/output/` contains consumer-facing outputs and the current lighting score.
+- `data/shows/` contains rendered show playback artifacts.
 - `data/fixtures/` contains rig and focus-point context.
 - `data/songs/` contains source audio. `data/stems/` contains stem-separated audio derived from those songs.
 
@@ -60,6 +61,8 @@ data/
       info.json
       lighting_score.md
       sections.json
+  shows/
+    <Song - Artist>.show_<yyyymmdd>.dmx
   reference/
     <Song - Artist>/
       moises/
@@ -109,6 +112,10 @@ Per-song generated analysis artifacts. This is the main machine-readable analysi
 ### `data/output/`
 
 Per-song consumer-facing outputs. These files are more compact and presentation-friendly than the artifact files.
+
+### `data/shows/`
+
+Rendered show playback artifacts. Explicit DMX canvas renders write a binary `.dmx` file here as `{song}.show_{yyyymmdd}.dmx`, so rerendering the same song on the same date overwrites the existing show artifact.
 
 ### `data/fixtures/`
 

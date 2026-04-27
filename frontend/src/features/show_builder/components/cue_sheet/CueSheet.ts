@@ -3,7 +3,7 @@ import { Button } from "../../../../shared/components/controls/Button.ts";
 import { ConfirmCancelPrompt } from "../../../../shared/components/feedback/ConfirmCancelPrompt.ts";
 import type { CueEntry } from "../../../../shared/transport/protocol.ts";
 import { getBackendStore, subscribeBackendStore } from "../../../../shared/state/backend_state.ts";
-import { deleteCue, previewChaser, reloadCueSheet } from "../../cue_intents.ts";
+import { deleteCue, exportCueDmx, previewChaser, reloadCueSheet } from "../../cue_intents.ts";
 import { previewEffect } from "../../../dmx_control/fixture_intents.ts";
 import { transportJumpToTime } from "../../../../shared/transport/transport_intents.ts";
 import {
@@ -31,6 +31,15 @@ export function CueSheet(): HTMLElement {
 	title.append(eyebrow);
 	const headerMeta = document.createElement("div");
 	headerMeta.className = "cue-sheet-header-meta";
+	const exportButton = Button({
+		caption: "Export DMX",
+		bindings: {
+			title: "Render and save the DMX binary show file",
+			onClick: () => {
+				exportCueDmx();
+			},
+		},
+	});
 	const reloadButton = Button({
 		caption: "Reload",
 		bindings: {
@@ -42,7 +51,7 @@ export function CueSheet(): HTMLElement {
 	});
 	const count = document.createElement("span");
 	count.className = "cue-sheet-header-count";
-	headerMeta.append(reloadButton, count);
+	headerMeta.append(exportButton, reloadButton, count);
 	header.append(title, headerMeta);
 
 	const listContainer = document.createElement("div");
@@ -87,6 +96,7 @@ export function CueSheet(): HTMLElement {
 		const cues = getCues();
 		const currentTime = findCurrentCueTime(cues, getTimeMs());
 		const signature = cueSignature(cues);
+		exportButton.disabled = !state.song?.filename;
 		reloadButton.disabled = Boolean(state.system?.edit_lock) || !state.song?.filename;
 		count.textContent = `${cues.length} ${cues.length === 1 ? "cue" : "cues"}`;
 
