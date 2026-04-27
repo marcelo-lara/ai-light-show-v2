@@ -94,6 +94,8 @@ class FakeStateManager:
             "fps": self.canvas.fps,
             "total_frames": self.canvas.total_frames,
             "duration_s": round((self.canvas.total_frames - 1) / float(self.canvas.fps), 3),
+            "show_name": "show_20260426",
+            "dmx_binary_path": f"data/shows/{self.current_song.song_id}.show_20260426.dmx",
             "dmx_log_path": f"backend/cues/{self.current_song.song_id}.dmx.log",
         }
 
@@ -144,6 +146,26 @@ class FakeWsManager:
 
     async def _schedule_broadcast(self) -> None:
         self.broadcasts += 1
+
+
+@pytest.mark.asyncio
+async def test_render_dmx_canvas_returns_binary_artifact_metadata():
+    meta_path = Path(__file__).resolve().parents[1] / "data" / "output"
+    song_service = FakeSongService(meta_path)
+    state_manager = FakeStateManager(meta_path)
+    ws_manager = FakeWsManager(state_manager, song_service)
+    runtime = BackendMcpRuntime()
+    runtime.attach(ws_manager, song_service)
+    mcp = create_backend_mcp(runtime)
+
+    async with Client(mcp) as client:
+        rendered = await client.call_tool("render_dmx_canvas", {})
+
+    assert rendered.data["ok"] is True
+    assert rendered.data["data"]["song"] == TEST_SONG
+    assert rendered.data["data"]["show_name"] == "show_20260426"
+    assert rendered.data["data"]["dmx_binary_path"].endswith(f"{TEST_SONG}.show_20260426.dmx")
+    assert rendered.data["data"]["dmx_log_path"].endswith(f"{TEST_SONG}.dmx.log")
 
 
 @pytest.mark.asyncio
@@ -273,6 +295,8 @@ async def test_backend_mcp_tools_cover_song_metadata_and_cues():
         rendered = await client.call_tool("render_dmx_canvas", {})
         assert rendered.data["ok"] is True
         assert rendered.data["data"]["fps"] == 60
+        assert rendered.data["data"]["show_name"] == "show_20260426"
+        assert rendered.data["data"]["dmx_binary_path"].endswith(f"{TEST_SONG}.show_20260426.dmx")
         assert rendered.data["data"]["dmx_log_path"].endswith(f"{TEST_SONG}.dmx.log")
 
         fixture_output = await client.call_tool(

@@ -10,18 +10,31 @@ from store.services.canvas_rendering import (
     render_cue_sheet_to_canvas,
     render_preview_canvas,
 )
-from store.services.canvas_debug import dump_named_canvas_debug
+from store.services.canvas_debug import (
+    build_named_canvas_binary_path,
+    build_show_name,
+    dump_canvas_binary,
+    dump_named_canvas_debug,
+)
 
 from ..constants import FPS
 
 
 class StateCoreRenderMixin:
     def _build_canvas_metadata(self, canvas: DMXCanvas, song_filename: str) -> Dict[str, Any]:
+        show_name = build_show_name()
         return {
             "song": song_filename,
             "fps": int(canvas.fps),
             "total_frames": int(canvas.total_frames),
             "duration_s": round((max(0, canvas.total_frames - 1)) / float(canvas.fps), 3),
+            "show_name": show_name,
+            "dmx_binary_path": str(
+                build_named_canvas_binary_path(
+                    backend_path=self.backend_path,
+                    song_filename=song_filename,
+                )
+            ),
             "dmx_log_path": str(self.backend_path / "cues" / f"{song_filename}.dmx.log"),
         }
 
@@ -79,6 +92,12 @@ class StateCoreRenderMixin:
             self._refresh_canvas_after_cue_change()
             if not self.canvas:
                 return {"ok": False, "reason": "canvas_unavailable"}
+
+            dump_canvas_binary(
+                backend_path=self.backend_path,
+                song_filename=song_filename,
+                canvas=self.canvas,
+            )
 
             return {
                 "ok": True,
