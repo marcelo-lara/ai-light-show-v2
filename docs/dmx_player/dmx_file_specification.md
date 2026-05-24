@@ -2,7 +2,6 @@
 
 The file name must be explicit: {song_name}.{show_name}.dmx
 
-
 The file uses a Little-Endian binary format composed of a fixed 32-byte header followed by sequential frame records.
 
 ### 1 Global Header (32 Bytes)
